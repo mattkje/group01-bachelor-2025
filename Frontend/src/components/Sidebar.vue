@@ -19,6 +19,7 @@
     { name: 'Zones', icon: zonesIcon, iconSelected: zonesIconSelected, path: '/zones' },
     { name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff' },
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
+    { separator: true },
     { name: 'Simulation', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/simulation' },
     { name: 'Graph', icon: graphIcon, iconSelected: graphIconSelected, path: '/graph' },
   ]);
@@ -31,37 +32,38 @@
   </script>
 
   <template>
-    <div class="sidebar">
-      <div class="logo">
-        <img src="@/assets/logo.png" alt="Logo" class="logo-icon" />
-        <span class="logo-text">Warehouse&nbsp;Workflow<br>Assigner™</span>
-      </div>
-      <div class="tabs">
+  <div class="sidebar">
+    <div class="logo">
+      <img src="@/assets/logo.png" alt="Logo" class="logo-icon" />
+      <span class="logo-text">Warehouse&nbsp;Workflow<br>Assigner™</span>
+    </div>
+    <div class="tabs">
+      <template v-for="(tab, index) in tabs" :key="index">
+        <hr v-if="tab.separator">
         <router-link
-          v-for="(tab, index) in tabs"
-          :key="index"
+          v-else
           :to="tab.path"
           class="tab"
-          :class="{ separator: index === 4 }"
           active-class="active-tab"
           exact-active-class="exact-active-tab"
         >
           <img :src="tab.path === activeTab.path ? tab.iconSelected : tab.icon" alt="" class="tab-icon" />
           <span>{{ tab.name }}</span>
         </router-link>
-      </div>
-      <button class="settings-button">
-        <i class="settings-icon"></i>
-        <span>Settings</span>
-      </button>
+      </template>
     </div>
-  </template>
-
+    <hr>
+    <button class="settings-button">
+      <img src='../assets/icons/settings.svg' class="settings-icon"> </img>
+      <span>Settings</span>
+    </button>
+  </div>
+</template>
   <style scoped>
   .sidebar {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 97vh;
     width: 250px;
     background-color: #ffffff;
     color: #646464;
@@ -105,8 +107,8 @@
   }
 
   .tab-icon {
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
     margin-right: 0.5rem;
     margin-left: 0.5rem;
   }
@@ -118,18 +120,27 @@
   }
 
   .settings-button {
+    border: none;
+    padding-top: 1rem;
+    margin-top: 1rem;
     display: flex;
     align-items: center;
-    margin-top: auto;
-    padding: 0.5rem 0;
     cursor: pointer;
     background: none;
-    border: none;
     color: inherit;
   }
 
-  .settings-button i {
+  hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .settings-button img {
     margin-right: 0.5rem;
+    width: 20px;
+    height: 20px;
   }
 
   .active-tab, .exact-active-tab {
