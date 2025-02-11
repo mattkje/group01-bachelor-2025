@@ -8,18 +8,25 @@ import java.util.List;
 public class Task {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "description")
     private String description;
 
+    @Column(name = "max_duration")
     private int maxDuration;
 
+    @Column(name = "min_duration")
     private int minDuration;
 
+    @Column(name = "min_workers")
     private int minWorkers;
 
+    @Column(name = "max_workers")
     private int maxWorkers;
 
     @ElementCollection
