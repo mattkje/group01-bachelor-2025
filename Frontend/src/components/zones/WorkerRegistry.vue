@@ -57,7 +57,7 @@ import {ref, computed, defineProps} from 'vue';
           </label>
         </div>
         <div class="worker-list">
-          <Worker v-for="(worker, index) in filteredWorkers" :key="index" :name="worker.name" :licenses="worker.licenses" :task="worker.task" :eta="worker.eta"  :available="worker.available" :class="{ 'unavailable': !worker.available }"/>
+          <Worker v-for="(worker, index) in filteredWorkers" :key="index" :name="worker.name" :licenses="worker.licenses" :task="worker.task" :eta="worker.eta"  :available="worker.available" :class="{ 'unavailable': !worker.available }" qualified/>
         </div>
       </div>
     </template>

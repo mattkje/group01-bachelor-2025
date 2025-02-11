@@ -3,7 +3,7 @@
         <div class="container">
           <div class="overview">
             <div class="grid">
-              <Zone v-for="index in 6" :key="index" :title="`Zone ${index}`" :workers="getWorkersByZone(index)" />
+              <Zone v-for="zone in dummyZones" :key="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)"  :required-qualifications="zone.requiredQualifications"/>
             </div>
           </div>
           <WorkerRegistry :workers="dummyWorkers" />
@@ -22,15 +22,27 @@
         { name: "Bob Brown", zone: 2, licenses: [0], task: "Inspecting", eta: "3 hours", available: true },
         { name: "Charlie Davis", zone: 3, licenses: [1, 2], task: "Repairing", eta: "4 hours", available: false },
         { name: "Diana Evans", zone: 3, licenses: [3], task: "Supervising", eta: "2 hours", available: true },
-        { name: "Eve Foster", zone: 4, licenses: [0, 2], task: "Welding", eta: "5 hours", available: true },
+        { name: "Eve Foster", zone: 4, licenses: [0, 2], task: "None", eta: "0", available: true },
         { name: "Frank Green", zone: 4, licenses: [1], task: "Painting", eta: "1 hour", available: false },
         { name: "Grace Harris", zone: 5, licenses: [2, 3], task: "Cleaning", eta: "3 hours", available: true },
         { name: "Hank Irving", zone: 5, licenses: [0], task: "Transporting", eta: "2 hours", available: true },
-        { name: "Ivy Johnson", zone: 6, licenses: [1, 3], task: "Organizing", eta: "4 hours", available: false },
+        { name: "Ivy Johnson", zone: 5, licenses: [1, 3], task: "Organizing", eta: "4 hours", available: true },
         { name: "Jack King", zone: 6, licenses: [2], task: "Surveying", eta: "1 hour", available: true },
         { name: "Karen Lee", zone: 1, licenses: [0, 1, 2], task: "Planning", eta: "2 hours", available: true },
         { name: "Leo Martin", zone: 2, licenses: [3], task: "Executing", eta: "3 hours", available: false },
         { name: "Mona Nelson", zone: 3, licenses: [0, 2], task: "Monitoring", eta: "5 hours", available: true }
+      ];
+
+      const dummyZones = [
+        { id: 1, name: "Receiving", requiredQualifications: ["Truck License", "Forklift License"] },
+        { id: 2, name: "Storage", requiredQualifications: ["Forklift License", "Safety Training"] },
+        { id: 3, name: "Picking", requiredQualifications: ["Forklift License", "First Aid Certification"] },
+        { id: 4, name: "Packing", requiredQualifications: ["Truck License"] },
+        { id: 5, name: "Shipping", requiredQualifications: ["Forklift License", "First Aid Certification"] },
+        { id: 6, name: "Quality Control", requiredQualifications: ["Safety Training"] },
+        { id: 7, name: "Planning", requiredQualifications: ["Truck License", "Safety Training"] },
+        { id: 8, name: "Execution", requiredQualifications: ["Forklift License", "First Aid Certification"] },
+        { id: 9, name: "Monitoring", requiredQualifications: ["Truck License", "Forklift License"] }
       ];
 
       const getWorkersByZone = (zoneIndex) => {

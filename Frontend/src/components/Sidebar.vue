@@ -35,7 +35,7 @@
   <div class="sidebar">
     <div class="logo">
       <img src="@/assets/logo.png" alt="Logo" class="logo-icon" />
-      <span class="logo-text">Warehouse&nbsp;Workflow<br>Assigner™</span>
+      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Assigner™</span></span>
     </div>
     <div class="tabs">
       <template v-for="(tab, index) in tabs" :key="index">
@@ -84,7 +84,9 @@
   }
 
   .logo-text {
+    padding-top: 0.3rem;
     font-size: 1.1rem;
+    line-height: 1rem;
     font-weight: bold;
   }
 
