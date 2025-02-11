@@ -1,5 +1,12 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+    import overviewIcon from '../assets/icons/overview.svg';
+    import zonesIcon from '../assets/icons/zones.svg';
+    import staffIcon from '../assets/icons/staff.svg';
+    import tasksIcon from '../assets/icons/tasks.svg';
+    import simulationIcon from '../assets/icons/simulation.svg';
+    import graphIcon from '../assets/icons/graph.svg';
+
 
     const tabs = ref([
       { name: 'Overview', icon: 'overview-icon', path: '/' },
