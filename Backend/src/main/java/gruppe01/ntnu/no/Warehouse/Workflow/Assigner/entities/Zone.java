@@ -1,8 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
 import java.util.List;
 
@@ -10,15 +8,24 @@ import java.util.List;
 public class Zone {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "description")
     private String description;
 
+    @Column(name = "capacity")
     private int capacity;
 
     @OneToMany
+    @JoinTable(
+            name = "zone_task",
+            joinColumns = @JoinColumn(name = "zone_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
     private List<Task> tasks;
 
     public Zone() {

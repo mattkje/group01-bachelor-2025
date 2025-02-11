@@ -1,8 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.List;
 
@@ -10,12 +8,16 @@ import java.util.List;
 public class Worker {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name")
     private String name;
 
-    private String workerType;
+    @Column(name = "work_title")
+    private String workTitle;
 
+    @Column(name = "effectiveness")
     private double effectiveness;
 
     @ElementCollection
@@ -33,7 +35,7 @@ public class Worker {
     }
 
     public void setWorkerType(String workerType) {
-        this.workerType = workerType;
+        this.workTitle = workerType;
     }
 
     public void setEffectiveness(double effectiveness) {
@@ -53,7 +55,7 @@ public class Worker {
     }
 
     public String getWorkerType() {
-        return workerType;
+        return workTitle;
     }
 
     public double getEffectiveness() {
