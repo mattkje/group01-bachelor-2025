@@ -16,45 +16,61 @@
     <template>
       <div class="toolbar">
         <div class="toolbar-title">{{ props.title }}</div>
-        <div class="toolbar-item">
-          <img src="@/assets/icons/overview.svg" alt="Home" class="icon" />
-        </div>
-        <div class="toolbar-item">
-          <img src="@/assets/icons/overview.svg" alt="Search" class="icon" />
-        </div>
-        <div class="toolbar-item">
-          <img src="@/assets/icons/overview.svg" alt="Notifications" class="icon" />
-        </div>
-        <div class="toolbar-item">
-          <img src="@/assets/icons/overview.svg" alt="Profile" class="icon" />
-        </div>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/overview.svg" alt="Assign" />
+        </button>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/tasks.svg" alt="Assign" />
+        </button>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/simulation.svg" alt="Assign" />
+        </button>
+        <button v-if="false" class="toolbar-item">
+          <img src="/src/assets/icons/bell.svg" alt="Assign" />
+        </button>
+        <button v-if="true" class="toolbar-item">
+          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
+        </button>
       </div>
     </template>
 
-    <style scoped>
-    .toolbar {
-      display: flex;
-      justify-content: flex-end;
-      background-color: #ffffff;
-      padding: 1rem;
-      border-bottom: 1px solid #e0e0e0;
-      position: relative;
-    }
+  <style scoped>
+  .toolbar {
+    display: flex;
+    justify-content: flex-end;
+    background-color: #ffffff;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+  }
 
-    .toolbar-title {
-      position: absolute;
-      left: 1rem;
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
+  .toolbar-title {
+    position: absolute;
+    left: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
 
-    .toolbar-item {
-      margin-left: 1rem;
-    }
+  .toolbar-item {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 30px; /* Ensure consistent width */
+    height: 30px; /* Ensure consistent height */
+    margin-right: 1rem;
+    color: #b77979;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .icon {
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-    }
-    </style>
+  .toolbar-item img {
+    width: 100%; /* Make the image take the full width of the button */
+    height: auto; /* Maintain aspect ratio */
+  }
+
+  .toolbar-item:hover {
+    color: #000;
+  }
+  </style>

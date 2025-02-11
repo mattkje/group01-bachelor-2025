@@ -93,7 +93,7 @@
 
       <style scoped>
       .rounded-square {
-        width: 300px;
+        width: 280px;
         height: 100%;
         border: 1px solid #ccc;
         border-radius: 15px;
@@ -180,6 +180,6 @@
       }
 
       .bell-icon {
-        margin-left: 7.5rem;
+        margin-left: 6rem;
       }
       </style>
