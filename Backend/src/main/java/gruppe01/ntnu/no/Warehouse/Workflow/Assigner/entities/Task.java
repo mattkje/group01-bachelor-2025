@@ -14,9 +14,9 @@ public class Task {
 
     private String description;
 
-    private int maxTime;
+    private int maxDuration;
 
-    private int minTime;
+    private int minDuration;
 
     private int minWorkers;
 
@@ -40,11 +40,11 @@ public class Task {
     }
 
     public void setMaxTime(int maxTime) {
-        this.maxTime = maxTime;
+        this.maxDuration = maxTime;
     }
 
     public void setMinTime(int minTime) {
-        this.minTime = minTime;
+        this.minDuration = minTime;
     }
 
     public void setMinWorkers(int minWorkers) {
@@ -76,11 +76,11 @@ public class Task {
     }
 
     public int getMaxTime() {
-        return maxTime;
+        return maxDuration;
     }
 
     public int getMinTime() {
-        return minTime;
+        return minDuration;
     }
 
     public int getMinWorkers() {
