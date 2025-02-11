@@ -1,5 +1,6 @@
 package simulations;
 
+   import com.google.common.util.concurrent.AtomicDouble;
    import java.util.ArrayList;
    import java.util.List;
    import java.util.Random;
@@ -26,8 +27,12 @@ package simulations;
        // Setting up the simulation worker parameter
        int minWorkers = 8, maxWorkers = 10; // Number of workers active on a given day as a range
 
-       // Setting up the simulation task parameters
-       int minTasks = 10, maxTasks = 100; // Number of tasks on a given day as a range
+       // Setting up the zone parameters
+       int minZones = 1, maxZones = 8; // Number of zones in the warehouse as a range
+       int minZoneWorkers = 1, maxZoneWorkers = 3; // Number of workers in a zone as a range
+       int minZoneTasks = 1, maxZoneTasks = 20; // Number of tasks in a zone as a range
+
+
        int minTaskTime = 5, maxTaskTime = 30; // Time to complete each task as a range
        int minTaskWorkers = 1, maxTaskWorkers = 3; // Number of workers required to complete a task as a range
 
@@ -36,35 +41,65 @@ package simulations;
 
        for (int i = 0; i < simCount; i++) {
          futures.add(simulationExecutor.submit(() -> {
-           int tasks = random.nextInt(maxTasks - minTasks + 1) + minTasks;
+           int zones = random.nextInt(maxZones - minZones + 1) + minZones;
            int availableWorkers = random.nextInt(maxWorkers - minWorkers + 1) + minWorkers;
 
            ExecutorService executor = Executors.newFixedThreadPool(availableWorkers);
-           Semaphore semaphore = new Semaphore(availableWorkers);
+           Semaphore availableWorkersSemaphore = new Semaphore(availableWorkers);
 
-           double totalTaskTime = 0;
+           AtomicDouble totalTaskTime = new AtomicDouble(0);
+           for (int k = 0; k < zones; k++) {
+             int zoneWorkers = random.nextInt(maxZoneWorkers - minZoneWorkers + 1) + minZoneWorkers;
+             int zoneTasks = random.nextInt(maxZoneTasks - minZoneTasks + 1) + minZoneTasks;
 
-           for (int j = 0; j < tasks; j++) {
-             int taskWorkers = random.nextInt(maxTaskWorkers - minTaskWorkers + 1) + minTaskWorkers;
-             int taskTime = random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime;
-
-             executor.submit(() -> {
+               int finalK = k;
+               executor.submit(() -> {
                try {
-                 semaphore.acquire(taskWorkers);
-                 TimeUnit.MILLISECONDS.sleep(taskTime);
-                 semaphore.release(taskWorkers);
+                 availableWorkersSemaphore.acquire(zoneWorkers);
+
+                 // System.out.println("Zone " + finalK + " has " + zoneWorkers + " workers and " + zoneTasks + " tasks");
+
+                 ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers);
+                 Semaphore availableZoneWorkersSemaphore = new Semaphore(zoneWorkers);
+
+                 for (int j = 0; j < zoneTasks; j++) {
+                   int taskWorkers = random.nextInt(maxTaskWorkers - minTaskWorkers + 1) + minTaskWorkers;
+                   // TODO: Fix this temporary fix
+                   if (taskWorkers > zoneWorkers) {
+                     taskWorkers = zoneWorkers;
+                   }
+                   int taskTime = random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime;
+
+                     int finalJ = j;
+                   int finalTaskWorkers = taskWorkers;
+                   zoneExecutor.submit(() -> {
+                     try {
+                       availableZoneWorkersSemaphore.acquire(finalTaskWorkers);
+                       TimeUnit.MILLISECONDS.sleep(taskTime);
+                       // System.out.println("Task " + finalJ + " in zone " + finalK + " completed in " + taskTime + "ms");
+                       availableZoneWorkersSemaphore.release(finalTaskWorkers);
+                       // Update task time safely
+                       totalTaskTime.addAndGet(taskTime);
+
+                     } catch (InterruptedException e) {
+                       Thread.currentThread().interrupt();
+                     }
+                   });
+                 }
+                 availableWorkersSemaphore.release(zoneWorkers);
+                 zoneExecutor.shutdown();
+                 zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
+
                } catch (InterruptedException e) {
                  Thread.currentThread().interrupt();
                }
              });
 
-             totalTaskTime += taskTime;
            }
-
            executor.shutdown();
            executor.awaitTermination(1, TimeUnit.DAYS);
 
-           return totalTaskTime / availableWorkers;
+           return totalTaskTime.get() / availableWorkers;
          }));
        }
 
