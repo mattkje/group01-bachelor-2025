@@ -1,68 +1,164 @@
 CREATE DATABASE IF NOT EXISTS warehouse;
 USE warehouse;
 
-CREATE TABLE IF NOT EXISTS worker (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    workerType VARCHAR(255) NOT NULL,
-    effectiveness DOUBLE NOT NULL
+CREATE TABLE IF NOT EXISTS worker
+(
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(255) NOT NULL,
+    workerType    VARCHAR(255) NOT NULL,
+    effectiveness DOUBLE       NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS license (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS license
+(
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS worker_license (
-    worker_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS worker_license
+(
+    worker_id  INT NOT NULL,
     license_id INT NOT NULL,
-    FOREIGN KEY (worker_id) REFERENCES worker(id),
-    FOREIGN KEY (license_id) REFERENCES license(id)
+    FOREIGN KEY (worker_id) REFERENCES worker (id),
+    FOREIGN KEY (license_id) REFERENCES license (id)
 );
 
-CREATE TABLE IF NOT EXISTS zone (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS zone
+(
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(255) NOT NULL,
     description TEXT,
-    capacity INT NOT NULL
+    capacity    INT          NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS task (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    min_duration INT NOT NULL,
-    max_duration INT NOT NULL,
-    min_workers INT NOT NULL,
-    max_workers INT NOT NULL
+CREATE TABLE IF NOT EXISTS task
+(
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    name         VARCHAR(255) NOT NULL,
+    description  TEXT,
+    min_duration INT          NOT NULL,
+    max_duration INT          NOT NULL,
+    min_workers  INT          NOT NULL,
+    max_workers  INT          NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS active_task (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    task_id INT NOT NULL,
-    due_date DATE NOT NULL,
+CREATE TABLE IF NOT EXISTS active_task
+(
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    task_id    INT  NOT NULL,
+    due_date   DATE NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    FOREIGN KEY (task_id) REFERENCES task(id)
+    end_date   DATE NOT NULL,
+    FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
-CREATE TABLE IF NOT EXISTS active_task_worker (
+CREATE TABLE IF NOT EXISTS active_task_worker
+(
     active_task_id INT NOT NULL,
-    worker_id INT NOT NULL,
-    FOREIGN KEY (active_task_id) REFERENCES active_task(id),
-    FOREIGN KEY (worker_id) REFERENCES worker(id)
+    worker_id      INT NOT NULL,
+    FOREIGN KEY (active_task_id) REFERENCES active_task (id),
+    FOREIGN KEY (worker_id) REFERENCES worker (id)
 );
 
-CREATE TABLE IF NOT EXISTS task_license (
-    task_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS task_license
+(
+    task_id    INT NOT NULL,
     license_id INT NOT NULL,
-    FOREIGN KEY (task_id) REFERENCES task(id),
-    FOREIGN KEY (license_id) REFERENCES license(id)
+    FOREIGN KEY (task_id) REFERENCES task (id),
+    FOREIGN KEY (license_id) REFERENCES license (id)
 );
 
-CREATE TABLE IF NOT EXISTS zone_tasks (
+CREATE TABLE IF NOT EXISTS zone_tasks
+(
     zone_id INT NOT NULL,
     task_id INT NOT NULL,
-    FOREIGN KEY (zone_id) REFERENCES zone(id),
-    FOREIGN KEY (task_id) REFERENCES task(id)
+    FOREIGN KEY (zone_id) REFERENCES zone (id),
+    FOREIGN KEY (task_id) REFERENCES task (id)
 );
+
+CREATE TABLE IF NOT EXISTS zone_worker
+(
+    zone_id   INT NOT NULL,
+    worker_id INT NOT NULL,
+    FOREIGN KEY (zone_id) REFERENCES zone (id),
+    FOREIGN KEY (worker_id) REFERENCES worker (id)
+);
+
+INSERT INTO worker (name, workerType, effectiveness)
+VALUES ('John Doe', 'Warehouse Manager', 1),
+       ('Jane Smith', 'Warehouse Supervisor', 1),
+       ('Alice Johnson', 'Warehouse Technician', 1),
+       ('Bob Brown', 'Forklift Operator', 1),
+       ('Charlie Davis', 'Warehouse Engineer', 1),
+       ('Diana Evans', 'Inventory Clerk', 1),
+       ('Eve Foster', 'Logistics Analyst', 1),
+       ('Frank Green', 'Shipping Coordinator', 1),
+       ('Grace Harris', 'Quality Inspector', 1),
+       ('Hank Irving', 'Warehouse Specialist', 1),
+       ('Ivy Johnson', 'Warehouse Consultant', 1),
+       ('Jack King', 'Warehouse Planner', 1),
+       ('Karen Lee', 'Warehouse Designer', 1),
+       ('Leo Martin', 'Warehouse Developer', 1),
+       ('Mona Nelson', 'Warehouse Architect', 1);
+
+INSERT INTO zone (name, description, capacity)
+VALUES ('Receiving', 'Zone for receiving goods', 10),
+       ('Storage', 'Zone for storing goods', 15),
+       ('Picking', 'Zone for picking goods', 5),
+       ('Packing', 'Zone for packing goods', 7),
+       ('Shipping', 'Zone for shipping goods', 8),
+       ('Quality Control', 'Zone for quality control', 4),
+       ('Planning', 'Zone for planning', 6),
+       ('Execution', 'Zone for execution', 14),
+       ('Monitoring', 'Zone for monitoring', 2);
+
+INSERT INTO license (name)
+VALUES ('Truck License'),
+       ('Forklift License'),
+       ('Safety Training'),
+       ('First Aid Certification');
+
+-- Assuming worker IDs are from 1 to 15 and license IDs are from 1 to 4
+INSERT INTO worker_license (worker_id, license_id)
+VALUES (1, 1),
+       (1, 2),
+       (2, 3),
+       (3, 2),
+       (3, 4),
+       (4, 1),
+       (5, 2),
+       (5, 3),
+       (6, 4),
+       (7, 1),
+       (7, 3),
+       (8, 2),
+       (9, 3),
+       (9, 4),
+       (10, 1),
+       (11, 2),
+       (11, 4),
+       (12, 3),
+       (13, 1),
+       (13, 2),
+       (13, 3),
+       (14, 4),
+       (15, 1),
+       (15, 3);
+
+-- Assuming zone IDs are from 1 to 6
+INSERT INTO zone_worker (zone_id, worker_id)
+VALUES (1, 1),
+       (1, 2),
+       (1, 13),
+       (2, 3),
+       (2, 4),
+       (2, 14),
+       (3, 5),
+       (3, 6),
+       (3, 15),
+       (4, 7),
+       (4, 8),
+       (5, 9),
+       (5, 10),
+       (5, 11),
+       (6, 12);
