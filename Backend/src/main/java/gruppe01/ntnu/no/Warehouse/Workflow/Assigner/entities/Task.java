@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner;
+package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 

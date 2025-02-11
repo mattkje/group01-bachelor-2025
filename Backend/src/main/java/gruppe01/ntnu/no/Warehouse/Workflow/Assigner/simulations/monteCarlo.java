@@ -1,4 +1,4 @@
-package simulations;
+package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
    import com.google.common.util.concurrent.AtomicDouble;
    import java.util.ArrayList;
