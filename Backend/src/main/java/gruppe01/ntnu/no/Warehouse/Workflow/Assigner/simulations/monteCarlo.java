@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
+import java.awt.desktop.SystemSleepEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -27,14 +28,14 @@ public class monteCarlo {
     long startTime = System.currentTimeMillis();
 
     // Setting up the simulation
-    int simCount = 1; // Number of simulations
+    int simCount = 100; // Number of simulations
     Random random = new Random();
 
     // Setting up the simulation worker parameter
-    int minWorkers = 4, maxWorkers = 7; // Number of workers active on a given day as a range
+    int minWorkers = 4, maxWorkers = 12; // Number of workers active on a given day as a range
 
     // Setting up the zone parameters
-    int minZones = 1, maxZones = 1; // Number of zones in the warehouse as a range
+    int minZones = 1, maxZones = 8; // Number of zones in the warehouse as a range
     int minZoneWorkers = 1, maxZoneWorkers = 6; // Number of workers in a zone as a range
     int minZoneTasks = 1, maxZoneTasks = 20; // Number of tasks in a zone as a range
 
@@ -65,17 +66,21 @@ public class monteCarlo {
         System.out.println("Simulation " + finalI + " has " + availableWorkers + " workers and " + zones + " zones");
         for (int k = 0; k < zones; k++) {
           int zoneWorkers = random.nextInt(maxZoneWorkers - minZoneWorkers + 1) + minZoneWorkers;
+          if (zoneWorkers > availableWorkers) {
+            zoneWorkers = availableWorkers;
+          }
           int zoneTasks = random.nextInt(maxZoneTasks - minZoneTasks + 1) + minZoneTasks;
 
           int finalK = k;
+          int finalZoneWorkers = zoneWorkers;
           executor.submit(() -> {
             try {
-              availableWorkersSemaphore.acquire(zoneWorkers);
+              availableWorkersSemaphore.acquire(finalZoneWorkers);
 
-              System.out.println("Zone " + finalK + " has " + zoneWorkers + " workers and " + zoneTasks + " tasks");
+              System.out.println("Zone " + finalK + " has " + finalZoneWorkers + " workers and " + zoneTasks + " tasks, with a potential of " + maxZoneWorkers + " workers");
 
-              ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers);
-              Semaphore availableZoneWorkersSemaphore = new Semaphore(zoneWorkers);
+              ExecutorService zoneExecutor = Executors.newFixedThreadPool(finalZoneWorkers);
+              Semaphore availableZoneWorkersSemaphore = new Semaphore(finalZoneWorkers);
 
               for (int j = 0; j < zoneTasks; j++) {
                 int minTaskWorkers =
@@ -83,10 +88,10 @@ public class monteCarlo {
                 int maxTaskWorkers = random.nextInt(maxMaxTaskWorkers - maxMinTaskWorkers + 1) + maxMinTaskWorkers;
                 // TODO: Fix this temporary fix
                 // Essentially this will be made reduntant by actual values provided by the warehouse later on
-                if (minTaskWorkers > zoneWorkers) {
-                  minTaskWorkers = zoneWorkers;
-                } else if (maxTaskWorkers > zoneWorkers) {
-                  maxTaskWorkers = zoneWorkers;
+                if (minTaskWorkers > finalZoneWorkers) {
+                  minTaskWorkers = finalZoneWorkers;
+                } else if (maxTaskWorkers > finalZoneWorkers) {
+                  maxTaskWorkers = finalZoneWorkers;
                 } else if (maxTaskWorkers < minTaskWorkers) {
                   maxTaskWorkers = minTaskWorkers;
                 }
@@ -106,7 +111,7 @@ public class monteCarlo {
                       if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1, TimeUnit.MILLISECONDS)) {
                         acquiredWorkers += toAcquire;
                         System.out.println("Zone " + finalK + " Task " + finalJ + " Acquired " + toAcquire + " workers" + ", total acquired: " + acquiredWorkers + " here");
-                      } else if (acquiredWorkers < finalMinTaskWorkers) {
+                      } else if (acquiredWorkers < finalMinTaskWorkers && finalMinTaskWorkers < 2) {
                         if (availableZoneWorkersSemaphore.tryAcquire(1, 1, TimeUnit.MILLISECONDS)) {
                           acquiredWorkers++;
                           System.out.println("Zone " + finalK + " Task " + finalJ + " Acquired 1 worker, total acquired: " + acquiredWorkers);
@@ -135,10 +140,12 @@ public class monteCarlo {
                   }
                 });
               }
-              availableWorkersSemaphore.release(zoneWorkers);
+
               zoneExecutor.shutdown();
               zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
-
+              System.out.println("Zone " + finalK + " tasks submitted");
+              availableWorkersSemaphore.release(finalZoneWorkers);
+              System.out.println("Zone " + finalK + " workers released");
             } catch (InterruptedException e) {
               Thread.currentThread().interrupt();
             }
@@ -152,14 +159,17 @@ public class monteCarlo {
       }));
     }
 
+
     double totalCompletionTime = 0;
     for (Future<Double> future : futures) {
       totalCompletionTime += future.get();
     }
 
-    long endTime = System.currentTimeMillis();
+
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
+
+    long endTime = System.currentTimeMillis();
 
     double averageCompletionTime = totalCompletionTime / simCount;
     System.out.println("Average time to complete all tasks: " + averageCompletionTime);
