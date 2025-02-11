@@ -19,7 +19,7 @@ import Sidebar from './components/Sidebar.vue';
   justify-content: flex-start;
   align-items: center;
   height: 100vh;
-  width: calc(100vw - 1rem);
+  width: 100vw;
   background-color: #ffffff; /* Set background to white */
   padding: 0 1rem;
   box-sizing: border-box;
@@ -38,7 +38,7 @@ import Sidebar from './components/Sidebar.vue';
 .main-content {
   flex: 1;
   background-color: #ffffff; /* Set background to white */
-  padding: 1rem;
+  padding: 0;
   overflow-y: auto; /* Allow vertical scrolling if content overflows */
 }
 
