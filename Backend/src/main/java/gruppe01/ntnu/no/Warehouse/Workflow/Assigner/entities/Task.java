@@ -86,6 +86,10 @@ public class Task {
         this.zone = zone;
     }
 
+    public void setZoneId(long zoneId) {
+        this.zoneId = zoneId;
+    }
+
     public String getName() {
         return name;
     }
@@ -120,5 +124,9 @@ public class Task {
 
     public Zone getZone() {
         return zone;
+    }
+
+    public long getZoneId() {
+        return zoneId;
     }
 }

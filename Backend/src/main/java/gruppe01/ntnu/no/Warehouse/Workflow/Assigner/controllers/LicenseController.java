@@ -2,11 +2,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.LicenseRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,15 +13,30 @@ import java.util.List;
 public class LicenseController {
 
     @Autowired
-    private LicenseRepository licenseRepository;
+    private LicenseService licenseService;
 
     @GetMapping
     public List<License> getAllLicenses() {
-        return licenseRepository.findAll();
+        return licenseService.getAllLicenses();
     }
 
     @GetMapping("/{id}")
     public License getLicenseById(@PathVariable Long id) {
-        return licenseRepository.findById(id).orElse(null);
+        return licenseService.getLicenseById(id);
+    }
+
+    @PostMapping
+    public License createLicense(@RequestBody License license) {
+        return licenseService.createLicense(license);
+    }
+
+    @PutMapping("/{id}")
+    public License updateLicense(@PathVariable Long id, @RequestBody License license) {
+        return licenseService.updateLicense(id, license);
+    }
+
+    @DeleteMapping("/{id}")
+    public License deleteLicense(@PathVariable Long id) {
+        return licenseService.deleteLicense(id);
     }
 }
