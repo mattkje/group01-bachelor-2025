@@ -57,20 +57,20 @@
 
       .overview {
         flex: 1;
-        padding: 2rem;
+        padding: 1rem;
         max-height: 85vh; /* Set a fixed height */
         overflow-y: auto; /* Enable vertical scrolling */
       }
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
       }
 
       .worker-registry {
         position: sticky;
-        width: 300px;
+        width: 280px;
         max-height: 100%;
         padding: 1rem;
         border-left: 1px solid #ccc;
