@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -31,6 +32,10 @@ public class Worker {
     )
     private Set<License> licenses;
 
+    @ManyToOne
+    @JsonIgnore
+    private Zone zone;
+
     public Worker() {
     }
 
@@ -61,6 +66,10 @@ public class Worker {
         this.licenses = licenses;
     }
 
+    public void setZone(Zone zone) {
+        this.zone = zone;
+    }
+
     public Long getId() {
         return id;
     }
@@ -79,5 +88,9 @@ public class Worker {
 
     public Set<License> getLicenses() {
         return licenses;
+    }
+
+    public Zone getZone() {
+        return zone;
     }
 }

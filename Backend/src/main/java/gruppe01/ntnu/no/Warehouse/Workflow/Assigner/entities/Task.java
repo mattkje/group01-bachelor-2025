@@ -1,8 +1,10 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Task {
@@ -33,8 +35,13 @@ public class Task {
     @JoinColumn(name = "zone_id")
     private Zone zone;
 
-    @ElementCollection
-    private List<String> requiredLicense;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "task_license",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "license_id")
+    )
+    private Set<License> requiredLicense;
 
     @OneToMany(mappedBy = "task")
     private List<ActiveTask> activeTasks;
@@ -66,7 +73,7 @@ public class Task {
         this.maxWorkers = maxWorkers;
     }
 
-    public void setRequiredLicense(List<String> requiredLicense) {
+    public void setRequiredLicense(Set<License> requiredLicense) {
         this.requiredLicense = requiredLicense;
     }
 
@@ -102,7 +109,7 @@ public class Task {
         return maxWorkers;
     }
 
-    public List<String> getRequiredLicense() {
+    public Set<License> getRequiredLicense() {
         return requiredLicense;
     }
 

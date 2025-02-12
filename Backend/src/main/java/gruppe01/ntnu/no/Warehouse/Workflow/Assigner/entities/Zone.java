@@ -17,8 +17,11 @@ public class Zone {
     @Column(name = "capacity")
     private int capacity;
 
-    @OneToMany(mappedBy = "zone")
+    @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
     private List<Task> tasks;
+
+    @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+    private List<Worker> workers;
 
     public Zone() {
     }
@@ -39,6 +42,10 @@ public class Zone {
         this.tasks = tasks;
     }
 
+    public void setWorkers(List<Worker> workers) {
+        this.workers = workers;
+    }
+
     public Long getId() {
         return id;
     }
@@ -53,5 +60,9 @@ public class Zone {
 
     public List<Task> getTasks() {
         return tasks;
+    }
+
+    public List<Worker> getWorkers() {
+        return workers;
     }
 }

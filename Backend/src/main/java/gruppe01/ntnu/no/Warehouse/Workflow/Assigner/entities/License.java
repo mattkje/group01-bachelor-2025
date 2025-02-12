@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 
 import java.util.Set;
@@ -18,6 +19,10 @@ public class License {
     @ManyToMany(mappedBy = "licenses")
     @JsonIgnore
     private Set<Worker> workers;
+
+    @ManyToMany(mappedBy = "requiredLicense")
+    @JsonIgnore
+    private Set<Task> tasks;
 
     public License() {
     }
@@ -37,6 +42,10 @@ public class License {
         this.workers = workers;
     }
 
+    public void setTasks(Set<Task> tasks) {
+        this.tasks = tasks;
+    }
+
     public Long getId() {
         return id;
     }
@@ -47,5 +56,9 @@ public class License {
 
     public Set<Worker> getWorkers() {
         return workers;
+    }
+
+    public Set<Task> getTasks() {
+        return tasks;
     }
 }
