@@ -3,13 +3,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,5 +34,20 @@ public class ZoneController {
     @GetMapping("/{id}/tasks")
     public List<Task> getTasksByZoneId(@PathVariable Long id) {
         return zoneService.getTasksByZoneId(id);
+    }
+
+    @PostMapping
+    public Zone addZone(@RequestBody Zone zone) {
+        return zoneService.addZone(zone);
+    }
+
+    @PutMapping("/{id}")
+    public Zone updateZone(@PathVariable Long id, @RequestBody Zone zone) {
+        return zoneService.updateZone(id, zone);
+    }
+
+    @PutMapping("/{id}/workers")
+    public Zone addWorkerToZone(@PathVariable Long id, @RequestBody int workerId) {
+        return zoneService.addWorkerToZone(id, workerId);
     }
 }
