@@ -2,7 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Worker {
@@ -20,8 +20,8 @@ public class Worker {
     @Column(name = "effectiveness")
     private double effectiveness;
 
-    @ElementCollection
-    private List<String> licenses;
+    @OneToMany(mappedBy = "worker", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<License> licenses;
 
     public Worker() {
     }
@@ -42,7 +42,7 @@ public class Worker {
         this.effectiveness = effectiveness;
     }
 
-    public void setLicenses(List<String> licenses) {
+    public void setLicenses(Set<License> licenses) {
         this.licenses = licenses;
     }
 
@@ -62,7 +62,7 @@ public class Worker {
         return effectiveness;
     }
 
-    public List<String> getLicenses() {
+    public Set<License> getLicenses() {
         return licenses;
     }
 }
