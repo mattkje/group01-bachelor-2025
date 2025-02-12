@@ -14,18 +14,10 @@ public class Zone {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "description")
-    private String description;
-
     @Column(name = "capacity")
     private int capacity;
 
-    @OneToMany
-    @JoinTable(
-            name = "zone_task",
-            joinColumns = @JoinColumn(name = "zone_id"),
-            inverseJoinColumns = @JoinColumn(name = "task_id")
-    )
+    @OneToMany(mappedBy = "zone")
     private List<Task> tasks;
 
     public Zone() {
@@ -37,10 +29,6 @@ public class Zone {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public void setCapacity(int capacity) {
@@ -57,10 +45,6 @@ public class Zone {
 
     public String getName() {
         return name;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public int getCapacity() {

@@ -1,7 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,10 +14,12 @@ import java.util.List;
 public class WorkerController {
 
     @Autowired
-    private WorkerRepository workerRepository;
+    private WorkerService workerService;
 
     @GetMapping
     public List<Worker> getAllWorkers() {
-        return workerRepository.findAll();
+        return workerService.getAllWorkers();
     }
+
+
 }

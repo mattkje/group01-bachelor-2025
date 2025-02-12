@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS zone
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
-    description TEXT,
     capacity    INT          NOT NULL
 );
 
@@ -39,7 +38,9 @@ CREATE TABLE IF NOT EXISTS task
     min_duration INT          NOT NULL,
     max_duration INT          NOT NULL,
     min_workers  INT          NOT NULL,
-    max_workers  INT          NOT NULL
+    max_workers  INT          NOT NULL,
+    zone_id      BIGINT,
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
 );
 
 CREATE TABLE IF NOT EXISTS active_task
@@ -68,14 +69,6 @@ CREATE TABLE IF NOT EXISTS task_license
     FOREIGN KEY (license_id) REFERENCES license (id)
 );
 
-CREATE TABLE IF NOT EXISTS zone_task
-(
-    zone_id BIGINT NOT NULL,
-    task_id BIGINT NOT NULL,
-    FOREIGN KEY (zone_id) REFERENCES zone (id),
-    FOREIGN KEY (task_id) REFERENCES task (id)
-);
-
 CREATE TABLE IF NOT EXISTS zone_worker
 (
     zone_id   BIGINT NOT NULL,
@@ -101,16 +94,16 @@ VALUES ('John Doe', 'Warehouse Manager', 1),
        ('Leo Martin', 'Warehouse Developer', 1),
        ('Mona Nelson', 'Warehouse Architect', 1);
 
-INSERT INTO zone (name, description, capacity)
-VALUES ('Receiving', 'Zone for receiving goods', 10),
-       ('Storage', 'Zone for storing goods', 15),
-       ('Picking', 'Zone for picking goods', 5),
-       ('Packing', 'Zone for packing goods', 7),
-       ('Shipping', 'Zone for shipping goods', 8),
-       ('Quality Control', 'Zone for quality control', 4),
-       ('Planning', 'Zone for planning', 6),
-       ('Execution', 'Zone for execution', 14),
-       ('Monitoring', 'Zone for monitoring', 2);
+INSERT INTO zone (name, capacity)
+VALUES ('Receiving', 10),
+       ('Storage', 15),
+       ('Picking', 5),
+       ('Packing', 7),
+       ('Shipping', 8),
+       ('Quality Control', 4),
+       ('Planning', 6),
+       ('Execution', 14),
+       ('Monitoring', 2);
 
 INSERT INTO license (name)
 VALUES ('Truck License'),

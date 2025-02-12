@@ -29,6 +29,10 @@ public class Task {
     @Column(name = "max_workers")
     private int maxWorkers;
 
+    @ManyToOne
+    @JoinColumn(name = "zone_id")
+    private Zone zone;
+
     @ElementCollection
     private List<String> requiredLicense;
 
