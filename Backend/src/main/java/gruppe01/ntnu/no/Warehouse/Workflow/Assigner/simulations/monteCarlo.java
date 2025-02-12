@@ -1,7 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import java.awt.desktop.SystemSleepEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -24,12 +23,9 @@ public class monteCarlo {
   // TODO: Add machine learning to predict a day (Separate function)
   public static void main(String[] args) throws InterruptedException, ExecutionException {
 
-    // Testing purpose: See time used
+    // TODO: Testing purpose: See time used, remove later
     long startTime = System.currentTimeMillis();
 
-    // Setting up the simulation
-    int simCount = 1; // Number of simulations
-    Random random = new Random();
 
     // Setting up the simulation worker parameter
     int minWorkers = 4, maxWorkers = 5; // Number of workers active on a given day as a range
@@ -39,7 +35,7 @@ public class monteCarlo {
     int minZoneWorkers = 1, maxZoneWorkers = 6; // Number of workers in a zone as a range
     int minZoneTasks = 1, maxZoneTasks = 20; // Number of tasks in a zone as a range
 
-
+    // Setting up the task parameters
     int minTaskTime = 5, maxTaskTime = 30; // Time to complete each task as a range
     int minMinTaskWorkers = 5,
         minMaxTaskWorkers = 5; // Minimum number of workers required to complete a task as a range
@@ -48,49 +44,75 @@ public class monteCarlo {
         maxMaxTaskWorkers = 5; // Maximum number of workers able to work on a given task as a range
 
 
+    // Setting up the simulation
+    int simCount = 100; // Number of simulations
+    Random random = new Random();
     ExecutorService simulationExecutor =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Future<Double>> futures = new ArrayList<>();
 
+
+    // Run each simulation
     for (int i = 0; i < simCount; i++) {
-      int finalI = i;
+      int finalI = i; // TODO: Debugging purposes, remove later
+      // Add the conlcusion of the simulation to the futures list
       futures.add(simulationExecutor.submit(() -> {
+        // Calculate a random amount of zones and workers
         int zones = random.nextInt(maxZones - minZones + 1) + minZones;
         int availableWorkers = random.nextInt(maxWorkers - minWorkers + 1) + minWorkers;
 
-        ExecutorService executor = Executors.newFixedThreadPool(availableWorkers);
+        // Set up the simulation for each warehouse
+        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(availableWorkers);
+        // A warehouse semaphore to limit the number of workers
         Semaphore availableWorkersSemaphore = new Semaphore(availableWorkers);
 
+        // Total time to complete all tasks in a warehouse
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
+        //TODO: Debugging purposes, remove later
         System.out.println(
             "Simulation " + finalI + " has " + availableWorkers + " workers and " + zones +
                 " zones");
+
+        // Run the simulation for each zone in a warehouse
         for (int k = 0; k < zones; k++) {
+          // Calculate a random amount of workers and tasks for each zone
           int zoneWorkers = random.nextInt(maxZoneWorkers - minZoneWorkers + 1) + minZoneWorkers;
+          // Limit the number of workers to the available workers (Sim only)
           if (zoneWorkers > availableWorkers) {
             zoneWorkers = availableWorkers;
           }
+          // A try,catch requires this step to use the variable
+          int finalZoneWorkers = zoneWorkers;
           int zoneTasks = random.nextInt(maxZoneTasks - minZoneTasks + 1) + minZoneTasks;
 
+          // TODO: Debugging purposes, remove later
           int finalK = k;
-          int finalZoneWorkers = zoneWorkers;
-          executor.submit(() -> {
+
+
+          // Run zone simulation
+          warehouseExecutor.submit(() -> {
             try {
+              // A zone will attempt to acquire the amount of workers it needs
               availableWorkersSemaphore.acquire(finalZoneWorkers);
 
+              //TODO: Debugging purposes, remove later
               System.out.println(
                   "Zone " + finalK + " has " + finalZoneWorkers + " workers and " + zoneTasks +
                       " tasks, with a potential of " + maxZoneWorkers + " workers");
 
+              // Set up the zone simulation
               ExecutorService zoneExecutor = Executors.newFixedThreadPool(finalZoneWorkers);
               Semaphore availableZoneWorkersSemaphore = new Semaphore(finalZoneWorkers);
 
+              // Run the simulation for each task in a zone
               for (int j = 0; j < zoneTasks; j++) {
+                // Calculate a random amount of workers and time for each task
                 int minTaskWorkers =
                     random.nextInt(minMaxTaskWorkers - minMinTaskWorkers + 1) + minMinTaskWorkers;
                 int maxTaskWorkers =
                     random.nextInt(maxMaxTaskWorkers - maxMinTaskWorkers + 1) + maxMinTaskWorkers;
+
                 // TODO: Fix this temporary fix
                 // Essentially this will be made reduntant by actual values provided by the warehouse later on
                 if (minTaskWorkers > finalZoneWorkers) {
@@ -101,49 +123,60 @@ public class monteCarlo {
                   maxTaskWorkers = minTaskWorkers;
                 }
 
-
+                // Calculate the time to complete the task
                 final int[] taskTime =
                     {random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime};
+                //TODO: Debugging purposes, remove later
                 int finalJ = j;
                 int finalMinTaskWorkers = minTaskWorkers;
                 int finalMaxTaskWorkers = maxTaskWorkers;
+
                 zoneExecutor.submit(() -> {
                   try {
+                    // Initial amount of workers acquired for a task
                     int acquiredWorkers = 0;
                     System.out.println("Zone " + finalK + " Task " + finalJ + " started with " +
                         finalMinTaskWorkers + " to " + finalMaxTaskWorkers + " workers and " +
                         taskTime[0] + "ms");
 
+                    // Latch preventing a task from starting until the required workers are acquired
                     CountDownLatch latch = new CountDownLatch(1);
 
                     while (acquiredWorkers < finalMinTaskWorkers) {
+                      // Calculate the amount of workers to acquire
                       int toAcquire = finalMaxTaskWorkers - acquiredWorkers;
-                      System.out.println("Zone " + finalK + " Task " + finalJ + " trying to acquire " +
-                          toAcquire + " workers");
-                      if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1, TimeUnit.MILLISECONDS)) {
+                      //TODO: Debugging purposes, remove later
+                      System.out.println(
+                          "Zone " + finalK + " Task " + finalJ + " trying to acquire " +
+                              toAcquire + " workers");
+                      // Attempt to acquire the workers
+                      if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1,
+                          TimeUnit.MILLISECONDS)) {
+                        // Update the amount of workers acquired
                         acquiredWorkers += toAcquire;
-                        System.out.println(" Latch: "+latch.getCount());
+                        // Release the latch
                         latch.countDown();
-                        System.out.println(" Latch: "+latch.getCount());
                         System.out.println(
                             "Zone " + finalK + " Task " + finalJ + " Acquired " + toAcquire +
                                 " workers" + ", total acquired: " + acquiredWorkers + " here");
-                      }
-                        else if (availableZoneWorkersSemaphore.tryAcquire(finalMinTaskWorkers, 1, TimeUnit.MILLISECONDS)) {
-                          acquiredWorkers += finalMinTaskWorkers;
-
+                      } // If the wanted amount of workers are not available, try to aquire the minimum amount
+                      else if (availableZoneWorkersSemaphore.tryAcquire(finalMinTaskWorkers, 1,
+                          TimeUnit.MILLISECONDS)) {
+                        // Update the amount of workers acquired
+                        acquiredWorkers += finalMinTaskWorkers;
+                        // Release the latch
                         latch.countDown();
-                        System.out.println(" Latch: "+latch.getCount());
-                          System.out.println("Zone " + finalK + " Task " + finalJ +
-                              " Acquired 1 worker, total acquired: " + acquiredWorkers);
-                      } else {
+                        System.out.println("Zone " + finalK + " Task " + finalJ +
+                            " Acquired 1 worker, total acquired: " + acquiredWorkers);
+                      } // No workers available, wait
+                      else {
                         System.out.println("Zone " + finalK + " Task " + finalJ + " waiting for " +
                             (finalMinTaskWorkers - acquiredWorkers) + " workers");
                       }
                     }
 
                     latch.await(); // Wait until the required number of workers is acquired
-                    System.out.println("Past Latch");
+
                     long startTaskTime = System.currentTimeMillis();
                     while (System.currentTimeMillis() - startTaskTime < taskTime[0]) {
                       int additionalWorkers = finalMaxTaskWorkers - acquiredWorkers;
@@ -177,8 +210,8 @@ public class monteCarlo {
           });
 
         }
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.DAYS);
+        warehouseExecutor.shutdown();
+        warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
 
         return totalTaskTime.get() / availableWorkers;
       }));
