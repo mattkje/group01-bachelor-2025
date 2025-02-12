@@ -21,17 +21,20 @@ public class monteCarlo {
 
   // TODO: Integrate real data into this
   // TODO: Add machine learning to predict a day (Separate function)
+
+
+  private static final Random random = new Random();
   public static void main(String[] args) throws InterruptedException, ExecutionException {
+
 
     // TODO: Testing purpose: See time used, remove later
     long startTime = System.currentTimeMillis();
-
 
     // Setting up the simulation worker parameter
     int minWorkers = 4, maxWorkers = 5; // Number of workers active on a given day as a range
 
     // Setting up the zone parameters
-    int minZones = 1, maxZones = 8; // Number of zones in the warehouse as a range
+    int minZones = 6, maxZones = 8; // Number of zones in the warehouse as a range
     int minZoneWorkers = 1, maxZoneWorkers = 6; // Number of workers in a zone as a range
     int minZoneTasks = 1, maxZoneTasks = 20; // Number of tasks in a zone as a range
 
@@ -45,8 +48,7 @@ public class monteCarlo {
 
 
     // Setting up the simulation
-    int simCount = 100; // Number of simulations
-    Random random = new Random();
+    int simCount = 1; // Number of simulations
     ExecutorService simulationExecutor =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Future<Double>> futures = new ArrayList<>();
@@ -91,123 +93,9 @@ public class monteCarlo {
 
 
           // Run zone simulation
-          warehouseExecutor.submit(() -> {
-            try {
-              // A zone will attempt to acquire the amount of workers it needs
-              availableWorkersSemaphore.acquire(finalZoneWorkers);
-
-              //TODO: Debugging purposes, remove later
-              System.out.println(
-                  "Zone " + finalK + " has " + finalZoneWorkers + " workers and " + zoneTasks +
-                      " tasks, with a potential of " + maxZoneWorkers + " workers");
-
-              // Set up the zone simulation
-              ExecutorService zoneExecutor = Executors.newFixedThreadPool(finalZoneWorkers);
-              Semaphore availableZoneWorkersSemaphore = new Semaphore(finalZoneWorkers);
-
-              // Run the simulation for each task in a zone
-              for (int j = 0; j < zoneTasks; j++) {
-                // Calculate a random amount of workers and time for each task
-                int minTaskWorkers =
-                    random.nextInt(minMaxTaskWorkers - minMinTaskWorkers + 1) + minMinTaskWorkers;
-                int maxTaskWorkers =
-                    random.nextInt(maxMaxTaskWorkers - maxMinTaskWorkers + 1) + maxMinTaskWorkers;
-
-                // TODO: Fix this temporary fix
-                // Essentially this will be made reduntant by actual values provided by the warehouse later on
-                if (minTaskWorkers > finalZoneWorkers) {
-                  minTaskWorkers = finalZoneWorkers;
-                } else if (maxTaskWorkers > finalZoneWorkers) {
-                  maxTaskWorkers = finalZoneWorkers;
-                } else if (maxTaskWorkers < minTaskWorkers) {
-                  maxTaskWorkers = minTaskWorkers;
-                }
-
-                // Calculate the time to complete the task
-                final int[] taskTime =
-                    {random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime};
-                //TODO: Debugging purposes, remove later
-                int finalJ = j;
-                int finalMinTaskWorkers = minTaskWorkers;
-                int finalMaxTaskWorkers = maxTaskWorkers;
-
-                zoneExecutor.submit(() -> {
-                  try {
-                    // Initial amount of workers acquired for a task
-                    int acquiredWorkers = 0;
-                    System.out.println("Zone " + finalK + " Task " + finalJ + " started with " +
-                        finalMinTaskWorkers + " to " + finalMaxTaskWorkers + " workers and " +
-                        taskTime[0] + "ms");
-
-                    // Latch preventing a task from starting until the required workers are acquired
-                    CountDownLatch latch = new CountDownLatch(1);
-
-                    while (acquiredWorkers < finalMinTaskWorkers) {
-                      // Calculate the amount of workers to acquire
-                      int toAcquire = finalMaxTaskWorkers - acquiredWorkers;
-                      //TODO: Debugging purposes, remove later
-                      System.out.println(
-                          "Zone " + finalK + " Task " + finalJ + " trying to acquire " +
-                              toAcquire + " workers");
-                      // Attempt to acquire the workers
-                      if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1,
-                          TimeUnit.MILLISECONDS)) {
-                        // Update the amount of workers acquired
-                        acquiredWorkers += toAcquire;
-                        // Release the latch
-                        latch.countDown();
-                        System.out.println(
-                            "Zone " + finalK + " Task " + finalJ + " Acquired " + toAcquire +
-                                " workers" + ", total acquired: " + acquiredWorkers + " here");
-                      } // If the wanted amount of workers are not available, try to aquire the minimum amount
-                      else if (availableZoneWorkersSemaphore.tryAcquire(finalMinTaskWorkers, 1,
-                          TimeUnit.MILLISECONDS)) {
-                        // Update the amount of workers acquired
-                        acquiredWorkers += finalMinTaskWorkers;
-                        // Release the latch
-                        latch.countDown();
-                        System.out.println("Zone " + finalK + " Task " + finalJ +
-                            " Acquired 1 worker, total acquired: " + acquiredWorkers);
-                      } // No workers available, wait
-                      else {
-                        System.out.println("Zone " + finalK + " Task " + finalJ + " waiting for " +
-                            (finalMinTaskWorkers - acquiredWorkers) + " workers");
-                      }
-                    }
-
-                    latch.await(); // Wait until the required number of workers is acquired
-
-                    long startTaskTime = System.currentTimeMillis();
-                    while (System.currentTimeMillis() - startTaskTime < taskTime[0]) {
-                      int additionalWorkers = finalMaxTaskWorkers - acquiredWorkers;
-                      if (additionalWorkers > 0) {
-                        availableZoneWorkersSemaphore.tryAcquire(additionalWorkers, 1,
-                            TimeUnit.MILLISECONDS);
-                      }
-                      TimeUnit.MILLISECONDS.sleep(100);
-                    }
-
-                    System.out.println(
-                        "Zone " + finalK + " Task " + finalJ + " completed in " + taskTime[0] +
-                            "ms with " + acquiredWorkers + " workers");
-                    availableZoneWorkersSemaphore.release(acquiredWorkers);
-                    totalTaskTime.addAndGet(taskTime[0]);
-
-                  } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                  }
-                });
-              }
-
-              zoneExecutor.shutdown();
-              zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
-              System.out.println("Zone " + finalK + " tasks submitted");
-              availableWorkersSemaphore.release(finalZoneWorkers);
-              System.out.println("Zone " + finalK + " workers released");
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-          });
+          runZoneSimulation(finalK, finalZoneWorkers, zoneTasks, maxZoneWorkers,
+              minMaxTaskWorkers, minMinTaskWorkers, maxMaxTaskWorkers, maxMinTaskWorkers,
+              maxTaskTime, minTaskTime, totalTaskTime, availableWorkersSemaphore);
 
         }
         warehouseExecutor.shutdown();
@@ -232,5 +120,128 @@ public class monteCarlo {
     double averageCompletionTime = totalCompletionTime / simCount;
     System.out.println("Average time to complete all tasks: " + averageCompletionTime);
     System.out.println("Time taken: " + (endTime - startTime) + "ms");
+  }
+
+  private static void runZoneSimulation(int finalK, int finalZoneWorkers, int zoneTasks,
+                                        int maxZoneWorkers, int minMaxTaskWorkers,
+                                        int minMinTaskWorkers, int maxMaxTaskWorkers,
+                                        int maxMinTaskWorkers, int maxTaskTime, int minTaskTime,
+                                        AtomicDouble totalTaskTime,
+                                        Semaphore availableWorkersSemaphore) {
+    try {
+      // A zone will attempt to acquire the amount of workers it needs
+      availableWorkersSemaphore.acquire(finalZoneWorkers);
+
+      //TODO: Debugging purposes, remove later
+      System.out.println(
+          "Zone " + finalK + " has " + finalZoneWorkers + " workers and " + zoneTasks +
+              " tasks, with a potential of " + maxZoneWorkers + " workers");
+
+      // Set up the zone simulation
+      ExecutorService zoneExecutor = Executors.newFixedThreadPool(finalZoneWorkers);
+      Semaphore availableZoneWorkersSemaphore = new Semaphore(finalZoneWorkers);
+
+      // Run the simulation for each task in a zone
+      for (int j = 0; j < zoneTasks; j++) {
+        // Calculate a random amount of workers and time for each task
+        int minTaskWorkers =
+            random.nextInt(minMaxTaskWorkers - minMinTaskWorkers + 1) + minMinTaskWorkers;
+        int maxTaskWorkers =
+            random.nextInt(maxMaxTaskWorkers - maxMinTaskWorkers + 1) + maxMinTaskWorkers;
+
+        // TODO: Fix this temporary fix
+        // Essentially this will be made redundant by actual values provided by the warehouse later on
+        if (minTaskWorkers > finalZoneWorkers) {
+          minTaskWorkers = finalZoneWorkers;
+        } else if (maxTaskWorkers > finalZoneWorkers) {
+          maxTaskWorkers = finalZoneWorkers;
+        } else if (maxTaskWorkers < minTaskWorkers) {
+          maxTaskWorkers = minTaskWorkers;
+        }
+
+        // Calculate the time to complete the task
+        final int[] taskTime =
+            {random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime};
+        //TODO: Debugging purposes, remove later
+        int finalJ = j;
+        int finalMinTaskWorkers = minTaskWorkers;
+        int finalMaxTaskWorkers = maxTaskWorkers;
+
+        zoneExecutor.submit(() -> {
+          try {
+            // Initial amount of workers acquired for a task
+            int acquiredWorkers = 0;
+            System.out.println("Zone " + finalK + " Task " + finalJ + " started with " +
+                finalMinTaskWorkers + " to " + finalMaxTaskWorkers + " workers and " +
+                taskTime[0] + "ms");
+
+            // Latch preventing a task from starting until the required workers are acquired
+            CountDownLatch latch = new CountDownLatch(1);
+
+            while (acquiredWorkers < finalMinTaskWorkers) {
+              // Calculate the amount of workers to acquire
+              int toAcquire = finalMaxTaskWorkers - acquiredWorkers;
+              //TODO: Debugging purposes, remove later
+              System.out.println(
+                  "Zone " + finalK + " Task " + finalJ + " trying to acquire " +
+                      toAcquire + " workers");
+              // Attempt to acquire the workers
+              if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1,
+                  TimeUnit.MILLISECONDS)) {
+                // Update the amount of workers acquired
+                acquiredWorkers += toAcquire;
+                // Release the latch
+                latch.countDown();
+                System.out.println(
+                    "Zone " + finalK + " Task " + finalJ + " Acquired " + toAcquire +
+                        " workers" + ", total acquired: " + acquiredWorkers + " here");
+              } // If the wanted amount of workers are not available, try to acquire the minimum amount
+              else if (availableZoneWorkersSemaphore.tryAcquire(finalMinTaskWorkers, 1,
+                  TimeUnit.MILLISECONDS)) {
+                // Update the amount of workers acquired
+                acquiredWorkers += finalMinTaskWorkers;
+                // Release the latch
+                latch.countDown();
+                System.out.println("Zone " + finalK + " Task " + finalJ +
+                    " Acquired 1 worker, total acquired: " + acquiredWorkers);
+              } // No workers available, wait
+              else {
+                System.out.println("Zone " + finalK + " Task " + finalJ + " waiting for " +
+                    (finalMinTaskWorkers - acquiredWorkers) + " workers");
+              }
+            }
+
+            latch.await(); // Wait until the required number of workers is acquired
+
+            long startTaskTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTaskTime < taskTime[0]) {
+              int additionalWorkers = finalMaxTaskWorkers - acquiredWorkers;
+              if (additionalWorkers > 0) {
+                availableZoneWorkersSemaphore.tryAcquire(additionalWorkers, 1,
+                    TimeUnit.MILLISECONDS);
+              }
+              TimeUnit.MILLISECONDS.sleep(100);
+            }
+
+            System.out.println(
+                "Zone " + finalK + " Task " + finalJ + " completed in " + taskTime[0] +
+                    "ms with " + acquiredWorkers + " workers");
+            availableZoneWorkersSemaphore.release(acquiredWorkers);
+            totalTaskTime.addAndGet(taskTime[0]);
+
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+        });
+      }
+
+      zoneExecutor.shutdown();
+      zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
+      System.out.println("Zone " + finalK + " tasks submitted");
+      availableWorkersSemaphore.release(finalZoneWorkers);
+      System.out.println("Zone " + finalK + " workers released");
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 }
