@@ -162,6 +162,14 @@ VALUES (1, 1),
        (5, 11),
        (6, 12);
 
+INSERT INTO active_task (task_id, due_date, start_time, end_time)
+VALUES
+(1, '2023-12-01 17:00:00', '2023-12-01 09:00:00', '2023-12-01 17:00:00'),
+(2, '2023-12-02 18:00:00', '2023-12-02 10:00:00', '2023-12-02 18:00:00'),
+(3, '2023-12-03 19:00:00', '2023-12-03 11:00:00', '2023-12-03 19:00:00'),
+(4, '2023-12-04 20:00:00', '2023-12-04 12:00:00', '2023-12-04 20:00:00'),
+(5, '2023-12-05 21:00:00', '2023-12-05 13:00:00', '2023-12-05 21:00:00');
+
 INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
 VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2, 1),
        ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3, 1),
