@@ -50,6 +50,13 @@
           <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
         </button>
       </div>
+      <div v-if="title === 'Staff'" class="toolbar">
+        <div class="toolbar-title">{{ props.title }}</div>
+      </div>
+      <div v-if="title === 'Overview'" class="toolbar">
+        <div class="toolbar-title">{{ props.title }}</div>
+
+      </div>
     </template>
 
   <style scoped>
@@ -58,6 +65,7 @@
     justify-content: flex-end;
     background-color: #ffffff;
     padding: 1rem;
+    height: 4rem;
     border-bottom: 1px solid #e0e0e0;
     position: relative;
   }

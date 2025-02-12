@@ -6,7 +6,7 @@
             <Zone v-for="zone in zones" :key="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)"/>
           </div>
         </div>
-        <WorkerRegistry :workers="workers" />
+        <WorkerRegistry :workers="workers"  :zones="zones"/>
       </div>
     </template>
 

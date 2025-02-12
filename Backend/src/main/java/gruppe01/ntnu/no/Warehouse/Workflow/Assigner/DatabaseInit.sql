@@ -94,7 +94,9 @@ VALUES ('John Doe', 1, 'Warehouse Manager', 1, true),
        ('Jack King', 6,'Warehouse Planner', 1, true),
        ('Karen Lee', 7,'Warehouse Designer', 1, true),
        ('Leo Martin', 7,'Warehouse Developer', 1, false),
-       ('Mona Nelson', 7,'Warehouse Architect', 1, true);
+       ('Mona Nelson', 7,'Warehouse Architect', 1, true),
+       ('Vincent Holiday', 0,'Powerhouse Specialist', 1, false),
+       ('Gerrard Paul', 0,'Truck Mechanic', 1, true);
 
 INSERT INTO zone (name, capacity)
 VALUES ('Receiving', 10),
