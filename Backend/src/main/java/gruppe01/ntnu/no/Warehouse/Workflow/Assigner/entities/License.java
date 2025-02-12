@@ -21,6 +21,9 @@ public class License {
     public License() {
     }
 
+    public License(String forklift) {
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

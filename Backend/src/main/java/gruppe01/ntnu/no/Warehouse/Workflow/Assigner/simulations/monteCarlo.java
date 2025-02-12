@@ -1,6 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -32,6 +34,11 @@ public class monteCarlo {
 
     // Setting up the simulation worker parameter
     int minWorkers = 4, maxWorkers = 5; // Number of workers active on a given day as a range
+    List<Worker> workers = initializeWorkers();
+
+    for (Worker worker : workers) {
+      System.out.println(worker.getWorkerType());
+    }
 
     // Setting up the zone parameters
     int minZones = 6, maxZones = 8; // Number of zones in the warehouse as a range
@@ -120,6 +127,35 @@ public class monteCarlo {
     double averageCompletionTime = totalCompletionTime / simCount;
     System.out.println("Average time to complete all tasks: " + averageCompletionTime);
     System.out.println("Time taken: " + (endTime - startTime) + "ms");
+  }
+
+  /**
+   * Initialize the workers for the simulation
+   * Later on replaced by real worker data
+   * @return A list of workers active that day
+   */
+  private static List<Worker> initializeWorkers() {
+    List<Worker> workers = new ArrayList<>();
+    workers.add(new Worker("Anna Jane", "Packaging Specialist", 1.0, new ArrayList<License>() {{
+      add(new License("Forklift"));
+    }}));
+    workers.add(new Worker("John Doe", "Crane Operator", 1.0, new ArrayList<License>() {{
+      add(new License("Crane Operator"));
+    }}));
+    workers.add(new Worker("Jane Doe", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+    workers.add(new Worker("John Smith", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+    workers.add(new Worker("Jane Smith", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+    workers.add(new Worker("John Johnson", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+    workers.add(new Worker("Jane Johnson", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+    workers.add(new Worker("John Brown", "Warehouse", 1.0, new ArrayList<License>() {{
+    }}));
+
+    return workers;
   }
 
   private static void runZoneSimulation(int finalK, int finalZoneWorkers, int zoneTasks,
