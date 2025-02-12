@@ -23,7 +23,12 @@ public class Worker {
     @Column(name = "effectiveness")
     private double effectiveness;
 
-    @OneToMany(mappedBy = "worker", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "worker_license",
+            joinColumns = @JoinColumn(name = "worker_id"),
+            inverseJoinColumns = @JoinColumn(name = "license_id")
+    )
     private Set<License> licenses;
 
     public Worker() {

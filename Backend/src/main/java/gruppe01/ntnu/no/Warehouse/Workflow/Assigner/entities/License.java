@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.Set;
@@ -14,9 +15,9 @@ public class License {
     @Column(name = "name")
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "worker_id")
-    private Worker worker;
+    @ManyToMany(mappedBy = "licenses")
+    @JsonIgnore
+    private Set<Worker> workers;
 
     public License() {
     }
@@ -32,8 +33,8 @@ public class License {
         this.name = name;
     }
 
-    public void setWorker(Worker worker) {
-        this.worker = worker;
+    public void setWorkers(Set<Worker> workers) {
+        this.workers = workers;
     }
 
     public Long getId() {
@@ -44,7 +45,7 @@ public class License {
         return name;
     }
 
-    public Worker getWorker() {
-        return worker;
+    public Set<Worker> getWorkers() {
+        return workers;
     }
 }
