@@ -1,6 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -33,7 +33,11 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "zone_id")
+    @JsonIgnore
     private Zone zone;
+
+    @Column(name = "zone_id", insertable = false, updatable = false)
+    private long zoneId;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -42,9 +46,6 @@ public class Task {
             inverseJoinColumns = @JoinColumn(name = "license_id")
     )
     private Set<License> requiredLicense;
-
-    @OneToMany(mappedBy = "task")
-    private List<ActiveTask> activeTasks;
 
     public Task() {
     }
@@ -77,12 +78,12 @@ public class Task {
         this.requiredLicense = requiredLicense;
     }
 
-    public void setActiveTasks(List<ActiveTask> activeTasks) {
-        this.activeTasks = activeTasks;
-    }
-
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setZone(Zone zone) {
+        this.zone = zone;
     }
 
     public String getName() {
@@ -113,11 +114,11 @@ public class Task {
         return requiredLicense;
     }
 
-    public List<ActiveTask> getActiveTasks() {
-        return activeTasks;
-    }
-
     public Long getId() {
         return id;
+    }
+
+    public Zone getZone() {
+        return zone;
     }
 }

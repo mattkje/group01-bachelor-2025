@@ -24,6 +24,9 @@ public class ActiveTask {
     @Column(name = "end_time")
     private Date endTime;
 
+    @Column(name = "strict_start")
+    private boolean strict_start;
+
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
@@ -63,6 +66,10 @@ public class ActiveTask {
         this.dueDate = dueDate;
     }
 
+    public void setStrictStart(boolean strict_start) {
+        this.strict_start = strict_start;
+    }
+
     public Date getDueDate() {
         return dueDate;
     }
@@ -85,5 +92,9 @@ public class ActiveTask {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean getStrictStart() {
+        return strict_start;
     }
 }

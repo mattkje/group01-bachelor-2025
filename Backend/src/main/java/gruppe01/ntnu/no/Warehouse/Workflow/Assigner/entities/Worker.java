@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class Worker {

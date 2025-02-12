@@ -3,11 +3,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/workers")
@@ -21,5 +20,33 @@ public class WorkerController {
         return workerService.getAllWorkers();
     }
 
+    @GetMapping("/available")
+    public List<Worker> getAvailableWorkers() {
+        return workerService.getAvailableWorkers();
+    }
 
+    @GetMapping("/unavailable")
+    public List<Worker> getUnavailableWorkers() {
+        return workerService.getUnavailableWorkers();
+    }
+
+    @GetMapping("/{id}")
+    public Optional<Worker> getWorkerById(@PathVariable Long id) {
+        return workerService.getWorkerById(id);
+    }
+
+    @PostMapping
+    public Worker addWorker(@RequestBody Worker worker) {
+        return workerService.addWorker(worker);
+    }
+
+    @PutMapping("/{id}")
+    public Worker updateWorker(@PathVariable Long id, @RequestBody Worker worker) {
+        return workerService.updateWorker(id, worker);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteWorker(@PathVariable Long id) {
+        workerService.deleteWorker(id);
+    }
 }

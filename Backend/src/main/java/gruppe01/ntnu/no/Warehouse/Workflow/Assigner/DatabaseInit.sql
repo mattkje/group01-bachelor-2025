@@ -49,9 +49,11 @@ CREATE TABLE IF NOT EXISTS active_task
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     task_id    BIGINT NOT NULL,
-    due_date   TIMESTAMP NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time   TIMESTAMP NOT NULL,
+    strict_start BOOLEAN DEFAULT FALSE,
+    date       DATE NOT NULL,
+    due_date   TIMESTAMP,
+    start_time TIMESTAMP,
+    end_time   TIMESTAMP,
     FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
@@ -160,14 +162,14 @@ VALUES (1, 1),
        (5, 11),
        (6, 12);
 
-INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers)
-VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2),
-       ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3),
-       ('Order Processing', 'Process customer orders for shipment', 3, 5, 2, 4),
-       ('Quality Inspection', 'Inspect the quality of incoming goods', 2, 4, 1, 2),
-       ('Package Orders', 'Package customer orders for delivery', 1, 2, 1, 2),
-       ('Load Trucks', 'Load trucks with outgoing shipments', 2, 3, 2, 3),
-       ('Unload Trucks', 'Unload trucks with incoming shipments', 2, 3, 2, 3),
-       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1),
-       ('Label Products', 'Label products with barcodes', 1, 2, 1, 2),
-       ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2);
+INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
+VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2, 1),
+       ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3, 1),
+       ('Order Processing', 'Process customer orders for shipment', 3, 5, 2, 4, 1),
+       ('Quality Inspection', 'Inspect the quality of incoming goods', 2, 4, 1, 2, 2),
+       ('Package Orders', 'Package customer orders for delivery', 1, 2, 1, 2, 2),
+       ('Load Trucks', 'Load trucks with outgoing shipments', 2, 3, 2, 3, 4),
+       ('Unload Trucks', 'Unload trucks with incoming shipments', 2, 3, 2, 3, 4),
+       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1, 5),
+       ('Label Products', 'Label products with barcodes', 1, 2, 1, 2, 8),
+       ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2, 8);
