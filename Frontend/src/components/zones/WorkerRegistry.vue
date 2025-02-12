@@ -2,14 +2,6 @@
 import {ref, computed, defineProps} from 'vue';
     import Worker from '@/components/zones/Worker.vue';
 
-    interface Worker {
-      name: string;
-      zone: number;
-      licenses: number[];
-      task: string;
-      eta: string;
-      available: boolean;
-    }
 
     const props = defineProps<{
       workers: Worker[];
@@ -30,9 +22,9 @@ import {ref, computed, defineProps} from 'vue';
     const filteredWorkers = computed(() => {
       return props.workers.filter(worker => {
         const matchesSearch = worker.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-        const matchesLicenses = selectedLicenses.value.length === 0 || selectedLicenses.value.every(license => worker.licenses.includes(license));
-        const matchesAvailability = showAvailableOnly.value ? worker.available : true;
-        const shouldIncludeUnavailable = searchQuery.value ? true : worker.available;
+const matchesLicenses = selectedLicenses.value.length === 0 || selectedLicenses.value.every(license => worker.licenses.map(l => l.id).includes(license));
+        const matchesAvailability = showAvailableOnly.value ? worker.availability : true;
+        const shouldIncludeUnavailable = searchQuery.value ? true : worker.availability;
         return matchesSearch && matchesLicenses && matchesAvailability && shouldIncludeUnavailable;
       });
     });
@@ -57,7 +49,13 @@ import {ref, computed, defineProps} from 'vue';
           </label>
         </div>
         <div class="worker-list">
-          <Worker v-for="(worker, index) in filteredWorkers" :key="index" :name="worker.name" :licenses="worker.licenses" :task="worker.task" :eta="worker.eta"  :available="worker.available" :class="{ 'unavailable': !worker.available }" qualified/>
+          <Worker v-for="(worker, index) in filteredWorkers"
+                  :key="index"
+                  :name="worker.name"
+                  :zone_id="worker.zone_id"
+                  :licenses="worker.licenses"
+                  :availability="worker.availability"
+                  :class="{ 'unavailable': !worker.availability }"/>
         </div>
       </div>
     </template>

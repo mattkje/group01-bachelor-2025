@@ -10,22 +10,10 @@
             type: Array,
             required: true
           },
-          task: {
-            type: String,
-            required: true
-          },
-          eta: {
-            type: String,
-            required: true
-          },
-          available: {
+          availability: {
             type: Boolean,
             required: true
           },
-          qualified: {
-            type: Boolean,
-            required: true
-          }
         });
 
         const licensesList = [
@@ -40,19 +28,18 @@
           <div class="worker">
             <div class="worker-name">{{ name }}</div>
             <div class="worker-licenses">
-              <span v-for="(license, index) in licenses" :key="index" class="license">{{ licensesList[license] }}</span>
+              <span v-for="(license, index) in licenses" :key="index" class="license">{{ license.name }}</span>
             </div>
             <hr />
             <div class="worker-status-container">
               <div>
-                <div v-if="available && !(eta === '0' || task === 'None')" class="worker-task">Task: {{ task }}</div>
-                <div v-if="available && !(eta === '0' || task === 'None')" class="worker-eta">ETA: {{ eta }}</div>
+                <div v-if="availability" class="worker-task">Task: 1</div>
+                <div v-if="availability" class="worker-eta">ETA: 1</div>
               </div>
               <div>
-                <div v-if="!qualified" class="worker-status worker-unqualified">Unqualified</div>
-                <div v-if="available && (eta === '0' || task === 'None')" class="worker-status worker-Ready">Ready</div>
-                <div v-if="available && !(eta === '0' || task === 'None')" class="worker-status worker-busy">Busy</div>
-                <div v-if="!available" class="worker-status worker-busy">Unavailable</div>
+
+                <div v-if="availability" class="worker-status worker-busy">Busy</div>
+                <div v-if="!availability" class="worker-status worker-busy">Unavailable</div>
               </div>
 
             </div>

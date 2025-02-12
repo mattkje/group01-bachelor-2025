@@ -1,27 +1,20 @@
 CREATE DATABASE IF NOT EXISTS warehouse;
 USE warehouse;
 
-CREATE TABLE IF NOT EXISTS license
-(
-    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS zone
-(
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name        VARCHAR(255) NOT NULL,
-    capacity    INT          NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS worker
 (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     name          VARCHAR(255) NOT NULL,
+    zone_id       BIGINT,
     work_title    VARCHAR(255) NOT NULL,
     effectiveness DOUBLE       NOT NULL,
-    zone_id       BIGINT       NOT NULL,
-    FOREIGN KEY (zone_id) REFERENCES zone (id)
+    availability  BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS license
+(
+    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS worker_license
@@ -30,6 +23,13 @@ CREATE TABLE IF NOT EXISTS worker_license
     license_id BIGINT NOT NULL,
     FOREIGN KEY (worker_id) REFERENCES worker (id),
     FOREIGN KEY (license_id) REFERENCES license (id)
+);
+
+CREATE TABLE IF NOT EXISTS zone
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
+    name        VARCHAR(255) NOT NULL,
+    capacity    INT          NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS task
@@ -71,6 +71,31 @@ CREATE TABLE IF NOT EXISTS task_license
     FOREIGN KEY (license_id) REFERENCES license (id)
 );
 
+CREATE TABLE IF NOT EXISTS zone_worker
+(
+    zone_id   BIGINT NOT NULL,
+    worker_id BIGINT NOT NULL,
+    FOREIGN KEY (zone_id) REFERENCES zone (id),
+    FOREIGN KEY (worker_id) REFERENCES worker (id)
+);
+
+INSERT INTO worker (name, zone_id, work_title, effectiveness, availability)
+VALUES ('John Doe', 1, 'Warehouse Manager', 1, true),
+       ('Jane Smith', 1, 'Warehouse Supervisor', 1, true),
+       ('Alice Johnson', 2,'Warehouse Technician', 1, true),
+       ('Bob Brown',2, 'Forklift Operator', 1, false),
+       ('Charlie Davis',3, 'Warehouse Engineer', 1, true),
+       ('Diana Evans', 3,'Inventory Clerk', 1, true),
+       ('Eve Foster', 4,'Logistics Analyst', 1, true),
+       ('Frank Green', 4,'Shipping Coordinator', 1, true),
+       ('Grace Harris',5, 'Quality Inspector', 1, false),
+       ('Hank Irving', 5,'Warehouse Specialist', 1, true),
+       ('Ivy Johnson', 6,'Warehouse Consultant', 1, true),
+       ('Jack King', 6,'Warehouse Planner', 1, true),
+       ('Karen Lee', 7,'Warehouse Designer', 1, true),
+       ('Leo Martin', 7,'Warehouse Developer', 1, false),
+       ('Mona Nelson', 7,'Warehouse Architect', 1, true);
+
 INSERT INTO zone (name, capacity)
 VALUES ('Receiving', 10),
        ('Storage', 15),
@@ -81,24 +106,6 @@ VALUES ('Receiving', 10),
        ('Planning', 6),
        ('Execution', 14),
        ('Monitoring', 2);
-
-
-INSERT INTO worker (name, work_title, effectiveness, zone_id)
-VALUES ('John Doe', 'Warehouse Manager', 1, 1),
-       ('Jane Smith', 'Warehouse Supervisor', 1, 1),
-       ('Alice Johnson', 'Warehouse Technician', 1, 2),
-       ('Bob Brown', 'Forklift Operator', 1, 2),
-       ('Charlie Davis', 'Warehouse Engineer', 1, 2),
-       ('Diana Evans', 'Inventory Clerk', 1, 2),
-       ('Eve Foster', 'Logistics Analyst', 1, 3),
-       ('Frank Green', 'Shipping Coordinator', 1, 3),
-       ('Grace Harris', 'Quality Inspector', 1, 4),
-       ('Hank Irving', 'Warehouse Specialist', 1, 5),
-       ('Ivy Johnson', 'Warehouse Consultant', 1, 5),
-       ('Jack King', 'Warehouse Planner', 1, 8),
-       ('Karen Lee', 'Warehouse Designer', 1, 8),
-       ('Leo Martin', 'Warehouse Developer', 1, 8),
-       ('Mona Nelson', 'Warehouse Architect', 1, 8);
 
 INSERT INTO license (name)
 VALUES ('Truck License'),
@@ -133,14 +140,32 @@ VALUES (1, 1),
        (15, 1),
        (15, 3);
 
-INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
-VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2, 1),
-       ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3, 2),
-       ('Order Processing', 'Process customer orders for shipment', 3, 5, 2, 4, 3),
-       ('Quality Inspection', 'Inspect the quality of incoming goods', 2, 4, 1, 2, 4),
-       ('Package Orders', 'Package customer orders for delivery', 1, 2, 1, 2, 5),
-       ('Load Trucks', 'Load trucks with outgoing shipments', 2, 3, 2, 3, 6),
-       ('Unload Trucks', 'Unload trucks with incoming shipments', 2, 3, 2, 3, 7),
-       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1, 8),
-       ('Label Products', 'Label products with barcodes', 1, 2, 1, 2, 9),
-       ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2, 1);
+-- Assuming zone IDs are from 1 to 6
+INSERT INTO zone_worker (zone_id, worker_id)
+VALUES (1, 1),
+       (1, 2),
+       (1, 13),
+       (2, 3),
+       (2, 4),
+       (2, 14),
+       (3, 5),
+       (3, 6),
+       (3, 15),
+       (4, 7),
+       (4, 8),
+       (5, 9),
+       (5, 10),
+       (5, 11),
+       (6, 12);
+
+INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers)
+VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2),
+       ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3),
+       ('Order Processing', 'Process customer orders for shipment', 3, 5, 2, 4),
+       ('Quality Inspection', 'Inspect the quality of incoming goods', 2, 4, 1, 2),
+       ('Package Orders', 'Package customer orders for delivery', 1, 2, 1, 2),
+       ('Load Trucks', 'Load trucks with outgoing shipments', 2, 3, 2, 3),
+       ('Unload Trucks', 'Unload trucks with incoming shipments', 2, 3, 2, 3),
+       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1),
+       ('Label Products', 'Label products with barcodes', 1, 2, 1, 2),
+       ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2);

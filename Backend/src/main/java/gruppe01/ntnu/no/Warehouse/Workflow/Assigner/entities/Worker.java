@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -18,11 +17,17 @@ public class Worker {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "zone_id")
+    private int zone;
+
     @Column(name = "work_title")
     private String workTitle;
 
     @Column(name = "effectiveness")
     private double effectiveness;
+
+    @Column(name = "availability")
+    private boolean availability;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -32,18 +37,16 @@ public class Worker {
     )
     private Set<License> licenses;
 
-    @ManyToOne
-    @JsonIgnore
-    private Zone zone;
-
     public Worker() {
     }
 
-    public Worker(String name, String workTitle, double effectiveness, ArrayList<License> licenses) {
+    public Worker(String name, int zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {
         this.name = name;
+        this.zone = zone;
         this.workTitle = workTitle;
         this.effectiveness = effectiveness;
         this.licenses = new HashSet<>(licenses);
+        this.availability = availability;
     }
 
     public void setId(Long id) {
@@ -66,10 +69,6 @@ public class Worker {
         this.licenses = licenses;
     }
 
-    public void setZone(Zone zone) {
-        this.zone = zone;
-    }
-
     public Long getId() {
         return id;
     }
@@ -90,7 +89,19 @@ public class Worker {
         return licenses;
     }
 
-    public Zone getZone() {
+    public int getZone() {
         return zone;
+    }
+
+    public void setZone(int zone) {
+        this.zone = zone;
+    }
+
+    public boolean isAvailability() {
+        return availability;
+    }
+
+    public void setAvailability(boolean availability) {
+        this.availability = availability;
     }
 }
