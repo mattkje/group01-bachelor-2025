@@ -162,3 +162,15 @@ VALUES (1, 1),
        (5, 10),
        (5, 11),
        (6, 12);
+
+INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers)
+VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2),
+       ('Restock Shelves', 'Restock the shelves with new inventory', 1, 3, 1, 3),
+       ('Order Processing', 'Process customer orders for shipment', 3, 5, 2, 4),
+       ('Quality Inspection', 'Inspect the quality of incoming goods', 2, 4, 1, 2),
+       ('Package Orders', 'Package customer orders for delivery', 1, 2, 1, 2),
+       ('Load Trucks', 'Load trucks with outgoing shipments', 2, 3, 2, 3),
+       ('Unload Trucks', 'Unload trucks with incoming shipments', 2, 3, 2, 3),
+       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1),
+       ('Label Products', 'Label products with barcodes', 1, 2, 1, 2),
+       ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2);

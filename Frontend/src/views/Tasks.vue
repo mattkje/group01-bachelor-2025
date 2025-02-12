@@ -92,7 +92,7 @@
     </template>
 
     <script setup lang="ts">
-    import { ref, computed } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
     import Toolbar from "@/components/Toolbar.vue";
 
     interface Task {
@@ -112,47 +112,8 @@
       name: string;
     }
 
-    const tasks = ref<Task[]>([
-      {
-        id: 1,
-        name: 'Task 1',
-        description: 'Description for Task 1',
-        estimatedTime: '2 hours',
-        zone: 1,
-        workers: '3',
-        requiredLicenses: 'License A',
-        deadline: '2023-12-01',
-        status: 'Pending'
-      },
-      {
-        id: 2,
-        name: 'Task 2',
-        description: 'Description for Task 2',
-        estimatedTime: '3 hours',
-        zone: 2,
-        workers: '2-4',
-        requiredLicenses: 'License B',
-        deadline: '2023-12-02',
-        status: 'In Progress'
-      },
-      {
-        id: 3,
-        name: 'Task 3',
-        description: 'Description for Task 3',
-        estimatedTime: '1 hour',
-        zone: 1,
-        workers: '3 - Chesse Pizza',
-        requiredLicenses: 'License C',
-        deadline: '2023-12-03',
-        status: 'Completed'
-      }
-    ]);
-
-    const zones = ref<Zone[]>([
-      { id: 1, name: 'Zone 1' },
-      { id: 2, name: 'Zone 2' },
-      { id: 3, name: 'Zone 3' }
-    ]);
+    const tasks = ref<Task[]>([]);
+    const zones = ref<Zone[]>([]);
 
     const currentPage = ref(1);
     const tasksPerPage = 10;
@@ -161,6 +122,37 @@
     const currentTask = ref<Task | null>(null);
     const statusFilter = ref('');
     const selectedZones = ref<number[]>([]);
+
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/tasks');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        tasks.value = data;
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      }
+    };
+
+    const fetchZones = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/zones');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        zones.value = data;
+      } catch (error) {
+        console.error('Failed to fetch zones:', error);
+      }
+    };
+
+    onMounted(() => {
+      fetchTasks();
+      fetchZones();
+    });
 
     const filteredTasks = computed(() => {
       const start = (currentPage.value - 1) * tasksPerPage;
