@@ -87,6 +87,7 @@
               :qualified="!isWorkerQualified(worker)"
               :class="{ 'unavailable': !worker.available}"
             />
+            <p v-if="workers.length === 0" style="text-align: center; margin-top: 1rem;">No workers assigned</p>
           </div>
         </div>
       </template>

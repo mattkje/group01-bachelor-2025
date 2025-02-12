@@ -14,7 +14,7 @@
     </script>
 
     <template>
-      <div class="toolbar">
+      <div v-if="title === 'Zones'" class="toolbar">
         <div class="toolbar-title">{{ props.title }}</div>
         <button class="toolbar-item">
           <img src="/src/assets/icons/overview.svg" alt="Assign" />
@@ -24,6 +24,24 @@
         </button>
         <button class="toolbar-item">
           <img src="/src/assets/icons/simulation.svg" alt="Assign" />
+        </button>
+        <button v-if="false" class="toolbar-item">
+          <img src="/src/assets/icons/bell.svg" alt="Assign" />
+        </button>
+        <button v-if="true" class="toolbar-item">
+          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
+        </button>
+      </div>
+      <div v-if="title === 'Tasks'" class="toolbar">
+        <div class="toolbar-title">{{ props.title }}</div>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/edit.svg" alt="Assign" />
+        </button>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/trash.svg" alt="Assign" />
+        </button>
+        <button class="toolbar-item">
+          <img src="/src/assets/icons/add.svg" alt="Assign" />
         </button>
         <button v-if="false" class="toolbar-item">
           <img src="/src/assets/icons/bell.svg" alt="Assign" />

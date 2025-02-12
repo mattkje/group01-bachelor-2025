@@ -1,15 +1,310 @@
 <template>
-  <div class="overview">
-    <h1>Tasks</h1>
-    <p>Welcome to the Tasks page.</p>
-  </div>
-</template>
+      <Toolbar title="Tasks"/>
+      <div class="content">
+        <div class="main-content">
+          <table class="task-table">
+            <thead>
+            <tr>
+              <th @click="sortTable('name')">Task Name</th>
+              <th @click="sortTable('description')">Description</th>
+              <th @click="sortTable('estimatedTime')">Estimated Time</th>
+              <th @click="sortTable('zone')">Zone</th>
+              <th @click="sortTable('workers')">Workers</th>
+              <th @click="sortTable('requiredLicenses')">Required Licenses</th>
+              <th @click="sortTable('deadline')">Deadline</th>
+              <th @click="sortTable('status')">Status</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="task in filteredTasks" :key="task.id">
+              <td>{{ task.name }}</td>
+              <td>{{ task.description }}</td>
+              <td>{{ task.estimatedTime }}</td>
+              <td>{{ task.zone }}</td>
+              <td>{{ task.workers }}</td>
+              <td>{{ task.requiredLicenses }}</td>
+              <td>{{ task.deadline }}</td>
+              <td>{{ task.status }}</td>
+              <td>
+                <button @click="editTask(task)">Edit</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+          </div>
+        </div>
+        <div class="filter-menu">
+          <h3>Filter Tasks</h3>
+          <input type="text" v-model="searchQuery" placeholder="Search tasks..." />
+          <label for="statusFilter">Status:</label>
+          <select v-model="statusFilter" id="statusFilter">
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <h4>Zones</h4>
+          <div v-for="zone in zones" :key="zone.id">
+            <input type="checkbox" :id="'zone-' + zone.id" :value="zone.id" v-model="selectedZones" />
+            <label :for="'zone-' + zone.id">{{ zone.name }}</label>
+          </div>
+        </div>
+      </div>
 
-<script setup lang="ts">
-</script>
+      <div v-if="showModal" class="modal">
+        <div class="modal-content">
+          <span class="close" @click="closeModal">&times;</span>
+          <h2>Edit Task</h2>
+          <form @submit.prevent="saveTask">
+            <label for="name">Task Name:</label>
+            <input type="text" v-model="currentTask.name" id="name" required />
 
-<style scoped>
-.overview {
-  padding: 2rem;
-}
-</style>
+            <label for="description">Description:</label>
+            <input type="text" v-model="currentTask.description" id="description" required />
+
+            <label for="estimatedTime">Estimated Time:</label>
+            <input type="text" v-model="currentTask.estimatedTime" id="estimatedTime" required />
+
+            <label for="zone">Zone:</label>
+            <input type="number" v-model="currentTask.zone" id="zone" required />
+
+            <label for="workers">Workers:</label>
+            <input type="text" v-model="currentTask.workers" id="workers" required />
+
+            <label for="requiredLicenses">Required Licenses:</label>
+            <input type="text" v-model="currentTask.requiredLicenses" id="requiredLicenses" required />
+
+            <label for="deadline">Deadline:</label>
+            <input type="date" v-model="currentTask.deadline" id="deadline" required />
+
+            <label for="status">Status:</label>
+            <input type="text" v-model="currentTask.status" id="status" required />
+
+            <button type="submit">Save</button>
+          </form>
+        </div>
+      </div>
+    </template>
+
+    <script setup lang="ts">
+    import { ref, computed } from 'vue';
+    import Toolbar from "@/components/Toolbar.vue";
+
+    interface Task {
+      id: number;
+      name: string;
+      description: string;
+      estimatedTime: string;
+      zone: number;
+      workers: string;
+      requiredLicenses: string;
+      deadline: string;
+      status: string;
+    }
+
+    interface Zone {
+      id: number;
+      name: string;
+    }
+
+    const tasks = ref<Task[]>([
+      {
+        id: 1,
+        name: 'Task 1',
+        description: 'Description for Task 1',
+        estimatedTime: '2 hours',
+        zone: 1,
+        workers: '3',
+        requiredLicenses: 'License A',
+        deadline: '2023-12-01',
+        status: 'Pending'
+      },
+      {
+        id: 2,
+        name: 'Task 2',
+        description: 'Description for Task 2',
+        estimatedTime: '3 hours',
+        zone: 2,
+        workers: '2-4',
+        requiredLicenses: 'License B',
+        deadline: '2023-12-02',
+        status: 'In Progress'
+      },
+      {
+        id: 3,
+        name: 'Task 3',
+        description: 'Description for Task 3',
+        estimatedTime: '1 hour',
+        zone: 1,
+        workers: '3 - Chesse Pizza',
+        requiredLicenses: 'License C',
+        deadline: '2023-12-03',
+        status: 'Completed'
+      }
+    ]);
+
+    const zones = ref<Zone[]>([
+      { id: 1, name: 'Zone 1' },
+      { id: 2, name: 'Zone 2' },
+      { id: 3, name: 'Zone 3' }
+    ]);
+
+    const currentPage = ref(1);
+    const tasksPerPage = 10;
+    const searchQuery = ref('');
+    const showModal = ref(false);
+    const currentTask = ref<Task | null>(null);
+    const statusFilter = ref('');
+    const selectedZones = ref<number[]>([]);
+
+    const filteredTasks = computed(() => {
+      const start = (currentPage.value - 1) * tasksPerPage;
+      const end = start + tasksPerPage;
+      return tasks.value
+        .filter(task => task.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+        .filter(task => !statusFilter.value || task.status === statusFilter.value)
+        .filter(task => selectedZones.value.length === 0 || selectedZones.value.includes(task.zone))
+        .slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(tasks.value.length / tasksPerPage);
+    });
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+      }
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+      }
+    };
+
+    const sortTable = (key: keyof Task) => {
+      tasks.value.sort((a, b) => {
+        if (a[key] < b[key]) return -1;
+        if (a[key] > b[key]) return 1;
+        return 0;
+      });
+    };
+
+    const editTask = (task: Task) => {
+      currentTask.value = { ...task };
+      showModal.value = true;
+    };
+
+    const closeModal = () => {
+      showModal.value = false;
+    };
+
+    const saveTask = () => {
+      if (currentTask.value) {
+        const index = tasks.value.findIndex(task => task.id === currentTask.value!.id);
+        if (index !== -1) {
+          tasks.value[index] = { ...currentTask.value };
+        }
+        closeModal();
+      }
+    };
+    </script>
+
+    <style scoped>
+    .overview {
+
+    }
+
+    .content {
+      display: flex;
+      margin: 0;
+      height: 89.8vh;
+    }
+
+    .main-content {
+      padding: 1rem;
+      flex: 1;
+    }
+
+    .filter-menu {
+      position: sticky;
+      width: 280px;
+      max-height: 100%;
+      padding: 1rem;
+      border-left: 1px solid #ccc;
+      background-color: #f9f9f9;
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: #e1e1e1 1px solid;
+    }
+
+    .task-table th, .task-table td {
+      padding: 1rem;
+      text-align: left;
+    }
+
+    .task-table th {
+      background-color: #f4f4f4;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .task-table tbody tr {
+      transition: background-color 0.3s;
+    }
+
+    .task-table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .task-table tbody tr:nth-child(even) {
+      background-color: #f8f8f8;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 100%;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    </style>
