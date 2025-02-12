@@ -171,3 +171,11 @@ VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 
        ('Cycle Counting', 'Perform cycle counting of inventory', 1, 2, 1, 1),
        ('Label Products', 'Label products with barcodes', 1, 2, 1, 2),
        ('Warehouse Cleaning', 'Clean and organize the warehouse', 1, 2, 1, 2);
+
+INSERT INTO active_task (task_id, due_date, start_time, end_time)
+VALUES
+(1, '2023-12-01 17:00:00', '2023-12-01 09:00:00', '2023-12-01 17:00:00'),
+(2, '2023-12-02 18:00:00', '2023-12-02 10:00:00', '2023-12-02 18:00:00'),
+(3, '2023-12-03 19:00:00', '2023-12-03 11:00:00', '2023-12-03 19:00:00'),
+(4, '2023-12-04 20:00:00', '2023-12-04 12:00:00', '2023-12-04 20:00:00'),
+(5, '2023-12-05 21:00:00', '2023-12-05 13:00:00', '2023-12-05 21:00:00');
