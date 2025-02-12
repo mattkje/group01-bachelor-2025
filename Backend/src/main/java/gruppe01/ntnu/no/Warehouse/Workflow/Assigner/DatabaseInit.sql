@@ -162,6 +162,19 @@ VALUES (1, 1),
        (5, 11),
        (6, 12);
 
+INSERT INTO task_license (task_id, license_id)
+VALUES (1, 3),
+       (2, 3),
+       (3, 1),
+       (3, 2),
+       (4, 3),
+       (5, 3),
+       (6, 1),
+       (7, 1),
+       (8, 3),
+       (9, 3),
+       (10, 3);
+
 INSERT INTO active_task (task_id, due_date, start_time, end_time)
 VALUES
 (1, '2023-12-01 17:00:00', '2023-12-01 09:00:00', '2023-12-01 17:00:00'),

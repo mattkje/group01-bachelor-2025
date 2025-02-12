@@ -1,0 +1,41 @@
+package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
+
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ZoneService {
+
+    @Autowired
+    private ZoneRepository zoneRepository;
+
+    public List<Zone> getAllZones() {
+        return zoneRepository.findAll();
+    }
+
+    public Zone getZoneById(Long id) {
+        return zoneRepository.findById(id).orElse(null);
+    }
+
+    public List<Worker> getWorkersByZoneId(Long id) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            return zone.getWorkers();
+        }
+        return null;
+    }
+
+    public List<Task> getTasksByZoneId(Long id) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            return zone.getTasks();
+        }
+        return null;
+    }
+}
