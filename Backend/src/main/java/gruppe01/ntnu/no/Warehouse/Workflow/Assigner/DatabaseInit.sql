@@ -162,6 +162,18 @@ VALUES (1, 1),
        (5, 11),
        (6, 12);
 
+INSERT INTO task_license (task_id, license_id)
+VALUES (1, 3),
+       (2, 3),
+       (3, 1),
+       (3, 2),
+       (4, 3),
+       (5, 3),
+       (6, 1),
+       (7, 1),
+       (8, 3),
+       (9, 3),
+       (10, 3);
 
 INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
 VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 2, 4, 1, 2, 1),
