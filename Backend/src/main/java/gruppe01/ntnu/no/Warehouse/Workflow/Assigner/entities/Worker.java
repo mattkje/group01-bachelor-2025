@@ -16,8 +16,8 @@ public class Worker {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "zone_id")
-    private int zone;
+    @Column(name = "zone_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long zone;
 
     @Column(name = "work_title")
     private String workTitle;
@@ -39,7 +39,7 @@ public class Worker {
     public Worker() {
     }
 
-    public Worker(String name, int zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {
+    public Worker(String name, Long zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {
         this.name = name;
         this.zone = zone;
         this.workTitle = workTitle;
@@ -88,11 +88,11 @@ public class Worker {
         return licenses;
     }
 
-    public int getZone() {
+    public Long getZone() {
         return zone;
     }
 
-    public void setZone(int zone) {
+    public void setZone(Long zone) {
         this.zone = zone;
     }
 

@@ -67,7 +67,7 @@ public class ZoneService {
             Worker worker = workerRepository.findById(workerId).orElse(null);
             if (worker != null) {
                 zone.getWorkers().add(worker);
-
+                worker.setZone(id);
                 return zoneRepository.save(zone);
             }
             return null;
@@ -81,6 +81,8 @@ public class ZoneService {
             Worker worker = workerRepository.findById(workerId).orElse(null);
             if (worker != null) {
                 zone.getWorkers().remove(worker);
+                worker.setZone(0L);
+                workerRepository.save(worker);
                 return zoneRepository.save(zone);
             }
             return null;

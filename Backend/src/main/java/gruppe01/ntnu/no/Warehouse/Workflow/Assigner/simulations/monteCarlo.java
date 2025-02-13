@@ -136,23 +136,23 @@ public class monteCarlo {
    */
   private static List<Worker> initializeWorkers() {
     List<Worker> workers = new ArrayList<>();
-    workers.add(new Worker("Anna Jane", 1, "Packaging Specialist", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Anna Jane", 1L, "Packaging Specialist", 1.0, new ArrayList<License>() {{
       add(new License("Forklift"));
     }}, true));
-    workers.add(new Worker("John Doe",1, "Crane Operator", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Doe",1L, "Crane Operator", 1.0, new ArrayList<License>() {{
       add(new License("Crane Operator"));
     }}, true));
-    workers.add(new Worker("Jane Doe", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Doe", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }}, true));
-    workers.add(new Worker("John Smith", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Smith", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("Jane Smith", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Smith", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("John Johnson",2, "Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Johnson",2L, "Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("Jane Johnson",2, "Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Johnson",2L, "Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("John Brown", 2,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Brown", 2L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
 
     return workers;
