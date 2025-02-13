@@ -46,8 +46,28 @@ public class ZoneController {
         return zoneService.updateZone(id, zone);
     }
 
-    @PutMapping("/{id}/workers")
-    public Zone addWorkerToZone(@PathVariable Long id, @RequestBody int workerId) {
+    @PutMapping("/{id}/worker/{workerId}")
+    public Zone addWorkerToZone(@PathVariable Long id, @PathVariable Long workerId) {
         return zoneService.addWorkerToZone(id, workerId);
+    }
+
+    @PutMapping("/{id}/worker/{workerId}/remove")
+    public Zone removeWorkerFromZone(@PathVariable Long id, @PathVariable Long workerId) {
+        return zoneService.removeWorkerFromZone(id, workerId);
+    }
+
+    @PutMapping("/{id}/task/{taskId}")
+    public Zone addTaskToZone(@PathVariable Long id, @PathVariable Long taskId) {
+        return zoneService.addTaskToZone(id, taskId);
+    }
+
+    @PutMapping("/{id}/task/{taskId}/remove")
+    public Zone removeTaskFromZone(@PathVariable Long id, @PathVariable Long taskId) {
+        return zoneService.removeTaskFromZone(id, taskId);
+    }
+
+    @DeleteMapping("/{id}")
+    public Zone deleteZone(@PathVariable Long id) {
+        return zoneService.deleteZone(id);
     }
 }

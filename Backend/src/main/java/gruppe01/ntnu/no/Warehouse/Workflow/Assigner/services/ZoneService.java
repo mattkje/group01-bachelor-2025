@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ public class ZoneService {
     private ZoneRepository zoneRepository;
     @Autowired
     private WorkerRepository workerRepository;
+    @Autowired
+    private TaskRepository taskRepository;
 
     public List<Zone> getAllZones() {
         return zoneRepository.findAll();
@@ -43,7 +46,10 @@ public class ZoneService {
     }
 
     public Zone addZone(Zone zone) {
-        return zoneRepository.save(zone);
+        if (zone != null) {
+            return zoneRepository.save(zone);
+        }
+        return null;
     }
 
     public Zone updateZone(Long id, Zone zone) {
@@ -51,16 +57,68 @@ public class ZoneService {
         updatedZone.setName(zone.getName());
         updatedZone.setWorkers(zone.getWorkers());
         updatedZone.setTasks(zone.getTasks());
+        updatedZone.setCapacity(zone.getCapacity());
         return zoneRepository.save(updatedZone);
     }
 
-    public Zone addWorkerToZone(Long id, int workerId) {
+    public Zone addWorkerToZone(Long id, Long workerId) {
         Zone zone = zoneRepository.findById(id).orElse(null);
         if (zone != null) {
-            Worker worker = workerRepository.findById((long) workerId).orElse(null);
-            zone.getWorkers().add(worker);
-            return zoneRepository.save(zone);
+            Worker worker = workerRepository.findById(workerId).orElse(null);
+            if (worker != null) {
+                zone.getWorkers().add(worker);
+
+                return zoneRepository.save(zone);
+            }
+            return null;
         }
         return null;
+    }
+
+    public Zone removeWorkerFromZone(Long id, Long workerId) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            Worker worker = workerRepository.findById(workerId).orElse(null);
+            if (worker != null) {
+                zone.getWorkers().remove(worker);
+                return zoneRepository.save(zone);
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Zone addTaskToZone(Long id, Long taskId) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            Task task = taskRepository.findById(taskId).orElse(null);
+            if (task != null) {
+                zone.getTasks().add(task);
+                return zoneRepository.save(zone);
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Zone removeTaskFromZone(Long id, Long taskId) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            Task task = taskRepository.findById(taskId).orElse(null);
+            if (task != null) {
+                zone.getTasks().remove(task);
+                return zoneRepository.save(zone);
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Zone deleteZone(Long id) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        if (zone != null) {
+            zoneRepository.delete(zone);
+        }
+        return zone;
     }
 }

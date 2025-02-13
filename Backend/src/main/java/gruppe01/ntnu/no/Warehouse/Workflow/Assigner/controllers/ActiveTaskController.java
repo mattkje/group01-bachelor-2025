@@ -1,11 +1,11 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -14,10 +14,50 @@ import java.util.List;
 public class ActiveTaskController {
 
     @Autowired
-    private ActiveTaskRepository activeTaskRepository;
+    private ActiveTaskService activeTaskService;
 
     @GetMapping
     public List<ActiveTask> getAllActiveTasks() {
-        return activeTaskRepository.findAll();
+        return activeTaskService.getAllActiveTasks();
+    }
+
+    @GetMapping("{id}")
+    public ActiveTask getActiveTaskById(Long id) {
+        return activeTaskService.getActiveTaskById(id);
+    }
+
+    @PostMapping
+    public ActiveTask createActiveTask(@RequestBody ActiveTask activeTask) {
+        return activeTaskService.createActiveTask(activeTask);
+    }
+
+    @PutMapping("{id}")
+    public ActiveTask updateActiveTask(@PathVariable Long id, @RequestBody ActiveTask activeTask) {
+        return activeTaskService.updateActiveTask(id, activeTask);
+    }
+
+    @PutMapping("/{id}/worker/{workerId}")
+    public ActiveTask assignWorkerToTask(@PathVariable Long id, @PathVariable Long workerId) {
+        return activeTaskService.assignWorkerToTask(id, workerId);
+    }
+
+    @PutMapping("/{id}/worker/{workerId}/remove")
+    public ActiveTask removeWorkerFromTask(@PathVariable Long id, @PathVariable Long workerId) {
+        return activeTaskService.removeWorkerFromTask(id, workerId);
+    }
+
+    @PutMapping("/{id}/task/{taskId}")
+    public ActiveTask addTaskToActiveTask(@PathVariable Long id, @PathVariable Long taskId) {
+        return activeTaskService.addTaskToActiveTask(id, taskId);
+    }
+
+    @PutMapping("/{id}/task/remove")
+    public ActiveTask removeTaskFromActiveTask(@PathVariable Long id) {
+        return activeTaskService.removeTaskFromActiveTask(id);
+    }
+
+    @DeleteMapping("{id}")
+    public ActiveTask deleteActiveTask(@PathVariable Long id) {
+        return activeTaskService.deleteActiveTask(id);
     }
 }
