@@ -70,12 +70,13 @@
     <style scoped>
     .container {
       display: flex;
+      height: 100%;
     }
 
     .overview {
       flex: 1;
       padding: 1rem;
-      max-height: 85vh; /* Set a fixed height */
+      height: 100%; /* Set a fixed height */
       overflow-y: auto; /* Enable vertical scrolling */
     }
 

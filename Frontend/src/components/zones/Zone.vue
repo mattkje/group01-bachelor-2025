@@ -1,6 +1,7 @@
 <script setup lang="ts">
-              import { defineProps, computed } from 'vue';
+import {defineProps, computed, ref} from 'vue';
               import Worker from '@/components/zones/Worker.vue';
+import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 
 
 
@@ -8,6 +9,18 @@
                 title: string;
                 workers: Worker[];
               }>();
+
+              const showPopup = ref(false);
+              const selectedZone = ref({ id: 0, name: '', data: '' });
+
+              const openPopup = () => {
+                selectedZone.value = { id: 1, name: props.title, data: 'Zone data here' }; // Replace with actual data
+                showPopup.value = true;
+              };
+
+              const closePopup = () => {
+                showPopup.value = false;
+              };
 
               const taskCompletionTimes = [30, 45, 60];
               const remainingTasks = 5;
@@ -36,7 +49,7 @@
                     </div>
                     <hr>
                     <div class="zone-options">
-                      <button class="icon-button">
+                      <button class="icon-button" @click="openPopup">
                         <img src="/src/assets/icons/overview.svg" alt="Assign" />
                       </button>
                       <button class="icon-button">
@@ -66,6 +79,7 @@
                     <p v-if="workers.length === 0" style="text-align: center; margin-top: 1rem;">No workers assigned</p>
                   </div>
                 </div>
+                <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup" />
               </template>
 
               <style scoped>

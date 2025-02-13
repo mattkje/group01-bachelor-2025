@@ -39,7 +39,7 @@ import Sidebar from './components/Sidebar.vue';
   flex: 1;
   background-color: #ffffff; /* Set background to white */
   padding: 0;
-  overflow-y: auto; /* Allow vertical scrolling if content overflows */
+  height: 100%; /* Allow vertical scrolling if content overflows */
 }
 
 header {
