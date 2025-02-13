@@ -103,4 +103,13 @@ public class Worker {
     public void setAvailability(boolean availability) {
         this.availability = availability;
     }
+
+    public boolean hasLicense(String requiredLicense) {
+        for (License license : licenses) {
+            if (license.getName().equals(requiredLicense)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

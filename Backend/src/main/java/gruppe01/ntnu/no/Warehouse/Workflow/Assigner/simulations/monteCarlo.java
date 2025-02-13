@@ -36,9 +36,6 @@ public class monteCarlo {
     int minWorkers = 4, maxWorkers = 5; // Number of workers active on a given day as a range
     List<Worker> workers = initializeWorkers();
 
-    for (Worker worker : workers) {
-      System.out.println(worker.getWorkerType());
-    }
 
     // Setting up the zone parameters
     int minZones = 6, maxZones = 8; // Number of zones in the warehouse as a range

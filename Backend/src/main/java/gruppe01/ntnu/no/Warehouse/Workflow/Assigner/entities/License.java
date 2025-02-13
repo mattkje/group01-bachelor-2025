@@ -27,7 +27,8 @@ public class License {
     public License() {
     }
 
-    public License(String forklift) {
+    public License(String name) {
+        this.name = name;
     }
 
     public void setId(Long id) {
