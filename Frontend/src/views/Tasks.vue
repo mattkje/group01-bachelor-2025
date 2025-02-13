@@ -19,7 +19,11 @@
                    <tr v-for="task in paginatedTasks" :key="task.id">
                      <td>{{ task.name }}</td>
                      <td>{{ task.description }}</td>
-                     <td>Gay</td>
+                     <td>
+                       <ul>
+                         <li v-for="license in task.requiredLicense" :key="license">{{ license.name }}</li>
+                       </ul>
+                     </td>
                      <td>{{ (task.maxTime+task.minTime/2) }} minutes</td>
                      <td>{{ task.minWorkers }} - {{ task.maxWorkers }}</td>
                      <td>{{ getZoneNameById(task.zoneId) }}</td>
@@ -92,30 +96,22 @@
          import { ref, computed, onMounted } from 'vue';
          import Toolbar from '@/components/Toolbar.vue';
 
-         interface Task {
-           id: number;
-           name: string;
-           description: string;
-           licence: string;
-           estimatedTime: string;
-           workers: number;
-           zoneId: number;
-         }
+
 
          interface Zone {
            id: number;
            name: string;
          }
 
-         const tasks = ref<Task[]>([]);
-         const activeTasks = ref<Task[]>([]);
+         const tasks = ref([]);
+         const activeTasks = ref([]);
          const zones = ref<Zone[]>([]);
 
          const currentPage = ref(1);
          const tasksPerPage = 5;
          const searchQuery = ref('');
          const showModal = ref(false);
-         const currentTask = ref<Task>({ id: 0, name: '', description: '', estimatedTime: '', zone: 0, workers: '', requiredLicenses: '', deadline: '', status: '' });
+         const currentTask = ref({ id: 0, name: '', description: '', estimatedTime: '', zone: 0, workers: '', requiredLicenses: '', deadline: '', status: '' });
          const statusFilter = ref('');
          const selectedZones = ref<number[]>([]);
 
@@ -276,6 +272,19 @@
 
          .task-table tbody tr:nth-child(even) {
            background-color: #f8f8f8;
+         }
+
+         .task-table button {
+           padding: 0.25rem 0.5rem;
+           background-color: #E77474;
+           color: white;
+           border: none;
+           border-radius: 4px;
+           cursor: pointer;
+         }
+
+         .task-table button:hover {
+           background-color: #9d4d4d;
          }
 
          .pagination {

@@ -150,27 +150,39 @@
         gap: 0.25rem;
       }
 
+
       .staff-table {
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        border: #e1e1e1 1px solid;
       }
 
       .staff-table th, .staff-table td {
-        border: 1px solid #ccc;
-        padding: 0.75rem;
+        padding: 0.8vh;
         text-align: left;
       }
 
       .staff-table th {
         background-color: #f4f4f4;
         font-weight: bold;
+        cursor: pointer;
+      }
+
+      .staff-table tbody tr {
+        transition: background-color 0.3s;
+      }
+
+      .staff-table tbody tr:hover {
+        background-color: #f9f9f9;
       }
 
       .staff-table tbody tr:nth-child(even) {
-        background-color: #f9f9f9;
+        background-color: #f8f8f8;
       }
+
 
       .staff-table button {
         padding: 0.25rem 0.5rem;
