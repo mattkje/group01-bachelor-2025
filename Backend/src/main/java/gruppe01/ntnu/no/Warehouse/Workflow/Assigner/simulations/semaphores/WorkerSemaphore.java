@@ -47,4 +47,11 @@ public class WorkerSemaphore {
         }
         semaphore.release();
     }
+
+    public void releaseAll(List<Worker> allWorkers) {
+        synchronized (workers) {
+            workers.addAll(allWorkers);
+        }
+        semaphore.release(workers.size());
+    }
 }

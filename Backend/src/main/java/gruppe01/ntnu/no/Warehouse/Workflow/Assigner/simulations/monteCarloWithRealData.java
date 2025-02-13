@@ -67,7 +67,6 @@ public class monteCarloWithRealData {
 
     // Run each simulation
     for (int i = 0; i < simCount; i++) {
-      int finalI = i; // TODO: Debugging purposes, remove later
       // Add the conlcusion of the simulation to the futures list
       futures.add(simulationExecutor.submit(() -> {
         // Calculate a random amount of zones and workers
@@ -81,11 +80,6 @@ public class monteCarloWithRealData {
         // Total time to complete all tasks in a warehouse
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-        //TODO: Debugging purposes, remove later
-        System.out.println(
-            "Simulation " + finalI + " has " + workers.size() + " workers and " + zones +
-                " zones");
-
         // Run the simulation for each zone in a warehouse
         for (int k = 0; k < zones; k++) {
           // Calculate a random amount of workers and tasks for each zone
@@ -98,12 +92,8 @@ public class monteCarloWithRealData {
           int finalZoneWorkers = zoneWorkers;
           int zoneTasks = random.nextInt(maxZoneTasks - minZoneTasks + 1) + minZoneTasks;
 
-          // TODO: Debugging purposes, remove later
-          int finalK = k;
-
-
           // Run zone simulation
-          runZoneSimulation(finalK, finalZoneWorkers, zoneTasks, maxZoneWorkers,
+          runZoneSimulation(finalZoneWorkers, zoneTasks, maxZoneWorkers,
               minMaxTaskWorkers, minMinTaskWorkers, maxMaxTaskWorkers, maxMinTaskWorkers,
               maxTaskTime, minTaskTime, totalTaskTime, availableWorkersSemaphore);
 
@@ -134,7 +124,7 @@ public class monteCarloWithRealData {
 
 
 
- private static void runZoneSimulation(int finalK, int finalZoneWorkers, int zoneTasks,
+ private static void runZoneSimulation( int finalZoneWorkers, int zoneTasks,
                                        int maxZoneWorkers, int minMaxTaskWorkers,
                                        int minMinTaskWorkers, int maxMaxTaskWorkers,
                                        int maxMinTaskWorkers, int maxTaskTime, int minTaskTime,
@@ -152,15 +142,8 @@ public class monteCarloWithRealData {
 
          // Check if there are any acquired workers
          if (acquiredWorkers.isEmpty()) {
-             System.out.println("Zone " + finalK + " has no workers available.");
              return;
          }
-
-         //TODO: Debugging purposes, remove later
-         System.out.println(
-             "Zone " + finalK + " has " + acquiredWorkers.size() + " workers and " + zoneTasks +
-                 " tasks, with a potential of " + maxZoneWorkers + " workers");
-
          // Set up the zone simulation
          ExecutorService zoneExecutor = Executors.newFixedThreadPool(acquiredWorkers.size());
          Semaphore availableZoneWorkersSemaphore = new Semaphore(acquiredWorkers.size());
@@ -186,8 +169,6 @@ public class monteCarloWithRealData {
              // Calculate the time to complete the task
              final int[] taskTime =
                  {random.nextInt(maxTaskTime - minTaskTime + 1) + minTaskTime};
-             //TODO: Debugging purposes, remove later
-             int finalJ = j;
              int finalMinTaskWorkers = minTaskWorkers;
              int finalMaxTaskWorkers = maxTaskWorkers;
 
@@ -195,20 +176,12 @@ public class monteCarloWithRealData {
                  try {
                      // Initial amount of workers acquired for a task
                      int acquiredWorkersCount = 0;
-                     System.out.println("Zone " + finalK + " Task " + finalJ + " started with " +
-                         finalMinTaskWorkers + " to " + finalMaxTaskWorkers + " workers and " +
-                         taskTime[0] + "ms");
-
                      // Latch preventing a task from starting until the required workers are acquired
                      CountDownLatch latch = new CountDownLatch(1);
 
                      while (acquiredWorkersCount < finalMinTaskWorkers) {
                          // Calculate the amount of workers to acquire
                          int toAcquire = finalMaxTaskWorkers - acquiredWorkersCount;
-                         //TODO: Debugging purposes, remove later
-                         System.out.println(
-                             "Zone " + finalK + " Task " + finalJ + " trying to acquire " +
-                                 toAcquire + " workers");
                          // Attempt to acquire the workers
                          if (availableZoneWorkersSemaphore.tryAcquire(toAcquire, 1,
                              TimeUnit.MILLISECONDS)) {
@@ -216,9 +189,6 @@ public class monteCarloWithRealData {
                              acquiredWorkersCount += toAcquire;
                              // Release the latch
                              latch.countDown();
-                             System.out.println(
-                                 "Zone " + finalK + " Task " + finalJ + " Acquired " + toAcquire +
-                                     " workers" + ", total acquired: " + acquiredWorkersCount + " here");
                          } // If the wanted amount of workers are not available, try to acquire the minimum amount
                          else if (availableZoneWorkersSemaphore.tryAcquire(finalMinTaskWorkers, 1,
                              TimeUnit.MILLISECONDS)) {
@@ -226,13 +196,8 @@ public class monteCarloWithRealData {
                              acquiredWorkersCount += finalMinTaskWorkers;
                              // Release the latch
                              latch.countDown();
-                             System.out.println("Zone " + finalK + " Task " + finalJ +
-                                 " Acquired 1 worker, total acquired: " + acquiredWorkersCount);
                          } // No workers available, wait
-                         else {
-                             System.out.println("Zone " + finalK + " Task " + finalJ + " waiting for " +
-                                 (finalMinTaskWorkers - acquiredWorkersCount) + " workers");
-                         }
+
                      }
 
                      latch.await(); // Wait until the required number of workers is acquired
@@ -246,10 +211,6 @@ public class monteCarloWithRealData {
                          }
                          TimeUnit.MILLISECONDS.sleep(100);
                      }
-
-                     System.out.println(
-                         "Zone " + finalK + " Task " + finalJ + " completed in " + taskTime[0] +
-                             "ms with " + acquiredWorkersCount + " workers");
                      availableZoneWorkersSemaphore.release(acquiredWorkersCount);
                      totalTaskTime.addAndGet(taskTime[0]);
 
@@ -261,13 +222,8 @@ public class monteCarloWithRealData {
 
          zoneExecutor.shutdown();
          zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
-         System.out.println("Zone " + finalK + " tasks submitted");
-
          // Release the workers back to the semaphore
-         for (Worker worker : acquiredWorkers) {
-             availableWorkersSemaphore.release(worker);
-         }
-         System.out.println("Zone " + finalK + " workers released");
+         availableWorkersSemaphore.releaseAll(acquiredWorkers);
      } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
      }
@@ -280,23 +236,23 @@ public class monteCarloWithRealData {
    */
   private static List<Worker> initializeWorkers() {
     List<Worker> workers = new ArrayList<>();
-    workers.add(new Worker("Anna Jane", 1, "Packaging Specialist", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Anna Jane", 1L, "Packaging Specialist", 1.0, new ArrayList<License>() {{
       add(new License("Forklift"));
     }}, true));
-    workers.add(new Worker("John Doe",1, "Crane Operator", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Doe",1L, "Crane Operator", 1.0, new ArrayList<License>() {{
       add(new License("Crane Operator"));
     }}, true));
-    workers.add(new Worker("Jane Doe", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Doe", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }}, true));
-    workers.add(new Worker("John Smith", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Smith", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("Jane Smith", 1,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Smith", 1L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("John Johnson",2, "Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Johnson",2L, "Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("Jane Johnson",2, "Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("Jane Johnson",2L, "Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
-    workers.add(new Worker("John Brown", 2,"Warehouse", 1.0, new ArrayList<License>() {{
+    workers.add(new Worker("John Brown", 2L,"Warehouse", 1.0, new ArrayList<License>() {{
     }},true));
 
     return workers;
