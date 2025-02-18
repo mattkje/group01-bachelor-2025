@@ -30,6 +30,10 @@ public class ActiveTask {
     @Column(name = "strict_start")
     private boolean strict_start;
 
+    @Temporal(TemporalType.DATE)
+    @Column(name="date")
+    private Date date;
+
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
