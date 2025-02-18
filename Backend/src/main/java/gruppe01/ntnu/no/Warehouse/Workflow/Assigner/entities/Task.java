@@ -33,7 +33,6 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "zone_id")
-    @JsonIgnore
     private Zone zone;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -45,6 +44,16 @@ public class Task {
     private Set<License> requiredLicense;
 
     public Task() {
+    }
+
+    public Task(String packaging, String packagingItems, int i, int i1, int i2, int i3, Object o) {
+        this.name = packaging;
+        this.description = packagingItems;
+        this.minDuration = i;
+        this.maxDuration = i1;
+        this.minWorkers = i2;
+        this.maxWorkers = i3;
+        this.zone = (Zone) o;
     }
 
     public void setName(String name) {
@@ -115,7 +124,7 @@ public class Task {
         return id;
     }
 
-    public Zone getZone() {
-        return zone;
+    public Long getZoneId() {
+        return zone != null ? zone.getId() : null;
     }
 }

@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
@@ -28,8 +29,10 @@ public class ActiveTaskService {
         return activeTaskRepository.findById(id).orElse(null);
     }
 
-    public ActiveTask createActiveTask(ActiveTask activeTask) {
+    public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
         if (activeTask != null) {
+            Task task = taskRepository.findById(taskId).get();
+            activeTask.setTask(task);
             return activeTaskRepository.save(activeTask);
         }
         return null;
