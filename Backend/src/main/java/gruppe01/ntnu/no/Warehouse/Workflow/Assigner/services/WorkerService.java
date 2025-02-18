@@ -78,4 +78,10 @@ public class WorkerService {
     public void deleteWorker(Long id) {
         workerRepository.deleteById(id);
     }
+
+    public Worker addWorkerToZone(Long workerId, Long zoneId) {
+        Worker updatedWorker = workerRepository.findById(workerId).get();
+        updatedWorker.setZone(zoneId);
+        return workerRepository.save(updatedWorker);
+    }
 }

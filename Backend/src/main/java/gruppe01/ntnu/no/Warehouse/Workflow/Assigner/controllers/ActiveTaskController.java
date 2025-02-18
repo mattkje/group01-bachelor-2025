@@ -20,7 +20,7 @@ public class ActiveTaskController {
     }
 
     @GetMapping("{id}")
-    public ActiveTask getActiveTaskById(Long id) {
+    public ActiveTask getActiveTaskById(@PathVariable Long id) {
         return activeTaskService.getActiveTaskById(id);
     }
 

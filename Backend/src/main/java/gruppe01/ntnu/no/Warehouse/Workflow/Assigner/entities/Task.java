@@ -36,9 +36,6 @@ public class Task {
     @JsonIgnore
     private Zone zone;
 
-    @Column(name = "zone_id", insertable = false, updatable = false)
-    private long zoneId;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "task_license",
@@ -86,10 +83,6 @@ public class Task {
         this.zone = zone;
     }
 
-    public void setZoneId(long zoneId) {
-        this.zoneId = zoneId;
-    }
-
     public String getName() {
         return name;
     }
@@ -124,9 +117,5 @@ public class Task {
 
     public Zone getZone() {
         return zone;
-    }
-
-    public long getZoneId() {
-        return zoneId;
     }
 }

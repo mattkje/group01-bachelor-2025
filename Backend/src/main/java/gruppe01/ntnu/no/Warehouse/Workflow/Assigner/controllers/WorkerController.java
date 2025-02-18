@@ -50,6 +50,11 @@ public class WorkerController {
         return workerService.updateWorkerAvailability(id);
     }
 
+    @PutMapping("/{workerId}/zone/{zoneId}/")
+    public Worker addWorkerToZone(@PathVariable Long workerId, @PathVariable Long zoneId) {
+        return workerService.addWorkerToZone(workerId, zoneId);
+    }
+
     @PutMapping("/{id}/license/{licenseId}")
     public Worker addLicenseToWorker(@PathVariable Long id, @PathVariable Long licenseId) {
         return workerService.addLicenseToWorker(id, licenseId);
