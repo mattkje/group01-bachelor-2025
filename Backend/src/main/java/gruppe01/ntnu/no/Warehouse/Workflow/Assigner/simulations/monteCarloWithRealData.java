@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore;
 import java.util.ArrayList;
@@ -56,6 +57,11 @@ public class monteCarloWithRealData {
 
     int maxMinTaskWorkers = 5,
         maxMaxTaskWorkers = 5; // Maximum number of workers able to work on a given task as a range
+
+    // Setting up zones
+
+    // Setting up real tasks
+    List<Task> tasks = initializeTasks();
 
 
     // Setting up the simulation
@@ -124,7 +130,7 @@ public class monteCarloWithRealData {
 
 
 
- private static void runZoneSimulation( int finalZoneWorkers, int zoneTasks,
+  private static void runZoneSimulation( int finalZoneWorkers, int zoneTasks,
                                        int maxZoneWorkers, int minMaxTaskWorkers,
                                        int minMinTaskWorkers, int maxMaxTaskWorkers,
                                        int maxMinTaskWorkers, int maxTaskTime, int minTaskTime,
@@ -256,5 +262,14 @@ public class monteCarloWithRealData {
     }},true));
 
     return workers;
+  }
+
+  private static List<Task> initializeTasks() {
+    List<Task> tasks = new ArrayList<>();
+   tasks.add(new Task("Packaging", "Packaging items", 30, 5, 1, 5, null));
+    tasks.add(new Task("Crane Operation", "Operating a crane", 30, 5, 1, 5, null));
+    tasks.add(new Task("Warehouse", "General warehouse work", 30, 5, 1, 5, null));
+    return tasks;
+
   }
 }
