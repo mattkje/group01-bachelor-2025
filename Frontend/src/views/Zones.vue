@@ -6,7 +6,7 @@
             <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
-        <WorkerRegistry :workers="workers"  :zones="zones" @refreshWorkers="fetchAll"/>
+        <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll"/>
       </div>
     </template>
 
@@ -38,7 +38,7 @@
 
     const zones = ref<Zone[]>([]);
     const workers = ref<Worker[]>([]);
-    const isEditable = ref(false);
+    const taskLessWorkers = ref<Worker[]>([]);
 
     const getWorkersByZone = (zoneId: number) => {
       return workers.value.filter(worker => worker.zone === zoneId);
@@ -61,6 +61,18 @@
         console.error('Failed to fetch workers:', error);
       }
     };
+
+    const getTaskLessWorkers = async (): Promise<void> => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/active-tasks`);
+        const tasks = await response.json();
+        taskLessWorkers.value = workers.value.filter(worker => !tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id)));
+      } catch (error) {
+        console.error('Failed to fetch worker task:', error);
+        taskLessWorkers.value = [];
+      }
+    };
+
 
     // If worker is unavailable, set zone to 0
     const updateWorkerZone = async () => {
@@ -87,6 +99,7 @@
     const fetchAll = async () => {
       await fetchZones();
       await fetchWorkers();
+      await getTaskLessWorkers();
       await updateWorkerZone();
     };
 
