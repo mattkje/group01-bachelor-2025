@@ -51,6 +51,7 @@ public class ActiveTaskService {
         if (activeTask != null) {
             Worker worker = workerRepository.findById(workerId).orElse(null);
             if (worker != null) {
+                worker.setAvailability(false);
                 activeTask.getWorkers().add(worker);
                 return activeTaskRepository.save(activeTask);
             }
@@ -64,10 +65,23 @@ public class ActiveTaskService {
         if (activeTask != null) {
             Worker worker = workerRepository.findById(workerId).orElse(null);
             if (worker != null) {
+                worker.setAvailability(true);
                 activeTask.getWorkers().remove(worker);
                 return activeTaskRepository.save(activeTask);
             }
             return null;
+        }
+        return null;
+    }
+
+    public ActiveTask removeWorkersFromTask(Long id) {
+        ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
+        if (activeTask != null) {
+            for (Worker worker : activeTask.getWorkers()) {
+                worker.setAvailability(true);
+            }
+            activeTask.getWorkers().clear();
+            return activeTaskRepository.save(activeTask);
         }
         return null;
     }

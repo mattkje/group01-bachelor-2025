@@ -45,6 +45,16 @@ public class WorkerController {
         return workerService.updateWorker(id, worker);
     }
 
+    @PutMapping("/{id}/availability")
+    public Worker updateWorkerAvailability(@PathVariable Long id) {
+        return workerService.updateWorkerAvailability(id);
+    }
+
+    @PutMapping("/{id}/license/{licenseId}")
+    public Worker addLicenseToWorker(@PathVariable Long id, @PathVariable Long licenseId) {
+        return workerService.addLicenseToWorker(id, licenseId);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteWorker(@PathVariable Long id) {
         workerService.deleteWorker(id);

@@ -1,7 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.LicenseRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

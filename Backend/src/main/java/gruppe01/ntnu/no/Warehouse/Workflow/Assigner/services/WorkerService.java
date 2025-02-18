@@ -1,6 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.LicenseRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ public class WorkerService {
 
     @Autowired
     private WorkerRepository workerRepository;
+    @Autowired
+    private LicenseRepository licenseRepository;
 
     public List<Worker> getAllWorkers() {
         return workerRepository.findAll();
@@ -55,6 +59,19 @@ public class WorkerService {
         updatedWorker.setLicenses(worker.getLicenses());
         updatedWorker.setZone(worker.getZone());
         updatedWorker.setWorkerType(worker.getWorkerType());
+        return workerRepository.save(updatedWorker);
+    }
+
+    public Worker updateWorkerAvailability(Long id) {
+        Worker updatedWorker = workerRepository.findById(id).get();
+        updatedWorker.setAvailability(!updatedWorker.isAvailability());
+        return workerRepository.save(updatedWorker);
+    }
+
+    public Worker addLicenseToWorker(Long id, Long licenseId) {
+        Worker updatedWorker = workerRepository.findById(id).get();
+        License license = licenseRepository.findById(licenseId).get();
+        updatedWorker.getLicenses().add(license);
         return workerRepository.save(updatedWorker);
     }
 

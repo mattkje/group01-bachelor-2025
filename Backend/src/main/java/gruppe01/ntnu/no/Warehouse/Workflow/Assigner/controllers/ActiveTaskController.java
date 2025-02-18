@@ -1,8 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +42,11 @@ public class ActiveTaskController {
     @PutMapping("/{id}/worker/{workerId}/remove")
     public ActiveTask removeWorkerFromTask(@PathVariable Long id, @PathVariable Long workerId) {
         return activeTaskService.removeWorkerFromTask(id, workerId);
+    }
+
+    @PutMapping("/{id}/workers/remove")
+    public ActiveTask removeWorkersFromTask(@PathVariable Long id) {
+        return activeTaskService.removeWorkersFromTask(id);
     }
 
     @PutMapping("/{id}/task/{taskId}")
