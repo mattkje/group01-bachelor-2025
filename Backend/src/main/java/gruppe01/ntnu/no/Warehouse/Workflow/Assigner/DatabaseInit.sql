@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS active_task
     due_date   TIMESTAMP,
     start_time TIMESTAMP,
     end_time   TIMESTAMP,
-    eta        TIMESTAMP DEFAULT NULL,
+    eta        DATETIME(6) DEFAULT NULL,
     FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
