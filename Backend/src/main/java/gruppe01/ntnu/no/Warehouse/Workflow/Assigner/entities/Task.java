@@ -33,7 +33,6 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "zone_id")
-    @JsonIgnore
     private Zone zone;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -115,7 +114,7 @@ public class Task {
         return id;
     }
 
-    public Zone getZone() {
-        return zone;
+    public Long getZoneId() {
+        return zone != null ? zone.getId() : null;
     }
 }

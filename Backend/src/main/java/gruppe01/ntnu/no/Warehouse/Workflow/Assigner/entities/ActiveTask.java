@@ -24,6 +24,9 @@ public class ActiveTask {
     @Column(name = "end_time")
     private Date endTime;
 
+    @Column(name = "eta")
+    private int eta;
+
     @Column(name = "strict_start")
     private boolean strict_start;
 
@@ -70,6 +73,10 @@ public class ActiveTask {
         this.strict_start = strict_start;
     }
 
+    public void setEta(int eta) {
+        this.eta = eta;
+    }
+
     public Date getDueDate() {
         return dueDate;
     }
@@ -96,5 +103,9 @@ public class ActiveTask {
 
     public boolean getStrictStart() {
         return strict_start;
+    }
+
+    public int getEta() {
+        return eta;
     }
 }

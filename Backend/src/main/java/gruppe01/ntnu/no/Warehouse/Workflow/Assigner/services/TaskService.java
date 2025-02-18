@@ -1,7 +1,9 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +14,17 @@ public class TaskService {
 
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private ZoneRepository zoneRepository;
 
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
 
-    public Task createTask(Task task) {
+    public Task createTask(Task task, Long zoneId) {
         if (task != null) {
+            Zone zone = zoneRepository.findById(zoneId).get();
+            task.setZone(zone);
             return taskRepository.save(task);
         }
         return null;
@@ -28,7 +34,8 @@ public class TaskService {
         return taskRepository.findById(id).orElse(null);
     }
 
-    public Task updateTask(Long id, Task task) {
+    public Task updateTask(Long id, Task task, Long zoneId) {
+        Zone zone = zoneRepository.findById(zoneId).get();
         Task updatedTask = taskRepository.findById(id).get();
         updatedTask.setName(task.getName());
         updatedTask.setDescription(task.getDescription());
@@ -37,6 +44,7 @@ public class TaskService {
         updatedTask.setMaxWorkers(task.getMaxWorkers());
         updatedTask.setMinWorkers(task.getMinWorkers());
         updatedTask.setRequiredLicense(task.getRequiredLicense());
+        updatedTask.setZone(zone);
         return taskRepository.save(updatedTask);
     }
 

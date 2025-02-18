@@ -24,14 +24,14 @@ public class TaskController {
         return taskService.getTaskById(id);
     }
 
-    @PostMapping
-    public Task createTask(@RequestBody Task task) {
-        return taskService.createTask(task);
+    @PostMapping("/{zoneId}")
+    public Task createTask(@RequestBody Task task, @PathVariable Long zoneId) {
+        return taskService.createTask(task, zoneId);
     }
 
-    @PutMapping("/{id}")
-    public Task updateTask(@PathVariable Long id, @RequestBody Task task) {
-        return taskService.updateTask(id, task);
+    @PutMapping("/{id}/{zoneId}")
+    public Task updateTask(@PathVariable Long id, @RequestBody Task task, @PathVariable Long zoneId) {
+        return taskService.updateTask(id, task, zoneId);
     }
 
     @DeleteMapping("/{id}")

@@ -24,9 +24,9 @@ public class ActiveTaskController {
         return activeTaskService.getActiveTaskById(id);
     }
 
-    @PostMapping
-    public ActiveTask createActiveTask(@RequestBody ActiveTask activeTask) {
-        return activeTaskService.createActiveTask(activeTask);
+    @PostMapping("{taskId}")
+    public ActiveTask createActiveTask(@PathVariable Long taskId, @RequestBody ActiveTask activeTask) {
+        return activeTaskService.createActiveTask(taskId, activeTask);
     }
 
     @PutMapping("{id}")
