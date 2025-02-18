@@ -1,38 +1,65 @@
 <script setup lang="ts">
-import {defineProps, ref} from 'vue';
+import {onMounted, ref} from 'vue';
 
-const props = defineProps({
-  name: {
-    type: String,
-    required: true
-  },
-  licenses: {
-    type: Array,
-    required: true
-  },
-  availability: {
-    type: Boolean,
-    required: true
+interface License {
+  id: number;
+  name: string;
+}
+
+const props = defineProps<{
+  name: string;
+  workerId: number;
+  licenses: License[];
+  availability: boolean;
+}>();
+
+const task = ref('');
+const qualified = ref(false);
+
+const getTaskByWorker = async (workerId: number) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/active-tasks`);
+    const tasks = await response.json();
+    const workerTask = tasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
+    qualified.value = isWorkerQualified(workerTask);
+    return workerTask;
+  } catch (error) {
+    console.error('Failed to fetch worker task:', error);
   }
-});
+};
 
+const isWorkerQualified = (task: any) => {
+  if (task) {
+    return task.task.requiredLicense.every((license: any) => props.licenses.some((workerLicense: License) => workerLicense.id === license.id));
+  } else {
+    return true;
+  }
+};
+
+onMounted(async () => {
+  task.value = await getTaskByWorker(props.workerId);
+});
 </script>
 
 <template>
-  <div class="worker" draggable="true">
+  <div :class="['worker', { 'unq-worker-box': !qualified , 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-name">{{ name }}</div>
     <div class="worker-licenses">
       <span v-for="(license, index) in licenses" :key="index" class="license">{{ license.name }}</span>
     </div>
     <hr/>
     <div class="worker-status-container">
-      <div>
-        <div v-if="availability" class="worker-task">Task: 1</div>
-        <div v-if="availability" class="worker-eta">ETA: 1</div>
+      <div v-if="task">
+        <div v-if="availability" class="worker-task">Task: {{ task.task.name }}</div>
+        <div v-if="availability" class="worker-eta">
+          ETA: {{ task.eta ? task.eta : 'unavailable' }}
+        </div>
       </div>
       <div>
 
-        <div v-if="availability" class="worker-status worker-busy">Busy</div>
+        <div v-if="availability && task" class="worker-status worker-busy">Busy</div>
+        <div v-if="availability && !task" class="worker-status worker-Ready">Ready</div>
+        <div v-if="availability && task && !qualified" class="worker-status worker-unqualified">Unqualified</div>
         <div v-if="!availability" class="worker-status worker-busy">Unavailable</div>
       </div>
 
@@ -52,9 +79,13 @@ const props = defineProps({
   -webkit-user-select: none !important;
 }
 
-.worker:hover {
-  background-color: #FFF2F2;
-  border: 1px solid #f56e6e;
+.hover-effect:hover {
+  background-color: #f1f1f1;
+  border: 1px solid #8d8d8d;
+}
+
+.unq-worker-box {
+  border: 1px solid #fab639;
 }
 
 .worker-name {

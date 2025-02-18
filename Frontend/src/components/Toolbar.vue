@@ -1,10 +1,4 @@
 <script setup lang="ts">
-    import { defineProps } from 'vue';
-    import homeIcon from '../assets/icons/overview.svg';
-    import searchIcon from '../assets/icons/overview.svg';
-    import notificationsIcon from '../assets/icons/overview.svg';
-    import profileIcon from '../assets/icons/overview.svg';
-
     const props = defineProps({
       title: {
         type: String,

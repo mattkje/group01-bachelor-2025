@@ -24,8 +24,9 @@ public class ActiveTask {
     @Column(name = "end_time")
     private Date endTime;
 
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "eta")
-    private int eta;
+    private Date eta;
 
     @Column(name = "strict_start")
     private boolean strict_start;
@@ -77,7 +78,7 @@ public class ActiveTask {
         this.strict_start = strict_start;
     }
 
-    public void setEta(int eta) {
+    public void setEta(Date eta) {
         this.eta = eta;
     }
 
@@ -113,7 +114,7 @@ public class ActiveTask {
         return strict_start;
     }
 
-    public int getEta() {
+    public Date getEta() {
         return eta;
     }
 

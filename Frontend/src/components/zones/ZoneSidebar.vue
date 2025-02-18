@@ -3,7 +3,6 @@ import {ref} from 'vue';
 import overviewIcon from '@/assets/icons/overview.svg';
 import tasksIcon from '@/assets/icons/tasks.svg';
 import simulationIcon from '@/assets/icons/simulation.svg';
-import Zone from "@/components/zones/Zone.vue";
 
 const tabs = ref([
   {name: 'Overview', icon: overviewIcon},
