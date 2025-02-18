@@ -47,6 +47,16 @@ public class Task {
     public Task() {
     }
 
+    public Task(String packaging, String packagingItems, int i, int i1, int i2, int i3, Object o) {
+        this.name = packaging;
+        this.description = packagingItems;
+        this.minDuration = i;
+        this.maxDuration = i1;
+        this.minWorkers = i2;
+        this.maxWorkers = i3;
+        this.zone = (Zone) o;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
