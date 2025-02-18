@@ -3,10 +3,10 @@
       <div class="container">
         <div class="overview">
           <div class="grid">
-            <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)"/>
+            <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
-        <WorkerRegistry :workers="workers"  :zones="zones"/>
+        <WorkerRegistry :workers="workers"  :zones="zones" @refreshWorkers="fetchAll"/>
       </div>
     </template>
 
@@ -62,9 +62,36 @@
       }
     };
 
+    // If worker is unavailable, set zone to 0
+    const updateWorkerZone = async () => {
+      try {
+        const unavailableWorkers = workers.value.filter(worker => worker.zone !== 0 && !worker.availability);
+
+        for (const worker of unavailableWorkers) {
+          const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/0`, {
+            method: 'PUT',
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to update zone for worker ${worker.id}`);
+          }
+        }
+
+        console.log('Worker zones updated successfully');
+        fetchWorkers();
+      } catch (error) {
+        console.error('Error updating worker zones:', error);
+      }
+    };
+
+    const fetchAll = async () => {
+      await fetchZones();
+      await fetchWorkers();
+      await updateWorkerZone();
+    };
+
     onMounted(() => {
-      fetchZones();
-      fetchWorkers();
+      fetchAll();
     });
     </script>
 

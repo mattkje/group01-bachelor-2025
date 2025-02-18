@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {defineProps, computed, ref} from 'vue';
+import {computed, ref} from 'vue';
 import Worker from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 
@@ -8,6 +8,8 @@ const props = defineProps<{
   zoneId: number;
   workers: Worker[];
 }>();
+
+const emit = defineEmits(['refreshWorkers']);
 
 const showPopup = ref(false);
 const selectedZone = ref({id: 0, name: '', data: ''});
@@ -52,11 +54,15 @@ const onDrop = async (event: DragEvent) => {
     }
 
     console.log('Worker zone updated successfully');
+
+    emit('refreshWorkers');
   } catch (error) {
     console.error('Error updating worker zone:', error);
   }
 
   isDraggingOver.value = false;
+
+  // Refresh workers without reloading the page
 };
 
 const onDragOver = (event: DragEvent) => {
@@ -104,11 +110,11 @@ const onDragLeave = () => {
           v-for="(worker, index) in workers"
           :key="index"
           :name="worker.name"
+          :worker-id="worker.id"
           :zone_id="worker.zone_id"
           :licenses="worker.licenses"
           :availability="worker.availability"
           :class="{ 'unavailable': !worker.availability }"
-          draggable="true"
           @dragstart="(event) => onDragStart(event, worker)"
       />
       <div v-if="isDraggingOver" class="on-drop-worker-box" />
@@ -132,7 +138,7 @@ const onDragLeave = () => {
 .on-drop-worker-box {
   height: 100px;
   width: 100%;
-  background-color: #FFF2F2;
+  background-color: #ececec;
   border-radius: 15px;
   pointer-events: none;
 }

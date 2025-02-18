@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
+
 import ZoneSidebar from "@/components/zones/ZoneSidebar.vue";
 
 interface Zone {
