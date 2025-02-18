@@ -1,176 +1,220 @@
 <script setup lang="ts">
 import {defineProps, computed, ref} from 'vue';
-              import Worker from '@/components/zones/Worker.vue';
+import Worker from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 
+const props = defineProps<{
+  title: string;
+  zoneId: number;
+  workers: Worker[];
+}>();
 
+const showPopup = ref(false);
+const selectedZone = ref({id: 0, name: '', data: ''});
+const isDraggingOver = ref(false);
 
-              const props = defineProps<{
-                title: string;
-                workers: Worker[];
-              }>();
+const openPopup = () => {
+  selectedZone.value = {id: 1, name: props.title, data: 'Zone data here'}; // Replace with actual data
+  showPopup.value = true;
+};
 
-              const showPopup = ref(false);
-              const selectedZone = ref({ id: 0, name: '', data: '' });
+const closePopup = () => {
+  showPopup.value = false;
+};
 
-              const openPopup = () => {
-                selectedZone.value = { id: 1, name: props.title, data: 'Zone data here' }; // Replace with actual data
-                showPopup.value = true;
-              };
+const taskCompletionTimes = [30, 45, 60];
+const remainingTasks = 5;
 
-              const closePopup = () => {
-                showPopup.value = false;
-              };
+const totalTaskCompletionTime = computed(() => {
+  return taskCompletionTimes.reduce((total, time) => total + time, 0);
+});
 
-              const taskCompletionTimes = [30, 45, 60];
-              const remainingTasks = 5;
+const completionTime = computed(() => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + totalTaskCompletionTime.value);
+  return now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: false});
+});
 
-              const totalTaskCompletionTime = computed(() => {
-                return taskCompletionTimes.reduce((total, time) => total + time, 0);
-              });
+const onDragStart = (event: DragEvent, worker: Worker) => {
+  event.dataTransfer?.setData('worker', JSON.stringify(worker));
+};
 
-              const completionTime = computed(() => {
-                const now = new Date();
-                now.setMinutes(now.getMinutes() + totalTaskCompletionTime.value);
-                return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-              });
-              </script>
+const onDrop = async (event: DragEvent) => {
+  const worker = JSON.parse(event.dataTransfer?.getData('worker') || '{}');
 
-              <template>
-                <div class="rounded-square">
-                  <div class="title-bar">
-                    <div class="title-bar-status">
-                      {{ title }}
-                      <div class="task-summary">
-                        Done by: {{ completionTime }}
-                        <br />
-                        Tasks: {{ remainingTasks }}
-                      </div>
-                    </div>
-                    <hr>
-                    <div class="zone-options">
-                      <button class="icon-button" @click="openPopup">
-                        <img src="/src/assets/icons/overview.svg" alt="Assign" />
-                      </button>
-                      <button class="icon-button">
-                        <img src="/src/assets/icons/tasks.svg" alt="Assign" />
-                      </button>
-                      <button class="icon-button">
-                        <img src="/src/assets/icons/simulation.svg" alt="Assign" />
-                      </button>
-                      <button v-if="false" class="icon-button bell-icon">
-                        <img src="/src/assets/icons/bell.svg" alt="Assign" />
-                      </button>
-                      <button v-if="true" class="icon-button bell-icon">
-                        <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
-                      </button>
-                    </div>
-                  </div>
-                  <div class="vertical-box">
-                    <Worker
-                      v-for="(worker, index) in workers"
-                      :key="index"
-                      :name="worker.name"
-                      :zone_id="worker.zone_id"
-                      :licenses="worker.licenses"
-                      :availability="worker.availability"
-                      :class="{ 'unavailable': !worker.availability }"
-                    />
-                    <p v-if="workers.length === 0" style="text-align: center; margin-top: 1rem;">No workers assigned</p>
-                  </div>
-                </div>
-                <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup" />
-              </template>
+  try {
+    const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/${props.zoneId}`, {
+      method: 'PUT',
+    });
 
-              <style scoped>
-              .rounded-square {
-                width: 280px;
-                height: 100%;
-                border: 1px solid #ccc;
-                border-radius: 15px;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-              }
+    if (!response.ok) {
+      throw new Error('Failed to update worker zone');
+    }
 
-              .title-bar {
-                display: flex;
-                flex-direction: column;
-                background-color: #f5f5f5;
-                padding: 1rem;
-                font-size: 1.2rem;
-                line-height: 0.7rem;
-                font-weight: bold;
-                color: #7B7B7B;
-                border-bottom: 1px solid #ccc;
-              }
+    console.log('Worker zone updated successfully');
+  } catch (error) {
+    console.error('Error updating worker zone:', error);
+  }
 
-              .title-bar hr {
-                width: 100%;
-                margin: 0.5rem 0;
-                border: none;
-                border-top: 1px solid #ccc;
-              }
+  isDraggingOver.value = false;
+};
 
-              .title-bar-status {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 1.2rem;
-                font-weight: bold;
-                color: #7B7B7B;
-              }
+const onDragOver = (event: DragEvent) => {
+  event.preventDefault();
+  isDraggingOver.value = true;
+};
 
-              .task-summary {
-                color: #7B7B7B;
-                display: flex;
-                line-height: 1rem;
-                font-size: 0.7rem;
-                flex-direction: column;
-                align-items: flex-end;
-              }
+const onDragLeave = () => {
+  isDraggingOver.value = false;
+};
+</script>
 
-              .vertical-box {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                padding: 1rem;
-              }
+<template>
+  <div class="rounded-square">
+    <div class="title-bar">
+      <div class="title-bar-status">
+        {{ title }}
+        <div class="task-summary">
+          Done by: {{ completionTime }}
+          <br/>
+          Tasks: {{ remainingTasks }}
+        </div>
+      </div>
+      <hr>
+      <div class="zone-options">
+        <button class="icon-button" @click="openPopup">
+          <img src="/src/assets/icons/overview.svg" alt="Assign"/>
+        </button>
+        <button class="icon-button">
+          <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
+        </button>
+        <button class="icon-button">
+          <img src="/src/assets/icons/simulation.svg" alt="Assign"/>
+        </button>
+        <button v-if="false" class="icon-button bell-icon">
+          <img src="/src/assets/icons/bell.svg" alt="Assign"/>
+        </button>
+        <button v-if="true" class="icon-button bell-icon">
+          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
+        </button>
+      </div>
+    </div>
+    <div class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+      <Worker
+          v-for="(worker, index) in workers"
+          :key="index"
+          :name="worker.name"
+          :zone_id="worker.zone_id"
+          :licenses="worker.licenses"
+          :availability="worker.availability"
+          :class="{ 'unavailable': !worker.availability }"
+          draggable="true"
+          @dragstart="(event) => onDragStart(event, worker)"
+      />
+      <div v-if="isDraggingOver" class="on-drop-worker-box" />
+      <p v-if="workers.length === 0" style="text-align: center; margin-top: 1rem;">No workers assigned</p>
+    </div>
+  </div>
+  <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
+</template>
 
-              .unavailable {
-                display: none;
-              }
+<style scoped>
+.rounded-square {
+  width: 280px;
+  height: 100%;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-              .unqualified {
-                color: #f56e6e;
-                border-radius: 0.5rem;
-                padding: 10px;
-                line-height: 0.2rem;
-                margin-top: 0.1rem;
-              }
+.on-drop-worker-box {
+  height: 100px;
+  width: 100%;
+  background-color: #FFF2F2;
+  border-radius: 15px;
+  pointer-events: none;
+}
 
-              .icon-button {
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-size: 1rem;
-                width: 20px;
-                height: 20px;
-                margin-right: 1rem;
-                color: #b77979;
-              }
+.title-bar {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+  padding: 1rem;
+  font-size: 1.2rem;
+  line-height: 0.7rem;
+  font-weight: bold;
+  color: #7B7B7B;
+  border-bottom: 1px solid #ccc;
+}
 
-              .icon-button img {
-                width: 20px;
-                height: 20px;
-              }
+.title-bar hr {
+  width: 100%;
+  margin: 0.5rem 0;
+  border: none;
+  border-top: 1px solid #ccc;
+}
 
-              .icon-button:hover {
-                color: #000;
-              }
+.title-bar-status {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #7B7B7B;
+}
 
-              .bell-icon {
-                margin-left: 6rem;
-              }
-              </style>
+.task-summary {
+  color: #7B7B7B;
+  display: flex;
+  line-height: 1rem;
+  font-size: 0.7rem;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.vertical-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.unavailable {
+  display: none;
+}
+
+.unqualified {
+  color: #f56e6e;
+  border-radius: 0.5rem;
+  padding: 10px;
+  line-height: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  margin-right: 1rem;
+  color: #b77979;
+}
+
+.icon-button img {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-button:hover {
+  color: #000;
+}
+
+.bell-icon {
+  margin-left: 6rem;
+}
+</style>

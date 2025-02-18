@@ -37,7 +37,6 @@ public class TaskService {
         updatedTask.setMaxWorkers(task.getMaxWorkers());
         updatedTask.setMinWorkers(task.getMinWorkers());
         updatedTask.setRequiredLicense(task.getRequiredLicense());
-        updatedTask.setZoneId(task.getZoneId());
         return taskRepository.save(updatedTask);
     }
 

@@ -1,9 +1,9 @@
 <template>
-      <Toolbar title="Zones"/>
+  <Toolbar title="Zones"/>
       <div class="container">
         <div class="overview">
           <div class="grid">
-            <Zone v-for="zone in zones" :key="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)"/>
+            <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)"/>
           </div>
         </div>
         <WorkerRegistry :workers="workers"  :zones="zones"/>
@@ -38,6 +38,7 @@
 
     const zones = ref<Zone[]>([]);
     const workers = ref<Worker[]>([]);
+    const isEditable = ref(false);
 
     const getWorkersByZone = (zoneId: number) => {
       return workers.value.filter(worker => worker.zone === zoneId);
