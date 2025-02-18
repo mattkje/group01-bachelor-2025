@@ -1,323 +1,318 @@
 <template>
-           <Toolbar title="Tasks"/>
-           <div class="content">
-             <div class="main-content">
-               <h1>Active Tasks</h1>
-               <table class="task-table">
-                 <thead>
-                   <tr>
-                     <th @click="sortTable('name')">Task Name</th>
-                     <th @click="sortTable('description')">Description</th>
-                      <th @click="sortTable('licence')">Qualifications</th>
-                     <th @click="sortTable('estimatedTime')">Duration</th>
-                     <th @click="sortTable('workers')">Workers</th>
-                     <th @click="sortTable('zoneId')">Zone</th>
-                     <th>Actions</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr v-for="task in paginatedTasks" :key="task.id">
-                     <td>{{ task.name }}</td>
-                     <td>{{ task.description }}</td>
-                     <td>
-                       <ul>
-                         <li v-for="license in task.requiredLicense" :key="license">{{ license.name }}</li>
-                       </ul>
-                     </td>
-                     <td>{{ (task.maxTime+task.minTime/2) }} minutes</td>
-                     <td>{{ task.minWorkers }} - {{ task.maxWorkers }}</td>
-                     <td>{{ getZoneNameById(task.zoneId) }}</td>
-                     <td>
-                       <button @click="editTask(task)">Edit</button>
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-               <div class="pagination">
-                 <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-                 <span>Page {{ currentPage }} of {{ totalPages }}</span>
-                 <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
-               </div>
-             </div>
-             <div class="filter-menu">
-               <h3>Filter Tasks</h3>
-               <input type="text" v-model="searchQuery" placeholder="Search tasks..." />
-               <label for="statusFilter">Status:</label>
-               <select v-model="statusFilter" id="statusFilter">
-                 <option value="">All</option>
-                 <option value="Pending">Pending</option>
-                 <option value="In Progress">In Progress</option>
-                 <option value="Completed">Completed</option>
-               </select>
-               <h4>Zones</h4>
-               <div v-for="zone in zones" :key="zone.id">
-                 <input type="checkbox" :id="'zone-' + zone.id" :value="zone.id" v-model="selectedZones" />
-                 <label :for="'zone-' + zone.id">{{ zone.name }}</label>
-               </div>
-             </div>
-           </div>
+            <Toolbar title="Tasks"/>
+            <div class="content">
+              <div class="main-content">
+                <h1>Active Tasks</h1>
+                <table class="task-table">
+                  <thead>
+                  <tr>
+                    <th @click="sortTable('name')">Task Name</th>
+                    <th @click="sortTable('requiredLicense')">Qualifications</th>
+                    <th @click="sortTable('estimatedTime')">Duration</th>
+                    <th @click="sortTable('workers')">Workers</th>
+                    <th @click="sortTable('workerSlots')">Worker slots</th>
+                    <th @click="sortTable('zoneId')">Zone</th>
+                    <th @click="sortTable('description')">Info</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="task in paginatedTasks" :key="task.id">
+                    <td>{{ task.name }}</td>
+                    <td>
+                      <ul>
+                        <li v-for="license in task.requiredLicense" :key="license.name">{{ license.name }}</li>
+                      </ul>
+                    </td>
+                    <td>{{ (task.maxTime + task.minTime) / 2 }} minutes</td>
+                    <td>
+                      <ul>
+                        <li v-for="worker in getWorkersForTask(task.id)" :key="worker.id">{{ worker.name }}</li>
+                      </ul>
+                    </td>
+                    <td>{{ task.minWorkers }} - {{ task.maxWorkers }}</td>
+                    <td>{{ getZoneNameById(task.zoneId) }}</td>
+                    <td>
+                      <button @click="showModal = true">i</button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+                <div class="pagination">
+                  <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+                  <span>Page {{ currentPage }} of {{ totalPages }}</span>
+                  <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+                </div>
+              </div>
+              <div class="filter-menu">
+                <h3>Filter Tasks</h3>
+                <input type="text" v-model="searchQuery" placeholder="Search tasks..."/>
+                <label for="statusFilter">Status:</label>
+                <select v-model="statusFilter" id="statusFilter">
+                  <option value="">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+                <h4>Zones</h4>
+                <div v-for="zone in zones" :key="zone.id">
+                  <input type="checkbox" :id="'zone-' + zone.id" :value="zone.id" v-model="selectedZones"/>
+                  <label :for="'zone-' + zone.id">{{ zone.name }}</label>
+                </div>
+              </div>
+            </div>
+          </template>
 
-           <div v-if="showModal" class="modal">
-             <div class="modal-content">
-               <span class="close" @click="closeModal">&times;</span>
-               <h2>Edit Task</h2>
-               <form @submit.prevent="saveTask">
-                 <label for="name">Task Name:</label>
-                 <input type="text" v-model="currentTask.name" id="name" required />
+          <script setup lang="ts">
+          import { ref, computed, onMounted } from 'vue';
+          import Toolbar from '../components/Toolbar.vue';
 
-                 <label for="description">Description:</label>
-                 <input type="text" v-model="currentTask.description" id="description" required />
+          interface Task {
+            id: number;
+            name: string;
+            description: string;
+            requiredLicense: { name: string }[];
+            maxTime: number;
+            minTime: number;
+            zoneId: number;
+            minWorkers: number;
+            maxWorkers: number;
+          }
 
-                 <label for="estimatedTime">Estimated Time:</label>
-                 <input type="text" v-model="currentTask.estimatedTime" id="estimatedTime" required />
+          interface Worker {
+            id: number;
+            name: string;
+          }
 
-                 <label for="zone">Zone:</label>
-                 <input type="number" v-model="currentTask.zone" id="zone" required />
+          interface ActiveTask {
+            id: number;
+            workers: Worker[];
+          }
 
-                 <label for="workers">Workers:</label>
-                 <input type="text" v-model="currentTask.workers" id="workers" required />
+          interface Zone {
+            id: number;
+            name: string;
+          }
 
-                 <label for="requiredLicenses">Required Licenses:</label>
-                 <input type="text" v-model="currentTask.requiredLicenses" id="requiredLicenses" required />
+          const tasks = ref<Task[]>([]);
+          const activeTasks = ref<ActiveTask[]>([]);
+          const zones = ref<Zone[]>([]);
 
-                 <label for="deadline">Deadline:</label>
-                 <input type="date" v-model="currentTask.deadline" id="deadline" required />
+          const currentPage = ref(1);
+          const tasksPerPage = 9;
+          const searchQuery = ref('');
+          const showModal = ref(false);
+          const statusFilter = ref('');
+          const selectedZones = ref<number[]>([]);
 
-                 <label for="status">Status:</label>
-                 <input type="text" v-model="currentTask.status" id="status" required />
+          const fetchTasks = async () => {
+            try {
+              const response = await fetch('http://localhost:8080/api/tasks');
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              tasks.value = await response.json();
+            } catch (error) {
+              console.error('Failed to fetch tasks:', error);
+            }
+          };
 
-                 <button type="submit">Save</button>
-               </form>
-             </div>
-           </div>
-         </template>
+          const fetchActiveTasks = async () => {
+            try {
+              const response = await fetch('http://localhost:8080/api/active-tasks');
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              activeTasks.value = await response.json();
+            } catch (error) {
+              console.error('Failed to fetch active tasks:', error);
+            }
+          };
 
-         <script setup lang="ts">
-         import { ref, computed, onMounted } from 'vue';
-         import Toolbar from '@/components/Toolbar.vue';
+          const fetchZones = async () => {
+            try {
+              const response = await fetch('http://localhost:8080/api/zones');
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              zones.value = await response.json();
+            } catch (error) {
+              console.error('Failed to fetch zones:', error);
+            }
+          };
 
+          onMounted(() => {
+            fetchTasks();
+            fetchActiveTasks();
+            fetchZones();
+          });
 
+          const filteredTasks = computed(() => {
+            return tasks.value
+                .filter(task => task.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+                .filter(task => selectedZones.value.length === 0 || selectedZones.value.includes(task.zoneId));
+          });
 
-         interface Zone {
-           id: number;
-           name: string;
-         }
+          const getWorkersForTask = (taskId: number) => {
+            const activeTask = activeTasks.value.find(task => task.id === taskId);
+            return activeTask ? activeTask.workers : [];
+          };
 
-         const tasks = ref([]);
-         const activeTasks = ref([]);
-         const zones = ref<Zone[]>([]);
+          const paginatedTasks = computed(() => {
+            const start = (currentPage.value - 1) * tasksPerPage;
+            const end = start + tasksPerPage;
+            return filteredTasks.value.slice(start, end);
+          });
 
-         const currentPage = ref(1);
-         const tasksPerPage = 5;
-         const searchQuery = ref('');
-         const showModal = ref(false);
-         const currentTask = ref({ id: 0, name: '', description: '', estimatedTime: '', zone: 0, workers: '', requiredLicenses: '', deadline: '', status: '' });
-         const statusFilter = ref('');
-         const selectedZones = ref<number[]>([]);
+          const totalPages = computed(() => {
+            return Math.ceil(filteredTasks.value.length / tasksPerPage);
+          });
 
-         const fetchTasks = async () => {
-           try {
-             const response = await fetch('http://localhost:8080/api/tasks');
-             if (!response.ok) {
-               throw new Error('Network response was not ok');
-             }
-             tasks.value = await response.json();
-           } catch (error) {
-             console.error('Failed to fetch tasks:', error);
-           }
-         };
+          const nextPage = () => {
+            if (currentPage.value < totalPages.value) {
+              currentPage.value++;
+            }
+          };
 
-         const fetchActiveTasks = async () => {
-           try {
-             const response = await fetch('http://localhost:8080/api/active-tasks');
-             if (!response.ok) {
-               throw new Error('Network response was not ok');
-             }
-             activeTasks.value = await response.json();
-           } catch (error) {
-             console.error('Failed to fetch tasks:', error);
-           }
-         };
+          const prevPage = () => {
+            if (currentPage.value > 1) {
+              currentPage.value--;
+            }
+          };
 
-         const fetchZones = async () => {
-           try {
-             const response = await fetch('http://localhost:8080/api/zones');
-             if (!response.ok) {
-               throw new Error('Network response was not ok');
-             }
-             zones.value = await response.json();
-           } catch (error) {
-             console.error('Failed to fetch zones:', error);
-           }
-         };
-
-         onMounted(() => {
-           fetchTasks();
-           fetchActiveTasks();
-           fetchZones();
-         });
-
-         const filteredTasks = computed(() => {
-           return tasks.value
-             .filter(task => task.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
-             .filter(task => !statusFilter.value || task.status === statusFilter.value)
-             .filter(task => selectedZones.value.length === 0 || selectedZones.value.includes(task.zone));
-         });
-
-         const paginatedTasks = computed(() => {
-           const start = (currentPage.value - 1) * tasksPerPage;
-           const end = start + tasksPerPage;
-           return filteredTasks.value.slice(start, end);
-         });
-
-         const totalPages = computed(() => {
-           return Math.ceil(filteredTasks.value.length / tasksPerPage);
-         });
-
-         const nextPage = () => {
-           if (currentPage.value < totalPages.value) {
-             currentPage.value++;
-           }
-         };
-
-         const prevPage = () => {
-           if (currentPage.value > 1) {
-             currentPage.value--;
-           }
-         };
-
-         const sortTable = (key: keyof Task) => {
-           tasks.value.sort((a, b) => {
-             if (a[key] < b[key]) return -1;
-             if (a[key] > b[key]) return 1;
-             return 0;
-           });
-         };
-
-         const editTask = (task: Task) => {
-           currentTask.value = { ...task };
-           showModal.value = true;
-         };
-
-         const closeModal = () => {
-           showModal.value = false;
-         };
-
-         const saveTask = () => {
-           if (currentTask.value) {
-             const index = tasks.value.findIndex(task => task.id === currentTask.value.id);
-             if (index !== -1) {
-               tasks.value[index] = { ...currentTask.value };
-             }
-             closeModal();
-           }
-         };
+          const sortTable = (key: string) => {
+            tasks.value.sort((a, b) => {
+              const aValue = a[key as keyof Task];
+              const bValue = b[key as keyof Task];
+              if (aValue < bValue) return -1;
+              if (aValue > bValue) return 1;
+              return 0;
+            });
+          };
 
           const getZoneNameById = (zoneId: number) => {
             const zone = zones.value.find(zone => zone.id === zoneId);
             return zone ? zone.name : 'Unassigned';
           };
+          </script>
 
-         </script>
+          <style scoped>
+          .content {
+            display: flex;
+            margin: 0;
+            height: calc(100% - 4rem);
+          }
 
-         <style scoped>
-         .content {
-           display: flex;
-           margin: 0;
-           height: calc(100% - 4rem);
-         }
+          .main-content {
+            padding: 1rem;
+            flex: 1;
+            overflow-y: auto;
+          }
 
-         .main-content {
-           padding: 1rem;
-           flex: 1;
-         }
+          .filter-menu {
+            position: sticky;
+            width: 280px;
+            height: 100%;
+            padding: 1rem;
+            border-left: 1px solid #ccc;
+            background-color: #f9f9f9;
+          }
 
-         .filter-menu {
-           position: sticky;
-           width: 280px;
-           height: 100%;
-           padding: 1rem;
-           border-left: 1px solid #ccc;
-           background-color: #f9f9f9;
-         }
+          .task-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: #e1e1e1 1px solid;
+          }
 
-         .task-table {
-           width: 100%;
-           border-collapse: separate;
-           border-spacing: 0;
-           margin-bottom: 1rem;
-           border-radius: 8px;
-           overflow: hidden;
-           border: #e1e1e1 1px solid;
-         }
+          .task-table th, .task-table td {
+            padding: 0.8vh;
+            text-align: left;
+          }
 
-         .task-table th, .task-table td {
-           padding: 0.8vh;
-           text-align: left;
-         }
+          .task-table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+            cursor: pointer;
+          }
 
-         .task-table th {
-           background-color: #f4f4f4;
-           font-weight: bold;
-           cursor: pointer;
-         }
+          .task-table tbody tr {
+            transition: background-color 0.3s;
+          }
 
-         .task-table tbody tr {
-           transition: background-color 0.3s;
-         }
+          .task-table tbody tr:hover {
+            background-color: #f9f9f9;
+          }
 
-         .task-table tbody tr:hover {
-           background-color: #f9f9f9;
-         }
+          .task-table tbody tr:nth-child(even) {
+            background-color: #f8f8f8;
+          }
 
-         .task-table tbody tr:nth-child(even) {
-           background-color: #f8f8f8;
-         }
+          .task-table button {
+            padding: 0.25rem 0.5rem;
+            background-color: #E77474;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
 
-         .task-table button {
-           padding: 0.25rem 0.5rem;
-           background-color: #E77474;
-           color: white;
-           border: none;
-           border-radius: 4px;
-           cursor: pointer;
-         }
+          .task-table button:hover {
+            background-color: #9d4d4d;
+          }
 
-         .task-table button:hover {
-           background-color: #9d4d4d;
-         }
+          .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
 
-         .pagination {
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-         }
+          .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+          }
 
-         .modal {
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           position: fixed;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           background-color: rgba(0, 0, 0, 0.5);
-         }
+          .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 100%;
+          }
 
-         .modal-content {
-           background-color: #fff;
-           padding: 2rem;
-           border-radius: 8px;
-           width: 500px;
-           max-width: 100%;
-         }
+          .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+          }
 
-         .close {
-           position: absolute;
-           top: 10px;
-           right: 10px;
-           font-size: 1.5rem;
-           cursor: pointer;
-         }
-         </style>
+          ul {
+            list-style-type: none;
+            padding: 0;
+          }
+
+          ul li {
+            background-color: #f0f0f0;
+            padding: 0.5em;
+            border-radius: 4px;
+            margin-bottom: 0.5em;
+          }
+
+          ul li::before {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+          }
+          </style>
