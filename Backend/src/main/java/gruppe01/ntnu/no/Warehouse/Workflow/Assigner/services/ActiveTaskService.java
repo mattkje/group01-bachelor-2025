@@ -31,8 +31,10 @@ public class ActiveTaskService {
 
     public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
         if (activeTask != null) {
-            Task task = taskRepository.findById(taskId).get();
-            activeTask.setTask(task);
+            if (activeTask.getTask() == null){
+                Task task = taskRepository.findById(taskId).get();
+                activeTask.setTask(task);
+            }
             return activeTaskRepository.save(activeTask);
         }
         return null;

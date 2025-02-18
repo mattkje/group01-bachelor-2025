@@ -57,8 +57,12 @@ public class ActiveTaskGenerator{
       int numTasks = random.nextInt(maxNumTasks - minNumTasks) + minNumTasks;
 
       Date dueDate = calendar.getTime();
+      ActiveTask activeTask = new ActiveTask();
 
       for (int i = 0; i < numTasks; i++) {
+
+        // Generate random strict start requirement
+        boolean strictStart = random.nextInt(100) == strictStartChance;
         // Generate random due date
         if (random.nextInt(100) == dueDateChance) {
           int dueHour = dueHours[random.nextInt(dueHours.length)];
@@ -66,14 +70,16 @@ public class ActiveTaskGenerator{
           calendar.set(Calendar.HOUR_OF_DAY, dueHour);
           calendar.set(Calendar.MINUTE, dueMinute);
           dueDate = calendar.getTime();
+          if (strictStart) {
+            activeTask.setStartTime(dueDate);
+          } else {
+            activeTask.setEndTime(dueDate);
+          }
         }
         // Generate random task
         Task task = tasks.get(random.nextInt(tasks.size()));
-        // Generate random strict start requirement
-        boolean strictStart = random.nextInt(100) == strictStartChance;
 
         // Create active task
-        ActiveTask activeTask = new ActiveTask();
         activeTask.setDueDate(dueDate);
         activeTask.setTask(task);
         activeTask.setStrictStart(strictStart);
