@@ -4,6 +4,11 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -14,13 +19,16 @@ import java.util.Random;
  * Class for generating active tasks for the simulation
  * Generates a random numbers of active tasks with random durations and requirements
  */
-public class activeTaskGenerator {
+@Service
+public class ActiveTaskGenerator{
 
+  @Autowired
+  private TaskService taskService;
 
-  public static void main(String[] args) {
+  @Autowired
+  private ActiveTaskService activeTaskService;
 
-    // Get all tasks to create active tasks from
-    TaskService taskService = new TaskService();
+  public void generateActiveTasks() throws Exception {
     List<Task> tasks = new ArrayList<>(taskService.getAllTasks());
 
     // Set up generation parameters
@@ -69,9 +77,9 @@ public class activeTaskGenerator {
         activeTask.setDueDate(dueDate);
         activeTask.setTask(task);
         activeTask.setStrictStart(strictStart);
+        activeTask.setDate(calendar.getTime());
 
         // Save active task
-        ActiveTaskService activeTaskService = new ActiveTaskService();
         activeTaskService.createActiveTask(task.getId(),activeTask);
       }
 

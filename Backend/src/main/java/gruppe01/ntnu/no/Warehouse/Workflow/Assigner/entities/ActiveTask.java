@@ -81,6 +81,10 @@ public class ActiveTask {
         this.eta = eta;
     }
 
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
     public Date getDueDate() {
         return dueDate;
     }
@@ -113,5 +117,7 @@ public class ActiveTask {
         return eta;
     }
 
-
+    public Date getDate() {
+        return date;
+    }
 }
