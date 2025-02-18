@@ -56,10 +56,9 @@ public class ActiveTaskGenerator{
     while (calendar.getTime().before(endDate) || calendar.getTime().equals(endDate)) {
       int numTasks = random.nextInt(maxNumTasks - minNumTasks) + minNumTasks;
 
-      Date dueDate = calendar.getTime();
-      ActiveTask activeTask = new ActiveTask();
-
       for (int i = 0; i < numTasks; i++) {
+        Date dueDate = calendar.getTime();
+        ActiveTask activeTask = new ActiveTask();
 
         // Generate random strict start requirement
         boolean strictStart = random.nextInt(100) == strictStartChance;
