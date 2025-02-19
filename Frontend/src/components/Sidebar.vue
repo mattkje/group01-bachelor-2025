@@ -21,7 +21,7 @@
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
     { separator: true },
     { name: 'Simulation', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/simulation' },
-    { name: 'Graph', icon: graphIcon, iconSelected: graphIconSelected, path: '/graph' },
+    { name: 'Info', icon: graphIcon, iconSelected: graphIconSelected, path: '/info' },
   ]);
 
   const route = useRoute();
@@ -35,7 +35,7 @@
   <div class="sidebar">
     <div class="logo">
       <img src="@/assets/logo.png" alt="Logo" class="logo-icon" />
-      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Assigner™</span></span>
+      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
     </div>
     <div class="tabs">
       <template v-for="(tab, index) in tabs" :key="index">
