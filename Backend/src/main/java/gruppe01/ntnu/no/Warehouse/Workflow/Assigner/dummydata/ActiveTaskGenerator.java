@@ -7,9 +7,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
 
+    import java.time.LocalDate;
+    import java.time.LocalDateTime;
+    import java.time.LocalTime;
     import java.util.ArrayList;
-    import java.util.Calendar;
-    import java.util.Date;
     import java.util.List;
     import java.util.Random;
 
@@ -36,11 +37,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
 
             Random random = new Random();
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(2025, Calendar.FEBRUARY, 18);
-            Date startDate = calendar.getTime();
-            calendar.set(2025, Calendar.MARCH, 18);
-            Date endDate = calendar.getTime();
+            LocalDate startDate = LocalDate.of(2025, 2, 18);
+            LocalDate endDate = LocalDate.of(2025, 3, 18);
 
             int minNumTasks = 50;
             int maxNumTasks = 125;
@@ -48,20 +46,20 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
             int strictStartChance = 5;
 
             // Generate active tasks
-            List<Date> dates = new ArrayList<>();
-            calendar.setTime(startDate);
+            List<LocalDate> dates = new ArrayList<>();
+            LocalDate currentDate = startDate;
 
-            while (calendar.getTime().before(endDate) || calendar.getTime().equals(endDate)) {
+            while (!currentDate.isAfter(endDate)) {
                 int numTasks = random.nextInt(maxNumTasks - minNumTasks) + minNumTasks;
-                generateOneDay(calendar, tasks, numTasks, dueDateChance, dueHours, dueMinutes, strictStartChance, random);
-                dates.add(calendar.getTime());
-                calendar.add(Calendar.DATE, 1);
+                generateOneDay(currentDate, tasks, numTasks, dueDateChance, dueHours, dueMinutes, strictStartChance, random);
+                dates.add(currentDate);
+                currentDate = currentDate.plusDays(1);
             }
         }
 
-        private void generateOneDay(Calendar calendar, List<Task> tasks, int numTasks, int dueDateChance, int[] dueHours, int[] dueMinutes, int strictStartChance, Random random) throws Exception {
+        private void generateOneDay(LocalDate date, List<Task> tasks, int numTasks, int dueDateChance, int[] dueHours, int[] dueMinutes, int strictStartChance, Random random) throws Exception {
             for (int i = 0; i < numTasks; i++) {
-                Date dueDate = calendar.getTime();
+                LocalDateTime dueDate = date.atStartOfDay();
                 ActiveTask activeTask = new ActiveTask();
 
                 // Generate random strict start requirement
@@ -70,9 +68,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
                 if (random.nextInt(100) == dueDateChance) {
                     int dueHour = dueHours[random.nextInt(dueHours.length)];
                     int dueMinute = dueMinutes[random.nextInt(dueMinutes.length)];
-                    calendar.set(Calendar.HOUR_OF_DAY, dueHour);
-                    calendar.set(Calendar.MINUTE, dueMinute);
-                    dueDate = calendar.getTime();
+                    LocalTime dueTime = LocalTime.of(dueHour, dueMinute);
+                    dueDate = LocalDateTime.of(date, dueTime);
                     if (strictStart) {
                         activeTask.setStartTime(dueDate);
                     } else {
@@ -86,7 +83,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
                 activeTask.setDueDate(dueDate);
                 activeTask.setTask(task);
                 activeTask.setStrictStart(strictStart);
-                activeTask.setDate(calendar.getTime());
+                activeTask.setDate(date);
 
                 // Save active task
                 activeTaskService.createActiveTask(task.getId(), activeTask);

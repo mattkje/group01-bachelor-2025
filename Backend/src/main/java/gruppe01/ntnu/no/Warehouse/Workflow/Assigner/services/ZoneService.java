@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ZoneService {
@@ -22,14 +23,14 @@ public class ZoneService {
     private TaskRepository taskRepository;
 
     public List<Zone> getAllZones() {
-        return zoneRepository.findAll();
+        return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
     }
 
     public Zone getZoneById(Long id) {
         return zoneRepository.findById(id).orElse(null);
     }
 
-    public List<Worker> getWorkersByZoneId(Long id) {
+    public Set<Worker> getWorkersByZoneId(Long id) {
         Zone zone = zoneRepository.findById(id).orElse(null);
         if (zone != null) {
             return zone.getWorkers();
@@ -37,7 +38,7 @@ public class ZoneService {
         return null;
     }
 
-    public List<Task> getTasksByZoneId(Long id) {
+    public Set<Task> getTasksByZoneId(Long id) {
         Zone zone = zoneRepository.findById(id).orElse(null);
         if (zone != null) {
             return zone.getTasks();

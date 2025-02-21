@@ -2,7 +2,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -12,28 +13,23 @@ public class ActiveTask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "due_date")
-    private Date dueDate;
+    private LocalDateTime dueDate;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "start_time")
-    private Date startTime;
+    private LocalDateTime startTime;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "end_time")
-    private Date endTime;
+    private LocalDateTime endTime;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "eta")
-    private Date eta;
+    private LocalDate eta;
 
     @Column(name = "strict_start")
     private boolean strict_start;
 
-    @Temporal(TemporalType.DATE)
     @Column(name="date")
-    private Date date;
+    private LocalDate date;
 
     @ManyToOne
     @JoinColumn(name = "task_id")
@@ -54,11 +50,11 @@ public class ActiveTask {
         this.id = id;
     }
 
-    public void setEndTime(Date endTime) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
@@ -70,7 +66,7 @@ public class ActiveTask {
         this.task = task;
     }
 
-    public void setDueDate(Date dueDate) {
+    public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
     }
 
@@ -78,23 +74,23 @@ public class ActiveTask {
         this.strict_start = strict_start;
     }
 
-    public void setEta(Date eta) {
+    public void setEta(LocalDate eta) {
         this.eta = eta;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
-    public Date getDueDate() {
+    public LocalDateTime getDueDate() {
         return dueDate;
     }
 
-    public Date getStartTime() {
+    public LocalDateTime getStartTime() {
         return startTime;
     }
 
-    public Date getEndTime() {
+    public LocalDateTime getEndTime() {
         return endTime;
     }
 
@@ -114,11 +110,11 @@ public class ActiveTask {
         return strict_start;
     }
 
-    public Date getEta() {
+    public LocalDate getEta() {
         return eta;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 }

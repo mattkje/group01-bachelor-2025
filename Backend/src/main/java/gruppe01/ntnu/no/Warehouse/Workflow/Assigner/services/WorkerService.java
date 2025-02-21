@@ -20,7 +20,7 @@ public class WorkerService {
     private LicenseRepository licenseRepository;
 
     public List<Worker> getAllWorkers() {
-        return workerRepository.findAll();
+        return workerRepository.findAllWithLicenses();
     }
 
     public List<Worker> getAvailableWorkers() {

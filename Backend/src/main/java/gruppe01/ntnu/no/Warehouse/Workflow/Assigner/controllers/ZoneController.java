@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/zones")
@@ -27,12 +28,12 @@ public class ZoneController {
     }
 
     @GetMapping("/{id}/workers")
-    public List<Worker> getWorkersByZoneId(@PathVariable Long id) {
+    public Set<Worker> getWorkersByZoneId(@PathVariable Long id) {
         return zoneService.getWorkersByZoneId(id);
     }
 
     @GetMapping("/{id}/tasks")
-    public List<Task> getTasksByZoneId(@PathVariable Long id) {
+    public Set<Task> getTasksByZoneId(@PathVariable Long id) {
         return zoneService.getTasksByZoneId(id);
     }
 

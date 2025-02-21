@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import jakarta.persistence.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Zone {
@@ -18,10 +19,10 @@ public class Zone {
     private int capacity;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
-    private List<Task> tasks;
+    private Set<Task> tasks;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
-    private List<Worker> workers;
+    private Set<Worker> workers;
 
     public Zone() {
     }
@@ -38,11 +39,11 @@ public class Zone {
         this.capacity = capacity;
     }
 
-    public void setTasks(List<Task> tasks) {
+    public void setTasks(Set<Task> tasks) {
         this.tasks = tasks;
     }
 
-    public void setWorkers(List<Worker> workers) {
+    public void setWorkers(Set<Worker> workers) {
         this.workers = workers;
     }
 
@@ -58,11 +59,11 @@ public class Zone {
         return capacity;
     }
 
-    public List<Task> getTasks() {
+    public Set<Task> getTasks() {
         return tasks;
     }
 
-    public List<Worker> getWorkers() {
+    public Set<Worker> getWorkers() {
         return workers;
     }
 }

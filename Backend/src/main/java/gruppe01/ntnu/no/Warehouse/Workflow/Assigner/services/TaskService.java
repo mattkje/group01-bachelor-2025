@@ -18,7 +18,7 @@ public class TaskService {
     private ZoneRepository zoneRepository;
 
     public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+        return taskRepository.findAllWithLicenses();
     }
 
     public Task createTask(Task task, Long zoneId) {
