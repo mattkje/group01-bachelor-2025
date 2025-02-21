@@ -24,6 +24,11 @@ public class ActiveTaskController {
         return activeTaskService.getActiveTaskById(id);
     }
 
+    @GetMapping("/today")
+    public List<ActiveTask> getActiveTasksForToday() {
+        return activeTaskService.getActiveTasksForToday();
+    }
+
     @PostMapping("{taskId}")
     public ActiveTask createActiveTask(@PathVariable Long taskId, @RequestBody ActiveTask activeTask) {
         return activeTaskService.createActiveTask(taskId, activeTask);

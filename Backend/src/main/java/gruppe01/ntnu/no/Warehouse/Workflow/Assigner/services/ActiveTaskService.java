@@ -7,9 +7,16 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepos
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
+import java.sql.Time;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ActiveTaskService {
@@ -27,6 +34,17 @@ public class ActiveTaskService {
 
     public ActiveTask getActiveTaskById(Long id) {
         return activeTaskRepository.findById(id).orElse(null);
+    }
+
+    public List<ActiveTask> getActiveTasksForToday() {
+        LocalDate currentDate = LocalDate.now();
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentDate)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
     }
 
     public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
