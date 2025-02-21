@@ -31,7 +31,7 @@ public class ZoneSimulator {
                                        AtomicDouble totalTaskTime) {
     try {
       // Get the available workers in the zone
-      List<Worker> zoneWorkers = zone.getWorkers();
+      List<Worker> zoneWorkers = (List<Worker>) zone.getWorkers();
       System.out.println("Zone " + zone.getId() + " acquired " + zoneWorkers.size() +
           " workers. With a capacity of " + zone.getCapacity());
 
