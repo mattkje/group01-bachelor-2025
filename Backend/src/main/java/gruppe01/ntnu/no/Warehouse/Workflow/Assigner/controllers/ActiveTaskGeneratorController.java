@@ -20,7 +20,7 @@ public class ActiveTaskGeneratorController {
   @Autowired
   private MonteCarloWithRealData monteCarloWithRealData;
 
-    @GetMapping("/gernerate-active-tasks")
+    @GetMapping("/generate-active-tasks")
     public void generateActiveTasks() throws Exception {
         activeTaskGeneratorService.generateActiveTasks();
     }
