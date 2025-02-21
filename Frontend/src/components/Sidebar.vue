@@ -21,6 +21,7 @@
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
     { separator: true },
     { name: 'Simulation', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/simulation' },
+    { name: 'Worker Dev', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/worker' },
     { name: 'Info', icon: graphIcon, iconSelected: graphIconSelected, path: '/info' },
   ]);
 

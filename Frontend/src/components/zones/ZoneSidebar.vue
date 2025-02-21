@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from 'vue';
 import overviewIcon from '@/assets/icons/overview.svg';
 import tasksIcon from '@/assets/icons/tasks.svg';
 import simulationIcon from '@/assets/icons/simulation.svg';
 
 const tabs = ref([
-  {name: 'Overview', icon: overviewIcon},
-  {name: 'Tasks', icon: tasksIcon},
-  {name: 'History', icon: simulationIcon},
+  { name: 'Overview', icon: overviewIcon },
+  { name: 'Tasks', icon: tasksIcon },
+  { name: 'History', icon: simulationIcon },
 ]);
 
 const activeTab = ref(tabs.value[0].name);
+const emit = defineEmits(['tab-selected']);
 
 const props = defineProps<{
   title: string;
@@ -18,14 +19,14 @@ const props = defineProps<{
 
 const selectTab = (tabName: string) => {
   activeTab.value = tabName;
+  emit('tab-selected', tabName);
 };
-
 </script>
 
 <template>
   <div class="sidebar">
-      <button class="close-button" @click="$emit('close')">&times;</button>
-      <span class="logo-text">{{ title }}</span>
+    <button class="close-button" @click="$emit('close')">&times;</button>
+    <span class="logo-text">{{ title }}</span>
     <div class="tabs">
       <div
           v-for="tab in tabs"
@@ -33,7 +34,7 @@ const selectTab = (tabName: string) => {
           :class="['tab', { 'active-tab': tab.name === activeTab }]"
           @click="selectTab(tab.name)"
       >
-        <img :src="tab.icon" alt="" class="tab-icon"/>
+        <img :src="tab.icon" alt="" class="tab-icon" />
         <span>{{ tab.name }}</span>
       </div>
     </div>

@@ -69,6 +69,9 @@
           <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
         </button>
       </div>
+      <div v-if="title === 'Worker Profile'" class="toolbar">
+        <div class="toolbar-title">{{ props.title }}</div>
+      </div>
     </template>
 
   <style scoped>

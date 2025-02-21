@@ -116,9 +116,9 @@
 
     .overview {
       flex: 1;
-      padding: 1rem;
-      height: 100%; /* Set a fixed height */
-      overflow-y: auto; /* Enable vertical scrolling */
+      padding: 1rem 1rem 0 1rem;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
     }
 
     .grid {

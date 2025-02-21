@@ -12,11 +12,11 @@ const props = defineProps<{
 const emit = defineEmits(['refreshWorkers']);
 
 const showPopup = ref(false);
-const selectedZone = ref({id: 0, name: '', data: ''});
+const selectedZone = ref({id: 0, name: ''});
 const isDraggingOver = ref(false);
 
 const openPopup = () => {
-  selectedZone.value = {id: 1, name: props.title, data: 'Zone data here'}; // Replace with actual data
+  selectedZone.value = {id: props.zoneId, name: props.title};
   showPopup.value = true;
 };
 

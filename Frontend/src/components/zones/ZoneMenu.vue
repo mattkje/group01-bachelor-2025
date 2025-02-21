@@ -1,6 +1,7 @@
 <script setup lang="ts">
-
+import { ref } from 'vue';
 import ZoneSidebar from "@/components/zones/ZoneSidebar.vue";
+import ZoneTasks from "@/components/zones/ZoneTasks.vue";
 
 interface Zone {
   id: number;
@@ -9,19 +10,27 @@ interface Zone {
 }
 
 const props = defineProps<{ zone: Zone }>();
+const activeTab = ref('Overview');
+
+const handleTabSelected = (tabName: string) => {
+  activeTab.value = tabName;
+};
 </script>
 
 <template>
   <div class="popup-background" @click="$emit('close')">
     <div class="popup" @click.stop>
-
       <div class="popup-body">
-        <ZoneSidebar :title="zone.name" @close="$emit('close')" />
+        <ZoneSidebar :title="zone.name" @close="$emit('close')" @tab-selected="handleTabSelected" />
+        <div class="popup-content">
+          <div v-if="activeTab === 'Overview'">Overview Content</div>
+          <div v-if="activeTab === 'Tasks'"><ZoneTasks :zone="zone"/></div>
+          <div v-if="activeTab === 'History'">History Content</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
 <style scoped>
 .popup-background {
   position: fixed;
@@ -41,12 +50,9 @@ const props = defineProps<{ zone: Zone }>();
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   background-color: #fff;
-  border-radius: 10px;
-  border: #e1e1e1 solid 1px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
