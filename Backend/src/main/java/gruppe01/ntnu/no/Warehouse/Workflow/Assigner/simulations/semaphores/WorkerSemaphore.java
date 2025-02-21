@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * A semaphore that controls access to a list of workers.
@@ -15,10 +16,10 @@ import java.util.concurrent.Semaphore;
  */
 
 public class WorkerSemaphore {
-    private final List<Worker> workers;
+    private final Set<Worker> workers;
     private final Semaphore semaphore;
 
-    public WorkerSemaphore(List<Worker> workers) {
+    public WorkerSemaphore(Set<Worker> workers) {
         this.workers = workers;
         this.semaphore = new Semaphore(workers.size());
     }
@@ -37,7 +38,7 @@ public class WorkerSemaphore {
                     }
                 }
                 // If no worker with no license is found, return the first worker
-                Worker worker = workers.getFirst();
+                Worker worker = workers.iterator().next();
                 workers.remove(worker);
                 // System.out.println("Acquired worker with license: " + requiredLicense);
                 return worker;
@@ -55,25 +56,31 @@ public class WorkerSemaphore {
         return null; // No worker with the required license found
     }
 
-   public void acquireMultiple(ActiveTask activeTask) throws InterruptedException {
-       semaphore.acquire(activeTask.getTask().getMinWorkers()-activeTask.getWorkers().size());
-       synchronized (workers) {
-           while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()-activeTask.getWorkers().size()) {
-               for (Worker worker : workers) {
-                   if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
-                       activeTask.getWorkers().add(worker);
-                       workers.remove(worker);
-                       if (activeTask.getWorkers().size() == activeTask.getTask().getMinWorkers()-activeTask.getWorkers().size()) {
-                           break;
+  public void acquireMultiple(ActiveTask activeTask, CountDownLatch latch) throws InterruptedException {
+           System.out.println("Zone has " + workers.size() + " workers");
+           semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
+           synchronized (workers) {
+               while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
+                   for (Worker worker : workers) {
+                       System.out.println("Task requires " + activeTask.getTask().getRequiredLicense() + " workers, currently have " + worker.getLicenses());
+                       if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
+                           System.out.println("Task " + activeTask.getTask().getId() + " acquired worker " + worker.getId());
+                           activeTask.getWorkers().add(worker);
+                           workers.remove(worker);
+                           if (activeTask.getWorkers().size() == activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
+                               System.out.println("Task " + activeTask.getTask().getId() + " acquired all workers");
+                               latch.countDown(); // Count down the latch
+                           }
                        }
                    }
-               }
-               if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()-activeTask.getWorkers().size()) {
-                   workers.wait();
+                   semaphore.release();
+                   if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
+                       System.out.println("Task " + activeTask.getTask().getId() + " waiting for workers, Currently has " + activeTask.getWorkers().size());
+                       workers.wait();
+                   }
                }
            }
        }
-   }
 
     public void release(Worker worker) {
         synchronized (workers) {
