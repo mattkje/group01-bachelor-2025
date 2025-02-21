@@ -38,7 +38,7 @@ public class ZoneService {
         return null;
     }
 
-    public List<Task> getTasksByZoneId(Long id) {
+    public Set<Task> getTasksByZoneId(Long id) {
         Zone zone = zoneRepository.findById(id).orElse(null);
         if (zone != null) {
             return zone.getTasks();

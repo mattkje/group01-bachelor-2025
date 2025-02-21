@@ -33,7 +33,7 @@ public class ZoneController {
     }
 
     @GetMapping("/{id}/tasks")
-    public List<Task> getTasksByZoneId(@PathVariable Long id) {
+    public Set<Task> getTasksByZoneId(@PathVariable Long id) {
         return zoneService.getTasksByZoneId(id);
     }
 

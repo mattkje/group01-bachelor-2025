@@ -13,6 +13,6 @@ import java.util.List;
 public interface ZoneRepository extends JpaRepository<Zone, Long> {
 
     @EntityGraph(attributePaths = {"workers", "workers.licenses", "tasks", "tasks.requiredLicense"})
-    @Query("SELECT z FROM Zone z")
+    @Query("SELECT DISTINCT z FROM Zone z")
     List<Zone> findAllWithTasksAndWorkersAndLicenses();
 }

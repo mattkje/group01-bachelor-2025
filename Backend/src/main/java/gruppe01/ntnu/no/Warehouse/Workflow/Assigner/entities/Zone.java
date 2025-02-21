@@ -19,7 +19,7 @@ public class Zone {
     private int capacity;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
-    private List<Task> tasks;
+    private Set<Task> tasks;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
     private Set<Worker> workers;
@@ -39,7 +39,7 @@ public class Zone {
         this.capacity = capacity;
     }
 
-    public void setTasks(List<Task> tasks) {
+    public void setTasks(Set<Task> tasks) {
         this.tasks = tasks;
     }
 
@@ -59,7 +59,7 @@ public class Zone {
         return capacity;
     }
 
-    public List<Task> getTasks() {
+    public Set<Task> getTasks() {
         return tasks;
     }
 
