@@ -29,7 +29,7 @@ public class ActiveTaskService {
     private TaskRepository taskRepository;
 
     public List<ActiveTask> getAllActiveTasks() {
-        return activeTaskRepository.findAll();
+        return activeTaskRepository.findAllWithTasksAndWorkersAndLicenses();
     }
 
     public ActiveTask getActiveTaskById(Long id) {
