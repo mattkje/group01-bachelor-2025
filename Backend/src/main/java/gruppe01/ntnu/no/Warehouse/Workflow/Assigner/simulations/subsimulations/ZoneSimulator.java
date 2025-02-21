@@ -28,10 +28,12 @@ public class ZoneSimulator {
 
   static Random random = new Random();
 
-  public static void runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks, AtomicDouble totalTaskTime) {
+  public static void runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
+                                       AtomicDouble totalTaskTime) {
     try {
       Set<Worker> zoneWorkers = zone.getWorkers();
-      System.out.println("Zone " + zone.getId() + " acquired " + zoneWorkers.size() + " workers. With a capacity of " + zone.getCapacity());
+      System.out.println("Zone " + zone.getId() + " acquired " + zoneWorkers.size() +
+          " workers. With a capacity of " + zone.getCapacity());
 
       if (zoneWorkers.isEmpty()) {
         return;
@@ -39,39 +41,43 @@ public class ZoneSimulator {
 
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
-      CountDownLatch latch = new CountDownLatch(zoneTasks.size());
+      CountDownLatch zoneLatch = new CountDownLatch(zoneTasks.size());
 
       for (ActiveTask activeTask : zoneTasks) {
         int taskDuration = activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime();
         zoneExecutor.submit(() -> {
           try {
-            System.out.println("Task " + activeTask.getTask().getId() + " waiting for " + activeTask.getTask().getMinWorkers() + " workers in zone " + zone.getId());
-            availableZoneWorkersSemaphore.acquireMultiple(activeTask, latch);
+            CountDownLatch taskLatch = new CountDownLatch(1);
+            System.out.println("Task " + activeTask.getId() + " waiting for " +
+                activeTask.getTask().getMinWorkers() + " workers in zone " + zone.getId());
+            availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
 
-            latch.await();
+            taskLatch.await();
+            System.out.println("Task " + activeTask.getId() + " starting in zone " + zone.getId() +
+                "with duration " + taskDuration);
 
             long startTaskTime = System.currentTimeMillis();
 
             while (System.currentTimeMillis() - startTaskTime < taskDuration) {
-              if (activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size() > 0) {
-                availableZoneWorkersSemaphore.acquire(activeTask);
-              }
+              long elapsedTime = System.currentTimeMillis() - startTaskTime;
+              System.out.println(
+                  "Elapsed time: " + elapsedTime + "ms, Task duration: " + taskDuration + "ms");
               TimeUnit.MILLISECONDS.sleep(1);
             }
             availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
+            System.out.println("realese");
             totalTaskTime.addAndGet(taskDuration);
-
-            System.out.println("task " + activeTask.getTask().getId() + " completed in zone " + zone.getId());
+            System.out.println("task " + activeTask.getId() + " completed in zone " + zone.getId());
 
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           } finally {
-            latch.countDown();
+            zoneLatch.countDown();
           }
         });
       }
 
-      latch.await();
+      zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
     } catch (InterruptedException e) {

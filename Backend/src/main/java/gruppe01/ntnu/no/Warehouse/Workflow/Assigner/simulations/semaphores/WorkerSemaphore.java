@@ -56,43 +56,77 @@ public class WorkerSemaphore {
         return null; // No worker with the required license found
     }
 
-  public void acquireMultiple(ActiveTask activeTask, CountDownLatch latch) throws InterruptedException {
-           System.out.println("Zone has " + workers.size() + " workers");
-           semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
-           synchronized (workers) {
-               while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
-                   for (Worker worker : workers) {
-                       System.out.println("Task requires " + activeTask.getTask().getRequiredLicense() + " workers, currently have " + worker.getLicenses());
-                       if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
-                           System.out.println("Task " + activeTask.getTask().getId() + " acquired worker " + worker.getId());
-                           activeTask.getWorkers().add(worker);
-                           workers.remove(worker);
-                           if (activeTask.getWorkers().size() == activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
-                               System.out.println("Task " + activeTask.getTask().getId() + " acquired all workers");
-                               latch.countDown(); // Count down the latch
-                           }
-                       }
-                   }
-                   semaphore.release();
-                   if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size()) {
-                       System.out.println("Task " + activeTask.getTask().getId() + " waiting for workers, Currently has " + activeTask.getWorkers().size());
-                       workers.wait();
-                   }
-               }
-           }
-       }
-
-    public void release(Worker worker) {
-        synchronized (workers) {
-            workers.add(worker);
+public void acquireNoLicense(ActiveTask activeTask) throws InterruptedException {
+    semaphore.acquire();
+    synchronized (workers) {
+        if (!workers.isEmpty()) {
+            Worker worker = workers.iterator().next();
+            workers.remove(worker);
+            activeTask.getWorkers().add(worker);
         }
-        semaphore.release();
     }
+    semaphore.release();
+}
 
-    public void releaseAll(List<Worker> allWorkers) {
-        synchronized (workers) {
-            workers.addAll(allWorkers);
+public void acquireMultiple(ActiveTask activeTask, CountDownLatch latch) throws InterruptedException {
+    semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
+    synchronized (workers) {
+        while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+            for (Worker worker : workers) {
+                if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
+                    activeTask.getWorkers().add(worker);
+                    workers.remove(worker);
+                    if (activeTask.getWorkers().size() == activeTask.getTask().getMinWorkers()) {
+                        latch.countDown(); // Count down the latch
+                        break;
+                    }
+                }
+            }
+            if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+                workers.wait();
+            }
         }
-        semaphore.release(workers.size());
     }
+    semaphore.release(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
+}
+
+public void acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch) throws InterruptedException {
+    semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
+    synchronized (workers) {
+        while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+            List<Worker> acquiredWorkers = new ArrayList<>();
+            for (Worker worker : workers) {
+                if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+                    acquiredWorkers.add(worker);
+                    activeTask.getWorkers().add(worker);
+                } else {
+                    break;
+                }
+            }
+            workers.removeAll(acquiredWorkers);
+
+            if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+                workers.wait();
+            }
+        }
+        latch.countDown();
+    }
+    semaphore.release(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
+}
+
+public void release(Worker worker) {
+    synchronized (workers) {
+        workers.add(worker);
+        workers.notifyAll();
+    }
+    semaphore.release();
+}
+
+public void releaseAll(List<Worker> allWorkers) {
+    synchronized (workers) {
+        workers.addAll(allWorkers);
+        workers.notifyAll();
+    }
+    semaphore.release(allWorkers.size());
+}
 }
