@@ -19,7 +19,7 @@ public class ActiveTaskController {
         return activeTaskService.getAllActiveTasks();
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ActiveTask getActiveTaskById(@PathVariable Long id) {
         return activeTaskService.getActiveTaskById(id);
     }
@@ -29,12 +29,27 @@ public class ActiveTaskController {
         return activeTaskService.getActiveTasksForToday();
     }
 
-    @PostMapping("{taskId}")
+    @GetMapping("/completed")
+    public List<ActiveTask> getCompletedActiveTasks() {
+        return activeTaskService.getCompletedActiveTasks();
+    }
+
+    @GetMapping("/not-started")
+    public List<ActiveTask> getNotStartedActiveTasks() {
+        return activeTaskService.getNotStartedActiveTasks();
+    }
+
+    @GetMapping("/in-progress")
+    public List<ActiveTask> getActiveTasksInProgress() {
+        return activeTaskService.getActiveTasksInProgress();
+    }
+
+    @PostMapping("/{taskId}")
     public ActiveTask createActiveTask(@PathVariable Long taskId, @RequestBody ActiveTask activeTask) {
         return activeTaskService.createActiveTask(taskId, activeTask);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ActiveTask updateActiveTask(@PathVariable Long id, @RequestBody ActiveTask activeTask) {
         return activeTaskService.updateActiveTask(id, activeTask);
     }
@@ -54,17 +69,7 @@ public class ActiveTaskController {
         return activeTaskService.removeWorkersFromTask(id);
     }
 
-    @PutMapping("/{id}/task/{taskId}")
-    public ActiveTask addTaskToActiveTask(@PathVariable Long id, @PathVariable Long taskId) {
-        return activeTaskService.addTaskToActiveTask(id, taskId);
-    }
-
-    @PutMapping("/{id}/task/remove")
-    public ActiveTask removeTaskFromActiveTask(@PathVariable Long id) {
-        return activeTaskService.removeTaskFromActiveTask(id);
-    }
-
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ActiveTask deleteActiveTask(@PathVariable Long id) {
         return activeTaskService.deleteActiveTask(id);
     }

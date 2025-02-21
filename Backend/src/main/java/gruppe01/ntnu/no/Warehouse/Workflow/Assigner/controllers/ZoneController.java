@@ -47,16 +47,6 @@ public class ZoneController {
         return zoneService.updateZone(id, zone);
     }
 
-    @PutMapping("/{id}/task/{taskId}")
-    public Zone addTaskToZone(@PathVariable Long id, @PathVariable Long taskId) {
-        return zoneService.addTaskToZone(id, taskId);
-    }
-
-    @PutMapping("/{id}/task/{taskId}/remove")
-    public Zone removeTaskFromZone(@PathVariable Long id, @PathVariable Long taskId) {
-        return zoneService.removeTaskFromZone(id, taskId);
-    }
-
     @DeleteMapping("/{id}")
     public Zone deleteZone(@PathVariable Long id) {
         return zoneService.deleteZone(id);

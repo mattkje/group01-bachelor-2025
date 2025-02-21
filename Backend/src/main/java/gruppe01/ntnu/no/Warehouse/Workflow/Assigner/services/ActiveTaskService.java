@@ -7,16 +7,11 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepos
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ActiveTaskService {
@@ -47,6 +42,36 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
+    public List<ActiveTask> getCompletedActiveTasks() {
+        List<ActiveTask> completedActiveTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getEndTime() != null) {
+                completedActiveTasks.add(activeTask);
+            }
+        }
+        return completedActiveTasks;
+    }
+
+    public List<ActiveTask> getNotStartedActiveTasks() {
+        List<ActiveTask> incompleteActiveTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getEndTime() == null && activeTask.getStartTime() == null) {
+                incompleteActiveTasks.add(activeTask);
+            }
+        }
+        return incompleteActiveTasks;
+    }
+
+    public List<ActiveTask> getActiveTasksInProgress() {
+        List<ActiveTask> activeTasksInProgress = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getStartTime() != null && activeTask.getEndTime() == null) {
+                activeTasksInProgress.add(activeTask);
+            }
+        }
+        return activeTasksInProgress;
+    }
+
     public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
         if (activeTask != null) {
             if (activeTask.getTask() == null){
@@ -75,6 +100,7 @@ public class ActiveTaskService {
             Worker worker = workerRepository.findById(workerId).orElse(null);
             if (worker != null) {
                 worker.setAvailability(false);
+                worker.setZone(activeTask.getTask().getZoneId());
                 activeTask.getWorkers().add(worker);
                 return activeTaskRepository.save(activeTask);
             }
@@ -104,24 +130,6 @@ public class ActiveTaskService {
                 worker.setAvailability(true);
             }
             activeTask.getWorkers().clear();
-            return activeTaskRepository.save(activeTask);
-        }
-        return null;
-    }
-
-    public ActiveTask addTaskToActiveTask(Long id, Long taskId) {
-        ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
-        if (activeTask != null) {
-            activeTask.setTask(taskRepository.findById(taskId).orElse(null));
-            return activeTaskRepository.save(activeTask);
-        }
-        return null;
-    }
-
-    public ActiveTask removeTaskFromActiveTask(Long id) {
-        ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
-        if (activeTask != null) {
-            activeTask.setTask(null);
             return activeTaskRepository.save(activeTask);
         }
         return null;

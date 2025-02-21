@@ -62,35 +62,6 @@ public class ZoneService {
         return zoneRepository.save(updatedZone);
     }
 
-    public Zone addWorkerToZone(Long id, Long workerId) {
-        Zone zone = zoneRepository.findById(id).orElse(null);
-        if (zone != null) {
-            Worker worker = workerRepository.findById(workerId).orElse(null);
-            if (worker != null) {
-                zone.getWorkers().add(worker);
-                worker.setZone(id);
-                return zoneRepository.save(zone);
-            }
-            return null;
-        }
-        return null;
-    }
-
-    public Zone removeWorkerFromZone(Long id, Long workerId) {
-        Zone zone = zoneRepository.findById(id).orElse(null);
-        if (zone != null) {
-            Worker worker = workerRepository.findById(workerId).orElse(null);
-            if (worker != null) {
-                zone.getWorkers().remove(worker);
-                worker.setZone(0L);
-                workerRepository.save(worker);
-                return zoneRepository.save(zone);
-            }
-            return null;
-        }
-        return null;
-    }
-
     public Zone addTaskToZone(Long id, Long taskId) {
         Zone zone = zoneRepository.findById(id).orElse(null);
         if (zone != null) {
