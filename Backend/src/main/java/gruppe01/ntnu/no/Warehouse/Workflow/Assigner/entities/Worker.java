@@ -112,4 +112,8 @@ public class Worker {
         }
         return false;
     }
+
+    public boolean hasAllLicenses(Set<License> requiredLicenses) {
+        return licenses.containsAll(requiredLicenses);
+    }
 }
