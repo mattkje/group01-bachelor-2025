@@ -46,8 +46,6 @@ public class WorkerSemaphore {
         // acquire the required number of workers, if not enough workers are available, wait
         int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
         semaphore.acquire(requiredWorkers);
-        System.out.println("Task " + activeTask.getId() + " acquired " + requiredWorkers +
-            " workers. With a pool of " + workers.size() + " simulation " + simNo);
         // acquired the workers
         // while the number of workers acquired is less than the required number of workers
         List<Worker> workersToRemove = new ArrayList<>();
@@ -58,7 +56,8 @@ public class WorkerSemaphore {
             activeTask.getWorkers().addAll(workersToRemove);
             workersToRemove.forEach(workers::remove);
             latch.countDown();
-            System.out.println("task: " +activeTask.getId() + " acquired " + activeTask.getWorkers().size() + " simNo: " + simNo);
+            System.out.println("Task " + activeTask.getId() + " acquired " + activeTask.getWorkers().size() +
+                " workers. With a pool of " + workers.size() + " and a requirement of " + requiredWorkers +" simulation " + simNo);
             return "";
           }
         }

@@ -8,62 +8,70 @@ import java.util.Set;
 @Entity
 public class Zone {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(name = "name")
-    private String name;
+  @Column(name = "name")
+  private String name;
 
-    @Column(name = "capacity")
-    private int capacity;
+  @Column(name = "capacity")
+  private int capacity;
 
-    @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
-    private Set<Task> tasks;
+  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  private Set<Task> tasks;
 
-    @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
-    private Set<Worker> workers;
+  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  private Set<Worker> workers;
 
-    public Zone() {
-    }
+  public Zone() {
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public Zone(Zone zone) {
+    this.id = zone.getId();
+    this.name = zone.getName();
+    this.capacity = zone.getCapacity();
+    this.tasks = zone.getTasks();
+    this.workers = zone.getWorkers();
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setTasks(Set<Task> tasks) {
-        this.tasks = tasks;
-    }
+  public void setCapacity(int capacity) {
+    this.capacity = capacity;
+  }
 
-    public void setWorkers(Set<Worker> workers) {
-        this.workers = workers;
-    }
+  public void setTasks(Set<Task> tasks) {
+    this.tasks = tasks;
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public void setWorkers(Set<Worker> workers) {
+    this.workers = workers;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public int getCapacity() {
-        return capacity;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public Set<Task> getTasks() {
-        return tasks;
-    }
+  public int getCapacity() {
+    return capacity;
+  }
 
-    public Set<Worker> getWorkers() {
-        return workers;
-    }
+  public Set<Task> getTasks() {
+    return tasks;
+  }
+
+  public Set<Worker> getWorkers() {
+    return workers;
+  }
 }

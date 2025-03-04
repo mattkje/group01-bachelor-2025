@@ -47,6 +47,18 @@ public class ActiveTask {
     public ActiveTask() {
     }
 
+    public ActiveTask(ActiveTask activeTask) {
+        this.id = activeTask.getId();
+        this.dueDate = activeTask.getDueDate();
+        this.startTime = activeTask.getStartTime();
+        this.endTime = activeTask.getEndTime();
+        this.eta = activeTask.getEta();
+        this.strict_start = activeTask.getStrictStart();
+        this.date = activeTask.getDate();
+        this.task = activeTask.getTask();
+        this.workers = new ArrayList<>(activeTask.getWorkers());
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

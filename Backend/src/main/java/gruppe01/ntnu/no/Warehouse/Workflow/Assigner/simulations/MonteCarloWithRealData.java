@@ -14,6 +14,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +75,7 @@ public class MonteCarloWithRealData {
 
     // Amount of simulations
     // TODO: Set this to a minimum of 5000 simulations or make it a variable
-    int simCount = 2;
+    int simCount = 100;
 
     // Run the Monte Carlo Simulations
     runSimulation(simCount, workers, zones, activeTasks, licenses);
@@ -117,9 +118,9 @@ public class MonteCarloWithRealData {
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-        List<Zone> zonesCopy = new ArrayList<>(zones);
-        List<ActiveTask> activeTasksCopy = new ArrayList<>(activeTasks);
-        List<Worker> workersCopy = new ArrayList<>(workers);
+       List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
+       List<ActiveTask> activeTasksCopy = activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
+       List<Worker> workersCopy = workers.stream().map(Worker::new).collect(Collectors.toList());
 
         for (Zone zone : zonesCopy) {
           // Only get tasks that are in the zone
@@ -160,7 +161,6 @@ public class MonteCarloWithRealData {
      }
    }
 
-   System.out.println("Total time to complete all tasks: " + totalCompletionTime);
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 
