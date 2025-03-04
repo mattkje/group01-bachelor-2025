@@ -75,7 +75,7 @@ public class MonteCarloWithRealData {
 
     // Amount of simulations
     // TODO: Set this to a minimum of 5000 simulations or make it a variable
-    int simCount = 100;
+    int simCount = 10;
 
     // Run the Monte Carlo Simulations
     runSimulation(simCount, workers, zones, activeTasks, licenses);
@@ -86,11 +86,12 @@ public class MonteCarloWithRealData {
 
   /**
    * Runner class for the Monte Carlo Simulation
-   * @param simCount Number of simulations to run (aiming to run at least 5000)
-   * @param workers List of workers
-   * @param zones List of zones
+   *
+   * @param simCount    Number of simulations to run (aiming to run at least 5000)
+   * @param workers     List of workers
+   * @param zones       List of zones
    * @param activeTasks List of active tasks for the given day
-   * @param licenses List of licenses
+   * @param licenses    List of licenses
    * @throws InterruptedException
    * @throws ExecutionException
    */
@@ -113,23 +114,27 @@ public class MonteCarloWithRealData {
     for (int i = 0; i < simCount; i++) {
       int finalI = i;
       futures.add(simulationExecutor.submit(() -> {
-
+        // Create a new executor for each warehouse
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+        // AtomicDouble to store the total time for all tasks in the warehouse for this simulation
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-       List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
-       List<ActiveTask> activeTasksCopy = activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
+        // Deep copy of the data to avoid changing the original data
+        List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
+        List<ActiveTask> activeTasksCopy =
+            activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
 
+        // Run a simulation for each zone in the warehouse
         for (Zone zone : zonesCopy) {
           // Only get tasks that are in the zone
           List<ActiveTask> zoneTasks = activeTasksCopy.stream()
               .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
               .toList();
-
+          // Run the simulation for the zone
           warehouseExecutor.submit(() -> {
             try {
-              String result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime,
-                  finalI);
+              String result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime);
+              // If an error occurs, add it to the error messages
               if (!result.isEmpty()) {
                 synchronized (errorMessages) {
                   errorMessages.add(result);
@@ -141,8 +146,11 @@ public class MonteCarloWithRealData {
           });
         }
 
+        // Shutdown the warehouse executor and wait for it to finish
         warehouseExecutor.shutdown();
         warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
+
+        System.out.println("Simulation " + finalI + " finished");
 
         return totalTaskTime.get() / zonesCopy.size();
       }));
@@ -153,11 +161,11 @@ public class MonteCarloWithRealData {
       totalCompletionTime += future.get();
     }
 
-   if (!errorMessages.isEmpty()) {
-     for (String errorMessage : errorMessages) {
-       System.out.println(errorMessage);
-     }
-   }
+    if (!errorMessages.isEmpty()) {
+      for (String errorMessage : errorMessages) {
+        System.out.println(errorMessage);
+      }
+    }
 
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);

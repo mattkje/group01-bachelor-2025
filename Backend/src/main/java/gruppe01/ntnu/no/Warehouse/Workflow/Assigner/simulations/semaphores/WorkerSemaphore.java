@@ -34,7 +34,7 @@ public class WorkerSemaphore {
    * @return An empty string if successful, an error message if not
    * @throws InterruptedException
    */
-  public String acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch,int simNo)
+  public String acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch)
       throws InterruptedException {
     lock.lock();
     try {

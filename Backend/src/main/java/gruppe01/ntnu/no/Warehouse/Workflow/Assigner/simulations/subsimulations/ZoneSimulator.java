@@ -30,7 +30,7 @@ public class ZoneSimulator {
   static Random random = new Random();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
-                                         AtomicDouble totalTaskTime, int simNo) {
+                                         AtomicDouble totalTaskTime) {
     try {
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
@@ -68,7 +68,7 @@ public class ZoneSimulator {
             CountDownLatch taskLatch = new CountDownLatch(1);
 
               // Acquire the workers for the task
-              String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch,simNo);
+              String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
               // If there is an error acquiring the workers, add the error message to the list and return
               if (!acquireWorkerError.isEmpty()) {
                 errorMessages.add(acquireWorkerError);
