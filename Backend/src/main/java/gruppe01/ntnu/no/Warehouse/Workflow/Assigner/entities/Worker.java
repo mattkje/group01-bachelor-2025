@@ -36,7 +36,11 @@ public class Worker {
     )
     private Set<License> licenses;
 
-    public Worker() {
+    public Worker(){
+
+    }
+
+    public Worker(Worker worker) {
     }
 
     public Worker(String name, Long zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {

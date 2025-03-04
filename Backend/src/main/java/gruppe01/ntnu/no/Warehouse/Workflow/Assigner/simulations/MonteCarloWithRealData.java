@@ -74,10 +74,10 @@ public class MonteCarloWithRealData {
 
     // Amount of simulations
     // TODO: Set this to a minimum of 5000 simulations or make it a variable
-    int simCount = 1;
+    int simCount = 2;
 
     // Run the Monte Carlo Simulations
-    runSimulation(simCount, workers, tasks, zones, activeTasks, licenses);
+    runSimulation(simCount, workers, zones, activeTasks, licenses);
 
     long endTime = System.currentTimeMillis();
     long timeTakenInSec = (endTime - startTime) / 1000;
@@ -88,14 +88,13 @@ public class MonteCarloWithRealData {
    * Runner class for the Monte Carlo Simulation
    * @param simCount Number of simulations to run (aiming to run at least 5000)
    * @param workers List of workers
-   * @param tasks List of tasks
    * @param zones List of zones
    * @param activeTasks List of active tasks for the given day
    * @param licenses List of licenses
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  private void runSimulation(int simCount, List<Worker> workers, List<Task> tasks, List<Zone> zones,
+  private void runSimulation(int simCount, List<Worker> workers, List<Zone> zones,
                              List<ActiveTask> activeTasks, List<License> licenses)
       throws InterruptedException, ExecutionException {
 
@@ -107,29 +106,31 @@ public class MonteCarloWithRealData {
     List<Future<Double>> futures = new ArrayList<>();
 
     System.out.println("Running simulation with " + simCount + " simulations");
-//    System.out.println("Number of workers: " + workers.size());
-//    System.out.println("Number of tasks: " + tasks.size());
-//    System.out.println("Number of zones: " + zones.size());
-//    System.out.println("Number of active tasks: " + activeTasks.size());
-//    System.out.println("Number of licenses: " + licenses.size());
-
+    System.out.println("Number of workers: " + workers.size());
+    System.out.println("Number of zones: " + zones.size());
+    System.out.println("Number of tasks: " + activeTasks.size());
     // For each simulation, run a simulation of each warehouse
     for (int i = 0; i < simCount; i++) {
-      System.out.println("Running simulation " + (i + 1) + " of " + simCount);
+      int finalI = i;
       futures.add(simulationExecutor.submit(() -> {
 
-        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(workers.size());
+        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-        for (Zone zone : zones) {
+        List<Zone> zonesCopy = new ArrayList<>(zones);
+        List<ActiveTask> activeTasksCopy = new ArrayList<>(activeTasks);
+        List<Worker> workersCopy = new ArrayList<>(workers);
+
+        for (Zone zone : zonesCopy) {
           // Only get tasks that are in the zone
-          List<ActiveTask> zoneTasks = activeTasks.stream()
+          List<ActiveTask> zoneTasks = activeTasksCopy.stream()
               .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
               .toList();
 
           warehouseExecutor.submit(() -> {
             try {
-              String result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime);
+              String result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime,
+                  finalI);
               if (!result.isEmpty()) {
                 synchronized (errorMessages) {
                   errorMessages.add(result);
@@ -159,7 +160,7 @@ public class MonteCarloWithRealData {
      }
    }
 
-
+   System.out.println("Total time to complete all tasks: " + totalCompletionTime);
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 

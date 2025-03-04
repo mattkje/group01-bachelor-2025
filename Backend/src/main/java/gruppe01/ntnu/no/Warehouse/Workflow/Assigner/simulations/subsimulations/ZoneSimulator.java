@@ -6,6 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -29,23 +30,29 @@ public class ZoneSimulator {
   static Random random = new Random();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
-                                         AtomicDouble totalTaskTime) {
+                                         AtomicDouble totalTaskTime, int simNo) {
     try {
       // Get the workers in the zone as a set
-      Set<Worker> zoneWorkers = zone.getWorkers();
+      Set<Worker> originalZoneWorkers = zone.getWorkers();
 
       // If there are no workers, return an error message
-      if (zoneWorkers.isEmpty()) {
+      if (originalZoneWorkers.isEmpty()) {
         return "ERROR: Zone " + zone.getId() +
             " has no workers and therefore cannot complete tasks";
+      }
+
+      // Create a deep copy of the workers for this simulation
+      Set<Worker> zoneWorkers = new HashSet<>();
+      for (Worker worker : originalZoneWorkers) {
+        zoneWorkers.add(new Worker(worker)); // Assuming Worker has a copy constructor
       }
 
       // Error message list for any errors that occur during the completion of tasks
       List<String> errorMessages = new ArrayList<>();
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
-      WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
       // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
       CountDownLatch zoneLatch = new CountDownLatch(zoneTasks.size());
+      WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
 
       // Itearate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
@@ -54,36 +61,36 @@ public class ZoneSimulator {
         int taskDuration =
             random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
                 activeTask.getTask().getMinTime();
-
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {
             // Latch for the workers in the task ensuring that all workers are acquired before the task starts
-            CountDownLatch taskLatch = new CountDownLatch(activeTask.getTask().getMinWorkers());
+            CountDownLatch taskLatch = new CountDownLatch(1);
 
-            // Acquire the workers for the task
-            String acquireWorkerError =
-                availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
-            // If there is an error acquiring the workers, add the error message to the list and return
-            if (!acquireWorkerError.isEmpty()) {
-              errorMessages.add(acquireWorkerError);
-              return;
-            }
+              // Acquire the workers for the task
+              String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch,simNo);
+              // If there is an error acquiring the workers, add the error message to the list and return
+              if (!acquireWorkerError.isEmpty()) {
+                errorMessages.add(acquireWorkerError);
+                return;
+              }
 
             // Wait for all workers to be acquired
             taskLatch.await();
-
             // Simulate the task duration
             // TODO: Find a quicker way of doing this so that the simulation runs faster
             TimeUnit.MILLISECONDS.sleep(taskDuration);
-            
-            availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
-            totalTaskTime.addAndGet(taskDuration);
 
+            System.out.println("Task " + activeTask.getId() + " in zone " + zone.getId() + " completed. Releasing: " + activeTask.getWorkers().size() + " workers. Simulation: " + simNo);
+            // Release the workers when the task is finished
+            availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
+            // Add the task duration to the total task time
+            totalTaskTime.addAndGet(taskDuration);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           } finally {
             zoneLatch.countDown();
+            System.out.println("ZoneLatchcountdown value: " + zoneLatch.getCount() + " zone: " + zone.getId() + " simulation " + simNo);
           }
         });
       }
@@ -91,6 +98,7 @@ public class ZoneSimulator {
       zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
+      System.out.println("Zone " + zone.getId() + " completed all tasks. Simulation " + simNo);
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
     } catch (InterruptedException e) {
       System.out.println("Zone simulation interrupted");

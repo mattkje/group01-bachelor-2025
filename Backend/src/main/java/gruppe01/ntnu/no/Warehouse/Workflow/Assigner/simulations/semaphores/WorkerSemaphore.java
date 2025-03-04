@@ -1,13 +1,13 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A semaphore that controls access to a list of workers.
@@ -18,129 +18,61 @@ import java.util.concurrent.CountDownLatch;
 public class WorkerSemaphore {
   private final Set<Worker> workers;
   private final Semaphore semaphore;
+  private final ReentrantLock lock = new ReentrantLock();
 
   public WorkerSemaphore(Set<Worker> workers) {
     this.workers = workers;
     this.semaphore = new Semaphore(workers.size());
   }
 
-  public Worker acquire(ActiveTask activeTask) throws InterruptedException {
-    semaphore.acquire();
-    synchronized (workers) {
-      // System.out.println("Acquiring worker with license: " + requiredLicense);
-      // If no license is required, return the first worker
-      if (activeTask.getTask().getRequiredLicense().isEmpty()) {
-        for (Worker worker : workers) {
-          if (worker.getLicenses().isEmpty()) {
-            workers.remove(worker);
-            // System.out.println("Acquired worker with no license");
-            return worker;
-          }
-        }
-        // If no worker with no license is found, return the first worker
-        Worker worker = workers.iterator().next();
-        workers.remove(worker);
-        // System.out.println("Acquired worker with license: " + requiredLicense);
-        return worker;
-      }// If a license is required, return the first worker with the required license
-      else {
-        for (Worker worker : workers) {
-          if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
-            workers.remove(worker);
-            return worker;
-          }
-        }
-      }
-    }
-    semaphore.release();
-    return null; // No worker with the required license found
-  }
-
-  public void acquireNoLicense(ActiveTask activeTask) throws InterruptedException {
-    semaphore.acquire();
-    synchronized (workers) {
-      if (!workers.isEmpty()) {
-        Worker worker = workers.iterator().next();
-        workers.remove(worker);
-        activeTask.getWorkers().add(worker);
-      }
-    }
-    semaphore.release();
-  }
-
-  public String acquireMultiple(ActiveTask activeTask, CountDownLatch latch)
+  /**
+   * Acquires workers without checking for licenses.
+   * Will be redundant later on, but is used for testing purposes.
+   *
+   * @param activeTask The task to acquire workers for
+   * @param latch      The latch to count down when workers are acquired
+   * @return An empty string if successful, an error message if not
+   * @throws InterruptedException
+   */
+  public String acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch,int simNo)
       throws InterruptedException {
-
-    if (activeTask.getTask().getMinWorkers() > workers.size()) {
-      return "ERROR: Not enough workers in zone " + activeTask.getTask().getZoneId() + " task " + activeTask.getId();
-    }
-
-    semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
-    synchronized (workers) {
-      while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+    lock.lock();
+    try {
+      synchronized (workers) {
+        System.out.println("Task " + activeTask.getId() + " is trying to get: " +
+            activeTask.getTask().getMinWorkers() + " from a pool of " + workers.size() +
+            " with a semaphore pool of " + semaphore.availablePermits() + " belonging to zone " +
+            activeTask.getTask().getZoneId() + " in simulation " + simNo);
+        // acquire the required number of workers, if not enough workers are available, wait
+        int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+        semaphore.acquire(requiredWorkers);
+        System.out.println("Task " + activeTask.getId() + " acquired " + requiredWorkers +
+            " workers. With a pool of " + workers.size() + " simulation " + simNo);
+        // acquired the workers
+        // while the number of workers acquired is less than the required number of workers
+        List<Worker> workersToRemove = new ArrayList<>();
+        // Iterate over the workers
         for (Worker worker : workers) {
-          if (worker.hasAllLicenses(activeTask.getTask().getRequiredLicense())) {
-            activeTask.getWorkers().add(worker);
-            workers.remove(worker);
+          workersToRemove.add(worker);
+          if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
+            activeTask.getWorkers().addAll(workersToRemove);
+            workersToRemove.forEach(workers::remove);
             latch.countDown();
+            System.out.println("task: " +activeTask.getId() + " acquired " + activeTask.getWorkers().size() + " simNo: " + simNo);
+            return "";
           }
         }
-      /*  if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-          workers.wait();
-          return "Not enough workers with required licenses for zone " + activeTask.getTask().getZoneId() + " task " + activeTask.getId();
-        }*/
-
-        if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-          semaphore.release(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
-          return "ERROR: Not enough workers with required licenses for zone " + activeTask.getTask().getZoneId() + " task " + activeTask.getId();
-        }
-
+        // if the number of workers acquired is less than the required number of workers
+        semaphore.release(requiredWorkers);
       }
+    } finally {
+      lock.unlock();
     }
-    semaphore.release(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
     return "";
-  }
-
-  public String acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch)
-      throws InterruptedException {
-    semaphore.acquire(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
-    synchronized (workers) {
-      while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-        List<Worker> acquiredWorkers = new ArrayList<>();
-
-        for (Worker worker : workers) {
-          if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-            acquiredWorkers.add(worker);
-            activeTask.getWorkers().add(worker);
-            latch.countDown();
-          } else {
-            break;
-          }
-        }
-        acquiredWorkers.forEach(workers::remove);
-
-        if (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-          workers.wait();
-        }
-      }
-    }
-    semaphore.release(activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size());
-    return "";
-  }
-
-  public void release(Worker worker) {
-    synchronized (workers) {
-      workers.add(worker);
-      workers.notifyAll();
-    }
-    semaphore.release();
   }
 
   public void releaseAll(List<Worker> allWorkers) {
-    synchronized (workers) {
-      workers.addAll(allWorkers);
-      workers.notifyAll();
-    }
+    workers.addAll(allWorkers);
     semaphore.release(allWorkers.size());
   }
 }
