@@ -80,8 +80,6 @@ public class ZoneSimulator {
             // Simulate the task duration
             // TODO: Find a quicker way of doing this so that the simulation runs faster
             TimeUnit.MILLISECONDS.sleep(taskDuration);
-
-            System.out.println("Task " + activeTask.getId() + " in zone " + zone.getId() + " completed. Releasing: " + activeTask.getWorkers().size() + " workers. Simulation: " + simNo);
             // Release the workers when the task is finished
             availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             // Add the task duration to the total task time
@@ -90,7 +88,6 @@ public class ZoneSimulator {
             Thread.currentThread().interrupt();
           } finally {
             zoneLatch.countDown();
-            System.out.println("ZoneLatchcountdown value: " + zoneLatch.getCount() + " zone: " + zone.getId() + " simulation " + simNo);
           }
         });
       }
@@ -98,10 +95,8 @@ public class ZoneSimulator {
       zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
-      System.out.println("Zone " + zone.getId() + " completed all tasks. Simulation " + simNo);
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
     } catch (InterruptedException e) {
-      System.out.println("Zone simulation interrupted");
       Thread.currentThread().interrupt();
     }
     return "Zone simulation failed";

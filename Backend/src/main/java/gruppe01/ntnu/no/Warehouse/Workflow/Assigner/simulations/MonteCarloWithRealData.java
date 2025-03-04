@@ -81,8 +81,7 @@ public class MonteCarloWithRealData {
     runSimulation(simCount, workers, zones, activeTasks, licenses);
 
     long endTime = System.currentTimeMillis();
-    long timeTakenInSec = (endTime - startTime) / 1000;
-    System.out.println("Time taken: " + timeTakenInSec + " seconds");
+    System.out.println("Simulation time: " + (endTime - startTime) + " ms");
   }
 
   /**
@@ -120,7 +119,6 @@ public class MonteCarloWithRealData {
 
        List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
        List<ActiveTask> activeTasksCopy = activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
-       List<Worker> workersCopy = workers.stream().map(Worker::new).collect(Collectors.toList());
 
         for (Zone zone : zonesCopy) {
           // Only get tasks that are in the zone
@@ -146,7 +144,7 @@ public class MonteCarloWithRealData {
         warehouseExecutor.shutdown();
         warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
 
-        return totalTaskTime.get() / workers.size();
+        return totalTaskTime.get() / zonesCopy.size();
       }));
     }
 
@@ -165,7 +163,7 @@ public class MonteCarloWithRealData {
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 
     double averageCompletionTime = totalCompletionTime / simCount;
-    System.out.println("Average time to complete all tasks: " + averageCompletionTime);
+    System.out.println("Average time to complete all tasks: " + averageCompletionTime + " minutes");
   }
 
 

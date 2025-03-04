@@ -39,10 +39,6 @@ public class WorkerSemaphore {
     lock.lock();
     try {
       synchronized (workers) {
-        System.out.println("Task " + activeTask.getId() + " is trying to get: " +
-            activeTask.getTask().getMinWorkers() + " from a pool of " + workers.size() +
-            " with a semaphore pool of " + semaphore.availablePermits() + " belonging to zone " +
-            activeTask.getTask().getZoneId() + " in simulation " + simNo);
         // acquire the required number of workers, if not enough workers are available, wait
         int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
         semaphore.acquire(requiredWorkers);
@@ -56,8 +52,6 @@ public class WorkerSemaphore {
             activeTask.getWorkers().addAll(workersToRemove);
             workersToRemove.forEach(workers::remove);
             latch.countDown();
-            System.out.println("Task " + activeTask.getId() + " acquired " + activeTask.getWorkers().size() +
-                " workers. With a pool of " + workers.size() + " and a requirement of " + requiredWorkers +" simulation " + simNo);
             return "";
           }
         }
