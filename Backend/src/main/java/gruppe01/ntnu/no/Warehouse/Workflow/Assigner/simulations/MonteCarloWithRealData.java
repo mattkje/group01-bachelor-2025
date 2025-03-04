@@ -80,7 +80,8 @@ public class MonteCarloWithRealData {
     runSimulation(simCount, workers, tasks, zones, activeTasks, licenses);
 
     long endTime = System.currentTimeMillis();
-    System.out.println("Time taken: " + (endTime - startTime) + "ms");
+    long timeTakenInSec = (endTime - startTime) / 1000;
+    System.out.println("Time taken: " + timeTakenInSec + " seconds");
   }
 
   /**
@@ -152,9 +153,11 @@ public class MonteCarloWithRealData {
       totalCompletionTime += future.get();
     }
 
-    if (!errorMessages.isEmpty()) {
-      errorMessages.forEach(System.out::println);
-    }
+   if (!errorMessages.isEmpty()) {
+     for (String errorMessage : errorMessages) {
+       System.out.println(errorMessage);
+     }
+   }
 
 
     simulationExecutor.shutdown();

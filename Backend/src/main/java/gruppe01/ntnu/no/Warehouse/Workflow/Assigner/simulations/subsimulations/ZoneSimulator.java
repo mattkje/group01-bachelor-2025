@@ -29,47 +29,56 @@ public class ZoneSimulator {
   static Random random = new Random();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
-                                       AtomicDouble totalTaskTime) {
+                                         AtomicDouble totalTaskTime) {
     try {
+      // Get the workers in the zone as a set
       Set<Worker> zoneWorkers = zone.getWorkers();
- /*     System.out.println("Zone " + zone.getId() + " acquired " + zoneWorkers.size() +
-          " workers. With a capacity of " + zone.getCapacity());*/
 
+      // If there are no workers, return an error message
       if (zoneWorkers.isEmpty()) {
-        return "ERROR: Zone " + zone.getId() + " has no workers and therefore cannot complete tasks";
+        return "ERROR: Zone " + zone.getId() +
+            " has no workers and therefore cannot complete tasks";
       }
 
+      // Error message list for any errors that occur during the completion of tasks
+      List<String> errorMessages = new ArrayList<>();
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
+      // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
       CountDownLatch zoneLatch = new CountDownLatch(zoneTasks.size());
 
+      // Itearate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
-        // TODO: This currently only gets the average time. Make it more realistic, perhaphs a random
-        int taskDuration = activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime();
+        // Gets a random duration for the task
+        // TODO: Replace this with a machine learning model for typical taskduration
+        int taskDuration =
+            random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
+                activeTask.getTask().getMinTime();
 
+        // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {
-            CountDownLatch taskLatch = new CountDownLatch(1);
-          /*  System.out.println("Task " + activeTask.getId() + " waiting for " +
-                activeTask.getTask().getMinWorkers() + " workers in zone " + zone.getId());*/
-            availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
+            // Latch for the workers in the task ensuring that all workers are acquired before the task starts
+            CountDownLatch taskLatch = new CountDownLatch(activeTask.getTask().getMinWorkers());
 
-            taskLatch.await();
-          /*  System.out.println("Task " + activeTask.getId() + " starting in zone " + zone.getId() +
-                "with duration " + taskDuration);*/
-
-            long startTaskTime = System.currentTimeMillis();
-
-            while (System.currentTimeMillis() - startTaskTime < taskDuration) {
-              long elapsedTime = System.currentTimeMillis() - startTaskTime;
-
+            // Acquire the workers for the task
+            String acquireWorkerError =
+                availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
+            // If there is an error acquiring the workers, add the error message to the list and return
+            if (!acquireWorkerError.isEmpty()) {
+              errorMessages.add(acquireWorkerError);
+              return;
             }
-           //  System.out.println( "Task duration: " + taskDuration + "minutes");
-            TimeUnit.MILLISECONDS.sleep(1);
 
+            // Wait for all workers to be acquired
+            taskLatch.await();
+
+            // Simulate the task duration
+            // TODO: Find a quicker way of doing this so that the simulation runs faster
+            TimeUnit.MILLISECONDS.sleep(taskDuration);
+            
             availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             totalTaskTime.addAndGet(taskDuration);
-            //System.out.println("task " + activeTask.getId() + " completed in zone " + zone.getId());
 
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -82,7 +91,7 @@ public class ZoneSimulator {
       zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
-      return "";
+      return errorMessages.isEmpty() ? "" : errorMessages.toString();
     } catch (InterruptedException e) {
       System.out.println("Zone simulation interrupted");
       Thread.currentThread().interrupt();
