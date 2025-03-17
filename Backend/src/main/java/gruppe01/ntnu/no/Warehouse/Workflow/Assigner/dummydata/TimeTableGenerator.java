@@ -62,6 +62,7 @@ public class TimeTableGenerator {
 
       }
 
+        startDate = startDate.plusDays(1);
     }
 
   }
