@@ -37,7 +37,7 @@ public class TimeTableGenerator {
     double maxWorkersPercentage = 0.9;
 
     // Times in which works starts and ends
-    int[] startHours = {3,4,5,6,7,8,9,15,16,18};
+    int[] startHours = {3,4,5,6,7,8,9,15};
     int[] minutes = {0,30};
     int[] endHours = {3,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
 
