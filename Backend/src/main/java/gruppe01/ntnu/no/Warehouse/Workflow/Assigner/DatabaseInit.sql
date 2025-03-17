@@ -82,6 +82,17 @@ CREATE TABLE IF NOT EXISTS zone_worker
     FOREIGN KEY (worker_id) REFERENCES worker (id)
 );
 
+CREATE TABLE IF NOT EXISTS timetable
+(
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    worker_id  BIGINT NOT NULL,
+    start_time TIMESTAMP,
+    end_time   TIMESTAMP,
+    real_start_time TIMESTAMP,
+    real_end_time TIMESTAMP,
+    FOREIGN KEY (worker_id) REFERENCES worker (id)
+);
+
 INSERT INTO worker (name, zone_id, work_title, effectiveness, availability)
 VALUES ('John Doe', 1, 'Warehouse Manager', 1, true),
        ('Jane Smith', 1, 'Warehouse Supervisor', 1, true),
