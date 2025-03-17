@@ -27,7 +27,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
         @Autowired
         private ActiveTaskService activeTaskService;
 
-        public void generateActiveTasks() throws Exception {
+        public void generateActiveTasks(LocalDate startDate, int numDays) throws Exception {
             List<Task> tasks = new ArrayList<>(taskService.getAllTasks());
 
             // Set up generation parameters
@@ -37,8 +37,14 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
 
             Random random = new Random();
 
-            LocalDate startDate = LocalDate.of(2025, 2, 18);
-            LocalDate endDate = LocalDate.of(2025, 3, 18);
+            if (startDate == null) {
+                startDate = LocalDate.now();
+            }
+            if (numDays < 1) {
+                numDays = 1;
+            }
+            LocalDate endDate = startDate.plusDays(numDays - 1);
+
 
             int minNumTasks = 50;
             int maxNumTasks = 150;
@@ -46,13 +52,11 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
             int strictStartChance = 5;
 
             // Generate active tasks
-            List<LocalDate> dates = new ArrayList<>();
             LocalDate currentDate = startDate;
 
             while (!currentDate.isAfter(endDate)) {
                 int numTasks = random.nextInt(maxNumTasks - minNumTasks) + minNumTasks;
                 generateOneDay(currentDate, tasks, numTasks, dueDateChance, dueHours, dueMinutes, strictStartChance, random);
-                dates.add(currentDate);
                 currentDate = currentDate.plusDays(1);
             }
         }
