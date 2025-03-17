@@ -28,6 +28,12 @@ public class Timetable {
 
     public Timetable() {}
 
+    public Timetable( LocalDateTime startTime, LocalDateTime endTime,  Worker worker) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.worker = worker;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

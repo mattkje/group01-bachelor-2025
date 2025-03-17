@@ -4,6 +4,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
     import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
     import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
     import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
+    import java.util.Objects;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
 
@@ -37,12 +38,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
 
             Random random = new Random();
 
-            if (startDate == null) {
-                startDate = LocalDate.now();
-            }
-            if (numDays < 1) {
-                numDays = 1;
-            }
+            startDate = Objects.requireNonNullElse(startDate, LocalDate.now());
+            numDays = Math.max(numDays, 1);
+
             LocalDate endDate = startDate.plusDays(numDays - 1);
 
 
