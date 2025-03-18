@@ -2,8 +2,6 @@
   <Toolbar title="Overview" />
   <div class="overview">
     <p>There is no overview right now...</p>
-    <p>But you might want to check...</p>
-    <p>...if you've got testicular cancer!</p>
   </div>
 </template>
 

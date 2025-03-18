@@ -15,6 +15,7 @@
     import Toolbar from "../components/Toolbar.vue";
     import Zone from "../components/zones/Zone.vue";
     import WorkerRegistry from "../components/zones/WorkerRegistry.vue";
+    import {provideCompactMode} from "@/compactMode";
 
     interface Zone {
       id: number;
@@ -106,6 +107,8 @@
     onMounted(() => {
       fetchAll();
     });
+
+    provideCompactMode();
     </script>
 
     <style scoped>

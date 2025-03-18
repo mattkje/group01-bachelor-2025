@@ -7,8 +7,6 @@ import Toolbar from "../components/Toolbar.vue";
   <Toolbar title="Simulation" />
   <div class="simulation">
     <p>There is no simulation right now...</p>
-    <p>But you might want to check...</p>
-    <p>...if you've got testicular cancer!</p>
   </div>
 </template>
 

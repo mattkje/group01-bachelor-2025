@@ -33,13 +33,17 @@
             </thead>
             <tbody>
               <tr v-for="worker in filteredWorkers" :key="worker.id">
-                <td>{{ worker.name }}</td>
+                <td>
+                  {{ worker.name }}
+                </td>
                 <td>{{ getZoneName(worker.zone) }}</td>
                 <td>{{ worker.effectiveness }}</td>
                 <td>{{ worker.licenses.map(license => license.name).join(', ') }}</td>
                 <td>{{ worker.availability ? 'Available' : 'Unavailable' }}</td>
                 <td>
-                  <button @click="editWorker(worker)">Edit</button>
+                  <ul>
+                    <router-link :to="`/worker?id=${worker.id}`" class="edit-link">Profile</router-link>
+                  </ul>
                 </td>
               </tr>
             </tbody>
@@ -184,7 +188,7 @@
       }
 
 
-      .staff-table button {
+      .edit-link {
         padding: 0.25rem 0.5rem;
         background-color: #E77474;
         color: white;
@@ -193,7 +197,7 @@
         cursor: pointer;
       }
 
-      .staff-table button:hover {
+      .edit-link:hover {
         background-color: #9d4d4d;
       }
       </style>

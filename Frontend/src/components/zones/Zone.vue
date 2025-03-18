@@ -1,7 +1,24 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue';
-import Worker from '@/components/zones/Worker.vue';
+import { computed, ref, onMounted } from 'vue';
+import WorkerCompact from '@/components/zones/WorkerCompact.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
+
+interface License {
+  id: number;
+  name: string;
+}
+
+interface Task {
+  id: number;
+  requiredLicense: License[];
+}
+
+interface Worker {
+  id: number;
+  name: string;
+  licenses: License[];
+  availability: boolean;
+}
 
 const props = defineProps<{
   title: string;
@@ -12,11 +29,13 @@ const props = defineProps<{
 const emit = defineEmits(['refreshWorkers']);
 
 const showPopup = ref(false);
-const selectedZone = ref({id: 0, name: ''});
+const selectedZone = ref({ id: 0, name: '' });
 const isDraggingOver = ref(false);
+const tasks = ref<Task[]>([]);
+const hasTasks = ref(false);
 
 const openPopup = () => {
-  selectedZone.value = {id: props.zoneId, name: props.title};
+  selectedZone.value = { id: props.zoneId, name: props.title };
   showPopup.value = true;
 };
 
@@ -24,17 +43,26 @@ const closePopup = () => {
   showPopup.value = false;
 };
 
-const taskCompletionTimes = [30, 45, 60];
-const remainingTasks = 5;
+const fetchTasksForZone = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/tasks`);
+    tasks.value = await response.json();
+  } catch (error) {
+    console.error('Failed to fetch tasks for zone:', error);
+  }
+};
 
-const totalTaskCompletionTime = computed(() => {
-  return taskCompletionTimes.reduce((total, time) => total + time, 0);
-});
+const isWorkerQualifiedForAnyTask = (worker: Worker) => {
+  return tasks.value.some(task =>
+      task.requiredLicense.every(license =>
+          worker.licenses.some(workerLicense => workerLicense.id === license.id)
+      )
+  );
+};
 
-const completionTime = computed(() => {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + totalTaskCompletionTime.value);
-  return now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: false});
+onMounted(async () => {
+  await fetchTasksForZone();
+  hasTasks.value = tasks.value.length > 0;
 });
 
 const onDragStart = (event: DragEvent, worker: Worker) => {
@@ -61,8 +89,6 @@ const onDrop = async (event: DragEvent) => {
   }
 
   isDraggingOver.value = false;
-
-  // Refresh workers without reloading the page
 };
 
 const onDragOver = (event: DragEvent) => {
@@ -105,20 +131,41 @@ const onDragLeave = () => {
         </button>
       </div>
     </div>
-    <div class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
-      <Worker
+    <div v-if="hasTasks" class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+      <WorkerCompact
           v-for="(worker, index) in workers"
           :key="index"
           :name="worker.name"
           :worker-id="worker.id"
-          :zone_id="worker.zone_id"
           :licenses="worker.licenses"
           :availability="worker.availability"
+          :qualified="isWorkerQualifiedForAnyTask(worker)"
+          :zone-id="props.zoneId"
           :class="{ 'unavailable': !worker.availability }"
           @dragstart="(event) => onDragStart(event, worker)"
       />
       <div v-if="isDraggingOver" class="on-drop-worker-box" />
-      <p v-if="workers.length === 0" style="text-align: center; margin-top: 1rem;">No workers assigned</p>
+      <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
+        <img
+            src="/src/assets/icons/warning.svg"
+            alt="Check"
+            style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
+        />
+        <p style="text-align: center; margin-top: 1rem;">
+          No workers assigned
+        </p>
+      </div>
+    </div>
+    <div v-else class="vertical-box" style="opacity: 0.5">
+      <img
+          src="/src/assets/icons/check.svg"
+          alt="Check"
+          style="margin: 10px auto; margin-top: 1rem; width: 50px; height: 50px;"
+      />
+      <p style="text-align: center;">
+        All tasks completed
+      </p>
+
     </div>
   </div>
   <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
@@ -136,10 +183,10 @@ const onDragLeave = () => {
 }
 
 .on-drop-worker-box {
-  height: 100px;
+  height: 45px;
   width: 100%;
   background-color: #ececec;
-  border-radius: 15px;
+  border-radius: 7px;
   pointer-events: none;
 }
 
