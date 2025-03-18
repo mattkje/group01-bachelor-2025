@@ -68,7 +68,7 @@ const isWorkerQualified = (task: any) => {
   }
 };
 
-const overtimeOccurance = (task: any) => {
+const overtimeOccurance = (task: any) => {s
   if (!task || !task.eta || task.task.maxTime) return false;
   return task.task.maxTime < task.eta;
 };

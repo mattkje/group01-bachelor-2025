@@ -154,7 +154,11 @@
 
           const getWorkersForTask = (taskId: number) => {
             const activeTask = activeTasks.value.find(task => task.id === taskId);
-            return activeTask ? activeTask.workers : [];
+            if (activeTask) {
+              const uniqueWorkers = new Set(activeTask.workers.map(worker => worker.id));
+              return Array.from(uniqueWorkers).map(id => activeTask.workers.find(worker => worker.id === id));
+            }
+            return [];
           };
 
           const paginatedTasks = computed(() => {

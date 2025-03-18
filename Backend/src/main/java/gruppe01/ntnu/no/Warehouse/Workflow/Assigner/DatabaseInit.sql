@@ -1,6 +1,8 @@
 CREATE DATABASE IF NOT EXISTS warehouse;
 USE warehouse;
 
+
+
 CREATE TABLE IF NOT EXISTS worker
 (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -92,6 +94,17 @@ CREATE TABLE IF NOT EXISTS timetable
     real_end_time TIMESTAMP,
     FOREIGN KEY (worker_id) REFERENCES worker (id)
 );
+
+CREATE TRIGGER update_worker_zone
+    BEFORE INSERT ON active_task_worker
+    FOR EACH ROW
+BEGIN
+    DECLARE task_zone INT;
+
+    SELECT zone_id INTO task_zone FROM task WHERE id = (SELECT task_id FROM active_task WHERE id = NEW.active_task_id);
+
+    UPDATE worker SET zone_id = task_zone WHERE id = NEW.worker_id;
+END;
 
 INSERT INTO worker (name, zone_id, work_title, effectiveness, availability)
 VALUES ('John Doe', 1, 'Warehouse Manager', 1, true),
@@ -300,3 +313,4 @@ VALUES (1, 1),
        (16, 32),
        (17, 33),
        (17, 34);
+
