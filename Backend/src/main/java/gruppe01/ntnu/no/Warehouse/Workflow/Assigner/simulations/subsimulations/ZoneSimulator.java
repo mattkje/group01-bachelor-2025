@@ -56,7 +56,7 @@ public class ZoneSimulator {
       WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
 
       AtomicBoolean isSimulationSuccessful = new AtomicBoolean(true);
-
+      AtomicDouble zoneTaskTime = new AtomicDouble(0.0);
       // Itearate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
         // Gets a random duration for the task
@@ -86,7 +86,7 @@ public class ZoneSimulator {
             // Release the workers when the task is finished
             availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             // Add the task duration to the total task time
-            totalTaskTime.addAndGet(taskDuration);
+            zoneTaskTime.addAndGet(taskDuration);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           } finally {
@@ -95,11 +95,13 @@ public class ZoneSimulator {
         });
       }
 
+
       zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
       if (isSimulationSuccessful.get()) {
-        return "Zone " + zone.getId() + " simulation successful";
+        totalTaskTime.addAndGet(zoneTaskTime.get());
+        return "Zone " + zone.getId() + " Was successful. Estimated time: " + zoneTaskTime.get() + " minutes";
       }
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
 
