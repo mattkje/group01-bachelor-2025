@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -66,17 +65,17 @@ public class ZoneSimulator {
           try {
             // Latch for the workers in the task ensuring that all workers are acquired before the task starts
             CountDownLatch taskLatch = new CountDownLatch(1);
-
-              // Acquire the workers for the task
-              String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultipleNoLicense(activeTask, taskLatch);
-              // If there is an error acquiring the workers, add the error message to the list and return
-              if (!acquireWorkerError.isEmpty()) {
-                errorMessages.add(acquireWorkerError);
-                return;
-              }
-
+            // Acquire the workers for the task
+            String acquireWorkerError =
+                availableZoneWorkersSemaphore.acquireMultiple(activeTask, taskLatch);
             // Wait for all workers to be acquired
             taskLatch.await();
+            // If there is an error acquiring the workers, add the error message to the list and return
+            if (!acquireWorkerError.isEmpty()) {
+              System.out.println(acquireWorkerError);
+              errorMessages.add(acquireWorkerError);
+              return;
+            }
             // Simulate the task duration
             // TODO: Find a quicker way of doing this so that the simulation runs faster
             TimeUnit.MILLISECONDS.sleep(taskDuration);

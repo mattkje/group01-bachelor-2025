@@ -41,6 +41,13 @@ public class Worker {
     }
 
     public Worker(Worker worker) {
+        this.id = worker.id;
+        this.name = worker.name;
+        this.zone = worker.zone;
+        this.workTitle = worker.workTitle;
+        this.effectiveness = worker.effectiveness;
+        this.licenses = new HashSet<>(worker.licenses);
+        this.availability = worker.availability;
     }
 
     public Worker(String name, Long zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {

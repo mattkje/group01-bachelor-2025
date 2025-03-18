@@ -34,7 +34,7 @@ public class WorkerSemaphore {
    * @return An empty string if successful, an error message if not
    * @throws InterruptedException
    */
-  public String acquireMultipleNoLicense(ActiveTask activeTask, CountDownLatch latch)
+  public String acquireMultiple(ActiveTask activeTask, CountDownLatch latch)
       throws InterruptedException {
     lock.lock();
     try {
@@ -42,26 +42,39 @@ public class WorkerSemaphore {
         // acquire the required number of workers, if not enough workers are available, wait
         int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
         semaphore.acquire(requiredWorkers);
+        System.out.println("Acquired workers for task " + activeTask.getId());
         // acquired the workers
         // while the number of workers acquired is less than the required number of workers
         List<Worker> workersToRemove = new ArrayList<>();
         // Iterate over the workers
         for (Worker worker : workers) {
-          workersToRemove.add(worker);
-          if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
-            activeTask.getWorkers().addAll(workersToRemove);
-            workersToRemove.forEach(workers::remove);
-            latch.countDown();
-            return "";
+          System.out.println("Checking worker " + worker.getName());
+          if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+            workersToRemove.add(worker);
+            if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
+              System.out.println("Task able to find workers");
+              activeTask.getWorkers().addAll(workersToRemove);
+              workersToRemove.forEach(workers::remove);
+              latch.countDown();
+              return "";
+            }
           }
         }
+        System.out.println("task unable to find workers");
         // if the number of workers acquired is less than the required number of workers
         semaphore.release(requiredWorkers);
+
+        if (workersToRemove.isEmpty()){
+          latch.countDown();
+          return "No workers with the correct qualifications for task " + activeTask.getTask().getId();
+        } else {
+          latch.countDown();
+          return "Not enough workers with the correct qualifications for task " + activeTask.getTask().getId();
+        }
       }
     } finally {
       lock.unlock();
     }
-    return "";
   }
 
   public void releaseAll(List<Worker> allWorkers) {

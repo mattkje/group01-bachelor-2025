@@ -75,7 +75,7 @@ public class MonteCarloWithRealData {
 
     // Amount of simulations
     // TODO: Set this to a minimum of 5000 simulations or make it a variable
-    int simCount = 10;
+    int simCount = 1;
 
     // Run the Monte Carlo Simulations
     runSimulation(simCount, workers, zones, activeTasks, licenses);
