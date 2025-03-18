@@ -64,6 +64,20 @@ public class ZoneSimulator {
         int taskDuration =
             random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
                 activeTask.getTask().getMinTime();
+
+        if (zone.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+            zoneLatch.countDown();
+          return "ERROR: ZONE " + zone.getId() + " - MISSING WORKERS FOR TASK " + activeTask.getId();
+        }
+
+        long workersWithRequiredLicenses = zone.getWorkers().stream()
+            .filter(worker -> worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))
+            .count();
+
+        if (workersWithRequiredLicenses < activeTask.getTask().getMinWorkers()) {
+          zoneLatch.countDown();
+          return "ERROR: ZONE " + zone.getId() + " - NOT ENOUGH WORKERS WITH REQUIRED LICENSES FOR TASK " + activeTask.getId();
+        }
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {

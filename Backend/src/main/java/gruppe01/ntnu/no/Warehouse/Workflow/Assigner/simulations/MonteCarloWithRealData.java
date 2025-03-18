@@ -112,7 +112,6 @@ public class MonteCarloWithRealData {
     System.out.println("Number of tasks: " + activeTasks.size());
     // For each simulation, run a simulation of each warehouse
     for (int i = 0; i < simCount; i++) {
-      int finalI = i;
       futures.add(simulationExecutor.submit(() -> {
         // Create a new executor for each warehouse
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());

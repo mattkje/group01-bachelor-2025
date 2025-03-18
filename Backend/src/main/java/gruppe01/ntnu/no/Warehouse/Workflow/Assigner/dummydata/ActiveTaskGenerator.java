@@ -44,8 +44,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
             LocalDate endDate = startDate.plusDays(numDays - 1);
 
 
-            int minNumTasks = 50;
-            int maxNumTasks = 150;
+            int minNumTasks = 40;
+            int maxNumTasks = 80;
 
             int strictStartChance = 5;
 
