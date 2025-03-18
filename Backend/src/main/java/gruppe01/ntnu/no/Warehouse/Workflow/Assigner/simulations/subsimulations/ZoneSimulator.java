@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Simulates a zone in a warehouse
@@ -48,10 +49,13 @@ public class ZoneSimulator {
 
       // Error message list for any errors that occur during the completion of tasks
       List<String> errorMessages = new ArrayList<>();
+      errorMessages.add("ERROR: Zone " + zone.getId() + " simulation failed");
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
       CountDownLatch zoneLatch = new CountDownLatch(zoneTasks.size());
       WorkerSemaphore availableZoneWorkersSemaphore = new WorkerSemaphore(zoneWorkers);
+
+      AtomicBoolean isSimulationSuccessful = new AtomicBoolean(true);
 
       // Itearate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
@@ -72,8 +76,8 @@ public class ZoneSimulator {
             taskLatch.await();
             // If there is an error acquiring the workers, add the error message to the list and return
             if (!acquireWorkerError.isEmpty()) {
-              System.out.println(acquireWorkerError);
               errorMessages.add(acquireWorkerError);
+              isSimulationSuccessful.set(false);
               return;
             }
             // Simulate the task duration
@@ -94,10 +98,14 @@ public class ZoneSimulator {
       zoneLatch.await();
       zoneExecutor.shutdown();
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
+      if (isSimulationSuccessful.get()) {
+        return "Zone " + zone.getId() + " simulation successful";
+      }
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
+
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
-    return "Zone simulation failed";
+    return "Zone " + zone.getId() + " simulation failed";
   }
 }

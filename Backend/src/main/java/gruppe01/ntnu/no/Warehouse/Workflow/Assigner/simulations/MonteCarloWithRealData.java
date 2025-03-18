@@ -145,13 +145,9 @@ public class MonteCarloWithRealData {
             }
           });
         }
-
         // Shutdown the warehouse executor and wait for it to finish
         warehouseExecutor.shutdown();
         warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-
-        System.out.println("Simulation " + finalI + " finished");
-
         return totalTaskTime.get() / zonesCopy.size();
       }));
     }
@@ -165,13 +161,13 @@ public class MonteCarloWithRealData {
       for (String errorMessage : errorMessages) {
         System.out.println(errorMessage);
       }
+      System.out.println("Simulation failed...");
+    } else {
+      double averageCompletionTime = totalCompletionTime / simCount;
+      System.out.println("Average time to complete all tasks: " + averageCompletionTime + " minutes");
     }
-
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
-
-    double averageCompletionTime = totalCompletionTime / simCount;
-    System.out.println("Average time to complete all tasks: " + averageCompletionTime + " minutes");
   }
 
 

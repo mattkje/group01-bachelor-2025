@@ -42,17 +42,14 @@ public class WorkerSemaphore {
         // acquire the required number of workers, if not enough workers are available, wait
         int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
         semaphore.acquire(requiredWorkers);
-        System.out.println("Acquired workers for task " + activeTask.getId());
         // acquired the workers
         // while the number of workers acquired is less than the required number of workers
         List<Worker> workersToRemove = new ArrayList<>();
         // Iterate over the workers
         for (Worker worker : workers) {
-          System.out.println("Checking worker " + worker.getName());
           if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
             workersToRemove.add(worker);
             if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
-              System.out.println("Task able to find workers");
               activeTask.getWorkers().addAll(workersToRemove);
               workersToRemove.forEach(workers::remove);
               latch.countDown();
@@ -60,16 +57,15 @@ public class WorkerSemaphore {
             }
           }
         }
-        System.out.println("task unable to find workers");
         // if the number of workers acquired is less than the required number of workers
         semaphore.release(requiredWorkers);
 
         if (workersToRemove.isEmpty()){
           latch.countDown();
-          return "No workers with the correct qualifications for task " + activeTask.getTask().getId();
+          return "FAILED TASK: "+activeTask.getId() + " - NO QUALIFICATIONS";
         } else {
           latch.countDown();
-          return "Not enough workers with the correct qualifications for task " + activeTask.getTask().getId();
+          return "FAILED TASK: "+activeTask.getId() + " - MISS QUALIFICATIONS";
         }
       }
     } finally {
