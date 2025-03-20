@@ -25,6 +25,9 @@ public class SimulationService {
 
   public List<String> runZoneSimulation(Long zoneId) {
 
+    if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
+        throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
+    }
       List<String> response = new ArrayList<>();
       AtomicDouble predictedTime = new AtomicDouble(0.0);
 
