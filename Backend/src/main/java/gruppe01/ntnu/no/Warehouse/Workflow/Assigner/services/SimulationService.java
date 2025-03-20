@@ -30,14 +30,15 @@ public class SimulationService {
   /**
    * Runs a simulation on a zone
    * Returns a list of strings containing the predicted time of completion and any error messages
+   *
    * @param zoneId The ID of the zone to run the simulation on
    * @return A list of strings containing the predicted time of completion and any error messages
    */
-public List<String> runZoneSimulation(Long zoneId) {
+  public List<String> runZoneSimulation(Long zoneId, boolean debug) {
 
     // Ensure the zoneID exists
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
-        throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
+      throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
     }
 
     int simCount = 100;
@@ -46,18 +47,23 @@ public List<String> runZoneSimulation(Long zoneId) {
     List<String> response = new ArrayList<>();
     List<String> errorMessages = new ArrayList<>();
 
+    List<AtomicDouble> predictedTimes = new ArrayList<>();
+
     // Create an atomic double to store the predicted time
     AtomicDouble predictedTime = new AtomicDouble(0.0);
     double totalPredictedTime = 0.0;
 
     for (int i = 0; i < simCount; i++) {
-        errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-            activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
-        totalPredictedTime += predictedTime.get();
+      errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
+          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
+      if (debug) {
+        predictedTimes.add(predictedTime);
+      }
+      totalPredictedTime += predictedTime.get();
     }
 
     // Set the accumulated predicted time
-    predictedTime.set(totalPredictedTime/simCount);
+    predictedTime.set(totalPredictedTime / simCount);
 
     // Get the current time
     LocalDateTime currentTime = LocalDateTime.now();
@@ -69,10 +75,19 @@ public List<String> runZoneSimulation(Long zoneId) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     String formattedTime = predictedCompletionTime.format(formatter);
 
+    if (debug) {
+      List<String> debugInfo = new ArrayList<>();
+      for (AtomicDouble time : predictedTimes) {
+        debugInfo.add(String.valueOf(time.get()));
+      }
+      response.addAll(debugInfo);
+      return response;
+    }
+
     response.add(formattedTime);
     response.addAll(errorMessages);
-
     return response;
-}
+  }
+
 
 }

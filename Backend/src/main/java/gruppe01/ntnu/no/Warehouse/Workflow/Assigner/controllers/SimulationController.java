@@ -48,7 +48,7 @@ public class SimulationController {
 
   @GetMapping("/monte-carlo/zones/{id}")
   public List<String> monteCarloZone(@PathVariable Long id) {
-    return simulationService.runZoneSimulation(id);
+    return simulationService.runZoneSimulation(id,false);
   }
 
   @GetMapping("/generate-timetable/{date}/{numDays}")

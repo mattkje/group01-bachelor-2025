@@ -34,12 +34,13 @@ public class SimulationServiceTest {
 
     @Test
     void testRunZoneSimulation() {
-        Long zoneId = 1L;
+        Long zoneId = zoneService.getAllZones().getFirst().getId();
         Zone mockZone = new Zone();
         when(zoneService.getZoneById(zoneId)).thenReturn(mockZone);
         when(activeTaskService.getRemainingTasksForTodayByZone(zoneId)).thenReturn(new ArrayList<>());
 
-        List<String> result = simulationService.runZoneSimulation(zoneId);
+        List<String> result = simulationService.runZoneSimulation(zoneId,true);
+        System.out.println(result);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -52,7 +53,7 @@ public class SimulationServiceTest {
      void testRunZoneSimulationWithInvalidZoneId() {
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            simulationService.runZoneSimulation(null);
+            simulationService.runZoneSimulation(null,false);
         });
 
         assertEquals("Zone ID cannot be null and must be a real zone", exception.getMessage());
