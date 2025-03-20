@@ -35,7 +35,7 @@
   <template>
   <div class="sidebar">
     <div class="logo">
-      <img src="@/assets/logo.png" alt="Logo" class="logo-icon" />
+      <img src="@/assets/icons/wws.svg" alt="Logo" class="logo-icon" />
       <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
     </div>
     <div class="tabs">
@@ -79,14 +79,13 @@
   }
 
   .logo-icon {
-    width: 40px;
-    height: 40px;
+    width: 50px;
     margin-right: 0.5rem;
   }
 
   .logo-text {
     padding-top: 0.3rem;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     line-height: 1rem;
     font-weight: bold;
   }

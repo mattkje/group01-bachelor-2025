@@ -125,7 +125,9 @@
 
       <style scoped>
       .staff-page {
+        max-height: 95%;
         padding: 2rem;
+        overflow-y: auto;
       }
 
       .filters {

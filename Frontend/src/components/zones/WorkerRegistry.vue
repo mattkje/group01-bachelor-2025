@@ -144,7 +144,7 @@ const onDragOver = (event: DragEvent) => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  height: 100%; /* Set a fixed height */
+  height: 90%; /* Set a fixed height */
   overflow-y: auto; /* Enable vertical scrolling */
   flex-grow: 1;
 }
