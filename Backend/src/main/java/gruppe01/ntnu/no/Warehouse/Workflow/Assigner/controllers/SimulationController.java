@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloWithRealData;
 import java.time.LocalDate;
 
@@ -26,6 +27,8 @@ public class SimulationController {
   private TimeTableGenerator timeTableGenerator;
   @Autowired
   private WorldSimulation worldSimulation;
+  @Autowired
+  private SimulationService simulationService;
 
   //  Generate active tasks for any given day
   // Format for day: YYYY-MM-DD
@@ -40,6 +43,11 @@ public class SimulationController {
   @GetMapping("/monte-carlo")
   public void monteCarlo() throws Exception {
     monteCarloWithRealData.monteCarlo();
+  }
+
+  @GetMapping("/monte-carlo/zones/{id}")
+  public void monteCarloZone(@PathVariable Long id) {
+    simulationService.runZoneSimulation(id);
   }
 
   @GetMapping("/generate-timetable/{date}/{numDays}")
