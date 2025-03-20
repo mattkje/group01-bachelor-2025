@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,7 @@ public class WorldSimulation {
     public void runWorldSimulation(int simulationTime) throws InterruptedException {
         LocalTime currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
         LocalTime endTime = LocalTime.MIDNIGHT;
+        // 1440 minutes in a day
         double simulationSleepInMillis = (double) (simulationTime * 1000 * 60) / 1440;
         Random random = new Random();
         List<Worker> availableWorkers = new ArrayList<>();
@@ -43,11 +45,11 @@ public class WorldSimulation {
         List<Worker> workersOnBreak  = new ArrayList<>();
         List<Worker> workersDelayedBreak = new ArrayList<>();
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
-        int i = 0;
+        int currentTaskId = 0;
 
         List<Timetable> timetables = timetableService.getAllTimetables();
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.of(2025, 3, 17);
         List<Worker> workersPresentToday = timetables.stream()
                 .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today))
                 .map(Timetable::getWorker)
@@ -60,6 +62,8 @@ public class WorldSimulation {
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(LocalDate.of(2025, 3, 17)))
                 .toList();
+
+        System.out.println("Active tasks today: " + activeTasksToday.size());
 
         for (Timetable timetable : timetables) {
             LocalDateTime timetableStartTime = timetable.getStartTime();
@@ -100,52 +104,57 @@ public class WorldSimulation {
                 }
             }
 
-            for (Worker worker : workersDelayedBreak) {
+            Iterator<Worker> delayedBreakIterator = workersDelayedBreak.iterator();
+            while (delayedBreakIterator.hasNext()) {
+                Worker worker = delayedBreakIterator.next();
                 if (worker.getCurrentTask() == null) {
                     System.out.println(worker.getName() + " is on break");
                     worker.setBreakStartTime(currentTime);
                     workersOnBreak.add(worker);
                     availableWorkers.remove(worker);
-                    workersDelayedBreak.remove(worker);
+                    delayedBreakIterator.remove();
                 }
             }
 
-            for (Worker worker : workersOnBreak) {
+            Iterator<Worker> onBreakIterator = workersOnBreak.iterator();
+            while (onBreakIterator.hasNext()) {
+                Worker worker = onBreakIterator.next();
                 if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
                     System.out.println(worker.getName() + " has ended their break");
                     availableWorkers.add(worker);
-                    workersOnBreak.remove(worker);
+                    onBreakIterator.remove();
                 }
             }
 
-            for (Worker worker : availableWorkers) {
-                if (!activeTasksToday.isEmpty()) {
-                    ActiveTask task = activeTasksToday.get(i);
-                    task.setStartTime(LocalDateTime.of(LocalDate.now(), currentTime));
+            Iterator<Worker> availableWorkerIterator = availableWorkers.iterator();
+            while (availableWorkerIterator.hasNext()) {
+                Worker worker = availableWorkerIterator.next();
+                if (!activeTasksToday.isEmpty() && currentTaskId < activeTasksToday.size()) {
+                    ActiveTask task = activeTasksToday.get(currentTaskId);
+                    task.setStartTime(LocalDateTime.of(LocalDate.of(2025, 3, 17), currentTime));
                     activeTasksInProgress.add(task);
                     busyWorkers.add(worker);
                     worker.setCurrentTask(task);
-                    i++;
+                    currentTaskId++;
                     System.out.println(worker.getName() + " has started working on task: " + task.getTask().getName());
+                    availableWorkerIterator.remove();
                 }
             }
-
-            availableWorkers.clear();
 
             for (ActiveTask task : activeTasksInProgress) {
                 int taskDuration = random.nextInt(task.getTask().getMaxTime() - task.getTask().getMinTime() + 1)
                         + task.getTask().getMinTime();
                 if (task.getStartTime().plusMinutes(taskDuration).toLocalTime().equals(currentTime)) {
-                    task.setEndTime(LocalDateTime.of(LocalDate.now(), currentTime));
-                    Worker worker = busyWorkers.stream()
-                            .filter(w -> w.getCurrentTask().equals(task))
-                            .findFirst()
-                            .orElse(null);
-                    if (worker != null) {
-                        busyWorkers.remove(worker);
-                        availableWorkers.add(worker);
-                        worker.setCurrentTask(null);
-                        System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
+                    task.setEndTime(LocalDateTime.of(LocalDate.of(2025, 3, 17), currentTime));
+                    Iterator<Worker> busyWorkerIterator = busyWorkers.iterator();
+                    while (busyWorkerIterator.hasNext()) {
+                        Worker worker = busyWorkerIterator.next();
+                        if (worker.getCurrentTask() != null && worker.getCurrentTask().equals(task)) {
+                            availableWorkers.add(worker);
+                            worker.setCurrentTask(null);
+                            busyWorkerIterator.remove();
+                            System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
+                        }
                     }
                 }
             }
