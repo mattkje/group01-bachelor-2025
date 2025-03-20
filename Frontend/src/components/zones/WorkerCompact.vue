@@ -103,25 +103,51 @@ onMounted(async () => {
   position: relative;
   display: flex;
   justify-content: space-between;
-  background-color: #dedede;
-  border-radius: 7px;
+  align-items: center;
+  background-color: #ececec;
+  border-radius: 10px;
+  max-height: 40px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.hover-effect:hover {
-  background-color: #f1f1f1;
-  border: 1px solid #8d8d8d;
+
+
+@keyframes pulse-border {
+  0% {
+    border-color: #ff4b4b;
+    box-shadow: 0 0 2px #ff4b4b;
+  }
+  50% {
+    border-color: #ffb4b4;
+    box-shadow: 0 0 0 #ff4b4b;
+  }
+  100% {
+    border-color: #ff4b4b;
+    box-shadow: 0 0 2px #ff4b4b;
+  }
 }
 
 .unq-worker-box {
-  background-color: #ffb4b4; /* Red for unqualified and ready */
+  background-color: #ffcccc; /* Red for unqualified and ready */
+  border: 2px solid #ff4b4b;
+  animation: pulse-border 2s infinite;
+}
+
+.unq-worker-box:hover {
+  animation: none;
+  background-color: #ff9292;
+  border: 2px solid #ff4b4b;
 }
 
 .rdy-worker-box {
   background-color: #bfffab;
+}
+
+.rdy-worker-box:hover {
+  background-color: #a3ff8f;
 }
 
 .busy-unq-worker-box {
@@ -145,7 +171,7 @@ onMounted(async () => {
 }
 
 .status-icon {
-  margin-left: 5px;
+  margin-top: 7px;
   width: 20px;
   height: 20px;
 }

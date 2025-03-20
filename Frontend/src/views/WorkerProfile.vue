@@ -140,19 +140,10 @@
    }
  };
 
+
   const removeLicensesFromWorker = async (workerId: number, licenses: License[]): Promise<void> => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/workers/${workerId}/licenses`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(licenses),
-      });
-      if (!response.ok) throw new Error('Failed to remove licenses from worker');
-    } catch (error) {
-      console.error('Error removing licenses from worker:', error);
-    }
+    // using addLicensesToWorker and adding a license to the worker that already exists, will delete the license from the worker
+    await addLicensesToWorker(workerId, licenses);
   };
 
   const getZoneName = (zoneId: number) => {

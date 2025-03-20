@@ -205,7 +205,7 @@ const onDragLeave = () => {
 .rounded-square {
   width: 280px;
   height: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid #e5e5e5;
   border-radius: 15px;
   overflow: hidden;
   display: flex;
@@ -229,7 +229,7 @@ const onDragLeave = () => {
   line-height: 0.7rem;
   font-weight: bold;
   color: #7B7B7B;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .title-bar hr {
