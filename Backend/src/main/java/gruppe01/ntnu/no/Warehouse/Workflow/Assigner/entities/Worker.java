@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
@@ -27,6 +28,12 @@ public class Worker {
 
     @Column(name = "availability")
     private boolean availability;
+
+    @ManyToOne
+    private ActiveTask currentTask;
+
+    @Column(name = "break_start_time")
+    private LocalTime breakStartTime;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -79,6 +86,14 @@ public class Worker {
         this.licenses = licenses;
     }
 
+    public void setCurrentTask(ActiveTask currentTask) {
+        this.currentTask = currentTask;
+    }
+
+    public void setBreakStartTime(LocalTime breakStartTime) {
+        this.breakStartTime = breakStartTime;
+    }
+
     public Long getId() {
         return id;
     }
@@ -97,6 +112,14 @@ public class Worker {
 
     public Set<License> getLicenses() {
         return licenses;
+    }
+
+    public ActiveTask getCurrentTask() {
+        return currentTask;
+    }
+
+    public LocalTime getBreakStartTime() {
+        return breakStartTime;
     }
 
     public Long getZone() {

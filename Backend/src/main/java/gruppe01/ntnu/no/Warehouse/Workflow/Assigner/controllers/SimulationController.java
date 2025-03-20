@@ -4,6 +4,8 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerato
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloWithRealData;
 import java.time.LocalDate;
+
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +24,8 @@ public class SimulationController {
   private MonteCarloWithRealData monteCarloWithRealData;
   @Autowired
   private TimeTableGenerator timeTableGenerator;
+  @Autowired
+  private WorldSimulation worldSimulation;
 
   //  Generate active tasks for any given day
   // Format for day: YYYY-MM-DD
@@ -42,5 +46,10 @@ public class SimulationController {
   public void generateTimeTable(@PathVariable String date, @PathVariable int numDays) {
     LocalDate startDate = LocalDate.parse(date);
     timeTableGenerator.generateTimeTable(startDate, numDays);
+  }
+
+  @GetMapping("/run-world-simulation")
+  public void runWorldSimulation() throws InterruptedException {
+    worldSimulation.runWorldSimulation(2);
   }
 }

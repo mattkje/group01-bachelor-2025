@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS worker
     zone_id       BIGINT,
     work_title    VARCHAR(255) NOT NULL,
     effectiveness DOUBLE       NOT NULL,
-    availability  BOOLEAN DEFAULT TRUE
+    availability  BOOLEAN DEFAULT TRUE,
+    break_start_time TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS license
