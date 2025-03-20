@@ -33,6 +33,9 @@ const selectedZone = ref({ id: 0, name: '' });
 const isDraggingOver = ref(false);
 const tasks = ref<Task[]>([]);
 const hasTasks = ref(false);
+const isSpinning = ref(false);
+const remainingTasks = computed(() => tasks.value.length);
+let completionTime = ref(null);
 
 const openPopup = () => {
   selectedZone.value = { id: props.zoneId, name: props.title };
@@ -41,6 +44,32 @@ const openPopup = () => {
 
 const closePopup = () => {
   showPopup.value = false;
+};
+
+
+const runMonteCarloSimulation = async () => {
+  isSpinning.value = true;
+  try {
+    const response = await fetch(`http://localhost:8080/api/monte-carlo/zones/${props.zoneId}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to run simulation');
+    }
+
+    const result = await response.json();
+
+    completionTime = result[0];
+    console.log('Simulation ran successfully');
+    emit('refreshWorkers');
+  } catch (error) {
+    console.error('Error running simulation:', error);
+  } finally {
+    // wait for 1 second to show the spinning animation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    isSpinning.value = false;
+  }
 };
 
 const fetchTasksForZone = async () => {
@@ -120,8 +149,8 @@ const onDragLeave = () => {
         <button class="icon-button">
           <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
         </button>
-        <button class="icon-button">
-          <img src="/src/assets/icons/simulation.svg" alt="Assign"/>
+        <button class="icon-button" @click="runMonteCarloSimulation">
+          <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
         </button>
         <button v-if="false" class="icon-button bell-icon">
           <img src="/src/assets/icons/bell.svg" alt="Assign"/>
@@ -269,5 +298,18 @@ const onDragLeave = () => {
 
 .bell-icon {
   margin-left: 6rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s ease-in-out;
 }
 </style>
