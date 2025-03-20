@@ -71,7 +71,11 @@ public class WorkerService {
     public Worker addLicenseToWorker(Long id, Long licenseId) {
         Worker updatedWorker = workerRepository.findById(id).get();
         License license = licenseRepository.findById(licenseId).get();
-        updatedWorker.getLicenses().add(license);
+        if (updatedWorker.getLicenses().contains(license)) {
+            updatedWorker.getLicenses().remove(license);
+        }else {
+            updatedWorker.getLicenses().add(license);
+        }
         return workerRepository.save(updatedWorker);
     }
 
