@@ -59,6 +59,7 @@ const runMonteCarloSimulation = async () => {
     }
 
     const result = await response.json();
+    console.log(result[0]);
 
     completionTime = result[0];
     console.log('Simulation ran successfully');

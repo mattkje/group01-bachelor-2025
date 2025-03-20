@@ -12,6 +12,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class for running simulations in the frontend
+ * Contains methods for running simulations on zones
+ * Ran from API calls
+ */
 @Service
 public class SimulationService {
 
@@ -22,20 +27,37 @@ public class SimulationService {
   @Autowired
   private ZoneService zoneService;
 
+  /**
+   * Runs a simulation on a zone
+   * Returns a list of strings containing the predicted time of completion and any error messages
+   * @param zoneId The ID of the zone to run the simulation on
+   * @return A list of strings containing the predicted time of completion and any error messages
+   */
+public List<String> runZoneSimulation(Long zoneId) {
 
-  public List<String> runZoneSimulation(Long zoneId) {
-
+    // Ensure the zoneID exists
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
-      throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
+        throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
     }
+
+    int simCount = 100;
+
+    // Create a list of strings to store the response
     List<String> response = new ArrayList<>();
     List<String> errorMessages = new ArrayList<>();
-    AtomicDouble predictedTime = new AtomicDouble(0.0);
 
-    for (int i = 0; i < 100; i++) {
-      errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
+    // Create an atomic double to store the predicted time
+    AtomicDouble predictedTime = new AtomicDouble(0.0);
+    double totalPredictedTime = 0.0;
+
+    for (int i = 0; i < simCount; i++) {
+        errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
+            activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
+        totalPredictedTime += predictedTime.get();
     }
+
+    // Set the accumulated predicted time
+    predictedTime.set(totalPredictedTime/simCount);
 
     // Get the current time
     LocalDateTime currentTime = LocalDateTime.now();
@@ -51,6 +73,6 @@ public class SimulationService {
     response.addAll(errorMessages);
 
     return response;
-  }
+}
 
 }
