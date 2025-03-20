@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloWithRe
 import java.time.LocalDate;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,8 +47,8 @@ public class SimulationController {
   }
 
   @GetMapping("/monte-carlo/zones/{id}")
-  public void monteCarloZone(@PathVariable Long id) {
-    simulationService.runZoneSimulation(id);
+  public List<String> monteCarloZone(@PathVariable Long id) {
+    return simulationService.runZoneSimulation(id);
   }
 
   @GetMapping("/generate-timetable/{date}/{numDays}")
