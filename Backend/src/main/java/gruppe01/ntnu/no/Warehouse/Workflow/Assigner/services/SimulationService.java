@@ -26,28 +26,31 @@ public class SimulationService {
   public List<String> runZoneSimulation(Long zoneId) {
 
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
-        throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
+      throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
     }
-      List<String> response = new ArrayList<>();
-      AtomicDouble predictedTime = new AtomicDouble(0.0);
+    List<String> response = new ArrayList<>();
+    List<String> errorMessages = new ArrayList<>();
+    AtomicDouble predictedTime = new AtomicDouble(0.0);
 
-      String errorMessages = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
+    for (int i = 0; i < 100; i++) {
+      errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
+          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
+    }
 
-      // Get the current time
-      LocalDateTime currentTime = LocalDateTime.now();
+    // Get the current time
+    LocalDateTime currentTime = LocalDateTime.now();
 
-      // Add the predicted time (in minutes) to the current time
-      LocalDateTime predictedCompletionTime = currentTime.plusMinutes((long) predictedTime.get());
+    // Add the predicted time (in minutes) to the current time
+    LocalDateTime predictedCompletionTime = currentTime.plusMinutes((long) predictedTime.get());
 
-      // Format the resulting LocalDateTime to a string in the format HH:mm
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-      String formattedTime = predictedCompletionTime.format(formatter);
+    // Format the resulting LocalDateTime to a string in the format HH:mm
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+    String formattedTime = predictedCompletionTime.format(formatter);
 
-      response.add(formattedTime);
-      response.add(errorMessages);
+    response.add(formattedTime);
+    response.addAll(errorMessages);
 
-      return response;
+    return response;
   }
 
 }

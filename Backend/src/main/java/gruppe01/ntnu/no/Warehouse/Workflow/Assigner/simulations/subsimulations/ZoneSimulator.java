@@ -57,7 +57,7 @@ public class ZoneSimulator {
 
       AtomicBoolean isSimulationSuccessful = new AtomicBoolean(true);
       AtomicDouble zoneTaskTime = new AtomicDouble(0.0);
-      // Itearate over the tasks in the zone
+      // Iterate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
         // Gets a random duration for the task
         // TODO: Replace this with a machine learning model for typical taskduration
