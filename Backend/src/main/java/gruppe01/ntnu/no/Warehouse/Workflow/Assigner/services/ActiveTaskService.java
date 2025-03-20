@@ -42,6 +42,28 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
+    public List<ActiveTask>getRemainingTasksForToday(){
+        LocalDate currentDate = LocalDate.now();
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentDate) && activeTask.getEndTime() == null) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
+    public List<ActiveTask> getRemainingTasksForTodayByZone(Long zoneId){
+        LocalDate currentDate = LocalDate.now();
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentDate) && activeTask.getEndTime() == null && activeTask.getTask().getZoneId().equals(zoneId)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
     public List<ActiveTask> getCompletedActiveTasks() {
         List<ActiveTask> completedActiveTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
