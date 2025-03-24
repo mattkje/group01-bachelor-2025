@@ -1,9 +1,19 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
+import { onMounted, ref, computed } from 'vue';
 
 interface License {
   id: number;
   name: string;
+}
+
+interface Task {
+  id: number;
+  requiredLicense: License[];
+}
+
+interface Worker {
+  id: number;
+  licenses: License[];
 }
 
 const props = defineProps<{
@@ -11,10 +21,13 @@ const props = defineProps<{
   workerId: number;
   licenses: License[];
   availability: boolean;
+  zoneId: number;
 }>();
 
-const task = ref('');
+const task = ref<Task | null>(null);
 const qualified = ref(false);
+const qualifiedForAnyTask = ref(false);
+const overtime = ref(false);
 
 const getTaskByWorker = async (workerId: number) => {
   try {
@@ -28,7 +41,27 @@ const getTaskByWorker = async (workerId: number) => {
   }
 };
 
+const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/zones/${zoneId}/tasks`);
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch tasks for zone:', error);
+    return [];
+  }
+};
+
+const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, worker: Worker): Promise<boolean> => {
+  const tasks = await fetchTasksForZone(zoneId);
+  return tasks.some(task =>
+      task.requiredLicense.some(license =>
+          worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+      )
+  );
+};
+
 const isWorkerQualified = (task: any) => {
+  if (props.zoneId === 0) return true;
   if (task) {
     return task.task.requiredLicense.every((license: any) => props.licenses.some((workerLicense: License) => workerLicense.id === license.id));
   } else {
@@ -36,116 +69,150 @@ const isWorkerQualified = (task: any) => {
   }
 };
 
+const overtimeOccurance = (task: any) => {
+  if (!task || !task.eta || task.task.maxTime) return false;
+  return task.task.maxTime < task.eta;
+};
+
 onMounted(async () => {
   task.value = await getTaskByWorker(props.workerId);
+  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, { id: props.workerId, licenses: props.licenses });
+  overtimeOccurance(task.value) ? overtime.value = true : overtime.value = false;
 });
 </script>
 
 <template>
-  <div :class="['worker', { 'unq-worker-box': !qualified , 'hover-effect': !task }]" :draggable="!task">
+  <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-name">{{ name }}</div>
-    <div class="worker-licenses">
-      <span v-for="(license, index) in licenses" :key="index" class="license">{{ license.name }}</span>
-    </div>
-    <hr/>
-    <div class="worker-status-container">
-      <div v-if="task">
-        <div v-if="availability" class="worker-task">Task: {{ task.task.name }}</div>
-        <div v-if="availability" class="worker-eta">
-          ETA: {{ task.eta ? task.eta : 'unavailable' }}
-        </div>
-      </div>
-      <div>
+    <div class="status-container">
 
-        <div v-if="availability && task" class="worker-status worker-busy">Busy</div>
-        <div v-if="availability && !task" class="worker-status worker-Ready">Ready</div>
-        <div v-if="availability && task && !qualified" class="worker-status worker-unqualified">Unqualified</div>
-        <div v-if="!availability" class="worker-status worker-busy">Unavailable</div>
-      </div>
-
+      <img v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
+      <img v-if="!task && qualified && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
+      <img v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
+      <img v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
+      <img v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />
+      <div v-if="!task && !qualifiedForAnyTask" class="status-popup">Unqualified</div>
+      <div v-if="task && qualified" class="status-popup">Busy</div>
+      <div v-if="task && !qualified" class="status-popup">Busy & Unqualified</div>
+      <div v-if="overtime" class="status-popup">Error occured</div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.worker {
-  border: 1px solid #ccc;
-  border-radius: 15px;
-  padding: 1rem;
-  max-height: 100px;
-  margin-bottom: 1rem;
-  background-color: transparent;
+.worker-compact {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ececec;
+  border-radius: 10px;
+  max-height: 40px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.hover-effect:hover {
-  background-color: #f1f1f1;
-  border: 1px solid #8d8d8d;
+
+
+@keyframes pulse-border {
+  0% {
+    border-color: #ff4b4b;
+    box-shadow: 0 0 2px #ff4b4b;
+  }
+  50% {
+    border-color: #ffb4b4;
+    box-shadow: 0 0 0 #ff4b4b;
+  }
+  100% {
+    border-color: #ff4b4b;
+    box-shadow: 0 0 2px #ff4b4b;
+  }
 }
 
 .unq-worker-box {
-  border: 1px solid #fab639;
+  background-color: #ffcccc; /* Red for unqualified and ready */
+  border: 2px solid #ff4b4b;
+  animation: pulse-border 2s infinite;
 }
+
+.unq-worker-box:hover {
+  animation: none;
+  background-color: #ff9292;
+  border: 2px solid #ff4b4b;
+}
+
+.rdy-worker-box {
+  background-color: #bfffab;
+}
+
+.rdy-worker-box:hover {
+  background-color: #a3ff8f;
+}
+
+.busy-unq-worker-box {
+  background-color: #ffebc0; /* Yellow for busy and unqualified */
+}
+
 
 .worker-name {
-  line-height: 0.3rem;
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: bold;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.worker-licenses {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  user-select: none !important;
-  -webkit-user-select: none !important;
+.warning-icon {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
 }
 
-.license {
-  background-color: #e0e0e0;
-  border-radius: 5px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.4rem;
-  font-weight: bold;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  color: #333;
+.status-icon {
+  margin-top: 7px;
+  width: 20px;
+  height: 20px;
+}
+
+.status-popup {
+  display: none;
+  position: absolute;
+  top: -25px;
+  right: 0;
+  background-color: #333;
+  color: #fff;
+  padding: 5px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.worker-compact:hover .status-popup {
+  display: block;
 }
 
 .worker-status-container {
   display: flex;
   justify-content: space-between;
-}
-
-.worker-task,
-.worker-eta {
-  color: #7B7B7B;
-  line-height: 0.2rem;
   margin-top: 0.5rem;
-  font-size: 0.5rem;
-  user-select: none !important;
-  -webkit-user-select: none !important;
 }
 
 .worker-status {
   background-color: white;
   color: white;
-  font-size: 0.6rem;
-  border-radius: 0.3rem;
-  padding: 5px;
-  width: 4rem;
+  font-size: 0.5rem;
+  border-radius: 0.2rem;
+  padding: 0.2rem;
+  width: 3rem;
   text-align: center;
-  line-height: 0.4rem;
-  margin-top: 0.1rem;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.worker-Ready {
+.worker-ready {
   background-color: #79cc5e;
 }
 
@@ -154,13 +221,10 @@ onMounted(async () => {
 }
 
 .worker-unqualified {
-  background-color: #fab639;
+  background-color: #fa7d39;
 }
 
-hr {
-  margin: 0.5rem 0;
-  border: none;
-  border-top: 1px solid #ccc;
-  user-select: none !important;
+.worker-unavailable {
+  background-color: #ff4d4d;
 }
 </style>

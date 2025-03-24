@@ -7,7 +7,6 @@ import simulationIcon from '@/assets/icons/simulation.svg';
 const tabs = ref([
   { name: 'Overview', icon: overviewIcon },
   { name: 'Tasks', icon: tasksIcon },
-  { name: 'History', icon: simulationIcon },
 ]);
 
 const activeTab = ref(tabs.value[0].name);
