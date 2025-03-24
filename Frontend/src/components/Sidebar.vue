@@ -21,15 +21,14 @@
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
     { separator: true },
     { name: 'Simulation', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/simulation' },
-    { name: 'Worker Dev', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/worker' },
     { name: 'Info', icon: graphIcon, iconSelected: graphIconSelected, path: '/info' },
   ]);
 
   const route = useRoute();
 
-  const activeTab = computed(() => {
-    return tabs.value.find(tab => tab.path === route.path);
-  });
+const activeTab = computed(() => {
+  return tabs.value.find(tab => tab.path === route.path) || tabs.value.find(tab => tab.name === 'Overview');
+});
   </script>
 
   <template>

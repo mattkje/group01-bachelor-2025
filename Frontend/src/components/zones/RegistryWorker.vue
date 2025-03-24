@@ -74,6 +74,15 @@ const overtimeOccurance = (task: any) => {
   return task.task.maxTime < task.eta;
 };
 
+const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
+  if (isToon) {
+    return `https://joesch.moe/api/v1/${workerId}`;
+  } else {
+    const gender = workerId % 2 === 0 ? 'men' : 'women';
+    const id = workerId % 100;
+    return `https://randomuser.me/api/portraits/med/${gender}/${id}.jpg`;
+  }
+};
 onMounted(async () => {
   task.value = await getTaskByWorker(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, { id: props.workerId, licenses: props.licenses });
@@ -83,7 +92,10 @@ onMounted(async () => {
 
 <template>
   <div :class="['worker-compact', { 'rdy-worker-box': !task, 'hover-effect': !task }]" :draggable="!task">
-    <div class="worker-name">{{ name }}</div>
+    <div class="worker-profile">
+      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, true)" />
+      <div class="worker-name">{{ name }}</div>
+    </div>
     <div class="status-container">
       <div v-if="overtime" class="status-popup">Error occured</div>
     </div>
@@ -147,12 +159,23 @@ onMounted(async () => {
   background-color: #ffebc0; /* Yellow for busy and unqualified */
 }
 
+.worker-profile {
+  display: flex;
+  align-items: center;
+}
 
 .worker-name {
   font-size: 0.8rem;
   font-weight: bold;
   user-select: none !important;
   -webkit-user-select: none !important;
+}
+
+.worker-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
 }
 
 .warning-icon {

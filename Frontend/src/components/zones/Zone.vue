@@ -311,6 +311,6 @@ const onDragLeave = () => {
 }
 
 .spin-animation {
-  animation: spin 1s ease-in-out;
+  animation: spin 1s ease-in-out infinite;
 }
 </style>
