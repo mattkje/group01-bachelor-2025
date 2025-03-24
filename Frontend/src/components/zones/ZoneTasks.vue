@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue';
+import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
 
 interface Task {
   id: number;
@@ -21,6 +22,7 @@ interface Worker {
 interface ActiveTask {
   id: number;
   workers: Worker[];
+  task: Task;
 }
 
 interface Zone {
@@ -52,9 +54,9 @@ const fetchTasks = async () => {
   }
 };
 
-const fetchActiveTasks = async () => {
+const fetchActiveTasks = async (id: number) => {
   try {
-    const response = await fetch('http://localhost:8080/api/active-tasks');
+    const response = await fetch(`http://localhost:8080/api/zones/${id}/active-tasks-now`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -78,8 +80,10 @@ const fetchZones = async () => {
 
 onMounted(() => {
   fetchTasks();
-  fetchActiveTasks();
+  fetchActiveTasks(props.zone.id);
   fetchZones();
+
+  console.log(activeTasks);
 });
 
 const filteredTasks = computed(() => {
@@ -131,47 +135,15 @@ const sortTable = (key: string) => {
 
 <template>
   <div class="content">
-    <div class="main-content">
-      <h1>Active Tasks</h1>
-      <table class="task-table">
-        <thead>
-        <tr>
-          <th @click="sortTable('name')">Task Name</th>
-          <th @click="sortTable('requiredLicense')">Qualifications</th>
-          <th @click="sortTable('estimatedTime')">Duration</th>
-          <th @click="sortTable('workers')">Workers</th>
-          <th @click="sortTable('workerSlots')">Worker slots</th>
-          <th @click="sortTable('description')">Info</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="task in paginatedTasks" :key="task.id">
-          <td>{{ task.name }}</td>
-          <td>
-            <ul>
-              <li v-for="license in task.requiredLicense" :key="license.name">{{ license.name }}</li>
-            </ul>
-          </td>
-          <td>{{ (task.maxTime + task.minTime) / 2 }} minutes</td>
-          <td>
-            <ul>
-              <li v-for="worker in getWorkersForTask(task.id)" :key="worker.id">
-                <router-link :to="`/worker?id=${worker.id}`">{{ worker.name }}</router-link>
-              </li>
-            </ul>
-          </td>
-          <td>{{ task.minWorkers }} - {{ task.maxWorkers }}</td>
-          <td>
-            <button @click="showModal = true">i</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-      <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-        <span>Page {{ currentPage }} of {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
-      </div>
+    <br><h1>Active Tasks</h1><br>
+    <div class="activeTaskContainer">
+      <div class="placeholder" v-if="activeTasks.length === 0">No tasks remaining...</div>
+      <active-task-component v-for="activeTask in activeTasks" :key="activeTask.id" :active-task="activeTask"/>
+    </div>
+    <div class="pagination" v-if="activeTasks.length > 0">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
     </div>
   </div>
 </template>
@@ -179,103 +151,32 @@ const sortTable = (key: string) => {
 <style scoped>
 .content {
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   margin: 0;
-  height: calc(100% - 4rem);
+  height: calc(100vh - 4rem);
 }
 
-.main-content {
+.activeTaskContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  height: 100%;
   padding: 1rem;
   flex: 1;
   overflow-y: auto;
-}
 
-.filter-menu {
-  position: sticky;
-  width: 280px;
-  height: 100%;
-  padding: 1rem;
-  border-left: 1px solid #ccc;
-  background-color: #f9f9f9;
 }
-
-.task-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  overflow: hidden;
-  border: #e1e1e1 1px solid;
-}
-
-.task-table th, .task-table td {
-  padding: 0.8vh;
-  text-align: left;
-}
-
-.task-table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.task-table tbody tr {
-  transition: background-color 0.3s;
-}
-
-.task-table tbody tr:hover {
-  background-color: #f9f9f9;
-}
-
-.task-table tbody tr:nth-child(even) {
-  background-color: #f8f8f8;
-}
-
-.task-table button {
-  padding: 0.25rem 0.5rem;
-  background-color: #E77474;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.task-table button:hover {
-  background-color: #9d4d4d;
-}
-
 .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
+  bottom: 10px;
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 500px;
-  max-width: 100%;
-}
-
-.close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 1.5rem;
-  cursor: pointer;
+  padding: 10px;
+  max-width: calc(100% - 2rem);
+  margin-top: auto;
 }
 
 ul {
@@ -295,5 +196,13 @@ ul li::before {
   display: inline-block;
   width: 1em;
   margin-left: -1em;
+}
+
+.placeholder {
+  font-size: 1.5rem;
+  color: #888;
+  text-align: center;
+  position: fixed;
+  top: 50%;
 }
 </style>

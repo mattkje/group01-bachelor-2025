@@ -43,6 +43,11 @@ public class ZoneController {
         return zoneService.getActiveTasksByZoneId(id);
     }
 
+    @GetMapping("/{id}/active-tasks-now")
+    public Set<ActiveTask> getActiveTasksByZoneIdNow(@PathVariable Long id) {
+        return zoneService.getTodaysUnfinishedTasksByZoneId(id);
+    }
+
     @PostMapping
     public Zone addZone(@RequestBody Zone zone) {
         return zoneService.addZone(zone);
