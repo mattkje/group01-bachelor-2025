@@ -21,12 +21,8 @@ const handleTabSelected = (tabName: string) => {
   <div class="popup-background" @click="$emit('close')">
     <div class="popup" @click.stop>
       <div class="popup-body">
-        <ZoneSidebar :title="zone.name" @close="$emit('close')" @tab-selected="handleTabSelected" />
-        <div class="popup-content">
-          <div v-if="activeTab === 'Overview'">Overview Content</div>
-          <div v-if="activeTab === 'Tasks'"><ZoneTasks :zone="zone"/></div>
-          <div v-if="activeTab === 'History'">History Content</div>
-        </div>
+        <button class="close-button" @click="$emit('close')">&times;</button>
+        <ZoneTasks :zone="zone"/>
       </div>
     </div>
   </div>
@@ -50,9 +46,10 @@ const handleTabSelected = (tabName: string) => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
+  width: 70%;
+  height: 70%;
   background-color: #fff;
+  border-radius: 2rem;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -64,7 +61,19 @@ const handleTabSelected = (tabName: string) => {
 
 .popup-body {
   display: flex;
+  flex-direction: row;
+  padding: 2rem;
   flex: 1;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #646464;
+
+  cursor: pointer;
+  align-self: flex-start;
 }
 
 .sidebar {

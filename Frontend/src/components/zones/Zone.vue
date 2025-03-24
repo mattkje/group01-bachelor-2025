@@ -144,9 +144,6 @@ const onDragLeave = () => {
       <hr>
       <div class="zone-options">
         <button class="icon-button" @click="openPopup">
-          <img src="/src/assets/icons/overview.svg" alt="Assign"/>
-        </button>
-        <button class="icon-button">
           <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
         </button>
         <button class="icon-button" @click="runMonteCarloSimulation">
@@ -297,7 +294,7 @@ const onDragLeave = () => {
 }
 
 .bell-icon {
-  margin-left: 6rem;
+  margin-left: 8.5rem;
 }
 
 @keyframes spin {
