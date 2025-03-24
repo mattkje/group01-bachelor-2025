@@ -75,6 +75,10 @@ public class ActiveTask {
         this.workers = workers;
     }
 
+    public void addWorker(Worker worker) {
+        this.workers.add(worker);
+    }
+
     public void setTask(Task task) {
         this.task = task;
     }

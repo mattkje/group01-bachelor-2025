@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
@@ -35,6 +36,11 @@ public class ZoneController {
     @GetMapping("/{id}/tasks")
     public Set<Task> getTasksByZoneId(@PathVariable Long id) {
         return zoneService.getTasksByZoneId(id);
+    }
+
+    @GetMapping("{id}/active-tasks")
+    public Set<ActiveTask> getActiveTasksByZoneId(@PathVariable Long id) {
+        return zoneService.getActiveTasksByZoneId(id);
     }
 
     @PostMapping

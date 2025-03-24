@@ -123,6 +123,7 @@ public class ActiveTaskService {
             if (worker != null) {
                 worker.setAvailability(false);
                 worker.setZone(activeTask.getTask().getZoneId());
+                worker.setCurrentTask(activeTask);
                 activeTask.getWorkers().add(worker);
                 return activeTaskRepository.save(activeTask);
             }
@@ -138,6 +139,7 @@ public class ActiveTaskService {
             if (worker != null) {
                 worker.setAvailability(true);
                 activeTask.getWorkers().remove(worker);
+                worker.setCurrentTask(null);
                 return activeTaskRepository.save(activeTask);
             }
             return null;
@@ -150,6 +152,7 @@ public class ActiveTaskService {
         if (activeTask != null) {
             for (Worker worker : activeTask.getWorkers()) {
                 worker.setAvailability(true);
+                worker.setCurrentTask(null);
             }
             activeTask.getWorkers().clear();
             return activeTaskRepository.save(activeTask);
@@ -159,7 +162,11 @@ public class ActiveTaskService {
 
     public ActiveTask deleteActiveTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
-        if (activeTask != null) {
+        if (activeTask != null && !activeTask.getWorkers().isEmpty()) {
+            for (Worker worker : activeTask.getWorkers()) {
+                worker.setAvailability(true);
+                worker.setCurrentTask(null);
+            }
             activeTaskRepository.delete(activeTask);
         }
         return activeTask;

@@ -1,14 +1,17 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +24,8 @@ public class ZoneService {
     private WorkerRepository workerRepository;
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private ActiveTaskRepository activeTaskRepository;
 
     public List<Zone> getAllZones() {
         return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
@@ -44,6 +49,21 @@ public class ZoneService {
             return zone.getTasks();
         }
         return null;
+    }
+
+    public Set<ActiveTask> getActiveTasksByZoneId(Long id) {
+        Zone zone = zoneRepository.findById(id).orElse(null);
+        Set<ActiveTask> activeTasks = new HashSet<>();
+        if (zone != null) {
+            for (Task task : zone.getTasks()) {
+                for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+                    if (activeTask.getTask().equals(task)) {
+                        activeTasks.add(activeTask);
+                    }
+                }
+            }
+        }
+        return activeTasks;
     }
 
     public Zone addZone(Zone zone) {
