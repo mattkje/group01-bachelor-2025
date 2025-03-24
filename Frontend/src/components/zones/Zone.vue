@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import {computed, ref, onMounted} from 'vue';
 import WorkerCompact from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 
@@ -29,7 +29,7 @@ const props = defineProps<{
 const emit = defineEmits(['refreshWorkers']);
 
 const showPopup = ref(false);
-const selectedZone = ref({ id: 0, name: '' });
+const selectedZone = ref({id: 0, name: ''});
 const isDraggingOver = ref(false);
 const tasks = ref<Task[]>([]);
 const hasTasks = ref(false);
@@ -38,7 +38,7 @@ const remainingTasks = computed(() => tasks.value.length);
 let completionTime = ref(null);
 
 const openPopup = () => {
-  selectedZone.value = { id: props.zoneId, name: props.title };
+  selectedZone.value = {id: props.zoneId, name: props.title};
   showPopup.value = true;
 };
 
@@ -57,11 +57,11 @@ const runMonteCarloSimulation = async () => {
     if (!response.ok) {
       throw new Error('Failed to run simulation');
     }
-
     const result = await response.json();
+    if (result.length < 2) {
+      completionTime = result[0];
+    }
 
-    completionTime = result[0];
-    console.log('Simulation ran successfully');
     emit('refreshWorkers');
   } catch (error) {
     console.error('Error running simulation:', error);
@@ -173,7 +173,7 @@ const onDragLeave = () => {
           :class="{ 'unavailable': !worker.availability }"
           @dragstart="(event) => onDragStart(event, worker)"
       />
-      <div v-if="isDraggingOver" class="on-drop-worker-box" />
+      <div v-if="isDraggingOver" class="on-drop-worker-box"/>
       <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
         <img
             src="/src/assets/icons/warning.svg"

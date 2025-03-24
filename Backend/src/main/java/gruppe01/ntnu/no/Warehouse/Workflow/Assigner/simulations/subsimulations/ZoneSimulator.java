@@ -117,8 +117,7 @@ public class ZoneSimulator {
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
       if (isSimulationSuccessful.get()) {
         totalTaskTime.addAndGet(zoneTaskTime.get());
-        return "Zone " + zone.getId() + " Was successful. Estimated time: " + zoneTaskTime.get() +
-            " minutes";
+        return "";
       }
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
 
