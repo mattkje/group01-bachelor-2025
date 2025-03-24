@@ -55,7 +55,6 @@ public class SimulationService {
         String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
             activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
         errorMessages.add(result);
-        System.out.println("Predicted time: " + predictedTime.get() + " for sim " + i);
         totalPredictedTime += predictedTime.get();
     }
 
