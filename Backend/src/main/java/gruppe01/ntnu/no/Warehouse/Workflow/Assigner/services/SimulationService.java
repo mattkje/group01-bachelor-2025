@@ -54,7 +54,9 @@ public class SimulationService {
         AtomicDouble predictedTime = new AtomicDouble(0.0);
         String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
             activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
-        errorMessages.add(result);
+        if (!result.isEmpty()){
+          errorMessages.add(result);
+        }
         totalPredictedTime += predictedTime.get();
     }
 
