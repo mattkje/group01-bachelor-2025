@@ -120,18 +120,7 @@ const prevPage = () => {
     currentPage.value--;
   }
 };
-
-const sortTable = (key: string) => {
-  tasks.value.sort((a, b) => {
-    const aValue = a[key as keyof Task];
-    const bValue = b[key as keyof Task];
-    if (aValue < bValue) return -1;
-    if (aValue > bValue) return 1;
-    return 0;
-  });
-};
 </script>
-
 
 <template>
   <div class="content">
@@ -166,7 +155,6 @@ const sortTable = (key: string) => {
   padding: 1rem;
   flex: 1;
   overflow-y: auto;
-
 }
 .pagination {
   display: flex;
@@ -203,6 +191,7 @@ ul li::before {
   color: #888;
   text-align: center;
   position: fixed;
+  left: 50%;
   top: 50%;
 }
 </style>
