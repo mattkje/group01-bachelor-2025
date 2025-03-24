@@ -38,7 +38,7 @@ public class ZoneController {
         return zoneService.getTasksByZoneId(id);
     }
 
-    @GetMapping("{id}/active-tasks")
+    @GetMapping("/{id}/active-tasks")
     public Set<ActiveTask> getActiveTasksByZoneId(@PathVariable Long id) {
         return zoneService.getActiveTasksByZoneId(id);
     }
