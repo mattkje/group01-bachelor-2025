@@ -155,11 +155,13 @@ onMounted(() => {
   }
 
   .clock span {
+    color: #7B7B7B;
     font-size: 2rem;
     font-weight: bold;
   }
 
   .clock p {
+    color: #7B7B7B;
     font-size: 0.7rem;
     font-weight: bold;
   }
@@ -171,13 +173,13 @@ onMounted(() => {
 
   .clock-done span
   {
-    color: #c94343;
+    color: #d97c7c;
     font-size: 2rem;
     font-weight: bold;
   }
 
   .clock-done p {
-    color: #c94343;
+    color: #d97c7c;
     font-size: 0.7rem;
     font-weight: bold;
   }
