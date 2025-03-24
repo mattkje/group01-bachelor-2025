@@ -1,28 +1,34 @@
 <template>
   <Toolbar title="Overview" />
   <div class="overview">
-    <pre>{{ asciiArt }}</pre>
+    <div class="large-rounded-square" v-for="n in 4" :key="n">
+      <p>Widget {{ n }}</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import Toolbar from "@/components/Toolbar.vue";
-import AsciiArt from "@/assets/ascii.txt";
-
-const asciiArt = ref('');
-
-onMounted(async () => {
-  const response = await fetch(AsciiArt);
-  asciiArt.value = await response.text();
-});
 </script>
 
 <style scoped>
 .overview {
   padding: 2rem;
-  white-space: pre-wrap;
-  font-size: 0.4rem;
-  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.large-rounded-square {
+  width: 450px;
+  height: 300px;
+  border: 1px solid #e5e5e5;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  font-size: 1.2rem;
+  color: #7B7B7B;
 }
 </style>
