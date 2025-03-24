@@ -93,7 +93,7 @@ onMounted(async () => {
 <template>
   <div :class="['worker-compact', { 'rdy-worker-box': !task, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, true)" />
+      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
       <div class="worker-name">{{ name }}</div>
     </div>
     <div class="status-container">
