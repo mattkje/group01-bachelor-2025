@@ -1,14 +1,12 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +32,7 @@ public class SimulationService {
    * @param zoneId The ID of the zone to run the simulation on
    * @return A list of strings containing the predicted time of completion and any error messages
    */
-  public List<String> runZoneSimulation(Long zoneId, boolean debug) {
+  public List<String> runZoneSimulation(Long zoneId) throws InterruptedException {
 
     // Ensure the zoneID exists
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
@@ -47,20 +45,21 @@ public class SimulationService {
     List<String> response = new ArrayList<>();
     List<String> errorMessages = new ArrayList<>();
 
-    List<AtomicDouble> predictedTimes = new ArrayList<>();
 
     // Create an atomic double to store the predicted time
-    AtomicDouble predictedTime = new AtomicDouble(0.0);
+
     double totalPredictedTime = 0.0;
 
     for (int i = 0; i < simCount; i++) {
-      errorMessages.add(ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime));
-      if (debug) {
-        predictedTimes.add(predictedTime);
-      }
-      totalPredictedTime += predictedTime.get();
+        AtomicDouble predictedTime = new AtomicDouble(0.0);
+        String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
+            activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
+        errorMessages.add(result);
+        System.out.println("Predicted time: " + predictedTime.get() + " for sim " + i);
+        totalPredictedTime += predictedTime.get();
     }
+
+    AtomicDouble predictedTime = new AtomicDouble(0.0);
 
     // Set the accumulated predicted time
     predictedTime.set(totalPredictedTime / simCount);
@@ -74,15 +73,6 @@ public class SimulationService {
     // Format the resulting LocalDateTime to a string in the format HH:mm
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     String formattedTime = predictedCompletionTime.format(formatter);
-
-    if (debug) {
-      List<String> debugInfo = new ArrayList<>();
-      for (AtomicDouble time : predictedTimes) {
-        debugInfo.add(String.valueOf(time.get()));
-      }
-      response.addAll(debugInfo);
-      return response;
-    }
 
     response.add(formattedTime);
     response.addAll(errorMessages);
