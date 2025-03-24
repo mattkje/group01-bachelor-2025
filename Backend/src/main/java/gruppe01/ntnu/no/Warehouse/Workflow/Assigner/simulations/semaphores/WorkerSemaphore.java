@@ -30,11 +30,10 @@ public class WorkerSemaphore {
    * Will be redundant later on, but is used for testing purposes.
    *
    * @param activeTask The task to acquire workers for
-   * @param latch      The latch to count down when workers are acquired
    * @return An empty string if successful, an error message if not
    * @throws InterruptedException
    */
-  public String acquireMultiple(ActiveTask activeTask, CountDownLatch latch)
+  public String acquireMultiple(ActiveTask activeTask)
       throws InterruptedException {
     lock.lock();
     try {
@@ -52,7 +51,6 @@ public class WorkerSemaphore {
             if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
               activeTask.getWorkers().addAll(workersToRemove);
               workersToRemove.forEach(workers::remove);
-              latch.countDown();
               return "";
             }
           }
@@ -60,13 +58,8 @@ public class WorkerSemaphore {
         // if the number of workers acquired is less than the required number of workers
         semaphore.release(requiredWorkers);
 
-        if (workersToRemove.isEmpty()){
-          latch.countDown();
-          return "FAILED TASK: "+activeTask.getId() + " - NO QUALIFICATIONS";
-        } else {
-          latch.countDown();
-          return "FAILED TASK: "+activeTask.getId() + " - MISS QUALIFICATIONS";
-        }
+        // TODO: ADD error checking in case the zone does nt have the qualified workers to avoid infinite loop of searching for workers
+        return "";
       }
     } finally {
       lock.unlock();

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component
 public class WorldSimulation {
@@ -57,7 +58,7 @@ public class WorldSimulation {
         List<ActiveTask> activeTasksToday = activeTaskService.getAllActiveTasks();
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(LocalDate.of(2025, 3, 17)))
-                .toList();
+                .collect(Collectors.toList());
 
         System.out.println("Active tasks today: " + activeTasksToday.size());
 
@@ -78,7 +79,9 @@ public class WorldSimulation {
                     System.out.println(timetable.getWorker().getName() + " has started working");
                     availableWorkers.add(timetable.getWorker());
                 }
-                if (timetable.getRealEndTime().toLocalTime().equals(currentTime)) {
+                if ((timetable.getRealEndTime().toLocalTime().isBefore(currentTime) ||
+                        timetable.getRealEndTime().toLocalTime().equals(currentTime)) &&
+                        availableWorkers.contains(timetable.getWorker())) {
                     System.out.println(timetable.getWorker().getName() + " has stopped working");
                     availableWorkers.remove(timetable.getWorker());
                 }
@@ -96,7 +99,7 @@ public class WorldSimulation {
                         .minusHours(timetable.getStartTime().getHour()).getHour() / 2).plusMinutes(15L))
                         .equals(currentTime) && !workersDelayedBreak.contains(timetable.getWorker())) {
                     System.out.println(timetable.getWorker().getName() + " has ended their lunch break");
-                    availableWorkers.add(timetable.getWorker());
+                    if (!availableWorkers.contains(timetable.getWorker())) availableWorkers.add(timetable.getWorker());
                 }
             }
 
@@ -119,56 +122,38 @@ public class WorldSimulation {
                 Worker worker = onBreakIterator.next();
                 if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
                     System.out.println(worker.getName() + " has ended their break");
-                    availableWorkers.add(worker);
+                    if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                     onBreakIterator.remove();
                 }
             }
 
-            //Assign tasks to available workers
+            // Assign tasks to available workers
             Iterator<ActiveTask> activeTaskIterator = activeTasksToday.iterator();
-            if (!activeTasksToday.isEmpty()) {
-                ActiveTask task;
-                while (activeTaskIterator.hasNext()) {
-                    task = activeTaskIterator.next();
-                    if (task.getTask().getMaxWorkers() <= availableWorkers.size()) {
-                        for (Worker worker : availableWorkers) {
-                            if (Objects.equals(task.getTask().getZoneId(), worker.getZone())) {
-                                task.addWorker(worker);
-                                worker.setCurrentTask(task);
-                                busyWorkers.add(worker);
-                                availableWorkers.remove(worker);
-                                System.out.println(worker.getName() + " has started working on task: " +
-                                        task.getTask().getName());
-                                task.setStartTime(LocalDateTime.of(LocalDate.of(2025, 3, 17), currentTime));
-                                activeTasksInProgress.add(task);
-                                activeTaskIterator.remove();
-                                break;
-                            }
-                        }
-                    }
-                }
-                /*if (task.getTask().getMaxWorkers() <= availableWorkers.size()) {
-                    Iterator<Worker> availableWorkerIterator = availableWorkers.iterator();
-                    Iterator<ActiveTask> activeTaskIterator = activeTasksInProgress.iterator();
-                    for (int i = 0; i < task.getTask().getMaxWorkers() && availableWorkerIterator.hasNext(); i++) {
-                        Worker workerForTask = availableWorkerIterator.next();
-                        while (activeTaskIterator.hasNext()) {
-                            ActiveTask activeTask = activeTaskIterator.next();
-                            if (Objects.equals(activeTask.getTask().getZoneId(), workerForTask.getZone())) {
-                                break;
-                            }
-                        }
-                        task.addWorker(workerForTask);
-                        workerForTask.setCurrentTask(task);
-                        busyWorkers.add(workerForTask);
-                        availableWorkerIterator.remove();
-                        System.out.println(workerForTask.getName() + " has started working on task: " +
-                                task.getTask().getName());
+            while (activeTaskIterator.hasNext()) {
+                ActiveTask task = activeTaskIterator.next();
+
+                List<Worker> workers = new ArrayList<>(availableWorkers.stream()
+                        .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()))
+                        .collect(Collectors.toList()));
+                if (workers.size() >= task.getTask().getMaxWorkers()) {
+                    int workersAssigned = 0;
+                    Iterator<Worker> workerIterator = workers.iterator();
+
+                    while (workerIterator.hasNext() && workersAssigned < task.getTask().getMaxWorkers()) {
+                        Worker worker = workerIterator.next();
+                        task.addWorker(worker);
+                        worker.setCurrentTask(task);
+                        busyWorkers.add(worker);
+                        availableWorkers.remove(worker);
+                        System.out.println(worker.getName() + " has started working on task: " + task.getTask().getName());
+                        workersAssigned++;
                     }
                     task.setStartTime(LocalDateTime.of(LocalDate.of(2025, 3, 17), currentTime));
                     activeTasksInProgress.add(task);
+                    activeTaskIterator.remove();
                 }
             }
+
 
             //Check if tasks are completed
             for (ActiveTask task : activeTasksInProgress) {
@@ -180,22 +165,22 @@ public class WorldSimulation {
                     while (busyWorkerIterator.hasNext()) {
                         Worker worker = busyWorkerIterator.next();
                         if (worker.getCurrentTask() != null && worker.getCurrentTask().equals(task)) {
-                            availableWorkers.add(worker);
+                            if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                             worker.setCurrentTask(null);
                             busyWorkerIterator.remove();
                             System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
                         }
                     }
                 }
-            }*/
-
-                if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
-                    System.out.println("Current time: " + currentTime);
-                }
-                currentTime = currentTime.plusMinutes(1);
-                TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
             }
-            System.out.println("Simulation finished");
+
+            if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
+                System.out.println("Current time: " + currentTime);
+            }
+            currentTime = currentTime.plusMinutes(1);
+            TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
         }
+
+        System.out.println("Simulation finished");
     }
 }

@@ -66,33 +66,35 @@ public class ZoneSimulator {
                 activeTask.getTask().getMinTime();
 
         if (zone.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-            zoneLatch.countDown();
-          return "ERROR: ZONE " + zone.getId() + " - MISSING WORKERS FOR TASK " + activeTask.getId();
+          isSimulationSuccessful.set(false);
+          zoneLatch.countDown();
+          return "ERROR: ZONE " + zone.getId() + " - MISSING WORKERS FOR TASK " +
+              activeTask.getId();
         }
 
         long workersWithRequiredLicenses = zone.getWorkers().stream()
-            .filter(worker -> worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))
+            .filter(worker -> worker.getLicenses()
+                .containsAll(activeTask.getTask().getRequiredLicense()))
             .count();
 
         if (workersWithRequiredLicenses < activeTask.getTask().getMinWorkers()) {
+          isSimulationSuccessful.set(false);
           zoneLatch.countDown();
-          return "ERROR: ZONE " + zone.getId() + " - NOT ENOUGH WORKERS WITH REQUIRED LICENSES FOR TASK " + activeTask.getId();
+          return "ERROR: ZONE " + zone.getId() +
+              " - NOT ENOUGH WORKERS WITH REQUIRED LICENSES FOR TASK " + activeTask.getId();
         }
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {
-            // Latch for the workers in the task ensuring that all workers are acquired before the task starts
-            CountDownLatch taskLatch = new CountDownLatch(1);
             // Acquire the workers for the task
-            String acquireWorkerError =
-                availableZoneWorkersSemaphore.acquireMultiple(activeTask, taskLatch);
-            // Wait for all workers to be acquired
-            taskLatch.await();
-            // If there is an error acquiring the workers, add the error message to the list and return
-            if (!acquireWorkerError.isEmpty()) {
-              errorMessages.add(acquireWorkerError);
-              isSimulationSuccessful.set(false);
-              return;
+            while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+              String acquireWorkerError =
+                  availableZoneWorkersSemaphore.acquireMultiple(activeTask);
+              if (!acquireWorkerError.isEmpty()) {
+                errorMessages.add(acquireWorkerError);
+                isSimulationSuccessful.set(false);
+                return;
+              }
             }
             // Simulate the task duration
             // TODO: Find a quicker way of doing this so that the simulation runs faster
@@ -115,7 +117,8 @@ public class ZoneSimulator {
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
       if (isSimulationSuccessful.get()) {
         totalTaskTime.addAndGet(zoneTaskTime.get());
-        return "Zone " + zone.getId() + " Was successful. Estimated time: " + zoneTaskTime.get() + " minutes";
+        return "Zone " + zone.getId() + " Was successful. Estimated time: " + zoneTaskTime.get() +
+            " minutes";
       }
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
 
