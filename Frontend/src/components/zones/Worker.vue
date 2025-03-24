@@ -94,7 +94,7 @@ onMounted(async () => {
 <template>
   <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, true)" />
+      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
       <div class="worker-name">{{ name }}</div>
     </div>
     <div class="status-container">
