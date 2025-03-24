@@ -239,7 +239,10 @@ VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 10, 40
        ('Schedule Maintenance', 'Schedule maintenance for warehouse equipment', 15, 45, 1, 2, 7),
        ('Update Records', 'Update warehouse records and logs', 5, 20, 1, 1, 7),
        ('Coordinate Teams', 'Coordinate teams for various tasks', 10, 25, 1, 2, 8),
-       ('Review Performance', 'Review the performance of warehouse operations', 20, 40, 1, 2, 8);
+       ('Review Performance', 'Review the performance of warehouse operations', 20, 40, 1, 2, 8),
+       ('System Monitoring', 'Monitor the warehouse management system for any issues', 15, 45, 1, 2, 9),
+       ('Security Check', 'Perform security checks and monitor surveillance systems', 20, 50, 1, 2, 9);
+
 
 INSERT INTO task_license (task_id, license_id)
 VALUES (1, 3),
@@ -258,7 +261,9 @@ VALUES (1, 3),
        (13, 3),
        (14, 3),
        (15, 3),
-       (17, 3);
+       (17, 3),
+         (18, 3),
+         (19, 3);
 
 INSERT INTO active_task (task_id, date, due_date, start_time, end_time)
 VALUES
@@ -278,7 +283,9 @@ VALUES
     (14, '2023-12-14', '2023-12-14 06:00:00', '2023-12-14 22:00:00', '2023-12-14 06:00:00'),
     (15, '2023-12-15', '2023-12-15 07:00:00', '2023-12-15 23:00:00', '2023-12-15 07:00:00'),
     (16, '2023-12-16', '2023-12-16 08:00:00', '2023-12-16 00:00:00', '2023-12-16 08:00:00'),
-    (17, '2023-12-17', '2023-12-17 09:00:00', '2023-12-17 01:00:00', '2023-12-17 09:00:00');
+    (17, '2023-12-17', '2023-12-17 09:00:00', '2023-12-17 01:00:00', '2023-12-17 09:00:00'),
+    (18, '2023-12-18', '2023-12-18 10:00:00', '2023-12-18 02:00:00', '2023-12-18 10:00:00'),
+    (19, '2023-12-19', '2023-12-19 11:00:00', '2023-12-19 03:00:00', '2023-12-19 11:00:00');
 
 INSERT INTO active_task_worker (active_task_id, worker_id)
 VALUES (1, 1),
@@ -313,5 +320,9 @@ VALUES (1, 1),
        (16, 31),
        (16, 32),
        (17, 33),
-       (17, 34);
+       (17, 34),
+         (18, 35),
+         (18, 36),
+         (19, 37),
+         (19, 38);
 
