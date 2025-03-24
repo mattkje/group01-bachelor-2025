@@ -6,7 +6,7 @@
             <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
-        <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll"/>
+        <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll" title="Unassigned" :zone-id="0"/>
       </div>
     </template>
 

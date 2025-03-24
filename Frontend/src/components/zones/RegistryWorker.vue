@@ -61,6 +61,7 @@ const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, worker: Worker): 
 };
 
 const isWorkerQualified = (task: any) => {
+  if (props.zoneId === 0) return true;
   if (task) {
     return task.task.requiredLicense.every((license: any) => props.licenses.some((workerLicense: License) => workerLicense.id === license.id));
   } else {
@@ -68,7 +69,7 @@ const isWorkerQualified = (task: any) => {
   }
 };
 
-const overtimeOccurance = (task: any) => {s
+const overtimeOccurance = (task: any) => {
   if (!task || !task.eta || task.task.maxTime) return false;
   return task.task.maxTime < task.eta;
 };
@@ -81,18 +82,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
+  <div :class="['worker-compact', { 'rdy-worker-box': !task, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-name">{{ name }}</div>
     <div class="status-container">
-
-      <img v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
-      <img v-if="!task && qualified && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
-      <img v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
-      <img v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
-      <img v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />
-      <div v-if="!task && !qualifiedForAnyTask" class="status-popup">Unqualified</div>
-      <div v-if="task && qualified" class="status-popup">Busy</div>
-      <div v-if="task && !qualified" class="status-popup">Busy & Unqualified</div>
       <div v-if="overtime" class="status-popup">Error occured</div>
     </div>
   </div>
@@ -105,12 +97,17 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   background-color: #ececec;
+  opacity: 0.5;
   border-radius: 10px;
   max-height: 40px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none !important;
   -webkit-user-select: none !important;
+}
+
+.worker-compact:hover {
+  background-color: #dcdcdc;
 }
 
 
@@ -143,11 +140,7 @@ onMounted(async () => {
 }
 
 .rdy-worker-box {
-  background-color: #bfffab;
-}
-
-.rdy-worker-box:hover {
-  background-color: #a3ff8f;
+  opacity: 1;
 }
 
 .busy-unq-worker-box {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
-import WorkerCompact from '@/components/zones/WorkerCompact.vue';
+import WorkerCompact from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 
 interface License {

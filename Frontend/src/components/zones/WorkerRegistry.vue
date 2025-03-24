@@ -1,47 +1,56 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
-import Worker from '@/components/zones/Worker.vue';
+import Worker from '@/components/zones/RegistryWorker.vue';
+
+interface License {
+  id: number;
+  name: string;
+}
 
 interface Worker {
   id: number;
   name: string;
-  zone_id: number;
-  licenses: { id: number; name: string }[];
+  licenses: License[];
   availability: boolean;
-  task?: any;
 }
 
 const props = defineProps<{
+  title: string;
+  zoneId: number;
   workers: Worker[];
   taskLessWorkers: Worker[];
-  zones: { id: number; name: string }[];
 }>();
 
 const emit = defineEmits(['refreshWorkers']);
 
+const isDraggingOver = ref(false);
+const showBusy = ref(false);
+const showUnavailable = ref(false);
 const searchQuery = ref('');
-const selectedLicenses = ref<number[]>([]);
-const showAvailableOnly = ref(false);
-const showFilters = ref(false);
-const selectedZones = ref<number[]>([]);
 
-const licensesList = [
-  "Truck License",
-  "Forklift License",
-  "Safety Training",
-  "First Aid Certification"
-];
 
 const filteredWorkers = computed(() => {
-  return props.workers.filter(worker => {
-    const matchesSearch = worker.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesLicenses = selectedLicenses.value.length === 0 || selectedLicenses.value.every(license => worker.licenses.map(l => l.id).includes(license));
-    const matchesAvailability = showAvailableOnly.value ? worker.availability : true;
-    const shouldIncludeUnavailable = searchQuery.value ? true : worker.availability;
-    const matchesZone = selectedZones.value.length === 0 || selectedZones.value.includes(worker.zone);
-    const hasNoTask = props.taskLessWorkers.some(w => w.id === worker.id);
-    return matchesSearch && matchesLicenses && matchesAvailability && shouldIncludeUnavailable && matchesZone && hasNoTask;
+  let workers: Worker[];
+  if (!showBusy.value) {
+    workers = props.taskLessWorkers;
+  } else {
+    workers = props.workers;
+  }
+  if (!showUnavailable.value) {
+    workers = workers.filter(worker => worker.availability);
+  }
+  if (searchQuery.value) {
+    workers = workers.filter(worker =>
+        worker.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  }
+  // Sort workers so that non-busy workers are shown at the top
+  workers = workers.sort((a, b) => {
+    if (a.availability && !b.availability) return -1;
+    if (!a.availability && b.availability) return 1;
+    return 0;
   });
+  return workers;
 });
 
 const onDragStart = (event: DragEvent, worker: Worker) => {
@@ -49,11 +58,10 @@ const onDragStart = (event: DragEvent, worker: Worker) => {
 };
 
 const onDrop = async (event: DragEvent) => {
-  event.preventDefault();
   const worker = JSON.parse(event.dataTransfer?.getData('worker') || '{}');
 
   try {
-    const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/0`, {
+    const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/${props.zoneId}`, {
       method: 'PUT',
     });
 
@@ -67,89 +75,178 @@ const onDrop = async (event: DragEvent) => {
   } catch (error) {
     console.error('Error updating worker zone:', error);
   }
+
+  isDraggingOver.value = false;
 };
 
 const onDragOver = (event: DragEvent) => {
   event.preventDefault();
+  isDraggingOver.value = true;
 };
 
+const onDragLeave = () => {
+  isDraggingOver.value = false;
+};
 
 </script>
 
 <template>
-  <div class="worker-registry" @drop="onDrop" @dragover="onDragOver">
-    <button @click="showFilters = !showFilters">
-      {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-    </button>
-    <div v-if="showFilters" class="filters">
-      <input v-model="searchQuery" type="text" placeholder="Search by name"/>
-      <div>
-        <hr/>
-        <label>Qualifications:</label>
-        <label v-for="(license, index) in licensesList" :key="index" style="display: block;">
-          <input type="checkbox" :value="index" v-model="selectedLicenses"/>
-          {{ license }}
-        </label>
-      </div>
-      <div>
-        <hr/>
-        <label>Zones:</label>
-        <label v-for="zone in props.zones" :key="zone.id" style="display: block;">
-          <input type="checkbox" :value="zone.id" v-model="selectedZones"/>
-          {{ zone.name }}
-        </label>
-        <label>
-          <input type="checkbox" :value="0" v-model="selectedZones"/>
-          Unassigned
-        </label>
+  <div class="rounded-square">
+    <div class="title-bar">
+      <div class="title-bar-status">
+        Workers
       </div>
       <hr/>
-      <label>
-        <input v-model="showAvailableOnly" type="checkbox"/>
-        Available Only
-      </label>
+      <div class="filter-box">
+        <p class="filter-text">Show busy workers</p>
+        <input type="checkbox" v-model="showBusy"/>
+      </div>
+      <div class="filter-box">
+        <p class="filter-text">Show unavailable workers</p>
+        <input type="checkbox" v-model="showUnavailable"/>
+      </div>
+      <div class="search-box">
+        <input type="text" v-model="searchQuery" placeholder="Search workers..."/>
+      </div>
     </div>
-    <div class="worker-list">
-      <Worker v-for="(worker, index) in filteredWorkers"
-              :key="index"
-              :name="worker.name"
-              :worker-id="worker.id"
-              :zone_id="worker.zone_id"
-              :licenses="worker.licenses"
-              :availability="worker.availability"
-              :class="{ 'unavailable': !worker.availability }"
-              @dragstart="(event: DragEvent) => onDragStart(event, worker)"/>
+    <div class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+      <Worker
+          v-for="(worker, index) in filteredWorkers"
+          :key="index"
+          :name="worker.name"
+          :worker-id="worker.id"
+          :availability="worker.availability"
+          :zone-id="props.zoneId"
+          :licenses="worker.licenses"
+          @dragstart="(event) => onDragStart(event, worker)"
+      />
+      <div v-if="isDraggingOver" class="on-drop-worker-box"/>
     </div>
   </div>
 </template>
 
 <style scoped>
-.worker-registry {
-  width: 300px;
-  height: 100%;
+.rounded-square {
+  width: 280px;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+}
+
+.on-drop-worker-box {
+  height: 45px;
+  width: 100%;
+  background-color: #ececec;
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.title-bar {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
   padding: 1rem;
-  border-left: 1px solid #ccc;
-  background-color: #f9f9f9;
-  box-sizing: border-box;
+  font-size: 1.2rem;
+  line-height: 0.7rem;
+  font-weight: bold;
+  color: #7B7B7B;
+  border-bottom: 1px solid #e5e5e5;
 }
 
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+.title-bar hr {
+  width: 100%;
+  margin: 0.5rem 0;
+  border: none;
+  border-top: 1px solid #ccc;
 }
 
-.worker-list {
+.title-bar-status {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #7B7B7B;
+}
+
+.vertical-box {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  height: 90%; /* Set a fixed height */
-  overflow-y: auto; /* Enable vertical scrolling */
-  flex-grow: 1;
+  overflow-y: scroll;
+  padding: 1rem 1rem 4.5rem;
 }
 
 .unavailable {
-  opacity: 0.5;
+  display: none;
+}
+
+.unqualified {
+  color: #f56e6e;
+  border-radius: 0.5rem;
+  padding: 10px;
+  line-height: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  margin-right: 1rem;
+  color: #b77979;
+}
+
+.icon-button img {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-button:hover {
+  color: #000;
+}
+
+.bell-icon {
+  margin-left: 6rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s ease-in-out;
+}
+
+.filter-box {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.filter-text {
+  font-size: 0.8rem;
+  color: #7B7B7B;
+  margin: auto 1rem auto 0;
+}
+
+.search-box {
+  margin-top: 1rem;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 </style>
