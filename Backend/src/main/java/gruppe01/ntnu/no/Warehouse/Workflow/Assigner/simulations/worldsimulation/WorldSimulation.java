@@ -39,7 +39,7 @@ public class WorldSimulation {
         Random random = new Random();
         List<Worker> availableWorkers = new ArrayList<>();
         List<Worker> busyWorkers = new ArrayList<>();
-        List<Worker> workersOnBreak  = new ArrayList<>();
+        List<Worker> workersOnBreak = new ArrayList<>();
         List<Worker> workersDelayedBreak = new ArrayList<>();
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
 
@@ -64,8 +64,8 @@ public class WorldSimulation {
         for (Timetable timetable : timetables) {
             LocalDateTime timetableStartTime = timetable.getStartTime();
             LocalDateTime timetableEndTime = timetable.getEndTime();
-            int randomStartTime = random.nextInt(31) -15;
-            int randomEndTime = random.nextInt(31) -15;
+            int randomStartTime = random.nextInt(31) - 15;
+            int randomEndTime = random.nextInt(31) - 15;
             timetable.setRealStartTime(timetableStartTime.plusMinutes(randomStartTime));
             timetable.setRealEndTime(timetableEndTime.plusMinutes(randomEndTime));
             System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
@@ -147,7 +147,7 @@ public class WorldSimulation {
                         }
                     }
                 }
-                if (task.getTask().getMaxWorkers() <= availableWorkers.size()) {
+                /*if (task.getTask().getMaxWorkers() <= availableWorkers.size()) {
                     Iterator<Worker> availableWorkerIterator = availableWorkers.iterator();
                     Iterator<ActiveTask> activeTaskIterator = activeTasksInProgress.iterator();
                     for (int i = 0; i < task.getTask().getMaxWorkers() && availableWorkerIterator.hasNext(); i++) {
@@ -187,14 +187,15 @@ public class WorldSimulation {
                         }
                     }
                 }
-            }
+            }*/
 
-            if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
-                System.out.println("Current time: " + currentTime);
+                if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
+                    System.out.println("Current time: " + currentTime);
+                }
+                currentTime = currentTime.plusMinutes(1);
+                TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
             }
-            currentTime = currentTime.plusMinutes(1);
-            TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
+            System.out.println("Simulation finished");
         }
-        System.out.println("Simulation finished");
     }
 }
