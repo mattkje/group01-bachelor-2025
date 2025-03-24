@@ -2,6 +2,7 @@
 import {computed, ref, onMounted} from 'vue';
 import WorkerCompact from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
+import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
 
 interface License {
   id: number;
@@ -36,6 +37,9 @@ const hasTasks = ref(false);
 const isSpinning = ref(false);
 const remainingTasks = computed(() => tasks.value.length);
 let completionTime = ref(null);
+const showNotificationBubble = ref(false);
+const notificationMessage = ref<string[]>([]);
+const notification = ref(false);
 
 const openPopup = () => {
   selectedZone.value = {id: props.zoneId, name: props.title};
@@ -61,8 +65,11 @@ const runMonteCarloSimulation = async () => {
     console.log(result);
     if (result.length < 2) {
       completionTime = result[0];
+    } else {
+      notification.value = true;
+      let notifications: string[] = result;
+      notificationMessage.value = notifications;
     }
-
     emit('refreshWorkers');
   } catch (error) {
     console.error('Error running simulation:', error);
@@ -129,6 +136,10 @@ const onDragOver = (event: DragEvent) => {
 const onDragLeave = () => {
   isDraggingOver.value = false;
 };
+
+const toggleNotificationBubble = () => {
+  showNotificationBubble.value = !showNotificationBubble.value;
+};
 </script>
 
 <template>
@@ -150,11 +161,11 @@ const onDragLeave = () => {
         <button class="icon-button" @click="runMonteCarloSimulation">
           <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
         </button>
-        <button v-if="false" class="icon-button bell-icon">
-          <img src="/src/assets/icons/bell.svg" alt="Assign"/>
+        <button v-if="notification" class="icon-button bell-icon" @mouseenter="toggleNotificationBubble" @mouseleave="toggleNotificationBubble">
+          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
         </button>
-        <button v-if="true" class="icon-button bell-icon">
-          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
+        <button v-else class="icon-button bell-icon">
+          <img src="/src/assets/icons/bell.svg" alt="Assign" />
         </button>
       </div>
     </div>
@@ -194,6 +205,7 @@ const onDragLeave = () => {
       </p>
 
     </div>
+   <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
   <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
 </template>

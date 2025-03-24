@@ -81,7 +81,7 @@ public class ZoneSimulator {
           isSimulationSuccessful.set(false);
           zoneLatch.countDown();
           return "ERROR: ZONE " + zone.getId() +
-              " - NOT ENOUGH WORKERS WITH REQUIRED LICENSES FOR TASK " + activeTask.getId();
+              " - " + activeTask.getTask().getName() + "!Missing workers with required licenses";
         }
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {

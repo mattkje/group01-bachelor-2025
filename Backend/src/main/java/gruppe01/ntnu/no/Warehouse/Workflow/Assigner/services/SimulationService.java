@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +53,7 @@ public class SimulationService {
         AtomicDouble predictedTime = new AtomicDouble(0.0);
         String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
             activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
-        if (!result.isEmpty()){
+        if (!result.isEmpty() && i == 0){
           errorMessages.add(result);
         }
         totalPredictedTime += predictedTime.get();
