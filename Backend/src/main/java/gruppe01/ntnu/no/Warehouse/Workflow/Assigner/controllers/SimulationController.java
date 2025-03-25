@@ -58,7 +58,7 @@ public class SimulationController {
   }
 
   @GetMapping("/run-world-simulation")
-  public void runWorldSimulation() throws InterruptedException {
+  public void runWorldSimulation() throws Exception {
     worldSimulation.runWorldSimulation(2);
   }
 }

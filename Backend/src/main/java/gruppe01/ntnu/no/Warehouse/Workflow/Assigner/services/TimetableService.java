@@ -36,5 +36,16 @@ public class TimetableService {
         return null;
     }
 
+    public void deleteAllTimetables() {
+        timetableRepository.deleteAll();
+    }
+
+    public void deleteAllTimetablesForToday() {
+        for (Timetable timetable : timetableRepository.findAll()) {
+            if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+                timetableRepository.delete(timetable);
+            }
+        }
+    }
 
 }
