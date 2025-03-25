@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,18 @@ public class WorkerSemaphore {
   public WorkerSemaphore(Set<Worker> workers) {
     this.workers = workers;
     this.semaphore = new Semaphore(workers.size());
+
+    // Upon creation of the semaphore, release all busy workers
+    //TODO: Once world simulation is up change the localDate based on the simulated time
+    for (Worker worker : workers) {
+      if (worker.getCurrentTask() != null && worker.getCurrentTask().getEndTime() == null &&
+          worker.getCurrentTask().getDate().isEqual(
+              LocalDate.now())) {
+        workers.remove(worker);
+        semaphore.release();
+      }
+    }
+
   }
 
   /**
@@ -39,8 +52,23 @@ public class WorkerSemaphore {
     try {
       synchronized (workers) {
         // acquire the required number of workers, if not enough workers are available, wait
-        int requiredWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
-        semaphore.acquire(requiredWorkers);
+        int maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
+        int minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+
+        int currentPermits = 0;
+
+        for (int i = 0; i < maxWorkers; i++) {
+          if (semaphore.tryAcquire(1)) {
+            currentPermits++;
+            if (maxWorkers == currentPermits) {
+              break;
+            }
+          }
+        }
+        if (currentPermits < minWorkers) {
+          semaphore.release(currentPermits);
+          return "";
+        }
         // acquired the workers
         // while the number of workers acquired is less than the required number of workers
         List<Worker> workersToRemove = new ArrayList<>();
@@ -56,7 +84,7 @@ public class WorkerSemaphore {
           }
         }
         // if the number of workers acquired is less than the required number of workers
-        semaphore.release(requiredWorkers);
+        semaphore.release(currentPermits);
 
         // TODO: ADD error checking in case the zone does nt have the qualified workers to avoid infinite loop of searching for workers
         return "";
