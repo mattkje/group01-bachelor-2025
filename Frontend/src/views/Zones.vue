@@ -1,5 +1,4 @@
 <template>
-  <Toolbar title="Zones"/>
       <div class="container">
         <div class="overview">
           <div class="grid">

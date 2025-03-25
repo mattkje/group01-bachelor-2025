@@ -74,14 +74,10 @@ const overtimeOccurance = (task: any) => {
   return task.task.maxTime < task.eta;
 };
 
-const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
-  if (isToon) {
-    return `https://joesch.moe/api/v1/${workerId}`;
-  } else {
-    const gender = workerId % 2 === 0 ? 'men' : 'women';
-    const id = workerId % 100;
-    return `https://randomuser.me/api/portraits/med/${gender}/${id}.jpg`;
-  }
+const getRandomProfileImageUrl = (workerId: number) => {
+  const gender = workerId % 2 === 0 ? 'men' : 'women';
+  const id = workerId % 100;
+  return `https://randomuser.me/api/portraits/med/${gender}/${id}.jpg`;
 };
 
 onMounted(async () => {
@@ -94,7 +90,7 @@ onMounted(async () => {
 <template>
   <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
+      <img class="worker-image" :src="getRandomProfileImageUrl(workerId)" />
       <div class="worker-name">{{ name }}</div>
     </div>
     <div class="status-container">

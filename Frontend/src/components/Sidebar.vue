@@ -33,10 +33,6 @@ const activeTab = computed(() => {
 
   <template>
   <div class="sidebar">
-    <div class="logo">
-      <img src="@/assets/icons/wws.svg" alt="Logo" class="logo-icon" />
-      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
-    </div>
     <div class="tabs">
       <template v-for="(tab, index) in tabs" :key="index">
         <hr v-if="tab.separator">
@@ -69,24 +65,6 @@ const activeTab = computed(() => {
     color: #646464;
     padding: 1rem;
     border-right: #e0e0e0 1px solid;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-
-  .logo-icon {
-    width: 50px;
-    margin-right: 0.5rem;
-  }
-
-  .logo-text {
-    padding-top: 0.3rem;
-    font-size: 0.9rem;
-    line-height: 1rem;
-    font-weight: bold;
   }
 
   .tabs {

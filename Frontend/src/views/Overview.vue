@@ -1,5 +1,4 @@
 <template>
-  <Toolbar title="Overview" />
   <div class="overview">
     <div class="large-rounded-square" v-for="n in 4" :key="n">
       <p>Widget {{ n }}</p>
