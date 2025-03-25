@@ -77,7 +77,7 @@ const overtimeOccurance = (task: any) => {
 const getRandomProfileImageUrl = (workerId: number) => {
   const gender = workerId % 2 === 0 ? 'men' : 'women';
   const id = workerId % 100;
-  return `https://randomuser.me/api/portraits/med/${gender}/${id}.jpg`;
+  return `https://randomuser.me/api/portraits/thumb/${gender}/${id}.jpg`;
 };
 
 onMounted(async () => {
@@ -90,16 +90,16 @@ onMounted(async () => {
 <template>
   <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(workerId)" />
+      <img class="worker-image" :src="getRandomProfileImageUrl(workerId)" draggable="false"/>
       <div class="worker-name">{{ name }}</div>
     </div>
     <div class="status-container">
 
-      <img v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
-      <img v-if="!task && qualified && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
-      <img v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
-      <img v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
-      <img v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />
+      <img :draggable="!task" v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
+      <img :draggable="!task" v-if="!task && qualified && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
+      <img :draggable="!task" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
+      <img :draggable="!task" v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
+      <img :draggable="!task" v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />
       <div v-if="!task && !qualifiedForAnyTask" class="status-popup">Unqualified</div>
       <div v-if="task && qualified" class="status-popup">Busy</div>
       <div v-if="task && !qualified" class="status-popup">Busy & Unqualified</div>

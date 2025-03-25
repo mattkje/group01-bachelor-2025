@@ -143,19 +143,19 @@ onMounted(() => {
     <div class="vertical-separator"/>
     <div class="clock">
       <p>Time</p>
-      <div class="clock-time">
+      <div v-if="currentTime" class="clock-time">
         <span>{{ currentTime.split(':')[0] }}</span>
         <span class="blink">:</span>
         <span>{{ currentTime.split(':')[1] }}</span>
       </div>
+      <span v-else>00:00</span>
     </div>
     <div class="vertical-separator"/>
     <div class="clock-done">
-      <p>Done By</p>
+      <p v-if="!isFinished">Done By</p>
       <div class="clock-time">
       <span v-if="completionTime !== null ">{{ completionTime }}</span>
-      <span v-if="isFinished">Finished</span>
-      <span v-else>Error</span>
+      <span v-else>{{ isFinished ? 'Done' : '00:00' }}</span>
       </div>
     </div>
   </div>

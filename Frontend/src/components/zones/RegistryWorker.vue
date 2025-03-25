@@ -80,7 +80,7 @@ const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
   } else {
     const gender = workerId % 2 === 0 ? 'men' : 'women';
     const id = workerId % 100;
-    return `https://randomuser.me/api/portraits/med/${gender}/${id}.jpg`;
+    return `https://randomuser.me/api/portraits/thumb/${gender}/${id}.jpg`;
   }
 };
 onMounted(async () => {
