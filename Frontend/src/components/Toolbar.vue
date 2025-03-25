@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, inject, computed } from "vue";
+import axios from 'axios';
 
 const props = defineProps({
   title: {
@@ -14,40 +15,57 @@ let isPlaying = ref(false);
 const activeTab = inject('activeTab', ref('Overview'));
 
 const simulatedTime = ref(new Date());
-const currentTime = computed(() => {
-  return simulatedTime.value.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
-});
+const fetchCurrentTimeFromBackend = async () => {
+  const response = await axios.get('http://localhost:8080/api/simulation/time');
+  return response.data;
+};
 
+const currentTime = ref('');
+
+const updateCurrentTime = async () => {
+  currentTime.value = await fetchCurrentTimeFromBackend();
+};
 const updateSimulatedTime = () => {
   simulatedTime.value = new Date(simulatedTime.value.getTime() + 60000); // Advance by 1 minute
 };
 
 let intervalId: number | null = null;
 
-const startClock = () => {
-  isPlaying.value = true;
-  if (!intervalId) {
-    intervalId = setInterval(updateSimulatedTime, 1000); // Update every second
-  }
-};
-
-const stopClock = () => {
-  isPlaying.value = false;
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
-};
-
 let speedIndex = 0;
-const speeds = [1000, 500, 333, 200]; // Corresponding to 1x, 2x, 3x, 5x speeds
+const speeds = [1000, 500, 333, 200];
 
-const fastForwardClock = () => {
+const startClock = async () => {
+  isPlaying.value = true;
+  try {
+    await axios.post('http://localhost:8080/api/simulation/start', null, {
+      params: { simulationTime: 60 }
+    });
+  } catch (error) {
+    console.error('Error starting simulation:', error);
+  }
+};
+
+const stopClock = async () => {
+  isPlaying.value = false;
+  try {
+    await axios.post('http://localhost:8080/api/simulation/pause');
+  } catch (error) {
+    console.error('Error pausing simulation:', error);
+  }
+};
+
+const fastForwardClock = async () => {
   if (intervalId) {
     clearInterval(intervalId);
   }
   speedIndex = (speedIndex + 1) % speeds.length;
-  intervalId = setInterval(updateSimulatedTime, speeds[speedIndex]);
+  try {
+    await axios.post('http://localhost:8080/api/simulation/fastForward', null, {
+      params: { speedMultiplier: speeds[speedIndex] }
+    });
+  } catch (error) {
+    console.error('Error fast forwarding simulation:', error);
+  }
 };
 
 const runAllMonteCarloSimulations = async () => {
@@ -64,12 +82,7 @@ const runAllMonteCarloSimulations = async () => {
     console.log(result);
     if (result.length < 2) {
       completionTime = result[0];
-    } else {
-      notification.value = true;
-      let notifications: string[] = result;
-      notificationMessage.value = notifications;
     }
-    emit('refreshWorkers');
   } catch (error) {
     console.error('Error running simulation:', error);
   } finally {
@@ -90,7 +103,8 @@ const isFinished = computed(() => {
 });
 
 onMounted(() => {
-  startClock();
+  updateCurrentTime();
+  setInterval(updateCurrentTime, 1000);
 });
 </script>
 
