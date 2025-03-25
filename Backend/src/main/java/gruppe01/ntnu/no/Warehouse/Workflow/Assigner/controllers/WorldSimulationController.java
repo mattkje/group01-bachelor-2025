@@ -15,8 +15,7 @@ public class WorldSimulationController {
 
     @GetMapping("/time")
     public LocalTime getCurrentTime() {
-        //return worldSimulation.getCurrentTime();
-        return LocalTime.now(); // TODO: Fix cuz this is Temporary
+        return worldSimulation.getCurrentTime();
     }
 
     @PostMapping("/start")
