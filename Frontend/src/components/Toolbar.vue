@@ -8,6 +8,9 @@ import {onMounted, ref} from "vue";
       },
     });
 
+const isSpinning = ref(false);
+let completionTime = ref(null);
+
 const currentTime = ref(new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }));
 
 const updateTime = () => {
@@ -36,6 +39,35 @@ const fastForwardClock = () => {
   intervalId = setInterval(updateTime, 500);
 };
 
+const runAllMonteCarloSimulations = async () => {
+  isSpinning.value = true;
+  try {
+    const response = await fetch(`http://localhost:8080/api/monte-carlo/zones/1`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to run simulation');
+    }
+    const result = await response.json()
+    console.log(result);
+    if (result.length < 2) {
+      completionTime = result[0];
+    } else {
+      notification.value = true;
+      let notifications: string[] = result;
+      notificationMessage.value = notifications;
+    }
+    emit('refreshWorkers');
+  } catch (error) {
+    console.error('Error running simulation:', error);
+  } finally {
+    // wait for 1 second to show the spinning animation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    isSpinning.value = false;
+  }
+};
+
 onMounted(() => {
   startClock();
 });
@@ -44,14 +76,8 @@ onMounted(() => {
     <template>
       <div class="toolbar">
         <div class="toolbar-title">{{ props.title }}</div>
-        <button class="toolbar-item">
-          <img src="/src/assets/icons/overview.svg" alt="Assign" />
-        </button>
-        <button class="toolbar-item">
-          <img src="/src/assets/icons/tasks.svg" alt="Assign" />
-        </button>
-        <button class="toolbar-item">
-          <img src="/src/assets/icons/simulation.svg" alt="Assign" />
+        <button class="toolbar-item" @click="runAllMonteCarloSimulations">
+          <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign" />
         </button>
         <button v-if="false" class="toolbar-item">
           <img src="/src/assets/icons/bell.svg" alt="Assign" />
@@ -78,7 +104,8 @@ onMounted(() => {
         <div class="vertical-separator"/>
         <div class="clock-done">
           <p>Done By</p>
-          <span>Finished</span>
+          <span v-if="completionTime !== null ">{{ completionTime }}</span>
+          <span v-else>Finished</span>
         </div>
       </div>
     </template>
@@ -198,5 +225,18 @@ onMounted(() => {
     40% {
       opacity: 1;
     }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spin-animation {
+    animation: spin 1s ease-in-out infinite;
   }
   </style>
