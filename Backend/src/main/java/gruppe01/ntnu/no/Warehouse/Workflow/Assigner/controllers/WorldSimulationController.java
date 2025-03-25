@@ -20,7 +20,7 @@ public class WorldSimulationController {
     }
 
     @PostMapping("/start")
-    public void startSimulation(@RequestParam int simulationTime) throws InterruptedException {
+    public void startSimulation(@RequestParam int simulationTime) throws Exception {
         worldSimulation.runWorldSimulation(simulationTime);
     }
 
@@ -32,5 +32,10 @@ public class WorldSimulationController {
     @PostMapping("/fastForward")
     public void fastForwardSimulation(@RequestParam int speedMultiplier) {
         //worldSimulation.fastForwardSimulation(speedMultiplier);
+    }
+
+    @GetMapping("/currentTime")
+    public LocalTime getCurrentSimulationTime() {
+        return worldSimulation.getCurrentTime();
     }
 }

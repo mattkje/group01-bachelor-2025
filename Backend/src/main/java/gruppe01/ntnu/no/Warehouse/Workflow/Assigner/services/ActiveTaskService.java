@@ -124,6 +124,9 @@ public class ActiveTaskService {
                 worker.setAvailability(false);
                 worker.setZone(activeTask.getTask().getZoneId());
                 worker.setCurrentTask(activeTask);
+                if (activeTask.getWorkers() == null) {
+                    activeTask.setWorkers(new ArrayList<>());
+                }
                 activeTask.getWorkers().add(worker);
                 return activeTaskRepository.save(activeTask);
             }
@@ -170,5 +173,18 @@ public class ActiveTaskService {
             activeTaskRepository.delete(activeTask);
         }
         return activeTask;
+    }
+
+    public void deleteAllActiveTasks() {
+        activeTaskRepository.deleteAll();
+    }
+
+    public void deleteAllActiveTasksForToday() {
+        LocalDate currentDate = LocalDate.now();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentDate)) {
+                activeTaskRepository.delete(activeTask);
+            }
+        }
     }
 }

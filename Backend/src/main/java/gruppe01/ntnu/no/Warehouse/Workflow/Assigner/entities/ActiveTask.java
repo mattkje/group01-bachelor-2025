@@ -36,7 +36,7 @@ public class ActiveTask {
     @JoinColumn(name = "task_id")
     private Task task;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinTable(
             name = "active_task_worker",
             joinColumns = @JoinColumn(name = "active_task_id"),
@@ -73,10 +73,6 @@ public class ActiveTask {
 
     public void setWorkers(List<Worker> workers) {
         this.workers = workers;
-    }
-
-    public void addWorker(Worker worker) {
-        this.workers.add(worker);
     }
 
     public void setTask(Task task) {
