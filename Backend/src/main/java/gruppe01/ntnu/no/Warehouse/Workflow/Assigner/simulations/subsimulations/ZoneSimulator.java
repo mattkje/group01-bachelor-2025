@@ -57,6 +57,7 @@ public class ZoneSimulator {
 
       AtomicBoolean isSimulationSuccessful = new AtomicBoolean(true);
       AtomicDouble zoneTaskTime = new AtomicDouble(0.0);
+
       // Iterate over the tasks in the zone
       for (ActiveTask activeTask : zoneTasks) {
         // Gets a random duration for the task
@@ -64,6 +65,11 @@ public class ZoneSimulator {
         int taskDuration =
             random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
                 activeTask.getTask().getMinTime();
+
+        // Set a random EPW for the task (Efficiency gained per worker)
+        // Currently at  a range between 0.4 and 0.9
+        // TODO: Replace this with a ML learned number
+         double epw = random.nextDouble() * 0.5 + 0.4;
 
         if (zone.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
           isSimulationSuccessful.set(false);
@@ -83,6 +89,8 @@ public class ZoneSimulator {
           return "ERROR: ZONE " + zone.getId() +
               " - " + activeTask.getTask().getName() + "!Missing workers with required licenses";
         }
+
+
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {
