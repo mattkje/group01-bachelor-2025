@@ -3,6 +3,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TimetableRepository;
+
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,17 @@ public class TimetableService {
             }
         }
         return null;
+    }
+
+    public List<Timetable> getTimetablesByDate(LocalDate date) {
+        List<Timetable> timetables = timetableRepository.findAll();
+        List<Timetable> timetablesByDate = new ArrayList<>();
+        for (Timetable timetable : timetables) {
+            if (timetable.getStartTime().toLocalDate().equals(date)) {
+                timetablesByDate.add(timetable);
+            }
+        }
+        return timetablesByDate;
     }
 
     public void deleteAllTimetables() {

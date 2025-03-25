@@ -51,13 +51,19 @@ public class WorldSimulation {
 
     public void runWorldSimulation(int simulationTime) throws Exception {
 
-        if (!activeTaskService.getActiveTasksForToday().isEmpty()) {
-            activeTaskService.deleteAllActiveTasksForToday();
-            timetableService.deleteAllTimetablesForToday();
+        LocalDate workday = LocalDate.now();
+        boolean activeTasksExistForWorkday = false;
+
+        while (!activeTasksExistForWorkday) {
+            if (activeTaskService.getActiveTaskByDate(workday).isEmpty()) {
+                activeTaskGenerator.generateActiveTasks(workday, 1);
+                timeTableGenerator.generateTimeTable(workday, 1);
+                activeTasksExistForWorkday = true;
+            } else {
+                workday = workday.plusDays(1);
+            }
         }
 
-        activeTaskGenerator.generateActiveTasks(LocalDate.now(), 1);
-        timeTableGenerator.generateTimeTable(LocalDate.now(), 1);
 
         LocalTime currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
         LocalTime endTime = LocalTime.MIDNIGHT;
@@ -70,9 +76,9 @@ public class WorldSimulation {
         List<Worker> workersDelayedBreak = new ArrayList<>();
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
 
-        List<Timetable> timetables = timetableService.getAllTimetables();
+        List<Timetable> timetables = timetableService.getTimetablesByDate(workday);
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = workday;
         List<Worker> workersPresentToday = timetables.stream()
                 .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today))
                 .map(Timetable::getWorker)
@@ -82,8 +88,9 @@ public class WorldSimulation {
         System.out.println("Workers present today: " + workersPresentToday.size());
 
         List<ActiveTask> activeTasksToday = activeTaskService.getAllActiveTasks();
+        LocalDate finalWorkday = workday;
         activeTasksToday = activeTasksToday.stream()
-                .filter(activeTask -> activeTask.getDate().equals(LocalDate.now()))
+                .filter(activeTask -> activeTask.getDate().equals(finalWorkday))
                 .collect(Collectors.toList());
 
         System.out.println("Active tasks today: " + activeTasksToday.size());
@@ -189,7 +196,7 @@ public class WorldSimulation {
                                 task.getTask().getName());
                         workersAssigned++;
                     }
-                    task.setStartTime(LocalDateTime.of(LocalDate.now(), currentTime));
+                    task.setStartTime(LocalDateTime.of(workday, currentTime));
                     task.setWorkers(workersAssignedToTask);
                     activeTaskService.updateActiveTask(task.getId(), task);
                     activeTasksInProgress.add(task);
@@ -204,14 +211,19 @@ public class WorldSimulation {
                 ActiveTask task = activeTaskInProgressIterator.next();
                 if (task.getEndTime() == null) {
                     Task task1 = task.getTask();
-                    double taskDuration = task1.getMinTime() + ((double) (task.getWorkers().size() - task1.getMaxWorkers()) / task1.getMaxWorkers() - task1.getMinWorkers()) * (task1.getMaxWorkers() - task1.getMinWorkers());
-                    double totalEffectiveness = task.getWorkers().stream().mapToDouble(Worker::getEffectiveness).sum();
-                    double actualDuration = taskDuration / totalEffectiveness;
+                    double taskDuration = task1.getMinTime() +
+                            ((double) (task.getWorkers().size() - task1.getMinWorkers()) /
+                                    (task1.getMaxWorkers() - task1.getMinWorkers())) *
+                                    (task1.getMaxTime() - task1.getMinTime());
+                    double averageEffectiveness = task.getWorkers().stream()
+                            .mapToDouble(Worker::getEffectiveness)
+                            .average().orElse(1);
+                    double actualDuration = taskDuration / averageEffectiveness;
                     task.setEndTime(task.getStartTime().plusMinutes((int) actualDuration));
                 }
                 if (task.getEndTime().toLocalTime().isBefore(currentTime) && activeTasksInProgress.contains(task)) {
                     activeTaskInProgressIterator.remove();
-                    task.setEndTime(LocalDateTime.of(LocalDate.now(), currentTime));
+                    task.setEndTime(LocalDateTime.of(workday, currentTime));
                     Iterator<Worker> busyWorkerIterator = busyWorkers.iterator();
                     while (busyWorkerIterator.hasNext()) {
                         Worker worker = busyWorkerIterator.next();
@@ -232,10 +244,9 @@ public class WorldSimulation {
             currentTime = currentTime.plusMinutes(1);
             TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
         }
-
+        workday = workday.plusDays(1);
         System.out.println("Simulation finished");
     }
-
 
     public LocalTime getCurrentTime() {
         return currentSimulationTime;

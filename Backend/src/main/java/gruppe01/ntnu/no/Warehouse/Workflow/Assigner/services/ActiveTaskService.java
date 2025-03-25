@@ -64,6 +64,16 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
+    public List<ActiveTask> getActiveTaskByDate(LocalDate date) {
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(date)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
     public List<ActiveTask> getCompletedActiveTasks() {
         List<ActiveTask> completedActiveTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {

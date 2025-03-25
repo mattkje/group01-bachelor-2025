@@ -36,7 +36,7 @@ public class ActiveTask {
     @JoinColumn(name = "task_id")
     private Task task;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "active_task_worker",
             joinColumns = @JoinColumn(name = "active_task_id"),

@@ -1,8 +1,6 @@
 CREATE DATABASE IF NOT EXISTS warehouse;
 USE warehouse;
 
-SET GLOBAL log_bin_trust_function_creators = 1;
-
 
 
 CREATE TABLE IF NOT EXISTS worker
@@ -109,64 +107,50 @@ BEGIN
     UPDATE worker SET zone_id = task_zone WHERE id = NEW.worker_id;
 END;
 
-DELIMITER //
-CREATE FUNCTION random_effectiveness()
-    RETURNS DOUBLE
-    DETERMINISTIC
-BEGIN
-    DECLARE effectiveness DOUBLE;
-    SET effectiveness = ROUND(0.7 + RAND() * 0.6, 2); -- Most values between 0.7 and 1.3
-    IF RAND() < 0.1 THEN -- 10% chance to be outside the 0.7-1.3 range
-        SET effectiveness = ROUND(RAND() * 2, 2);
-    END IF;
-    IF effectiveness = 0 THEN
-        SET effectiveness = 0.1; -- Ensure no worker has 0 effectiveness
-    END IF;
-    RETURN effectiveness;
-END //
-DELIMITER ;
 
 INSERT INTO worker (name, zone_id, work_title, effectiveness, availability)
-VALUES ('John Doe', 1, 'Warehouse Manager', random_effectiveness(), true),
-       ('Jane Smith', 1, 'Warehouse Supervisor', random_effectiveness(), true),
-       ('Alice Johnson', 2, 'Warehouse Technician', random_effectiveness(), true),
-       ('Bob Brown', 2, 'Forklift Operator', random_effectiveness(), false),
-       ('Charlie Davis', 3, 'Warehouse Engineer', random_effectiveness(), true),
-       ('Diana Evans', 3, 'Inventory Clerk', random_effectiveness(), true),
-       ('Eve Foster', 4, 'Logistics Analyst', random_effectiveness(), true),
-       ('Frank Green', 4, 'Shipping Coordinator', random_effectiveness(), true),
-       ('Grace Harris', 5, 'Quality Inspector', random_effectiveness(), false),
-       ('Hank Irving', 5, 'Warehouse Specialist', random_effectiveness(), true),
-       ('Ivy Johnson', 6, 'Warehouse Consultant', random_effectiveness(), true),
-       ('Jack King', 6, 'Warehouse Planner', random_effectiveness(), true),
-       ('Karen Lee', 7, 'Warehouse Designer', random_effectiveness(), true),
-       ('Leo Martin', 7, 'Warehouse Developer', random_effectiveness(), false),
-       ('Mona Nelson', 7, 'Warehouse Architect', random_effectiveness(), true),
-       ('Vincent Holiday', 0, 'Powerhouse Specialist', random_effectiveness(), false),
-       ('Gerrard Paul', 0, 'Truck Mechanic', random_effectiveness(), true),
-       ('Nancy White', 1, 'Warehouse Clerk', random_effectiveness(), true),
-       ('Oscar Black', 2, 'Warehouse Operator', random_effectiveness(), true),
-       ('Paul Brown', 3, 'Warehouse Assistant', random_effectiveness(), true),
-       ('Quincy Green', 4, 'Warehouse Coordinator', random_effectiveness(), true),
-       ('Rachel Blue', 5, 'Warehouse Manager', random_effectiveness(), true),
-       ('Steve Red', 6, 'Warehouse Supervisor', random_effectiveness(), true),
-       ('Tina Yellow', 7, 'Warehouse Technician', random_effectiveness(), true),
-       ('Uma Orange', 1, 'Warehouse Engineer', random_effectiveness(), true),
-       ('Victor Purple', 2, 'Warehouse Specialist', random_effectiveness(), true),
-       ('Wendy Pink', 3, 'Warehouse Analyst', random_effectiveness(), true),
-       ('Xander Gray', 4, 'Warehouse Planner', random_effectiveness(), true),
-       ('Yara Cyan', 5, 'Warehouse Developer', random_effectiveness(), true),
-       ('Zane Magenta', 6, 'Warehouse Architect', random_effectiveness(), true),
-       ('Adam Silver', 7, 'Warehouse Designer', random_effectiveness(), true),
-       ('Bella Gold', 1, 'Warehouse Clerk', random_effectiveness(), true),
-       ('Carl Bronze', 2, 'Warehouse Operator', random_effectiveness(), true),
-       ('Diana Copper', 3, 'Warehouse Assistant', random_effectiveness(), true),
-       ('Ethan Iron', 4, 'Warehouse Coordinator', random_effectiveness(), true),
-       ('Fiona Steel', 5, 'Warehouse Manager', random_effectiveness(), true),
-       ('George Nickel', 6, 'Warehouse Supervisor', random_effectiveness(), true),
-       ('Holly Zinc', 7, 'Warehouse Technician', random_effectiveness(), true),
-       ('Ian Lead', 1, 'Warehouse Engineer', random_effectiveness(), true),
-       ('Judy Tin', 2, 'Warehouse Specialist', random_effectiveness(), true);
+VALUES
+    ('John Doe', 1, 'Warehouse Manager', 1.1, true),
+    ('Jane Smith', 1, 'Warehouse Supervisor', 0.9, true),
+    ('Alice Johnson', 2, 'Warehouse Technician', 1.2, true),
+    ('Bob Brown', 2, 'Forklift Operator', 0.8, false),
+    ('Charlie Davis', 3, 'Warehouse Engineer', 1.3, true),
+    ('Diana Evans', 3, 'Inventory Clerk', 1.0, true),
+    ('Eve Foster', 4, 'Logistics Analyst', 0.95, true),
+    ('Frank Green', 4, 'Shipping Coordinator', 1.25, true),
+    ('Grace Harris', 5, 'Quality Inspector', 0.85, false),
+    ('Hank Irving', 5, 'Warehouse Specialist', 1.15, true),
+    ('Ivy Johnson', 6, 'Warehouse Consultant', 1.05, true),
+    ('Jack King', 6, 'Warehouse Planner', 1.2, true),
+    ('Karen Lee', 7, 'Warehouse Designer', 0.75, true),
+    ('Leo Martin', 7, 'Warehouse Developer', 1.3, false),
+    ('Mona Nelson', 7, 'Warehouse Architect', 1.0, true),
+    ('Vincent Holiday', 0, 'Powerhouse Specialist', 0.7, false),
+    ('Gerrard Paul', 0, 'Truck Mechanic', 1.05, true),
+    ('Nancy White', 1, 'Warehouse Clerk', 1.1, true),
+    ('Oscar Black', 2, 'Warehouse Operator', 0.95, true),
+    ('Paul Brown', 3, 'Warehouse Assistant', 1.25, true),
+    ('Quincy Green', 4, 'Warehouse Coordinator', 0.9, true),
+    ('Rachel Blue', 5, 'Warehouse Manager', 1.2, true),
+    ('Steve Red', 6, 'Warehouse Supervisor', 1.15, true),
+    ('Tina Yellow', 7, 'Warehouse Technician', 1.0, true),
+    ('Uma Orange', 1, 'Warehouse Engineer', 0.85, true),
+    ('Victor Purple', 2, 'Warehouse Specialist', 1.3, true),
+    ('Wendy Pink', 3, 'Warehouse Analyst', 1.05, true),
+    ('Xander Gray', 4, 'Warehouse Planner', 0.75, true),
+    ('Yara Cyan', 5, 'Warehouse Developer', 1.1, true),
+    ('Zane Magenta', 6, 'Warehouse Architect', 0.9, true),
+    ('Adam Silver', 7, 'Warehouse Designer', 1.2, true),
+    ('Bella Gold', 1, 'Warehouse Clerk', 1.15, true),
+    ('Carl Bronze', 2, 'Warehouse Operator', 1.05, true),
+    ('Diana Copper', 3, 'Warehouse Assistant', 0.7, true),
+    ('Ethan Iron', 4, 'Warehouse Coordinator', 1.0, true),
+    ('Fiona Steel', 5, 'Warehouse Manager', 1.3, true),
+    ('George Nickel', 6, 'Warehouse Supervisor', 0.95, true),
+    ('Holly Zinc', 7, 'Warehouse Technician', 0.85, true),
+    ('Ian Lead', 1, 'Warehouse Engineer', 1.2, true),
+    ('Judy Tin', 2, 'Warehouse Specialist', 1.1, true);
+
 
 INSERT INTO zone (name, capacity)
 VALUES ('Receiving', 10),
