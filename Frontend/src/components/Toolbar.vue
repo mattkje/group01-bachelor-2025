@@ -119,23 +119,30 @@ onMounted(() => {
       <button v-else @click="stopClock">
         <img src="/src/assets/icons/pause.svg" alt="Pause" />
       </button>
-      <button @click="fastForwardClock">
-        <img src="/src/assets/icons/skip.svg" alt="Fast Forward" />
+      <button class="ff-arrow"@click="fastForwardClock">
+        <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward" />
+        <img v-else-if="speedIndex === 1" src="/src/assets/icons/ff2x.svg" alt="Fast Forward" />
+        <img v-else-if="speedIndex === 2" src="/src/assets/icons/ff5x.svg" alt="Fast Forward" />
+        <img v-else src="/src/assets/icons/ff10x.svg" alt="Fast Forward" />
       </button>
     </div>
     <div class="vertical-separator"/>
     <div class="clock">
       <p>Time</p>
-      <span>{{ currentTime.split(':')[0] }}</span>
-      <span class="blink">:</span>
-      <span>{{ currentTime.split(':')[1] }}</span>
+      <div class="clock-time">
+        <span>{{ currentTime.split(':')[0] }}</span>
+        <span class="blink">:</span>
+        <span>{{ currentTime.split(':')[1] }}</span>
+      </div>
     </div>
     <div class="vertical-separator"/>
     <div class="clock-done">
       <p>Done By</p>
+      <div class="clock-time">
       <span v-if="completionTime !== null ">{{ completionTime }}</span>
       <span v-if="isFinished">Finished</span>
       <span v-else>Error</span>
+      </div>
     </div>
   </div>
 </template>
@@ -207,8 +214,17 @@ onMounted(() => {
 }
 
 .clock {
+  display: flex;
+  flex-direction: column;
   line-height: 1.5rem;
+  width: 6rem;
+  align-content: center;
   align-self: center;
+}
+
+.clock-time {
+  display: flex;
+  justify-content: center;
 }
 
 .clock span {
@@ -224,7 +240,10 @@ onMounted(() => {
 }
 
 .clock-done {
+  display: flex;
+  flex-direction: column;
   line-height: 1.5rem;
+  align-content: center;
   align-self: center;
 }
 
@@ -259,6 +278,12 @@ onMounted(() => {
 
 .blink {
   animation: blink 3s linear infinite;
+}
+
+.ff-arrow img {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 0.2rem;
 }
 
 @keyframes blink {

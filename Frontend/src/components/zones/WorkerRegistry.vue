@@ -136,7 +136,6 @@ const onDragLeave = () => {
 .on-drop-worker-box {
   height: 45px;
   width: 100%;
-  background-color: #ececec;
   border-radius: 7px;
   pointer-events: none;
 }
@@ -144,7 +143,7 @@ const onDragLeave = () => {
 .title-bar {
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  
   padding: 1rem;
   font-size: 1.2rem;
   line-height: 0.7rem;
