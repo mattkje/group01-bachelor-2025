@@ -38,15 +38,6 @@ public class WorldSimulation {
     @Autowired
     private TimeTableGenerator timeTableGenerator;
 
-    @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private TaskRepository taskRepository;
-
-    @Autowired
-    private ActiveTaskRepository activeTaskRepository;
-
     private LocalTime currentSimulationTime;
 
     public void runWorldSimulation(int simulationTime) throws Exception {
@@ -211,10 +202,9 @@ public class WorldSimulation {
                 ActiveTask task = activeTaskInProgressIterator.next();
                 if (task.getEndTime() == null) {
                     Task task1 = task.getTask();
-                    double taskDuration = task1.getMinTime() +
-                            ((double) (task.getWorkers().size() - task1.getMinWorkers()) /
-                                    (task1.getMaxWorkers() - task1.getMinWorkers())) *
-                                    (task1.getMaxTime() - task1.getMinTime());
+                    double workerFactor = (double) (task.getWorkers().size() - task1.getMinWorkers()) /
+                            Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
+                    double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
                     double averageEffectiveness = task.getWorkers().stream()
                             .mapToDouble(Worker::getEffectiveness)
                             .average().orElse(1);
@@ -244,7 +234,6 @@ public class WorldSimulation {
             currentTime = currentTime.plusMinutes(1);
             TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
         }
-        workday = workday.plusDays(1);
         System.out.println("Simulation finished");
     }
 

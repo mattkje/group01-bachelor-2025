@@ -35,6 +35,9 @@ public class Worker {
     @Column(name = "break_start_time")
     private LocalTime breakStartTime;
 
+    @Column(name = "dead")
+    private boolean dead;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "worker_license",
@@ -94,6 +97,10 @@ public class Worker {
         this.breakStartTime = breakStartTime;
     }
 
+    public void setDead(boolean dead) {
+        this.dead = dead;
+    }
+
     public Long getId() {
         return id;
     }
@@ -116,6 +123,10 @@ public class Worker {
 
     public ActiveTask getCurrentTask() {
         return currentTask;
+    }
+
+    public boolean isDead() {
+        return dead;
     }
 
     public LocalTime getBreakStartTime() {

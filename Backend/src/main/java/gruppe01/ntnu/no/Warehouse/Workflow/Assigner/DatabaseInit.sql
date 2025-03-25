@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS worker
     work_title    VARCHAR(255) NOT NULL,
     effectiveness DOUBLE       NOT NULL,
     availability  BOOLEAN DEFAULT TRUE,
-    break_start_time TIMESTAMP
+    break_start_time TIMESTAMP,
+    dead          BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS license
@@ -226,25 +227,26 @@ VALUES (1, 1),
 
 
 INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
-VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 10, 40, 1, 2, 1),
-       ('Restock Shelves', 'Restock the shelves with new inventory', 5, 30, 1, 3, 1),
-       ('Order Processing', 'Process customer orders for shipment', 5, 25, 2, 4, 1),
-       ('Quality Inspection', 'Inspect the quality of incoming goods', 20, 40, 1, 2, 2),
-       ('Package Orders', 'Package customer orders for delivery', 10, 29, 1, 2, 2),
-       ('Load Trucks', 'Load trucks with outgoing shipments', 20, 60, 2, 3, 3),
-       ('Unload Trucks', 'Unload trucks with incoming shipments', 20, 60, 2, 3, 3),
-       ('Cycle Counting', 'Perform cycle counting of inventory', 1, 10, 1, 1, 4),
-       ('Label Products', 'Label products with barcodes', 10, 30, 1, 2, 4),
-       ('Warehouse Cleaning', 'Clean and organize the warehouse', 20, 40, 1, 2, 5),
-       ('Safety Inspection', 'Inspect the warehouse for safety compliance', 15, 30, 1, 2, 5),
-       ('Plan Shipments', 'Plan the shipments for the day', 10, 20, 1, 1, 6),
-       ('Monitor Inventory', 'Monitor inventory levels and report discrepancies', 10, 30, 1, 2, 6),
-       ('Schedule Maintenance', 'Schedule maintenance for warehouse equipment', 15, 45, 1, 2, 7),
-       ('Update Records', 'Update warehouse records and logs', 5, 20, 1, 1, 7),
-       ('Coordinate Teams', 'Coordinate teams for various tasks', 10, 25, 1, 2, 8),
-       ('Review Performance', 'Review the performance of warehouse operations', 20, 40, 1, 2, 8),
-       ('System Monitoring', 'Monitor the warehouse management system for any issues', 15, 45, 1, 2, 9),
-       ('Security Check', 'Perform security checks and monitor surveillance systems', 20, 50, 1, 2, 9);
+VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 30, 90, 1, 2, 1),
+       ('Restock Shelves', 'Restock the shelves with new inventory', 20, 75, 1, 3, 1),
+       ('Order Processing', 'Process customer orders for shipment', 20, 60, 2, 4, 1),
+       ('Quality Inspection', 'Inspect the quality of incoming goods', 45, 120, 1, 2, 2),
+       ('Package Orders', 'Package customer orders for delivery', 30, 90, 1, 2, 2),
+       ('Load Trucks', 'Load trucks with outgoing shipments', 60, 180, 2, 3, 3),
+       ('Unload Trucks', 'Unload trucks with incoming shipments', 60, 180, 2, 3, 3),
+       ('Cycle Counting', 'Perform cycle counting of inventory', 15, 45, 1, 1, 4),
+       ('Label Products', 'Label products with barcodes', 30, 90, 1, 2, 4),
+       ('Warehouse Cleaning', 'Clean and organize the warehouse', 45, 120, 1, 2, 5),
+       ('Safety Inspection', 'Inspect the warehouse for safety compliance', 40, 90, 1, 2, 5),
+       ('Plan Shipments', 'Plan the shipments for the day', 30, 60, 1, 1, 6),
+       ('Monitor Inventory', 'Monitor inventory levels and report discrepancies', 30, 90, 1, 2, 6),
+       ('Schedule Maintenance', 'Schedule maintenance for warehouse equipment', 45, 120, 1, 2, 7),
+       ('Update Records', 'Update warehouse records and logs', 20, 60, 1, 1, 7),
+       ('Coordinate Teams', 'Coordinate teams for various tasks', 40, 90, 1, 2, 8),
+       ('Review Performance', 'Review the performance of warehouse operations', 60, 150, 1, 2, 8),
+       ('System Monitoring', 'Monitor the warehouse management system for any issues', 60, 180, 1, 2, 9),
+       ('Security Check', 'Perform security checks and monitor surveillance systems', 90, 240, 1, 2, 9);
+
 
 
 INSERT INTO task_license (task_id, license_id)

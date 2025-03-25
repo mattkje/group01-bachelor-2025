@@ -61,7 +61,7 @@ public class WorkerController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteWorker(@PathVariable Long id) {
-        workerService.deleteWorker(id);
+    public Worker deleteWorker(@PathVariable Long id) {
+        return workerService.deleteWorker(id);
     }
 }
