@@ -128,7 +128,7 @@ const onDragLeave = () => {
 <style scoped>
 .rounded-square {
   width: 280px;
-  border: 1px solid #e5e5e5;
+  border-left: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
 }

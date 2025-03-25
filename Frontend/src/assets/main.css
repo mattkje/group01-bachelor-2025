@@ -3,37 +3,25 @@
 
 
 body {
-    font-family: 'Istok Web', sans-serif; /* Apply Istok Web font */
+    font-family: 'Istok Web', sans-serif;
 }
 
 #app {
-    background-color: #ffffff; /* Set background to dark */
-    color: #000000; /* Set text color to white */
+    background-color: #eeeeee;
+    color: #000000;
 }
 
 a,
-.green {
+.red {
     text-decoration: none;
-    color: hsl(0, 0%, 17%); /* Adjusted to a lighter green */
+    color: hsl(0, 61%, 27%);
     transition: 0.4s;
     padding: 3px;
 }
 
 @media (hover: hover) {
     a:hover {
-        background-color: hsla(160, 100%, 75%, 0.2); /* Adjusted to a lighter green */
+        background-color: hsla(0, 100%, 75%, 0.2);
     }
 }
 
-@media (min-width: 1024px) {
-    body {
-        display: flex;
-        place-items: center;
-        background-color: #000000; /* Set background to dark */
-        color: #ffffff; /* Set text color to white */
-    }
-
-    #app {
-        color: #595959; /* Set text color to white */
-    }
-}
