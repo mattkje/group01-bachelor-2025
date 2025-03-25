@@ -1,5 +1,4 @@
 <template>
-  <Toolbar title="Zones"/>
       <div class="container">
         <div class="overview">
           <div class="grid">
@@ -128,6 +127,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .worker-registry {
