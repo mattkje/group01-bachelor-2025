@@ -166,7 +166,6 @@ onMounted(() => {
   align-items: center;
   padding-right: 1rem;
   height: 4rem;
-  border-bottom: 1px solid #e0e0e0;
   position: relative;
 }
 

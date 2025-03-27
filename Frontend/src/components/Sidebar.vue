@@ -1,18 +1,18 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import { useRoute } from 'vue-router';
-  import overviewIcon from '../assets/icons/overview.svg';
+  import overviewIcon from '../assets/icons/factory.svg';
   import zonesIcon from '../assets/icons/zones.svg';
   import staffIcon from '../assets/icons/staff.svg';
   import tasksIcon from '../assets/icons/tasks.svg';
-  import simulationIcon from '../assets/icons/simulation.svg';
-  import graphIcon from '../assets/icons/overview.svg';
-  import overviewIconSelected from '../assets/icons/overviewSelected.svg';
+  import settingsIcon from '../assets/icons/settings.svg';
+  import infoIcon from '../assets/icons/info.svg';
+  import overviewIconSelected from '../assets/icons/factorySelected.svg';
   import zonesIconSelected from '../assets/icons/zonesSelected.svg';
   import staffIconSelected from '../assets/icons/staffSelected.svg';
   import tasksIconSelected from '../assets/icons/tasksSelected.svg';
-  import simulationIconSelected from '../assets/icons/simulationSelected.svg';
-  import graphIconSelected from '../assets/icons/overviewSelected.svg';
+  import settingsIconSelected from '../assets/icons/settingsSelected.svg';
+  import infoIconSelected from '../assets/icons/infoSelected.svg';
 
   const tabs = ref([
     { name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/' },
@@ -20,8 +20,7 @@
     { name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff' },
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
     { separator: true },
-    { name: 'Simulation', icon: simulationIcon, iconSelected: simulationIconSelected, path: '/simulation' },
-    { name: 'Info', icon: graphIcon, iconSelected: graphIconSelected, path: '/info' },
+    { name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info' },
   ]);
 
   const route = useRoute();
@@ -49,17 +48,21 @@ const activeTab = computed(() => {
       </template>
     </div>
     <hr>
-    <button class="settings-button">
-      <img src='../assets/icons/settings.svg' class="settings-icon"> </img>
+    <router-link
+        to="/settings"
+        class="tab"
+        active-class="active-tab"
+        exact-active-class="exact-active-tab"
+    >
+      <img :src="route.path === '/settings' ? settingsIconSelected : settingsIcon" class="tab-icon" />
       <span>Settings</span>
-    </button>
+    </router-link>
   </div>
 </template>
   <style scoped>
   .sidebar {
     display: flex;
     flex-direction: column;
-    height: 97vh;
     width: 250px;
     background-color: #ffffff;
     color: #646464;
@@ -92,21 +95,19 @@ const activeTab = computed(() => {
     margin-left: 0.5rem;
   }
 
-  .separator {
-    margin-top: 1rem;
-    border-top: 1px solid #7f8c8d;
-    padding-top: 1rem;
-  }
-
   .settings-button {
     border: none;
-    padding-top: 1rem;
-    margin-top: 1rem;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     cursor: pointer;
     background: none;
     color: inherit;
+  }
+
+  .settings-button:hover{
+    border-radius: 10px;
+    background-color: #f0f0f0; /* Light grey background on hover */
   }
 
   hr {

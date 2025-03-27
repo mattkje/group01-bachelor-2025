@@ -46,6 +46,7 @@ import Toolbar from "@/components/Toolbar.vue";
   width: 100%;
   height: 5rem;
   background-color: #ffffff;
+  border: 1px solid #e0e0e0;
   border-radius: 1.5rem;
   margin-bottom: 1rem;
   display: flex;

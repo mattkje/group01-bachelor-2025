@@ -4,7 +4,7 @@ import Overview from '../views/Overview.vue';
 import Zones from "../views/Zones.vue";
 import Tasks from "../views/Tasks.vue";
 import Staff from "../views/Staff.vue";
-import Simulation from "../views/Simulation.vue";
+import Settings from "../views/Settings.vue";
 import Info from "../views/Info.vue";
 import WorkerProfile from "../views/WorkerProfile.vue";
 
@@ -13,7 +13,7 @@ const routes = [
   { path: '/zones', component: Zones },
   { path: '/staff', component: Staff },
   { path: '/tasks', component: Tasks },
-  { path: '/simulation', component: Simulation},
+  { path: '/settings', component: Settings},
   { path: '/info', component: Info},
   { path: '/worker', component: WorkerProfile},
 ];
