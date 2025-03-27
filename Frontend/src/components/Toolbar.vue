@@ -82,9 +82,8 @@ const runAllMonteCarloSimulations = async () => {
     console.log(result);
 
     let latestTime = null;
-
     for (const zoneId in result) {
-      const times = result[zoneId];
+      const times = result[zoneId].filter(time => !time.includes('ERROR'));
       if (times.length > 0) {
         const currentTime = times[0];
         if (!latestTime) {
@@ -109,7 +108,6 @@ const runAllMonteCarloSimulations = async () => {
     isSpinning.value = false;
   }
 };
-
 const isFinished = computed(() => {
   if (completionTime.value === null) {
     return false;

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 100;
+  private static final int SIM_COUNT = 1000;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -106,7 +106,9 @@ public class SimulationService {
           // Find the error messages for the zone
           for (SimulationResult result : results) {
             if (result.getZoneDurations().containsKey(zoneId)) {
-              newResult.put(zoneId, result.getErrorMessages().stream().filter(s -> s.contains("ZONE " + zoneId)).toList());
+              newResult.put(zoneId,
+                  result.getErrorMessages().stream().filter(s -> s.contains("ZONE " + zoneId))
+                      .findFirst().map(List::of).orElse(List.of()));
               break;
             }
           }
