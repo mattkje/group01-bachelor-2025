@@ -88,7 +88,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualified && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
+  <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
       <img class="worker-image" :src="getRandomProfileImageUrl(workerId)" draggable="false"/>
       <div class="worker-name">{{ name }}</div>
@@ -96,7 +96,7 @@ onMounted(async () => {
     <div class="status-container">
 
       <img :draggable="!task" v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
-      <img :draggable="!task" v-if="!task && qualified && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
+      <img :draggable="!task" v-if="!task && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
       <img :draggable="!task" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
       <img :draggable="!task" v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
       <img :draggable="!task" v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />

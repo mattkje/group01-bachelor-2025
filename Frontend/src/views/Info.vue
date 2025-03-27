@@ -46,7 +46,6 @@
 .container {
   height: 100%;
   padding: 2rem;
-  background-color: #f9f9f9;
   border-radius: 10px;
 }
 

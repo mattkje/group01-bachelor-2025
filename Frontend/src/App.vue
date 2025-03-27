@@ -25,6 +25,7 @@ import Toolbar from "@/components/Toolbar.vue";
   width: 100%;
   padding: 1rem;
   box-sizing: border-box;
+
 }
 
 .page-border {
