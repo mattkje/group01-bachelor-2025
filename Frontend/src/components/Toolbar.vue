@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, inject, computed } from "vue";
+import {onMounted, ref, inject, computed} from "vue";
 import axios from 'axios';
 
 const props = defineProps({
@@ -38,7 +38,7 @@ const startClock = async () => {
   isPlaying.value = true;
   try {
     await axios.post('http://localhost:8080/api/simulation/start', null, {
-      params: { simulationTime: 2 }
+      params: {simulationTime: 2}
     });
   } catch (error) {
     console.error('Error starting simulation:', error);
@@ -61,7 +61,7 @@ const fastForwardClock = async () => {
   speedIndex = (speedIndex + 1) % speeds.length;
   try {
     await axios.post('http://localhost:8080/api/simulation/fastForward', null, {
-      params: { speedMultiplier: speeds[speedIndex] }
+      params: {speedMultiplier: speeds[speedIndex]}
     });
   } catch (error) {
     console.error('Error fast forwarding simulation:', error);
@@ -71,7 +71,7 @@ const fastForwardClock = async () => {
 const runAllMonteCarloSimulations = async () => {
   isSpinning.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/monte-carlo/zones/1`, {
+    const response = await fetch(`http://localhost:8080/api/monte-carlo`, {
       method: 'GET',
     });
 
@@ -79,10 +79,7 @@ const runAllMonteCarloSimulations = async () => {
       throw new Error('Failed to run simulation');
     }
     const result = await response.json();
-    console.log(result);
-    if (result.length < 2) {
-      completionTime = result[0];
-    }
+    completionTime = result[0];
   } catch (error) {
     console.error('Error running simulation:', error);
   } finally {
@@ -117,27 +114,27 @@ onMounted(() => {
       </div>
     </div>
     <button class="toolbar-item" @click="runAllMonteCarloSimulations">
-      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign" />
+      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
     </button>
     <button v-if="false" class="toolbar-item">
-      <img src="/src/assets/icons/bell.svg" alt="Assign" />
+      <img src="/src/assets/icons/bell.svg" alt="Assign"/>
     </button>
     <button v-if="true" class="toolbar-item">
-      <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
+      <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
     </button>
     <div class="vertical-separator"/>
     <div class="controls">
       <button v-if="!isPlaying" @click="startClock">
-        <img src="/src/assets/icons/play.svg" alt="Play" />
+        <img src="/src/assets/icons/play.svg" alt="Play"/>
       </button>
       <button v-else @click="stopClock">
-        <img src="/src/assets/icons/pause.svg" alt="Pause" />
+        <img src="/src/assets/icons/pause.svg" alt="Pause"/>
       </button>
-      <button class="ff-arrow"@click="fastForwardClock">
-        <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward" />
-        <img v-else-if="speedIndex === 1" src="/src/assets/icons/ff2x.svg" alt="Fast Forward" />
-        <img v-else-if="speedIndex === 2" src="/src/assets/icons/ff5x.svg" alt="Fast Forward" />
-        <img v-else src="/src/assets/icons/ff10x.svg" alt="Fast Forward" />
+      <button class="ff-arrow" @click="fastForwardClock">
+        <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward"/>
+        <img v-else-if="speedIndex === 1" src="/src/assets/icons/ff2x.svg" alt="Fast Forward"/>
+        <img v-else-if="speedIndex === 2" src="/src/assets/icons/ff5x.svg" alt="Fast Forward"/>
+        <img v-else src="/src/assets/icons/ff10x.svg" alt="Fast Forward"/>
       </button>
     </div>
     <div class="vertical-separator"/>
@@ -154,8 +151,8 @@ onMounted(() => {
     <div class="clock-done">
       <p v-if="!isFinished">Done By</p>
       <div class="clock-time">
-      <span v-if="completionTime !== null ">{{ completionTime }}</span>
-      <span v-else>{{ isFinished ? 'Done' : '00:00' }}</span>
+        <span v-if="completionTime !== null ">{{ completionTime }}</span>
+        <span v-else>{{ isFinished ? 'Done' : '00:00' }}</span>
       </div>
     </div>
   </div>
@@ -202,6 +199,7 @@ onMounted(() => {
 .toolbar-item:hover {
   color: #000;
 }
+
 .vertical-separator {
   border-left: 1px solid #e0e0e0;
   height: 100%;

@@ -42,8 +42,8 @@ public class SimulationController {
   }
 
   @GetMapping("/monte-carlo")
-  public void monteCarlo() throws Exception {
-    monteCarloWithRealData.monteCarlo();
+  public List<String> monteCarlo() throws Exception {
+    return simulationService.runCompleteSimulation();
   }
 
   @GetMapping("/monte-carlo/zones/{id}")
@@ -61,4 +61,5 @@ public class SimulationController {
   public void runWorldSimulation() throws Exception {
     worldSimulation.runWorldSimulation(2);
   }
+
 }
