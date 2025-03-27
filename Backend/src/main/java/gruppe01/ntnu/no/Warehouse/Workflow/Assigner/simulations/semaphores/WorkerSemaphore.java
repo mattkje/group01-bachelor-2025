@@ -77,8 +77,7 @@ public class WorkerSemaphore {
         // acquired the worker permits
         List<Worker> workersToRemove = new ArrayList<>();
         // Iterate over the workers to check if they have the required licences for the task
-        for (Worker worker : workers) {
-          // If the worker has the required licenses, add them to the workers to remove
+        for (Worker worker : workers) {// If the worker has the required licenses, add them to the workers to remove
           if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
             workersToRemove.add(worker);
             // If the number of workers acquired is equal to the required number of workers, add them to the task

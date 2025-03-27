@@ -38,7 +38,7 @@ public class ZoneSimulator {
       // If there are no workers, return an error message
       if (originalZoneWorkers.isEmpty()) {
         return "ERROR: Zone " + zone.getId() +
-            " has no workers and therefore cannot complete tasks";
+            " No workers";
       }
 
       // Create a deep copy of the workers for this simulation
@@ -49,7 +49,6 @@ public class ZoneSimulator {
 
       // Error message list for any errors that occur during the completion of tasks
       List<String> errorMessages = new ArrayList<>();
-      errorMessages.add("ERROR: Zone " + zone.getId() + " simulation failed");
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
       CountDownLatch zoneLatch = new CountDownLatch(zoneTasks.size());
@@ -82,7 +81,6 @@ public class ZoneSimulator {
             .filter(worker -> worker.getLicenses()
                 .containsAll(activeTask.getTask().getRequiredLicense()))
             .count();
-
 
         if (workersWithRequiredLicenses < activeTask.getTask().getMinWorkers()) {
           isSimulationSuccessful.set(false);

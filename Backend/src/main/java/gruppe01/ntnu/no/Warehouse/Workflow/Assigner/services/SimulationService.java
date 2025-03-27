@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 100;
+  private static final int SIM_COUNT = 1;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -38,7 +38,7 @@ public class SimulationService {
    * @param zoneId The ID of the zone to run the simulation on
    * @return A list of strings containing the predicted time of completion and any error messages
    */
-  public List<String> runZoneSimulation(Long zoneId) throws InterruptedException {
+  public List<String> runZoneSimulation(Long zoneId) {
 
     // Ensure the zoneID exists
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
@@ -95,6 +95,7 @@ public class SimulationService {
     }
 
     newResult.addAll(result.subList(1, result.size()));
+    System.out.println(newResult);
     return newResult;
   }
 
