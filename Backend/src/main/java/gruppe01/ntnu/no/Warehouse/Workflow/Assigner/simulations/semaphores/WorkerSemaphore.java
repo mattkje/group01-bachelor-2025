@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -46,36 +45,43 @@ public class WorkerSemaphore {
    * @return An empty string if successful, an error message if not
    * @throws InterruptedException
    */
-  public String acquireMultiple(ActiveTask activeTask)
+  public String acquireMultiple(ActiveTask activeTask,int simNo)
       throws InterruptedException {
     lock.lock();
     try {
       synchronized (workers) {
-        // acquire the required number of workers, if not enough workers are available, wait
+        // Check if the number of workers required is less than the number of workers available
         int maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
         int minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
 
+        // Current permits from the semaphore
         int currentPermits = 0;
 
+        // For each worker the task requires attempt to get a permit from the semaphore
         for (int i = 0; i < maxWorkers; i++) {
+          // If a permit is aquired, increment the current permits
           if (semaphore.tryAcquire(1)) {
             currentPermits++;
+            // If the current permits is equal to the max workers, break the loop
             if (maxWorkers == currentPermits) {
               break;
             }
           }
         }
+        // If the current permits is less than the min workers,
+        // release the permits and attempt later
         if (currentPermits < minWorkers) {
           semaphore.release(currentPermits);
           return "";
         }
-        // acquired the workers
-        // while the number of workers acquired is less than the required number of workers
+        // acquired the worker permits
         List<Worker> workersToRemove = new ArrayList<>();
-        // Iterate over the workers
+        // Iterate over the workers to check if they have the required licences for the task
         for (Worker worker : workers) {
+          // If the worker has the required licenses, add them to the workers to remove
           if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
             workersToRemove.add(worker);
+            // If the number of workers acquired is equal to the required number of workers, add them to the task
             if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
               activeTask.getWorkers().addAll(workersToRemove);
               workersToRemove.forEach(workers::remove);
@@ -83,10 +89,8 @@ public class WorkerSemaphore {
             }
           }
         }
-        // if the number of workers acquired is less than the required number of workers
+        // if the number of workers acquired is less than the required number of workers, relase the permits
         semaphore.release(currentPermits);
-
-        // TODO: ADD error checking in case the zone does nt have the qualified workers to avoid infinite loop of searching for workers
         return "";
       }
     } finally {

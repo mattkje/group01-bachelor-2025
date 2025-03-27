@@ -44,8 +44,8 @@ public class ActiveTaskGenerator {
     LocalDate endDate = startDate.plusDays(numDays - 1);
 
 
-    int minNumTasks = 40;
-    int maxNumTasks = 80;
+    int minNumTasks = 10;
+    int maxNumTasks = 20;
 
     int strictStartChance = 5;
 

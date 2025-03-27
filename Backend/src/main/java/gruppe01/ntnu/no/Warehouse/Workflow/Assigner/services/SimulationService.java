@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 10;
+  private static final int SIM_COUNT = 100;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -29,6 +29,7 @@ public class SimulationService {
 
   @Autowired
   private MonteCarloWithRealData monteCarloWithRealData;
+
 
   /**
    * Runs a simulation on a zone
@@ -54,7 +55,7 @@ public class SimulationService {
     for (int i = 0; i < SIM_COUNT; i++) {
       AtomicDouble predictedTime = new AtomicDouble(0.0);
       String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime);
+          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime, i);
       if (!result.isEmpty() && i == 0) {
         errorMessages.add(result);
       }

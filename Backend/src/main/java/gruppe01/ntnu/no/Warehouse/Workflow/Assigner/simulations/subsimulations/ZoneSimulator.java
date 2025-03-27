@@ -30,7 +30,7 @@ public class ZoneSimulator {
   static Random random = new Random();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
-                                         AtomicDouble totalTaskTime) {
+                                  AtomicDouble totalTaskTime, int simNo) {
     try {
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
@@ -69,7 +69,7 @@ public class ZoneSimulator {
         // Set a random EPW for the task (Efficiency gained per worker)
         // Currently at  a range between 0.4 and 0.9
         // TODO: Replace this with a ML learned number
-         double epw = random.nextDouble() * 0.5 + 0.4;
+        double epw = random.nextDouble() * 0.5 + 0.4;
 
         if (zone.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
           isSimulationSuccessful.set(false);
@@ -83,6 +83,7 @@ public class ZoneSimulator {
                 .containsAll(activeTask.getTask().getRequiredLicense()))
             .count();
 
+
         if (workersWithRequiredLicenses < activeTask.getTask().getMinWorkers()) {
           isSimulationSuccessful.set(false);
           zoneLatch.countDown();
@@ -90,14 +91,13 @@ public class ZoneSimulator {
               " - " + activeTask.getTask().getName() + "!Missing workers with required licenses";
         }
 
-
         // Start a thread for a single task in a zone
         zoneExecutor.submit(() -> {
           try {
             // Acquire the workers for the task
             while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
               String acquireWorkerError =
-                  availableZoneWorkersSemaphore.acquireMultiple(activeTask);
+                  availableZoneWorkersSemaphore.acquireMultiple(activeTask,simNo);
               if (!acquireWorkerError.isEmpty()) {
                 errorMessages.add(acquireWorkerError);
                 isSimulationSuccessful.set(false);
