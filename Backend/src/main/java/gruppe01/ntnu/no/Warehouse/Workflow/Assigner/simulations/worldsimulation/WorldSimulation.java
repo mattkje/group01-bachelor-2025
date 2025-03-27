@@ -83,14 +83,15 @@ public class WorldSimulation {
         System.out.println("Active tasks today: " + activeTasksToday.size());
 
         LocalDate finalWorkday = workday;
+
+        List<ActiveTask> activeTasksWithDueDates = activeTasksToday.stream()
+                .filter(activeTask -> activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0))
+                .collect(Collectors.toList());
+
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
                         activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
                 .sorted(Comparator.comparing(ActiveTask::getStrictStart))
-                .collect(Collectors.toList());
-
-        List<ActiveTask> activeTasksWithDueDates = activeTasksToday.stream()
-                .filter(activeTask -> activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0))
                 .collect(Collectors.toList());
 
         for (Timetable timetable : timetables) {
@@ -163,54 +164,53 @@ public class WorldSimulation {
             Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
             while (activeTaskWithDueDatesIterator.hasNext()) {
                 ActiveTask task = activeTaskWithDueDatesIterator.next();
-                if (task.getDueDate().minusMinutes(task.getTask().getMaxTime()).toLocalTime().equals(currentTime)) {
-                    List<Worker> workers = new ArrayList<>(Stream.concat(
+                if (!task.getDueDate().minusMinutes(task.getTask().getMaxTime()).toLocalTime().isAfter(currentTime)) {
+                    List<Worker> workers = Stream.concat(
                                     availableWorkers.stream(),
-                                    workersWaitingForTask.stream()
-                                            .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
-                                                    task.getTask().getRequiredLicense().isEmpty() ||
-                                                    worker.getLicenses().containsAll(task.getTask().getRequiredLicense())))
+                                    workersWaitingForTask.stream())
                             .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
                                     (task.getTask().getRequiredLicense().isEmpty() ||
                                             worker.getLicenses().containsAll(task.getTask().getRequiredLicense())))
-                            .collect(Collectors.toList()));
+                            .distinct()
+                            .collect(Collectors.toList());
                     int workersSlots = 0;
                     if (workers.size() >= task.getTask().getMinWorkers()) {
-                        workersSlots = task.getTask().getMinWorkers();
-                        if (workers.size() < task.getTask().getMaxWorkers() && workers.size() > task.getTask().getMinWorkers()) {
-                            workersSlots = workers.size();
-                            if (workers.size() > task.getTask().getMaxWorkers()) {
-                                workersSlots = task.getTask().getMaxWorkers();
-                            }
-                        }
+                        workersSlots = Math.min(workers.size(), task.getTask().getMaxWorkers());
                         int workersAssigned = 0;
                         Iterator<Worker> workerIterator = workers.iterator();
                         List<Worker> workersAssignedToTask = new ArrayList<>();
+                        List<Worker> toRemove = new ArrayList<>();
+
 
                         while (workerIterator.hasNext() && workersAssigned < workersSlots) {
                             Worker worker = workerIterator.next();
                             workersAssignedToTask.add(worker);
                             worker.setCurrentTask(task);
                             busyWorkers.add(worker);
-                            availableWorkers.remove(worker);
-                            workersWaitingForTask.remove(worker);
+                            toRemove.add(worker);
                             activeTaskService.assignWorkerToTask(task.getId(), worker.getId());
                             workerService.updateWorker(worker.getId(), worker);
                             System.out.println(worker.getName() + " has started working on task: " +
                                     task.getTask().getName());
                             workersAssigned++;
                         }
+                        availableWorkers.removeAll(toRemove);
+                        workersAssignedToTask.removeAll(toRemove);
                         task.setStartTime(LocalDateTime.of(workday, currentTime));
                         task.setWorkers(workersAssignedToTask);
                         activeTasksInProgress.add(task);
                         activeTaskWithDueDatesIterator.remove();
                     } else {
+                        Set<Worker> toWait = new HashSet<>();
                         for (Worker worker : workers) {
                             if (!workersWaitingForTask.contains(worker)) {
-                                workersWaitingForTask.add(worker);
-                                availableWorkers.remove(worker);
+                                toWait.add(worker);
+                                System.out.println(worker.getName() + " is waiting for a task");
                             }
                         }
+                        workersWaitingForTask.addAll(toWait);
+                        availableWorkers.removeAll(toWait);
+
                     }
                 }
             }

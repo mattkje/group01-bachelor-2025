@@ -45,7 +45,6 @@ public class ActiveTask {
             joinColumns = @JoinColumn(name = "active_task_id"),
             inverseJoinColumns = @JoinColumn(name = "worker_id")
     )
-    @JsonIgnore
     private List<Worker> workers;
 
     public ActiveTask() {

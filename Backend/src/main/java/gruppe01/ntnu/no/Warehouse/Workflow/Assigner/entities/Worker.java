@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalTime;
@@ -30,6 +31,7 @@ public class Worker {
     private boolean availability;
 
     @ManyToOne
+    @JsonIgnore
     private ActiveTask currentTask;
 
     @Column(name = "break_start_time")
