@@ -32,7 +32,7 @@ public class ActiveTaskGenerator {
     List<Task> tasks = new ArrayList<>(taskService.getAllTasks());
 
     // Set up generation parameters
-    int dueDateChance = 2;
+    int dueDateChance = 10;
     int[] dueHours = {8, 9, 10, 11, 12, 13, 14, 15, 16};
     int[] dueMinutes = {0, 15, 30, 45};
 
@@ -66,7 +66,7 @@ public class ActiveTaskGenerator {
       ActiveTask activeTask = new ActiveTask();
 
       // Generate random due date
-      if (random.nextInt(100) == dueDateChance) {
+      if (random.nextInt(100) <= dueDateChance) {
         int dueHour = dueHours[random.nextInt(dueHours.length)];
         int dueMinute = dueMinutes[random.nextInt(dueMinutes.length)];
         LocalTime dueTime = LocalTime.of(dueHour, dueMinute);
