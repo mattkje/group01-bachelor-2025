@@ -69,72 +69,76 @@ public class MonteCarloWithRealData {
   /**
    * Runner class for the Monte Carlo Simulation
    *
-   * @param simCount    Number of simulations to run (aiming to run at least 5000) List of licenses
+   * @param simCount Number of simulations to run (aiming to run at least 5000) List of licenses
    * @throws InterruptedException
    * @throws ExecutionException
    */
-public List<SimulationResult> monteCarlo(int simCount)
-    throws InterruptedException, ExecutionException {
+  public List<SimulationResult> monteCarlo(int simCount)
+      throws InterruptedException, ExecutionException {
 
     List<String> errorMessages = new ArrayList<>();
-    ExecutorService simulationExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    ExecutorService simulationExecutor =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Future<SimulationResult>> futures = new ArrayList<>();
 
     List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
     List<Zone> zones = zoneService.getAllZones();
 
     for (int i = 0; i < simCount; i++) {
-        int finalI = i;
-        futures.add(simulationExecutor.submit(() -> {
-            ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
-            AtomicDouble totalTaskTime = new AtomicDouble(0);
+      int finalI = i;
+      futures.add(simulationExecutor.submit(() -> {
+        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+        AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-            List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
-            List<ActiveTask> activeTasksCopy = activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
+        List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
+        List<ActiveTask> activeTasksCopy =
+            activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
 
-            Map<Long, Double> zoneDurations = new HashMap<>();
+        Map<Long, Double> zoneDurations = new HashMap<>();
 
-            for (Zone zone : zonesCopy) {
-                List<ActiveTask> zoneTasks = activeTasksCopy.stream()
-                    .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
-                    .toList();
+        for (Zone zone : zonesCopy) {
+          List<ActiveTask> zoneTasks = activeTasksCopy.stream()
+              .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
+              .toList();
 
-                warehouseExecutor.submit(() -> {
-                    try {
-                        String result = zoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime, finalI);
-                        try {
-                            double parsedResult = Double.parseDouble(result);
-                            synchronized (zoneDurations) {
-                                zoneDurations.put(zone.getId(), parsedResult);
-                            }
-                        } catch (NumberFormatException e) {
-                            synchronized (errorMessages) {
-                                errorMessages.add(result);
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
+          warehouseExecutor.submit(() -> {
+            try {
+              String result =
+                  zoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime, finalI);
+              try {
+                double parsedResult = Double.parseDouble(result);
+                synchronized (zoneDurations) {
+                  zoneDurations.put(zone.getId(), parsedResult);
+                }
+              } catch (NumberFormatException e) {
+                synchronized (errorMessages) {
+                  zoneDurations.put(zone.getId(), 0.0);
+                  errorMessages.add(result);
+                }
+              }
+            } catch (Exception e) {
+              e.printStackTrace();
             }
+          });
+        }
 
-            warehouseExecutor.shutdown();
-            warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-            double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
-            return new SimulationResult(averageCompletionTime, zoneDurations);
-        }));
+        warehouseExecutor.shutdown();
+        warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
+        double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
+        return new SimulationResult(averageCompletionTime, zoneDurations, errorMessages);
+      }));
     }
 
     List<SimulationResult> results = new ArrayList<>();
     for (Future<SimulationResult> future : futures) {
-        results.add(future.get());
+      results.add(future.get());
     }
 
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 
     return results;
-}
+  }
 
 
 }

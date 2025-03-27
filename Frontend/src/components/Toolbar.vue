@@ -80,7 +80,27 @@ const runAllMonteCarloSimulations = async () => {
     }
     const result = await response.json();
     console.log(result);
-    completionTime = result[0];
+
+    let latestTime = null;
+
+    for (const zoneId in result) {
+      const times = result[zoneId];
+      if (times.length > 0) {
+        const currentTime = times[0];
+        if (!latestTime) {
+          latestTime = currentTime;
+        } else {
+          const [latestHours, latestMinutes] = latestTime.split(':').map(Number);
+          const [currentHours, currentMinutes] = currentTime.split(':').map(Number);
+
+          if (currentHours > latestHours || (currentHours === latestHours && currentMinutes > latestMinutes)) {
+            latestTime = currentTime;
+          }
+        }
+      }
+    }
+
+    completionTime.value = latestTime;
   } catch (error) {
     console.error('Error running simulation:', error);
   } finally {

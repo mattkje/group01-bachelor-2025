@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.Z
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -83,9 +84,11 @@ public class SimulationService {
    * The rest of the elements contain any error messages
    * Call it by using the following: /api/monte-carlo
    */
-  public List<String> runCompleteSimulation() throws ExecutionException, InterruptedException {
+  public Map<Long, List<String>> runCompleteSimulation()
+      throws ExecutionException, InterruptedException {
     List<SimulationResult> results = monteCarloWithRealData.monteCarlo(SIM_COUNT);
-    List<String> newResult = new ArrayList<>();
+    HashMap<Long, List<String>> newResult = new HashMap<>();
+
 
     if (!results.isEmpty()) {
       // Get the current time
@@ -96,18 +99,22 @@ public class SimulationService {
 
       // Format the predicted completion time for each zone
       averageZoneDurations.forEach((zoneId, averageDuration) -> {
-        String formattedTime = formatPredictedCompletionTime(currentTime, averageDuration);
-        newResult.add(formattedTime);
-      });
-
-      newResult.sort((a, b) -> {
-        double timeA = Double.parseDouble(a.split(":")[0]) * 60 + Double.parseDouble(a.split(":")[1]);
-        double timeB = Double.parseDouble(b.split(":")[0]) * 60 + Double.parseDouble(b.split(":")[1]);
-        return Double.compare(timeB, timeA);
+        if (averageDuration > 0) {
+          String formattedTime = formatPredictedCompletionTime(currentTime, averageDuration);
+          newResult.put(zoneId, List.of(formattedTime));
+        } else {
+          // Find the error messages for the zone
+          for (SimulationResult result : results) {
+            if (result.getZoneDurations().containsKey(zoneId)) {
+              newResult.put(zoneId, result.getErrorMessages().stream().filter(s -> s.contains("ZONE " + zoneId)).toList());
+              break;
+            }
+          }
+        }
       });
 
     } else {
-      newResult.add("No simulation results available.");
+      newResult.put(-1L, List.of("No simulation results available."));
     }
 
     return newResult;

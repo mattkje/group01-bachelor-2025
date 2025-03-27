@@ -5,12 +5,14 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
     import java.util.Map;
 
     public class SimulationResult {
-        private double averageCompletionTime;
-        private Map<Long, Double> zoneDurations;
+        private final double averageCompletionTime;
+        private final Map<Long, Double> zoneDurations;
+        private final List<String> errorMessages;
 
-        public SimulationResult(double averageCompletionTime, Map<Long, Double> zoneDurations) {
+        public SimulationResult(double averageCompletionTime, Map<Long, Double> zoneDurations, List<String> errorMessages) {
             this.averageCompletionTime = averageCompletionTime;
             this.zoneDurations = zoneDurations;
+            this.errorMessages = errorMessages;
         }
 
         public double getAverageCompletionTime() {
@@ -19,6 +21,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
 
         public Map<Long, Double> getZoneDurations() {
             return zoneDurations;
+        }
+
+        public List<String> getErrorMessages() {
+            return errorMessages;
         }
 
         public static Map<Long, Double> calculateAverageZoneDurations(List<SimulationResult> results) {

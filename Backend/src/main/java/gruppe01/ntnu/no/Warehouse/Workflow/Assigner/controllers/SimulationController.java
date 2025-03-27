@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +42,7 @@ public class SimulationController {
   }
 
   @GetMapping("/monte-carlo")
-  public List<String> monteCarlo() throws Exception {
+  public Map<Long,List<String>> monteCarlo() throws Exception {
     return simulationService.runCompleteSimulation();
   }
 
