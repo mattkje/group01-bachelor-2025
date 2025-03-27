@@ -155,18 +155,30 @@ const toggleNotificationBubble = () => {
       </div>
       <hr>
       <div class="zone-options">
-        <button class="icon-button" @click="openPopup">
-          <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
-        </button>
-        <button class="icon-button" @click="runMonteCarloSimulation">
-          <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
-        </button>
-        <button v-if="notification" class="icon-button bell-icon" @mouseenter="toggleNotificationBubble" @mouseleave="toggleNotificationBubble">
-          <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
-        </button>
-        <button v-else class="icon-button bell-icon">
-          <img src="/src/assets/icons/bell.svg" alt="Assign" />
-        </button>
+        <div class="zone-option">
+          <button class="icon-button" @click="openPopup">
+            <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
+          </button>
+          <div class="status-popup">Tasks</div>
+        </div>
+        <div class="zone-option">
+          <button class="icon-button" @click="runMonteCarloSimulation">
+            <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
+          </button>
+          <div class="status-popup">Simulate zone</div>
+        </div>
+        <div v-if="notification" class="zone-option">
+          <button class="icon-button bell-icon" @mouseenter="toggleNotificationBubble" @mouseleave="toggleNotificationBubble">
+            <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
+          </button>
+          <div class="status-popup">Notifications</div>
+        </div>
+        <div  v-else class="zone-option">
+          <button class="icon-button bell-icon">
+            <img src="/src/assets/icons/bell.svg" alt="Assign" />
+          </button>
+          <div class="status-popup">Notifications</div>
+        </div>
       </div>
     </div>
     <div v-if="hasTasks" class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
@@ -278,12 +290,40 @@ const toggleNotificationBubble = () => {
   display: none;
 }
 
+.status-popup {
+  display: none;
+  position: absolute;
+  top: -25px;
+  right: 0;
+  background-color: #333;
+  color: #fff;
+  padding: 5px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.zone-option:hover .status-popup {
+  display: block;
+}
+
+
 .unqualified {
   color: #f56e6e;
   border-radius: 0.5rem;
   padding: 10px;
   line-height: 0.2rem;
   margin-top: 0.1rem;
+}
+
+.zone-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.zone-option {
+  position: relative;
 }
 
 .icon-button {
