@@ -11,7 +11,10 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -70,75 +73,68 @@ public class MonteCarloWithRealData {
    * @throws InterruptedException
    * @throws ExecutionException
    */
-  public List<String> monteCarlo(int simCount)
-      throws InterruptedException, ExecutionException {
+public List<SimulationResult> monteCarlo(int simCount)
+    throws InterruptedException, ExecutionException {
 
-    //TODO: Implement an error checking system to ensure that a simulation can be completed
     List<String> errorMessages = new ArrayList<>();
-
-    ExecutorService simulationExecutor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    List<Future<Double>> futures = new ArrayList<>();
+    ExecutorService simulationExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    List<Future<SimulationResult>> futures = new ArrayList<>();
 
     List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
     List<Zone> zones = zoneService.getAllZones();
 
-    // For each simulation, run a simulation of each warehouse
     for (int i = 0; i < simCount; i++) {
-      int finalI = i;
-      futures.add(simulationExecutor.submit(() -> {
-        // Create a new executor for each warehouse
-        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
-        // AtomicDouble to store the total time for all tasks in the warehouse for this simulation
-        AtomicDouble totalTaskTime = new AtomicDouble(0);
+        int finalI = i;
+        futures.add(simulationExecutor.submit(() -> {
+            ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+            AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-        // Deep copy of the data to avoid changing the original data
-        List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
-        List<ActiveTask> activeTasksCopy =
-            activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
+            List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
+            List<ActiveTask> activeTasksCopy = activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
 
-        // Run a simulation for each zone in the warehouse
-        for (Zone zone : zonesCopy) {
-          // Only get tasks that are in the zone
-          List<ActiveTask> zoneTasks = activeTasksCopy.stream()
-              .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
-              .toList();
-          // Run the simulation for the zone
-          warehouseExecutor.submit(() -> {
-            try {
-              String result = zoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime, finalI);
-              // If an error occurs, add it to the error messages
-              if (!result.isEmpty()) {
-                synchronized (errorMessages) {
-                  errorMessages.add(result);
-                }
-              }
-            } catch (Exception e) {
-              e.printStackTrace();
+            Map<Long, Double> zoneDurations = new HashMap<>();
+
+            for (Zone zone : zonesCopy) {
+                List<ActiveTask> zoneTasks = activeTasksCopy.stream()
+                    .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
+                    .toList();
+
+                warehouseExecutor.submit(() -> {
+                    try {
+                        String result = zoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime, finalI);
+                        try {
+                            double parsedResult = Double.parseDouble(result);
+                            synchronized (zoneDurations) {
+                                zoneDurations.put(zone.getId(), parsedResult);
+                            }
+                        } catch (NumberFormatException e) {
+                            synchronized (errorMessages) {
+                                errorMessages.add(result);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
-          });
-        }
-        // Shutdown the warehouse executor and wait for it to finish
-        warehouseExecutor.shutdown();
-        warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-        return totalTaskTime.get() / zonesCopy.size();
-      }));
+
+            warehouseExecutor.shutdown();
+            warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
+            double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
+            return new SimulationResult(averageCompletionTime, zoneDurations);
+        }));
     }
 
-    double totalCompletionTime = 0;
-    for (Future<Double> future : futures) {
-      totalCompletionTime += future.get();
+    List<SimulationResult> results = new ArrayList<>();
+    for (Future<SimulationResult> future : futures) {
+        results.add(future.get());
     }
 
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 
-    double averageCompletionTime = totalCompletionTime / simCount;
-    List<String> output = new ArrayList<>();
-    output.add(averageCompletionTime + "");
-    output.addAll(errorMessages);
-    return output;
-  }
+    return results;
+}
 
 
 }

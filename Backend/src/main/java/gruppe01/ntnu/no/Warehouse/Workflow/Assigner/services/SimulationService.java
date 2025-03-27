@@ -2,11 +2,13 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloWithRealData;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 1;
+  private static final int SIM_COUNT = 100;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -82,20 +84,32 @@ public class SimulationService {
    * Call it by using the following: /api/monte-carlo
    */
   public List<String> runCompleteSimulation() throws ExecutionException, InterruptedException {
-    List<String> result = monteCarloWithRealData.monteCarlo(SIM_COUNT);
+    List<SimulationResult> results = monteCarloWithRealData.monteCarlo(SIM_COUNT);
     List<String> newResult = new ArrayList<>();
 
-    try {
-      double minutes = Double.parseDouble(result.get(0));
+    if (!results.isEmpty()) {
+      // Get the current time
       LocalDateTime currentTime = LocalDateTime.now();
-      String formattedTime = formatPredictedCompletionTime(currentTime, minutes);
-      newResult.add(formattedTime);
-    } catch (NumberFormatException e) {
-      newResult.add("Invalid number format in simulation result: " + result.get(0));
+      // Calculate the average zone durations
+      Map<Long, Double> averageZoneDurations =
+          SimulationResult.calculateAverageZoneDurations(results);
+
+      // Format the predicted completion time for each zone
+      averageZoneDurations.forEach((zoneId, averageDuration) -> {
+        String formattedTime = formatPredictedCompletionTime(currentTime, averageDuration);
+        newResult.add(formattedTime);
+      });
+
+      newResult.sort((a, b) -> {
+        double timeA = Double.parseDouble(a.split(":")[0]) * 60 + Double.parseDouble(a.split(":")[1]);
+        double timeB = Double.parseDouble(b.split(":")[0]) * 60 + Double.parseDouble(b.split(":")[1]);
+        return Double.compare(timeB, timeA);
+      });
+
+    } else {
+      newResult.add("No simulation results available.");
     }
 
-    newResult.addAll(result.subList(1, result.size()));
-    System.out.println(newResult);
     return newResult;
   }
 

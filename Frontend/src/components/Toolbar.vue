@@ -79,6 +79,7 @@ const runAllMonteCarloSimulations = async () => {
       throw new Error('Failed to run simulation');
     }
     const result = await response.json();
+    console.log(result);
     completionTime = result[0];
   } catch (error) {
     console.error('Error running simulation:', error);

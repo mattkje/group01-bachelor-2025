@@ -123,7 +123,7 @@ public class ZoneSimulator {
       zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
       if (isSimulationSuccessful.get()) {
         totalTaskTime.addAndGet(zoneTaskTime.get());
-        return "";
+        return zoneTaskTime.get() + "";
       }
       return errorMessages.isEmpty() ? "" : errorMessages.toString();
 
