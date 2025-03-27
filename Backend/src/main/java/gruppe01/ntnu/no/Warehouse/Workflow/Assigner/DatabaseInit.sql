@@ -126,7 +126,7 @@ VALUES
     ('Karen Lee', 7, 'Warehouse Designer', 0.75, true),
     ('Leo Martin', 7, 'Warehouse Developer', 1.3, false),
     ('Mona Nelson', 7, 'Warehouse Architect', 1.0, true),
-    ('Vincent Holiday', 0, 'Powerhouse Specialist', 0.7, false),
+    ('Vincent Holiday', 0, 'Powerhouse Specialist', 0, false),
     ('Gerrard Paul', 0, 'Truck Mechanic', 1.05, true),
     ('Nancy White', 1, 'Warehouse Clerk', 1.1, true),
     ('Oscar Black', 2, 'Warehouse Operator', 0.95, true),

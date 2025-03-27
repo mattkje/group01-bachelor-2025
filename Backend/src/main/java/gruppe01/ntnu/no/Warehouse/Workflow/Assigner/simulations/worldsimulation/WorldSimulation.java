@@ -40,6 +40,9 @@ public class WorldSimulation {
 
     private LocalTime currentSimulationTime;
 
+    @Autowired
+    private WorkerService workerService;
+
     public void runWorldSimulation(int simulationTime) throws Exception {
 
         LocalDate workday = LocalDate.now();
@@ -71,7 +74,8 @@ public class WorldSimulation {
 
         LocalDate today = workday;
         List<Worker> workersPresentToday = timetables.stream()
-                .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today))
+                .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today) &&
+                        timetable.getWorker().isAvailability())
                 .map(Timetable::getWorker)
                 .distinct()
                 .toList();
@@ -183,13 +187,13 @@ public class WorldSimulation {
                         busyWorkers.add(worker);
                         availableWorkers.remove(worker);
                         activeTaskService.assignWorkerToTask(task.getId(), worker.getId());
+                        workerService.updateWorker(worker.getId(), worker);
                         System.out.println(worker.getName() + " has started working on task: " +
                                 task.getTask().getName());
                         workersAssigned++;
                     }
                     task.setStartTime(LocalDateTime.of(workday, currentTime));
                     task.setWorkers(workersAssignedToTask);
-                    activeTaskService.updateActiveTask(task.getId(), task);
                     activeTasksInProgress.add(task);
                     activeTaskIterator.remove();
                 }
@@ -213,6 +217,7 @@ public class WorldSimulation {
                 }
                 if (task.getEndTime().toLocalTime().isBefore(currentTime) && activeTasksInProgress.contains(task)) {
                     activeTaskInProgressIterator.remove();
+                    activeTaskService.updateActiveTask(task.getId(), task);
                     task.setEndTime(LocalDateTime.of(workday, currentTime));
                     Iterator<Worker> busyWorkerIterator = busyWorkers.iterator();
                     while (busyWorkerIterator.hasNext()) {
@@ -221,6 +226,7 @@ public class WorldSimulation {
                             if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                             worker.setCurrentTask(null);
                             busyWorkerIterator.remove();
+                            workerService.updateWorker(worker.getId(), worker);
                             System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
                         }
                     }
