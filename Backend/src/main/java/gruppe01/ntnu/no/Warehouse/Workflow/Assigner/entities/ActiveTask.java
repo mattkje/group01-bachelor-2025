@@ -1,5 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ActiveTask {
 
     @Id
@@ -42,6 +45,7 @@ public class ActiveTask {
             joinColumns = @JoinColumn(name = "active_task_id"),
             inverseJoinColumns = @JoinColumn(name = "worker_id")
     )
+    @JsonIgnore
     private List<Worker> workers;
 
     public ActiveTask() {
