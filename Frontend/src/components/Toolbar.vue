@@ -52,7 +52,7 @@ const fetchCurrentDateFromBackend = async () => {
 };
 
 const currentTime = ref('');
-const currentDate = ref(new Date());
+const currentDate = ref('');
 
 const updateCurrentTime = async () => {
   currentTime.value = await fetchCurrentTimeFromBackend();
@@ -65,7 +65,7 @@ const updateSimulatedTime = () => {
 let intervalId: number | null = null;
 
 let speedIndex = 0;
-const speeds = [1000, 500, 333, 200];
+const speeds = [5/10, 5/2, 5/3, 5];
 
 const startClock = async () => {
   isPlaying.value = true;
@@ -151,6 +151,14 @@ const isFinished = computed(() => {
   return hours < currentHours || (hours === currentHours && minutes < currentMinutes);
 });
 
+const dateText = computed(() => {
+  if (!currentDate.value) {
+    return '00/00/0000';
+  }
+  console.log(currentDate.value);
+  return new Date(currentDate.value).toLocaleDateString();
+});
+
 onMounted(() => {
   fetchPausedState();
   updateCurrentTime();
@@ -192,12 +200,22 @@ onMounted(() => {
       </button>
     </div>
     <div class="vertical-separator"/>
+    <button class="date-clock">
+      <p>Date</p>
+      <div class="clock-time">
+        <span>{{ dateText }}</span>
+      </div>
+    </button>
+    <div class="vertical-separator"/>
     <div class="clock">
-      <p>Time {{ currentDate }}</p>
+      <p>Time</p>
       <div v-if="currentTime" class="clock-time">
         <span>{{ currentTime.split(':')[0] }}</span>
         <span class="blink">:</span>
         <span>{{ currentTime.split(':')[1] }}</span>
+      </div>
+      <div v-else class="clock-time">
+        <span>00:00</span>
       </div>
     </div>
     <div class="vertical-separator"/>
@@ -286,18 +304,46 @@ onMounted(() => {
   align-self: center;
 }
 
+.date-clock {
+  display: flex;
+  background: none;
+  border: none;
+  flex-direction: column;
+  line-height: 1.5rem;
+  width: 6rem;
+  align-content: center;
+  align-self: center;
+}
+
+.date-clock:hover {
+  background-color: #f0f0f0;
+  border-radius: 10px;
+}
+
 .clock-time {
   display: flex;
   justify-content: center;
 }
 
-.clock span {
+.clock span, .date-clock span {
   color: #7B7B7B;
   font-size: 2rem;
   font-weight: bold;
 }
 
-.clock p {
+.clock p, .date-clock p {
+  color: #7B7B7B;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.date-clock span {
+  color: #7B7B7B;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.clock p, .date-clock p {
   color: #7B7B7B;
   font-size: 0.7rem;
   font-weight: bold;
@@ -337,6 +383,12 @@ onMounted(() => {
   padding-top: 0.3rem;
   font-size: 0.9rem;
   line-height: 1rem;
+  font-weight: bold;
+}
+
+.date-text {
+  color: #7B7B7B;
+  font-size: 1.2rem !important;
   font-weight: bold;
 }
 
