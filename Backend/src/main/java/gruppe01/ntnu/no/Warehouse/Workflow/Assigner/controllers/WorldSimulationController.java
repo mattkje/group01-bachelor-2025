@@ -24,8 +24,8 @@ public class WorldSimulationController {
         worldSimulation.pauseSimulation();
     }
 
-    @GetMapping("/isPaused")
-    public boolean isSimulationPaused() {
+    @GetMapping("/getStatus")
+    public int getSimulationStatus() {
         return worldSimulation.getPauseStatus();
     }
 

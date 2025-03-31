@@ -66,11 +66,13 @@ public class WorldSimulation {
 
     private boolean isPaused;
 
+    private boolean isPlaying;
+
     @Autowired
     private WorkerService workerService;
 
     public void runWorldSimulation(int simulationTime) throws Exception {
-
+        isPlaying = true;
         workday = LocalDate.now();
         boolean activeTasksExistForWorkday = false;
 
@@ -137,8 +139,13 @@ public class WorldSimulation {
         }
 
         startSimulating();
+        if (isPaused) {
+            System.out.println("Simulation paused");
+        } else {
+            System.out.println("Simulation finished");
+            isPlaying = false;
+        }
 
-        System.out.println("Simulation finished");
     }
 
     private void startSimulating() throws InterruptedException {
@@ -308,7 +315,7 @@ public class WorldSimulation {
                     task.setEndTime(computedEndTime);
                     activeTaskService.updateActiveTask(task.getId(), task);
 
-                    for (Worker worker : task.getWorkers()) {
+                    for (Worker worker : activeTaskService.getWorkersAssignedToTask(task.getId())) {
                         if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                         worker.setCurrentTask(null);
                         workerService.updateWorker(worker.getId(), worker);
@@ -343,10 +350,10 @@ public class WorldSimulation {
 
     public LocalDateTime getEndTime(ActiveTask task) {
         Task task1 = task.getTask();
-        double workerFactor = (double) (task.getWorkers().size() - task1.getMinWorkers()) /
+        double workerFactor = (double) (activeTaskService.getWorkersAssignedToTask(task.getId()).size() - task1.getMinWorkers()) /
                 Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
         double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
-        double averageEffectiveness = task.getWorkers().stream()
+        double averageEffectiveness = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
                 .mapToDouble(Worker::getEffectiveness)
                 .average().orElse(1);
         double actualDuration = taskDuration / averageEffectiveness;
@@ -360,7 +367,17 @@ public class WorldSimulation {
         }
     }
 
-    public boolean getPauseStatus() {
-        return isPaused;
+    public int getPauseStatus() {
+        if (isPaused) {
+            return 2;
+        }
+        else if (!isPaused && isPlaying) {
+            return 1;
+        }
+        else if (!isPlaying && !isPaused) {
+            return 0;
+        } else  {
+            return -1;
+        }
     }
 }

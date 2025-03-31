@@ -186,4 +186,12 @@ public class ActiveTaskService {
             }
         }
     }
+
+    public List<Worker> getWorkersAssignedToTask(Long taskId) {
+        ActiveTask activeTask = activeTaskRepository.findById(taskId).orElse(null);
+        if (activeTask != null) {
+            return activeTask.getWorkers();
+        }
+        return new ArrayList<>();
+    }
 }
