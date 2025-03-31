@@ -24,8 +24,8 @@ public class Worker {
     @Column(name = "work_title")
     private String workTitle;
 
-    @Column(name = "effectiveness")
-    private double effectiveness;
+    @Column(name = "efficiency")
+    private double efficiency;
 
     @Column(name = "availability")
     private boolean availability;
@@ -57,7 +57,7 @@ public class Worker {
         this.name = worker.name;
         this.zone = worker.zone;
         this.workTitle = worker.workTitle;
-        this.effectiveness = worker.effectiveness;
+        this.efficiency = worker.efficiency;
         this.licenses = new HashSet<>(worker.licenses);
         this.availability = worker.availability;
     }
@@ -66,7 +66,7 @@ public class Worker {
         this.name = name;
         this.zone = zone;
         this.workTitle = workTitle;
-        this.effectiveness = effectiveness;
+        this.efficiency = effectiveness;
         this.licenses = new HashSet<>(licenses);
         this.availability = availability;
     }
@@ -84,7 +84,7 @@ public class Worker {
     }
 
     public void setEffectiveness(double effectiveness) {
-        this.effectiveness = effectiveness;
+        this.efficiency = effectiveness;
     }
 
     public void setLicenses(Set<License> licenses) {
@@ -116,7 +116,7 @@ public class Worker {
     }
 
     public double getEffectiveness() {
-        return effectiveness;
+        return efficiency;
     }
 
     public Set<License> getLicenses() {

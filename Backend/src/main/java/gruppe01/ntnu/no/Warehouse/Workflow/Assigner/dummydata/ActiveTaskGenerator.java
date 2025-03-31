@@ -77,7 +77,7 @@ public class ActiveTaskGenerator {
         int dueMinute = dueMinutes[random.nextInt(dueMinutes.length)];
         LocalTime dueTime = LocalTime.of(dueHour, dueMinute);
         dueDate = LocalDateTime.of(date, dueTime);
-        if (activeTask.getDueDate().isAfter(dueDate)) {
+        if (activeTask.getDueDate() != null && activeTask.getDueDate().isAfter(dueDate)) {
           activeTask.setStrictStart(dueDate);
         }
       }

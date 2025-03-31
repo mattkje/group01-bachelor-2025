@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS worker
     name          VARCHAR(255) NOT NULL,
     zone_id       BIGINT,
     work_title    VARCHAR(255) NOT NULL,
-    effectiveness DOUBLE       NOT NULL,
+    efficiency    DOUBLE       NOT NULL,
     availability  BOOLEAN DEFAULT TRUE,
     break_start_time TIMESTAMP,
     dead          BOOLEAN DEFAULT FALSE
@@ -109,7 +109,7 @@ BEGIN
 END;
 
 
-INSERT INTO worker (name, zone_id, work_title, effectiveness, availability)
+INSERT INTO worker (name, zone_id, work_title, efficiency, availability)
 VALUES
     ('John Doe', 1, 'Warehouse Manager', 1.1, true),
     ('Jane Smith', 1, 'Warehouse Supervisor', 0.9, true),
