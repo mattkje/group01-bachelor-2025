@@ -85,13 +85,14 @@ public class WorldSimulation {
         LocalDate finalWorkday = workday;
 
         List<ActiveTask> activeTasksWithDueDates = activeTasksToday.stream()
-                .filter(activeTask -> activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0))
+                .filter(activeTask -> (activeTask.getDate().equals(finalWorkday) &&
+                        activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
                 .collect(Collectors.toList());
 
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
                         activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
-                //.sorted(Comparator.comparing(ActiveTask::getStrictStart)) Fix this later
+                //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
                 .collect(Collectors.toList());
 
         for (Timetable timetable : timetables) {
@@ -157,13 +158,11 @@ public class WorldSimulation {
                 Worker worker = onBreakIterator.next();
                 if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
                     System.out.println(worker.getName() + " has ended their break");
+                    worker.setBreakStartTime(null);
                     if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                     onBreakIterator.remove();
                 }
             }
-
-            Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
-            availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
             Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
             while (activeTaskWithDueDatesIterator.hasNext()) {
@@ -287,6 +286,9 @@ public class WorldSimulation {
                     }
                 }
             }
+
+            Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
+            availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
             if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
                 System.out.println("Current time: " + currentTime);
