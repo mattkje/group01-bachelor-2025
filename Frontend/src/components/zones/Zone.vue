@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import {computed, ref, onMounted} from 'vue';
+import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerCompact from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
+import axios from "axios";
 
 interface License {
   id: number;

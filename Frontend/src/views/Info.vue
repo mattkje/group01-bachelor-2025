@@ -26,7 +26,7 @@
     <p>This project is developed by the following contributors:</p>
     <ul class="contributors-list">
       <li>
-        <img src="@/assets/images/håkon.jpg" alt="Håkon Svensen Karlsen" class="contributor-image"/>
+        <img src="../assets/images/håkon.jpg" alt="Håkon Svensen Karlsen" class="contributor-image"/>
         <span>Håkon Svensen Karlsen - Project Lead and Developer</span>
       </li>
       <li>
@@ -115,6 +115,7 @@ ul {
 .contributor-image {
   width: 50px;
   height: 50px;
+  object-fit: cover;
   border-radius: 50%;
   margin-right: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

@@ -73,24 +73,37 @@
       }
     };
 
+   const repopulateWorkersAfterActiveTaskUpdate = async () => {
+     try {
+       const response = await fetch('http://localhost:8080/api/active-tasks');
+       const tasks = await response.json();
 
-    // If worker is unavailable, set zone to 0
+       workers.value.forEach(worker => {
+         const isAssigned = tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id));
+         if (!isAssigned) {
+           worker.zone_id = 0; // Move unassigned workers to zone 0
+         }
+       });
+
+       console.log('Workers repopulated after active task update');
+     } catch (error) {
+       console.error('Failed to repopulate workers after active task update:', error);
+     }
+   };
+
+    const moveUnavailableWorkers = () => {
+      workers.value.forEach(worker => {
+        if (!worker.availability) {
+          worker.zone_id = 0;
+        }
+      });
+    };
+
     const updateWorkerZone = async () => {
       try {
-        const unavailableWorkers = workers.value.filter(worker => worker.zone !== 0 && !worker.availability);
-
-        for (const worker of unavailableWorkers) {
-          const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/0`, {
-            method: 'PUT',
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to update zone for worker ${worker.id}`);
-          }
-        }
-
+        moveUnavailableWorkers();
         console.log('Worker zones updated successfully');
-        fetchWorkers();
+        await fetchWorkers();
       } catch (error) {
         console.error('Error updating worker zones:', error);
       }
@@ -103,8 +116,13 @@
       await updateWorkerZone();
     };
 
+    const refreshWorkersEveryXMinutes = async () => {
+      await repopulateWorkersAfterActiveTaskUpdate();
+    };
+
     onMounted(() => {
       fetchAll();
+      setInterval(refreshWorkersEveryXMinutes, 5000); // Emit every 5 seconds
     });
 
     provideCompactMode();

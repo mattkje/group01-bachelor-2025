@@ -1,20 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
-
-interface License {
-  id: number;
-  name: string;
-}
-
-interface Task {
-  id: number;
-  requiredLicense: License[];
-}
-
-interface Worker {
-  id: number;
-  licenses: License[];
-}
+import {onMounted, ref, computed} from 'vue';
+import {License, ActiveTask, Worker} from '@/assets/types';
 
 const props = defineProps<{
   name: string;
@@ -24,7 +10,7 @@ const props = defineProps<{
   zoneId: number;
 }>();
 
-const task = ref<Task | null>(null);
+const activeTask = ref<ActiveTask | null>(null);
 const qualified = ref(false);
 const qualifiedForAnyTask = ref(false);
 const overtime = ref(false);
@@ -41,7 +27,7 @@ const getTaskByWorker = async (workerId: number) => {
   }
 };
 
-const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
+const fetchTasksForZone = async (zoneId: number): Promise<ActiveTask[]> => {
   try {
     const response = await fetch(`http://localhost:8080/api/zones/${zoneId}/tasks`);
     return await response.json();
@@ -70,7 +56,7 @@ const isWorkerQualified = (task: any) => {
 };
 
 const overtimeOccurance = (task: any) => {
-  if (!task || !task.eta || task.task.maxTime) return false;
+  if (!task || !task.eta || !task.task.maxTime) return false;
   return task.task.maxTime < task.eta;
 };
 
@@ -81,33 +67,43 @@ const getRandomProfileImageUrl = (workerId: number) => {
 };
 
 onMounted(async () => {
-  task.value = await getTaskByWorker(props.workerId);
-  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, { id: props.workerId, licenses: props.licenses });
-  overtimeOccurance(task.value) ? overtime.value = true : overtime.value = false;
+  activeTask.value = await getTaskByWorker(props.workerId);
+  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, {
+    id: props.workerId,
+    licenses: props.licenses
+  });
+  overtime.value = overtimeOccurance(activeTask.value);
 });
 </script>
 
 <template>
-  <div :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !task, 'rdy-worker-box': !task && qualifiedForAnyTask, 'busy-unq-worker-box': task && !qualified, 'hover-effect': !task }]" :draggable="!task">
+  <div
+      :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && (!activeTask || activeTask.endTime !== null), 'rdy-worker-box': (!activeTask || activeTask.endTime !== null) && qualifiedForAnyTask, 'busy-unq-worker-box': activeTask && activeTask.endTime === null && !qualified, 'hover-effect': !activeTask }]"
+      :draggable="!activeTask">
     <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(workerId)" draggable="false"/>
-      <div class="worker-name">{{ name }}</div>
+      <img class="worker-image" :src="getRandomProfileImageUrl(props.workerId)" draggable="false"/>
+      <div class="worker-name">{{ props.name }}</div>
     </div>
     <div class="status-container">
-
-      <img :draggable="!task" v-if="task" src="/src/assets/icons/busy.svg" class="status-icon" alt="Busy" />
-      <img :draggable="!task" v-if="!task && qualifiedForAnyTask" src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready" />
-      <img :draggable="!task" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon" alt="Error" />
-      <img :draggable="!task" v-if="!qualified && task" src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified" />
-      <img :draggable="!task" v-if="!task && !qualifiedForAnyTask" src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe" />
-      <div v-if="!task && !qualifiedForAnyTask" class="status-popup">Unqualified</div>
-      <div v-if="task && qualified" class="status-popup">Busy</div>
-      <div v-if="task && !qualified" class="status-popup">Busy & Unqualified</div>
-      <div v-if="overtime" class="status-popup">Error occured</div>
+      <img :draggable="!activeTask" v-if="activeTask && activeTask.endTime === null" src="/src/assets/icons/busy.svg"
+           class="status-icon" alt="Busy"/>
+      <img :draggable="!activeTask" v-if="(!activeTask || activeTask.endTime !== null) && qualifiedForAnyTask"
+           src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
+      <img :draggable="!activeTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
+           alt="Error"/>
+      <img :draggable="!activeTask" v-if="!qualified && activeTask && activeTask.endTime === null"
+           src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
+      <img :draggable="!activeTask" v-if="(!activeTask || activeTask.endTime !== null) && !qualifiedForAnyTask"
+           src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
+      <div v-if="(!activeTask || activeTask.endTime !== null) && !qualifiedForAnyTask" class="status-popup">
+        Unqualified
+      </div>
+      <div v-if="activeTask && qualified && activeTask.endTime === null" class="status-popup">Busy</div>
+      <div v-if="activeTask && !qualified && activeTask.endTime === null" class="status-popup">Busy & Unqualified</div>
+      <div v-if="overtime" class="status-popup">Error occurred</div>
     </div>
   </div>
 </template>
-
 <style scoped>
 .worker-compact {
   position: relative;
@@ -122,8 +118,6 @@ onMounted(async () => {
   user-select: none !important;
   -webkit-user-select: none !important;
 }
-
-
 
 @keyframes pulse-border {
   0% {
