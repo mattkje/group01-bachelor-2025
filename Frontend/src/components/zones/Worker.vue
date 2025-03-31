@@ -89,12 +89,15 @@ const referenceTime = ref<Date | null>(null);
 
 const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   try {
-    const response = await axios.get('http://localhost:8080/api/simulation/time');
-    const [hours, minutes, seconds] = response.data.split(':').map(Number);
-    const now = new Date();
-    referenceTime.value = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+    const timeResponse = await axios.get('http://localhost:8080/api/simulation/currentTime');
+    const dateResponse = await axios.get('http://localhost:8080/api/simulation/currentDate');
+
+    const [hours, minutes, seconds] = timeResponse.data.split(':').map(Number);
+    const [year, month, day] = dateResponse.data.split('-').map(Number);
+
+    referenceTime.value = new Date(year, month - 1, day, hours, minutes, seconds);
   } catch (error) {
-    console.error('Error fetching current time:', error);
+    console.error('Error fetching current date and time:', error);
   }
 };
 

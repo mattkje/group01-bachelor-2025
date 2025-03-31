@@ -16,14 +16,21 @@ const activeTab = inject('activeTab', ref('Overview'));
 
 const simulatedTime = ref(new Date());
 const fetchCurrentTimeFromBackend = async () => {
-  const response = await axios.get('http://localhost:8080/api/simulation/time');
+  const response = await axios.get('http://localhost:8080/api/simulation/currentTime');
+  return response.data;
+};
+
+const fetchCurrentDateFromBackend = async () => {
+  const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
   return response.data;
 };
 
 const currentTime = ref('');
+const currentDate = ref(new Date());
 
 const updateCurrentTime = async () => {
   currentTime.value = await fetchCurrentTimeFromBackend();
+  currentDate.value = await fetchCurrentDateFromBackend();
 };
 const updateSimulatedTime = () => {
   simulatedTime.value = new Date(simulatedTime.value.getTime() + 60000); // Advance by 1 minute
@@ -158,13 +165,12 @@ onMounted(() => {
     </div>
     <div class="vertical-separator"/>
     <div class="clock">
-      <p>Time</p>
+      <p>Time {{ currentDate }}</p>
       <div v-if="currentTime" class="clock-time">
         <span>{{ currentTime.split(':')[0] }}</span>
         <span class="blink">:</span>
         <span>{{ currentTime.split(':')[1] }}</span>
       </div>
-      <span v-else>00:00</span>
     </div>
     <div class="vertical-separator"/>
     <div class="clock-done">
