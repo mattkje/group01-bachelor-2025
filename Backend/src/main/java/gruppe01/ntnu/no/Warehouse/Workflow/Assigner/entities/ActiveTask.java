@@ -30,7 +30,7 @@ public class ActiveTask {
     private LocalDate eta;
 
     @Column(name = "strict_start")
-    private boolean strict_start;
+    private LocalDateTime strict_start;
 
     @Column(name="date")
     private LocalDate date;
@@ -86,7 +86,7 @@ public class ActiveTask {
         this.dueDate = dueDate;
     }
 
-    public void setStrictStart(boolean strict_start) {
+    public void setStrictStart(LocalDateTime strict_start) {
         this.strict_start = strict_start;
     }
 
@@ -122,7 +122,7 @@ public class ActiveTask {
         return id;
     }
 
-    public boolean getStrictStart() {
+    public LocalDateTime getStrictStart() {
         return strict_start;
     }
 

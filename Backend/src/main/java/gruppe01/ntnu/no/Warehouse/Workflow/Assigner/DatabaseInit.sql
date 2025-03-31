@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS active_task
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     task_id    BIGINT NOT NULL,
-    strict_start BOOLEAN DEFAULT FALSE,
+    strict_start TIMESTAMP DEFAULT NULL,
     date       DATE NOT NULL,
     due_date   TIMESTAMP,
     start_time TIMESTAMP,
