@@ -13,6 +13,32 @@ const isSpinning = ref(false);
 let completionTime = ref(null);
 let isPlaying = ref(false);
 const activeTab = inject('activeTab', ref('Overview'));
+const isPaused = ref(false);
+const state = ref(0); // 0: stopped, 1: running, 2: paused
+
+const fetchPausedState = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/simulation/getStatus');
+    isPaused.value = response.data;
+    if (state.value === 0) {
+      isPlaying.value = false;
+      isPaused.value = false
+    }
+    if (state.value === 1) {
+      isPlaying.value = true;
+      isPaused.value = false
+    }
+    if (state.value === 2) {
+      isPlaying.value = true;
+      isPaused.value = true
+    }
+    else {
+      console.error('Invalid state value:', state.value);
+    }
+  } catch (error) {
+    console.error('Error fetching paused state:', error);
+  }
+};
 
 const simulatedTime = ref(new Date());
 const fetchCurrentTimeFromBackend = async () => {
@@ -53,7 +79,7 @@ const startClock = async () => {
 };
 
 const stopClock = async () => {
-  isPlaying.value = false;
+  isPaused.value = !isPaused.value;
   try {
     await axios.post('http://localhost:8080/api/simulation/pause');
   } catch (error) {
@@ -126,6 +152,7 @@ const isFinished = computed(() => {
 });
 
 onMounted(() => {
+  fetchPausedState();
   updateCurrentTime();
   setInterval(updateCurrentTime, 1000);
 });
@@ -154,7 +181,8 @@ onMounted(() => {
         <img src="/src/assets/icons/play.svg" alt="Play"/>
       </button>
       <button v-else @click="stopClock">
-        <img src="/src/assets/icons/pause.svg" alt="Pause"/>
+        <img v-if="isPaused" src="/src/assets/icons/play.svg" alt="Play"/>
+        <img v-else src="/src/assets/icons/pause.svg" alt="Pause"/>
       </button>
       <button class="ff-arrow" @click="fastForwardClock">
         <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward"/>

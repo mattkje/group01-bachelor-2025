@@ -16,6 +16,7 @@ const qualified = ref(false);
 const qualifiedForAnyTask = ref(false);
 const overtime = ref(false);
 
+
 const getTaskByWorker = async (workerId: number) => {
   try {
     const response = await fetch(`http://localhost:8080/api/active-tasks`);
