@@ -36,12 +36,14 @@ public class WorldSimulation {
 
     private LocalTime currentSimulationTime;
 
+    private LocalDate workday;
+
     @Autowired
     private WorkerService workerService;
 
     public void runWorldSimulation(int simulationTime) throws Exception {
 
-        LocalDate workday = LocalDate.now();
+        workday = LocalDate.now();
         boolean activeTasksExistForWorkday = false;
 
         while (!activeTasksExistForWorkday) {
@@ -301,6 +303,10 @@ public class WorldSimulation {
 
     public LocalTime getCurrentTime() {
         return currentSimulationTime;
+    }
+
+    public LocalDate getCurrentDate() {
+        return this.workday;
     }
 
     public LocalDateTime getEndTime(ActiveTask task) {

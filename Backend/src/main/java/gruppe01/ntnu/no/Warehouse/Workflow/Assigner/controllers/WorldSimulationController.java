@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @RestController
@@ -36,5 +37,10 @@ public class WorldSimulationController {
     @GetMapping("/currentTime")
     public LocalTime getCurrentSimulationTime() {
         return worldSimulation.getCurrentTime();
+    }
+
+    @GetMapping("/currentDate")
+    public LocalDate getCurrentDate() {
+        return worldSimulation.getCurrentDate();
     }
 }
