@@ -66,6 +66,7 @@ public class WorldSimulation {
         List<Worker> workersDelayedBreak = new ArrayList<>();
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
         List<Worker> workersWaitingForTask = new ArrayList<>();
+        Map<ActiveTask, LocalDateTime> taskEndTimes = new HashMap<>();
 
         List<Timetable> timetables = timetableService.getTimetablesByDate(workday);
 
@@ -198,8 +199,12 @@ public class WorldSimulation {
                         availableWorkers.removeAll(toRemove);
                         task.setWorkers(new ArrayList<>(workersAssignedToTask));
                         task.setStartTime(LocalDateTime.of(workday, currentTime));
+
+                        taskEndTimes.put(task, getEndTime(task));
+
                         activeTasksInProgress.add(task);
                         activeTaskWithDueDatesIterator.remove();
+                        activeTaskService.updateActiveTask(task.getId(), task);
                     } else {
                         for (Worker worker : workers) {
                             if (!workersWaitingForTask.contains(worker)) {
@@ -248,9 +253,11 @@ public class WorldSimulation {
                         workersAssigned++;
                     }
                     task.setStartTime(LocalDateTime.of(workday, currentTime));
+                    taskEndTimes.put(task, getEndTime(task));
                     task.setWorkers(workersAssignedToTask);
                     activeTasksInProgress.add(task);
                     activeTaskIterator.remove();
+                    activeTaskService.updateActiveTask(task.getId(), task);
                 }
             }
 
@@ -259,31 +266,23 @@ public class WorldSimulation {
             Iterator<ActiveTask> activeTaskInProgressIterator = activeTasksInProgress.iterator();
             while (activeTaskInProgressIterator.hasNext()) {
                 ActiveTask task = activeTaskInProgressIterator.next();
-                if (task.getEndTime() == null) {
-                    Task task1 = task.getTask();
-                    double workerFactor = (double) (task.getWorkers().size() - task1.getMinWorkers()) /
-                            Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
-                    double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
-                    double averageEffectiveness = task.getWorkers().stream()
-                            .mapToDouble(Worker::getEffectiveness)
-                            .average().orElse(1);
-                    double actualDuration = taskDuration / averageEffectiveness;
-                    task.setEndTime(task.getStartTime().plusMinutes((int) actualDuration));
-                }
-                if (task.getEndTime().toLocalTime().isBefore(currentTime) && activeTasksInProgress.contains(task)) {
-                    activeTaskInProgressIterator.remove();
+                LocalDateTime computedEndTime = taskEndTimes.get(task);
+
+                if (computedEndTime != null && !computedEndTime.toLocalTime().isAfter(currentTime)) {
+                    // Now set endTime since we are processing completion
+                    task.setEndTime(computedEndTime);
                     activeTaskService.updateActiveTask(task.getId(), task);
-                    Iterator<Worker> busyWorkerIterator = busyWorkers.iterator();
-                    while (busyWorkerIterator.hasNext()) {
-                        Worker worker = busyWorkerIterator.next();
-                        if (worker.getCurrentTask() != null && worker.getCurrentTask().equals(task)) {
-                            if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
-                            worker.setCurrentTask(null);
-                            busyWorkerIterator.remove();
-                            workerService.updateWorker(worker.getId(), worker);
-                            System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
-                        }
+
+                    for (Worker worker : task.getWorkers()) {
+                        if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
+                        worker.setCurrentTask(null);
+                        workerService.updateWorker(worker.getId(), worker);
+                        System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
                     }
+
+                    // Remove task from progress and map
+                    activeTaskInProgressIterator.remove();
+                    taskEndTimes.remove(task);
                 }
             }
 
@@ -302,5 +301,17 @@ public class WorldSimulation {
 
     public LocalTime getCurrentTime() {
         return currentSimulationTime;
+    }
+
+    public LocalDateTime getEndTime(ActiveTask task) {
+        Task task1 = task.getTask();
+        double workerFactor = (double) (task.getWorkers().size() - task1.getMinWorkers()) /
+                Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
+        double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
+        double averageEffectiveness = task.getWorkers().stream()
+                .mapToDouble(Worker::getEffectiveness)
+                .average().orElse(1);
+        double actualDuration = taskDuration / averageEffectiveness;
+        return task.getStartTime().plusMinutes((int) actualDuration);
     }
 }
