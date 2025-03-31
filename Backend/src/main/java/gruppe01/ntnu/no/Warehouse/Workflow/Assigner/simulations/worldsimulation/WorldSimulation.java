@@ -91,7 +91,7 @@ public class WorldSimulation {
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
                         activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
-                .sorted(Comparator.comparing(ActiveTask::getStrictStart))
+                //.sorted(Comparator.comparing(ActiveTask::getStrictStart)) Fix this later
                 .collect(Collectors.toList());
 
         for (Timetable timetable : timetables) {
