@@ -44,7 +44,9 @@ public class ZoneSimulator {
       // Create a deep copy of the workers for this simulation
       Set<Worker> zoneWorkers = new HashSet<>();
       for (Worker worker : originalZoneWorkers) {
-        zoneWorkers.add(new Worker(worker)); // Assuming Worker has a copy constructor
+        if (worker.isAvailability()){
+          zoneWorkers.add(new Worker(worker));
+        }
       }
 
       // Error message list for any errors that occur during the completion of tasks
