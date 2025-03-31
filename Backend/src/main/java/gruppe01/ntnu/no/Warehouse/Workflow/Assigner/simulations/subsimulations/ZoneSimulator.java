@@ -30,7 +30,7 @@ public class ZoneSimulator {
   static Random random = new Random();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
-                                  AtomicDouble totalTaskTime, int simNo) {
+                                         AtomicDouble totalTaskTime, int simNo) {
     try {
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
@@ -95,7 +95,7 @@ public class ZoneSimulator {
             // Acquire the workers for the task
             while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
               String acquireWorkerError =
-                  availableZoneWorkersSemaphore.acquireMultiple(activeTask,simNo);
+                  availableZoneWorkersSemaphore.acquireMultiple(activeTask, simNo);
               if (!acquireWorkerError.isEmpty()) {
                 errorMessages.add(acquireWorkerError);
                 isSimulationSuccessful.set(false);
@@ -104,7 +104,7 @@ public class ZoneSimulator {
             }
             // Simulate the task duration
             // TODO: Find a quicker way of doing this so that the simulation runs faster
-            TimeUnit.MILLISECONDS.sleep(taskDuration);
+            TimeUnit.MILLISECONDS.sleep(calculateSleepTime(activeTask));
             // Release the workers when the task is finished
             availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             // Add the task duration to the total task time
@@ -131,5 +131,34 @@ public class ZoneSimulator {
       Thread.currentThread().interrupt();
     }
     return "Zone " + zone.getId() + " simulation failed";
+  }
+
+
+  /**
+   * Calculates sleep time for the thread for a single task
+   * Sleep time is measured using the following formula:
+   * T = (Duration (MAX) - ((Workers on task - Min Workers)/(Max Workers - Min Workers)) * (Duration (MAX) - Duration (MIN))) / E
+   * E = (Efficiency per worker + EPW N)/N
+   * For a better explanation see thesis document
+   *
+   * @param activeTask The task to calculate sleep time for
+   * @return The sleep time for the task
+   */
+  private static int calculateSleepTime(ActiveTask activeTask) {
+    int maxDuration = activeTask.getTask().getMaxTime();
+    int minDuration = activeTask.getTask().getMinTime();
+    int maxWorkers = activeTask.getTask().getMaxWorkers();
+    int minWorkers = activeTask.getTask().getMinWorkers();
+    List<Worker> workers = activeTask.getWorkers();
+
+    double totalEffectiveness = workers.stream()
+        .mapToDouble(Worker::getEffectiveness)
+        .sum();
+    double efficiency = totalEffectiveness / workers.size();
+    double adjustedDuration = maxDuration -
+        ((double) (workers.size() - minWorkers) / (maxWorkers - minWorkers)) *
+            (maxDuration - minDuration);
+
+    return (int) (adjustedDuration / efficiency);
   }
 }
