@@ -54,13 +54,13 @@ public class ActiveTaskGenerator {
 
     while (!currentDate.isAfter(endDate)) {
       int numTasks = random.nextInt(maxNumTasks - minNumTasks) + minNumTasks;
-      generateOneDay(currentDate, tasks, numTasks, dueDateChance, dueHours, dueMinutes, random);
+      generateOneDay(currentDate, tasks, numTasks, dueDateChance, dueHours, dueMinutes, random,strictStartChance);
       currentDate = currentDate.plusDays(1);
     }
   }
 
   private void generateOneDay(LocalDate date, List<Task> tasks, int numTasks, int dueDateChance,
-                              int[] dueHours, int[] dueMinutes, Random random) throws Exception {
+                              int[] dueHours, int[] dueMinutes, Random random, int strictStartChance) throws Exception {
     for (int i = 0; i < numTasks; i++) {
       LocalDateTime dueDate = date.atStartOfDay();
       ActiveTask activeTask = new ActiveTask();
@@ -72,6 +72,14 @@ public class ActiveTaskGenerator {
         LocalTime dueTime = LocalTime.of(dueHour, dueMinute);
         dueDate = LocalDateTime.of(date, dueTime);
         activeTask.setDueDate(dueDate);
+      } else if (random.nextInt(100) <= strictStartChance) {
+        int dueHour = dueHours[random.nextInt(dueHours.length)];
+        int dueMinute = dueMinutes[random.nextInt(dueMinutes.length)];
+        LocalTime dueTime = LocalTime.of(dueHour, dueMinute);
+        dueDate = LocalDateTime.of(date, dueTime);
+        if (activeTask.getDueDate().isAfter(dueDate)) {
+          activeTask.setStrictStart(dueDate);
+        }
       }
     // Generate random task
     Task task = tasks.get(random.nextInt(tasks.size()));
