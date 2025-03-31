@@ -38,7 +38,7 @@ const startClock = async () => {
   isPlaying.value = true;
   try {
     await axios.post('http://localhost:8080/api/simulation/start', null, {
-      params: {simulationTime: 10}
+      params: {simulationTime: 2}
     });
   } catch (error) {
     console.error('Error starting simulation:', error);

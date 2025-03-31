@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, computed} from 'vue';
-import {License, ActiveTask, Worker} from '@/assets/types';
+import {License, ActiveTask, Worker, TimeTable} from '@/assets/types';
+import axios from "axios";
 
 const props = defineProps<{
   name: string;
@@ -60,6 +61,67 @@ const overtimeOccurance = (task: any) => {
   return task.task.maxTime < task.eta;
 };
 
+const timeTables = ref<TimeTable[]>([]);
+
+const fetchTimeTables = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/timetables');
+    timeTables.value = await response.json();
+  } catch (error) {
+    console.error('Error fetching time tables:', error);
+  }
+};
+
+const startPolling = () => {
+  fetchTimeTables();
+  setInterval(async () => {
+    await fetchTimeTables();
+    activeTask.value = await getTaskByWorker(props.workerId);
+    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, {
+      id: props.workerId,
+      licenses: props.licenses
+    });
+    overtime.value = overtimeOccurance(activeTask.value);
+  }, 5000); // Poll every 5 seconds
+};
+
+const referenceTime = ref<Date | null>(null);
+
+const fetchCurrentTimeFromBackend = async (): Promise<void> => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/simulation/time');
+    const [hours, minutes, seconds] = response.data.split(':').map(Number);
+    const now = new Date();
+    referenceTime.value = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+  } catch (error) {
+    console.error('Error fetching current time:', error);
+  }
+};
+
+const startFetchingTime = () => {
+  fetchCurrentTimeFromBackend();
+  setInterval(fetchCurrentTimeFromBackend, 5000); // Fetch time every 5 seconds
+};
+
+const isWorkerPresent = (workerId: number): boolean => {
+  if (!referenceTime.value) return false;
+  return timeTables.value.some((timeTable: TimeTable) => {
+    const realStartTime = new Date(timeTable.realStartTime);
+    const realEndTime = new Date(timeTable.realEndTime);
+    return timeTable.worker.id === workerId && realStartTime <= referenceTime.value! && realEndTime >= referenceTime.value!;
+  });
+};
+
+const doesWorkerHaveUnfinishedActiveTask = (workerId: number): boolean => {
+  if (!referenceTime.value) return false;
+  if (!activeTask.value) return false;
+  return activeTask.value.workers.some(worker => worker.id === workerId) && (!activeTask.value.endTime || new Date(activeTask.value.endTime) >= referenceTime.value);
+};
+
+onMounted(() => {
+  startFetchingTime();
+  startPolling();
+});
 const getRandomProfileImageUrl = (workerId: number) => {
   const gender = workerId % 2 === 0 ? 'men' : 'women';
   const id = workerId % 100;
@@ -78,28 +140,30 @@ onMounted(async () => {
 
 <template>
   <div
-      :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && (!activeTask || activeTask.endTime !== null), 'rdy-worker-box': (!activeTask || activeTask.endTime !== null) && qualifiedForAnyTask, 'busy-unq-worker-box': activeTask && activeTask.endTime === null && !qualified, 'hover-effect': !activeTask }]"
+      :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
       :draggable="!activeTask">
     <div class="worker-profile">
       <img class="worker-image" :src="getRandomProfileImageUrl(props.workerId)" draggable="false"/>
       <div class="worker-name">{{ props.name }}</div>
     </div>
     <div class="status-container">
-      <img :draggable="!activeTask" v-if="activeTask && activeTask.endTime === null" src="/src/assets/icons/busy.svg"
+      <img :draggable="!activeTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)" src="/src/assets/icons/busy.svg"
            class="status-icon" alt="Busy"/>
-      <img :draggable="!activeTask" v-if="(!activeTask || activeTask.endTime !== null) && qualifiedForAnyTask"
+      <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
            src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
       <img :draggable="!activeTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
            alt="Error"/>
-      <img :draggable="!activeTask" v-if="!qualified && activeTask && activeTask.endTime === null"
+      <img :draggable="!activeTask" v-if="!qualified && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
            src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
-      <img :draggable="!activeTask" v-if="(!activeTask || activeTask.endTime !== null) && !qualifiedForAnyTask"
+      <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
            src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
-      <div v-if="(!activeTask || activeTask.endTime !== null) && !qualifiedForAnyTask" class="status-popup">
+      <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">
         Unqualified
       </div>
-      <div v-if="activeTask && qualified && activeTask.endTime === null" class="status-popup">Busy</div>
-      <div v-if="activeTask && !qualified && activeTask.endTime === null" class="status-popup">Busy & Unqualified</div>
+      <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)" class="status-popup">Busy</div>
+      <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)" class="status-popup">Busy & Unqualified</div>
+      <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">Ready</div>
+      <div v-if="!isWorkerPresent(workerId)" class="status-popup">Not Present</div>
       <div v-if="overtime" class="status-popup">Error occurred</div>
     </div>
   </div>
@@ -110,7 +174,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ececec;
+  background-color: #c0c0c0;
   border-radius: 10px;
   max-height: 40px;
   padding: 0.5rem;
@@ -156,6 +220,11 @@ onMounted(async () => {
 
 .busy-unq-worker-box {
   background-color: #ffebc0; /* Yellow for busy and unqualified */
+}
+
+.not-present-worker-box {
+  background: #ececec;
+  opacity: 0.7;
 }
 
 .worker-profile {

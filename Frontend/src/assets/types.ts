@@ -46,3 +46,12 @@ export interface Worker {
     licenses: License[];
     workerType: string;
 }
+
+export interface TimeTable {
+    id: number;
+    startTime: string;
+    endTime: string;
+    realStartTime: string;
+    realEndTime: string;
+    worker: Worker;
+}
