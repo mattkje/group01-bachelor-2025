@@ -107,7 +107,8 @@ public class WorldSimulation {
 
         while (!currentTime.equals(endTime)) {
             for (Timetable timetable : timetables) {
-                if (timetable.getRealStartTime().toLocalTime().equals(currentTime)) {
+                if (timetable.getRealStartTime().toLocalTime().equals(currentTime) &&
+                        timetable.getWorker().isAvailability()) {
                     System.out.println(timetable.getWorker().getName() + " has started working");
                     availableWorkers.add(timetable.getWorker());
                 }
@@ -161,6 +162,9 @@ public class WorldSimulation {
                 }
             }
 
+            Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
+            availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
+
             Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
             while (activeTaskWithDueDatesIterator.hasNext()) {
                 ActiveTask task = activeTaskWithDueDatesIterator.next();
@@ -171,16 +175,14 @@ public class WorldSimulation {
                             .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
                                     (task.getTask().getRequiredLicense().isEmpty() ||
                                             worker.getLicenses().containsAll(task.getTask().getRequiredLicense())))
-                            .distinct()
                             .collect(Collectors.toList());
-                    int workersSlots = 0;
+                    int workersSlots;
                     if (workers.size() >= task.getTask().getMinWorkers()) {
                         workersSlots = Math.min(workers.size(), task.getTask().getMaxWorkers());
                         int workersAssigned = 0;
                         Iterator<Worker> workerIterator = workers.iterator();
                         List<Worker> workersAssignedToTask = new ArrayList<>();
                         List<Worker> toRemove = new ArrayList<>();
-
 
                         while (workerIterator.hasNext() && workersAssigned < workersSlots) {
                             Worker worker = workerIterator.next();
@@ -195,22 +197,18 @@ public class WorldSimulation {
                             workersAssigned++;
                         }
                         availableWorkers.removeAll(toRemove);
-                        workersAssignedToTask.removeAll(toRemove);
+                        task.setWorkers(new ArrayList<>(workersAssignedToTask));
                         task.setStartTime(LocalDateTime.of(workday, currentTime));
-                        task.setWorkers(workersAssignedToTask);
                         activeTasksInProgress.add(task);
                         activeTaskWithDueDatesIterator.remove();
                     } else {
-                        Set<Worker> toWait = new HashSet<>();
                         for (Worker worker : workers) {
                             if (!workersWaitingForTask.contains(worker)) {
-                                toWait.add(worker);
+                                workersWaitingForTask.add(worker);
+                                availableWorkers.remove(worker);
                                 System.out.println(worker.getName() + " is waiting for a task");
                             }
                         }
-                        workersWaitingForTask.addAll(toWait);
-                        availableWorkers.removeAll(toWait);
-
                     }
                 }
             }
@@ -276,7 +274,6 @@ public class WorldSimulation {
                 if (task.getEndTime().toLocalTime().isBefore(currentTime) && activeTasksInProgress.contains(task)) {
                     activeTaskInProgressIterator.remove();
                     activeTaskService.updateActiveTask(task.getId(), task);
-                    task.setEndTime(LocalDateTime.of(workday, currentTime));
                     Iterator<Worker> busyWorkerIterator = busyWorkers.iterator();
                     while (busyWorkerIterator.hasNext()) {
                         Worker worker = busyWorkerIterator.next();
