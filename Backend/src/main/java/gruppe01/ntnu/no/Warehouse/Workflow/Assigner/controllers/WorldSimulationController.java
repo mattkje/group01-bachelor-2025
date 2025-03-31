@@ -14,19 +14,14 @@ public class WorldSimulationController {
     @Autowired
     private WorldSimulation worldSimulation;
 
-    @GetMapping("/time")
-    public LocalTime getCurrentTime() {
-        return worldSimulation.getCurrentTime();
-    }
-
     @PostMapping("/start")
     public void startSimulation(@RequestParam int simulationTime) throws Exception {
         worldSimulation.runWorldSimulation(simulationTime);
     }
 
     @PostMapping("/pause")
-    public void pauseSimulation() {
-        //worldSimulation.pauseSimulation();
+    public void pauseSimulation() throws InterruptedException {
+        worldSimulation.pauseSimulation();
     }
 
     @PostMapping("/fastForward")

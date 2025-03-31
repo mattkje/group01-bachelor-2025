@@ -38,6 +38,34 @@ public class WorldSimulation {
 
     private LocalDate workday;
 
+    private LocalTime currentTime;
+
+    private LocalTime endTime;
+
+    private List<Timetable> timetables;
+
+    private List<Worker> availableWorkers;
+
+    private List<Worker> workersDelayedBreak;
+
+    private List<Worker> workersOnBreak;
+
+    private List<ActiveTask> activeTasksWithDueDates;
+
+    private List<Worker> workersWaitingForTask;
+
+    private List<Worker> busyWorkers;
+
+    private Map<ActiveTask, LocalDateTime> taskEndTimes;
+
+    private List<ActiveTask> activeTasksInProgress;
+
+    private List<ActiveTask> activeTasksToday;
+
+    private long simulationSleepInMillis;
+
+    private boolean isPaused;
+
     @Autowired
     private WorkerService workerService;
 
@@ -57,20 +85,20 @@ public class WorldSimulation {
         }
 
 
-        LocalTime currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
-        LocalTime endTime = LocalTime.MIDNIGHT;
+        currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
+        endTime = LocalTime.MIDNIGHT;
         // 1440 minutes in a day
-        long simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
+        simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
         Random random = new Random();
-        List<Worker> availableWorkers = new ArrayList<>();
-        List<Worker> busyWorkers = new ArrayList<>();
-        List<Worker> workersOnBreak = new ArrayList<>();
-        List<Worker> workersDelayedBreak = new ArrayList<>();
-        List<ActiveTask> activeTasksInProgress = new ArrayList<>();
-        List<Worker> workersWaitingForTask = new ArrayList<>();
-        Map<ActiveTask, LocalDateTime> taskEndTimes = new HashMap<>();
+        availableWorkers = new ArrayList<>();
+        busyWorkers = new ArrayList<>();
+        workersOnBreak = new ArrayList<>();
+        workersDelayedBreak = new ArrayList<>();
+        activeTasksInProgress = new ArrayList<>();
+        workersWaitingForTask = new ArrayList<>();
+        taskEndTimes = new HashMap<>();
 
-        List<Timetable> timetables = timetableService.getTimetablesByDate(workday);
+        timetables = timetableService.getTimetablesByDate(workday);
 
         LocalDate today = workday;
         List<Worker> workersPresentToday = timetables.stream()
@@ -82,12 +110,12 @@ public class WorldSimulation {
 
         System.out.println("Workers present today: " + workersPresentToday.size());
 
-        List<ActiveTask> activeTasksToday = activeTaskService.getAllActiveTasks();
+        activeTasksToday = activeTaskService.getAllActiveTasks();
         System.out.println("Active tasks today: " + activeTasksToday.size());
 
         LocalDate finalWorkday = workday;
 
-        List<ActiveTask> activeTasksWithDueDates = activeTasksToday.stream()
+        activeTasksWithDueDates = activeTasksToday.stream()
                 .filter(activeTask -> (activeTask.getDate().equals(finalWorkday) &&
                         activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
                 .collect(Collectors.toList());
@@ -108,8 +136,13 @@ public class WorldSimulation {
             System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
         }
 
+        startSimulating();
 
-        while (!currentTime.equals(endTime)) {
+        System.out.println("Simulation finished");
+    }
+
+    private void startSimulating() throws InterruptedException {
+        while (!currentTime.equals(endTime) && !isPaused) {
             for (Timetable timetable : timetables) {
                 if (timetable.getRealStartTime().toLocalTime().equals(currentTime) &&
                         timetable.getWorker().isAvailability()) {
@@ -298,7 +331,6 @@ public class WorldSimulation {
             currentTime = currentTime.plusMinutes(1);
             TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
         }
-        System.out.println("Simulation finished");
     }
 
     public LocalTime getCurrentTime() {
@@ -319,5 +351,12 @@ public class WorldSimulation {
                 .average().orElse(1);
         double actualDuration = taskDuration / averageEffectiveness;
         return task.getStartTime().plusMinutes((int) actualDuration);
+    }
+
+    public void pauseSimulation() throws InterruptedException {
+        isPaused = !isPaused;
+        if (!isPaused) {
+            startSimulating();
+        }
     }
 }
