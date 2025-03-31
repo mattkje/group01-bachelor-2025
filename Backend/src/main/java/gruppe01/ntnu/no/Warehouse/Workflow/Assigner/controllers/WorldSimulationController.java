@@ -24,6 +24,11 @@ public class WorldSimulationController {
         worldSimulation.pauseSimulation();
     }
 
+    @GetMapping("/isPaused")
+    public boolean isSimulationPaused() {
+        return worldSimulation.getPauseStatus();
+    }
+
     @PostMapping("/fastForward")
     public void fastForwardSimulation(@RequestParam int speedMultiplier) {
         //worldSimulation.fastForwardSimulation(speedMultiplier);

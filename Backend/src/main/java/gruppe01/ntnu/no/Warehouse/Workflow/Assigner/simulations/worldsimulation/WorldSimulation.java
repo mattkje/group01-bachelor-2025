@@ -359,4 +359,8 @@ public class WorldSimulation {
             startSimulating();
         }
     }
+
+    public boolean getPauseStatus() {
+        return isPaused;
+    }
 }
