@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, computed} from 'vue';
-import {License, ActiveTask, Worker, TimeTable} from '@/assets/types';
+import {License, ActiveTask, Worker, TimeTable, Task} from '@/assets/types';
+import TaskClass from "@/components/tasks/Task.vue";
 import axios from "axios";
 
 const props = defineProps<{
@@ -29,7 +30,7 @@ const getTaskByWorker = async (workerId: number) => {
   }
 };
 
-const fetchTasksForZone = async (zoneId: number): Promise<ActiveTask[]> => {
+const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
   try {
     const response = await fetch(`http://localhost:8080/api/zones/${zoneId}/tasks`);
     return await response.json();
@@ -39,11 +40,11 @@ const fetchTasksForZone = async (zoneId: number): Promise<ActiveTask[]> => {
   }
 };
 
-const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, worker: Worker): Promise<boolean> => {
+const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, workerId: number): Promise<boolean> => {
   const tasks = await fetchTasksForZone(zoneId);
-  return tasks.some(task =>
-      task.requiredLicense.some(license =>
-          worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+  return tasks.some((task: Task) =>
+      task.requiredLicense.some((license: License) =>
+          props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
       )
   );
 };
@@ -78,10 +79,7 @@ const startPolling = () => {
   setInterval(async () => {
     await fetchTimeTables();
     activeTask.value = await getTaskByWorker(props.workerId);
-    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, {
-      id: props.workerId,
-      licenses: props.licenses
-    });
+    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, props.workerId);
     overtime.value = overtimeOccurance(activeTask.value);
   }, 5000); // Poll every 5 seconds
 };
@@ -134,42 +132,48 @@ const getRandomProfileImageUrl = (workerId: number) => {
 
 onMounted(async () => {
   activeTask.value = await getTaskByWorker(props.workerId);
-  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, {
-    id: props.workerId,
-    licenses: props.licenses
-  });
+  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, props.workerId);
   overtime.value = overtimeOccurance(activeTask.value);
 });
 </script>
 
 <template>
-  <div
-      :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
-      :draggable="!activeTask">
-    <div class="worker-profile">
-      <img class="worker-image" :src="getRandomProfileImageUrl(props.workerId)" draggable="false"/>
-      <div class="worker-name">{{ props.name }}</div>
-    </div>
-    <div class="status-container">
-      <img :draggable="!activeTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)" src="/src/assets/icons/busy.svg"
-           class="status-icon" alt="Busy"/>
-      <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
-           src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
-      <img :draggable="!activeTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
-           alt="Error"/>
-      <img :draggable="!activeTask" v-if="!qualified && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
-           src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
-      <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
-           src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
-      <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">
-        Unqualified
+  <div class="worker-task-container">
+    <div
+        :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
+        :draggable="!activeTask">
+      <div class="worker-profile">
+        <img class="worker-image" :src="getRandomProfileImageUrl(props.workerId)" draggable="false"/>
+        <div class="worker-name">{{ props.name }}</div>
       </div>
-      <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)" class="status-popup">Busy</div>
-      <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)" class="status-popup">Busy & Unqualified</div>
-      <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">Ready</div>
-      <div v-if="!isWorkerPresent(workerId)" class="status-popup">Not Present</div>
-      <div v-if="overtime" class="status-popup">Error occurred</div>
+      <div class="status-container">
+        <img :draggable="!activeTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)" src="/src/assets/icons/busy.svg"
+             class="status-icon" alt="Busy"/>
+        <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
+             src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
+        <img :draggable="!activeTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
+             alt="Error"/>
+        <img :draggable="!activeTask" v-if="!qualified && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
+             src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
+        <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
+             src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
+        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">
+          Unqualified
+        </div>
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)" class="status-popup">Busy</div>
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)" class="status-popup">Busy & Unqualified</div>
+        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">Ready</div>
+        <div v-if="!isWorkerPresent(workerId)" class="status-popup">Not Present</div>
+        <div v-if="overtime" class="status-popup">Error occurred</div>
+      </div>
     </div>
+    <TaskClass
+        v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && activeTask"
+        :task-id="activeTask.id"
+        :name="activeTask.task.name"
+        :requiredLicenses="activeTask.task.requiredLicense"
+        :zone-id="props.zoneId"
+    />
   </div>
 </template>
 <style scoped>

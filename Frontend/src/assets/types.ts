@@ -30,7 +30,7 @@ export interface ActiveTask {
     endTime: string;
     eta: string;
     date: string;
-    task: Task[];
+    task: Task;
     workers: Worker[];
     strictStart: boolean;
 }
@@ -40,7 +40,7 @@ export interface Worker {
     name: string;
     zone: number;
     efficiency: number;
-    available: boolean;
+    availability: boolean;
     breakStartTime: string;
     dead: boolean;
     licenses: License[];

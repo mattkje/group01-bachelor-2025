@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
-import TaskClass from '@/components/tasks/Task.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
 import {License, Task, Worker} from '@/assets/types';
@@ -9,7 +8,7 @@ import {License, Task, Worker} from '@/assets/types';
 const props = defineProps<{
   title: string;
   zoneId: number;
-  workers: WorkerClass[];
+  workers: Worker[];
 }>();
 
 const emit = defineEmits(['refreshWorkers']);
@@ -74,7 +73,7 @@ const fetchTasksForZone = async () => {
   }
 };
 
-const isWorkerQualifiedForAnyTask = (worker: WorkerClass) => {
+const isWorkerQualifiedForAnyTask = (worker: Worker) => {
   return tasks.value.some((task: Task) =>
     task.requiredLicense.every((license: License) =>
       worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
@@ -82,13 +81,12 @@ const isWorkerQualifiedForAnyTask = (worker: WorkerClass) => {
   );
 };
 
-
 onMounted(async () => {
   await fetchTasksForZone();
   hasTasks.value = tasks.value.length > 0;
 });
 
-const onDragStart = (event: DragEvent, worker: WorkerClass) => {
+const onDragStart = (event: DragEvent, worker: Worker) => {
   event.dataTransfer?.setData('worker', JSON.stringify(worker));
 };
 
@@ -168,7 +166,6 @@ const toggleNotificationBubble = () => {
         </div>
       </div>
     </div>
-    <div class="horizontal-box">
       <div v-if="hasTasks" class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
         <WorkerClass
             v-for="(worker, index) in workers"
@@ -187,7 +184,7 @@ const toggleNotificationBubble = () => {
           <img
               src="/src/assets/icons/warning.svg"
               alt="Check"
-              style="margin: 1rem auto auto;width: 50px; height: 50px;"
+              style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
           />
           <p style="text-align: center; margin-top: 1rem;">
             No workers assigned
@@ -204,35 +201,14 @@ const toggleNotificationBubble = () => {
           All tasks completed
         </p>
       </div>
-      <div class="vertical-task-box">
-        <TaskClass
-            v-for="(task, index) in tasks"
-            :key="index"
-            :task-id="task.id"
-            :name="task.name"
-            :required-licenses="task.requiredLicense"
-            :zone-id="props.zoneId"
-        />
-        <div v-if="tasks.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
-          <img
-              src="/src/assets/icons/warning.svg"
-              alt="Check"
-              style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
-          />
-          <p style="text-align: center; margin-top: 1rem;">
-            No tasks assigned
-          </p>
-        </div>
-      </div>
-    </div>
-   <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
+    <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
   <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
 </template>
 
 <style scoped>
 .rounded-square {
-  width: 280px;
+  width: 350px;
   height: 100%;
   border: 1px solid #e5e5e5;
   border-radius: 15px;
