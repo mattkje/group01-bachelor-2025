@@ -1,31 +1,15 @@
 <script setup lang="ts">
 import {computed, ref, onMounted, onUnmounted} from 'vue';
-import WorkerCompact from '@/components/zones/Worker.vue';
+import WorkerClass from '@/components/zones/Worker.vue';
+import TaskClass from '@/components/tasks/Task.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import axios from "axios";
-
-interface License {
-  id: number;
-  name: string;
-}
-
-interface Task {
-  id: number;
-  requiredLicense: License[];
-}
-
-interface Worker {
-  id: number;
-  name: string;
-  licenses: License[];
-  availability: boolean;
-}
+import {License, Task, Worker} from '@/assets/types';
 
 const props = defineProps<{
   title: string;
   zoneId: number;
-  workers: Worker[];
+  workers: WorkerClass[];
 }>();
 
 const emit = defineEmits(['refreshWorkers']);
@@ -90,11 +74,11 @@ const fetchTasksForZone = async () => {
   }
 };
 
-const isWorkerQualifiedForAnyTask = (worker: Worker) => {
-  return tasks.value.some(task =>
-      task.requiredLicense.every(license =>
-          worker.licenses.some(workerLicense => workerLicense.id === license.id)
-      )
+const isWorkerQualifiedForAnyTask = (worker: WorkerClass) => {
+  return tasks.value.some((task: Task) =>
+    task.requiredLicense.every((license: License) =>
+      worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+    )
   );
 };
 
@@ -103,7 +87,7 @@ onMounted(async () => {
   hasTasks.value = tasks.value.length > 0;
 });
 
-const onDragStart = (event: DragEvent, worker: Worker) => {
+const onDragStart = (event: DragEvent, worker: WorkerClass) => {
   event.dataTransfer?.setData('worker', JSON.stringify(worker));
 };
 
@@ -169,63 +153,85 @@ const toggleNotificationBubble = () => {
           <div class="status-popup">Simulate zone</div>
         </div>
         <div v-if="notification" class="zone-option">
-          <button class="icon-button bell-icon" @mouseenter="toggleNotificationBubble" @mouseleave="toggleNotificationBubble">
-            <img src="/src/assets/icons/bellUpdate.svg" alt="Assign" />
+          <button class="icon-button bell-icon" @mouseenter="toggleNotificationBubble"
+                  @mouseleave="toggleNotificationBubble">
+            <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
           </button>
           <div class="status-popup">Notifications</div>
         </div>
-        <div  v-else class="zone-option">
+        <div v-else class="zone-option">
           <button class="icon-button bell-icon">
-            <img src="/src/assets/icons/bell.svg" alt="Assign" />
+            <img src="/src/assets/icons/bell.svg" alt="Assign"/>
           </button>
           <div class="status-popup">Notifications</div>
         </div>
       </div>
     </div>
-    <div v-if="hasTasks" class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
-      <WorkerCompact
-          v-for="(worker, index) in workers"
-          :key="index"
-          :name="worker.name"
-          :worker-id="worker.id"
-          :licenses="worker.licenses"
-          :availability="worker.availability"
-          :qualified="isWorkerQualifiedForAnyTask(worker)"
-          :zone-id="props.zoneId"
-          :class="{ 'unavailable': !worker.availability }"
-          @dragstart="(event) => onDragStart(event, worker)"
-      />
-      <div v-if="isDraggingOver" class="on-drop-worker-box"/>
-      <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
-        <img
-            src="/src/assets/icons/warning.svg"
-            alt="Check"
-            style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
+    <div class="horizontal-box">
+      <div v-if="hasTasks" class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+        <WorkerClass
+            v-for="(worker, index) in workers"
+            :key="index"
+            :name="worker.name"
+            :worker-id="worker.id"
+            :licenses="worker.licenses"
+            :availability="worker.availability"
+            :qualified="isWorkerQualifiedForAnyTask(worker)"
+            :zone-id="props.zoneId"
+            :class="{ 'unavailable': !worker.availability }"
+            @dragstart="(event) => onDragStart(event, worker)"
         />
-        <p style="text-align: center; margin-top: 1rem;">
-          No workers assigned
+        <div v-if="isDraggingOver" class="on-drop-worker-box"/>
+        <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
+          <img
+              src="/src/assets/icons/warning.svg"
+              alt="Check"
+              style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
+          />
+          <p style="text-align: center; margin-top: 1rem;">
+            No workers assigned
+          </p>
+        </div>
+      </div>
+      <div v-else class="vertical-box" style="opacity: 0.5">
+        <img
+            src="/src/assets/icons/check.svg"
+            alt="Check"
+            style="margin: 10px auto; margin-top: 1rem; width: 50px; height: 50px;"
+        />
+        <p style="text-align: center;">
+          All tasks completed
         </p>
       </div>
+      <div class="vertical-task-box">
+        <TaskClass
+            v-for="(task, index) in tasks"
+            :key="index"
+            :task-id="task.id"
+            :name="task.name"
+            :required-licenses="task.requiredLicense"
+            :zone-id="props.zoneId"
+        />
+        <div v-if="tasks.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
+          <img
+              src="/src/assets/icons/warning.svg"
+              alt="Check"
+              style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
+          />
+          <p style="text-align: center; margin-top: 1rem;">
+            No tasks assigned
+          </p>
+        </div>
+      </div>
     </div>
-    <div v-else class="vertical-box" style="opacity: 0.5">
-      <img
-          src="/src/assets/icons/check.svg"
-          alt="Check"
-          style="margin: 10px auto; margin-top: 1rem; width: 50px; height: 50px;"
-      />
-      <p style="text-align: center;">
-        All tasks completed
-      </p>
-
-    </div>
-   <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
+    <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
   <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
 </template>
 
 <style scoped>
 .rounded-square {
-  width: 280px;
+  width: 350px;
   height: 100%;
   border: 1px solid #e5e5e5;
   border-radius: 15px;
@@ -271,6 +277,14 @@ const toggleNotificationBubble = () => {
   color: #7B7B7B;
 }
 
+.horizontal-box {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow-y: scroll;
+  padding: 1rem 1rem 4.5rem;
+}
+
 .task-summary {
   color: #7B7B7B;
   display: flex;
@@ -280,7 +294,14 @@ const toggleNotificationBubble = () => {
   align-items: flex-end;
 }
 
-.vertical-box {
+.vertical-worker-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.vertical-task-box {
   flex: 1;
   display: flex;
   flex-direction: column;

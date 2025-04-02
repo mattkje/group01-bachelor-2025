@@ -2,7 +2,7 @@
       <div class="container">
         <div class="overview">
           <div class="grid">
-            <Zone v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
+            <ZoneClass v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
         <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll" title="Unassigned" :zone-id="0"/>
@@ -11,37 +11,16 @@
 
     <script setup lang="ts">
     import { ref, onMounted } from 'vue';
-    import Toolbar from "../components/Toolbar.vue";
-    import Zone from "../components/zones/Zone.vue";
+    import ZoneClass from "../components/zones/Zone.vue";
     import WorkerRegistry from "../components/zones/WorkerRegistry.vue";
-    import {provideCompactMode} from "@/compactMode";
-
-    interface Zone {
-      id: number;
-      name: string;
-    }
-
-    interface License {
-      id: number;
-      name: string;
-    }
-
-    interface Worker {
-      id: number;
-      name: string;
-      zone_id: number;
-      effectiveness: number;
-      licenses: License[];
-      workerType: string;
-      availability: boolean;
-    }
+    import {Zone, Worker} from "@/assets/types";
 
     const zones = ref<Zone[]>([]);
     const workers = ref<Worker[]>([]);
     const taskLessWorkers = ref<Worker[]>([]);
 
-    const getWorkersByZone = (zoneId: number) => {
-      return workers.value.filter(worker => worker.zone === zoneId);
+    const getWorkersByZone = (zoneId: number): Worker[] => {
+      return workers.value.filter((worker: Worker) => worker.zone === zoneId);
     };
 
     const fetchZones = async () => {
@@ -66,7 +45,7 @@
       try {
         const response = await fetch(`http://localhost:8080/api/active-tasks`);
         const tasks = await response.json();
-        taskLessWorkers.value = workers.value.filter(worker => !tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id)));
+        taskLessWorkers.value = workers.value.filter((worker: Worker) => !tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id)));
       } catch (error) {
         console.error('Failed to fetch worker task:', error);
         taskLessWorkers.value = [];
@@ -78,7 +57,7 @@
        const response = await fetch('http://localhost:8080/api/active-tasks');
        const tasks = await response.json();
 
-       workers.value.forEach(worker => {
+       workers.value.forEach((worker: Worker) => {
          const isAssigned = tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id));
          if (!isAssigned) {
            worker.zone_id = 0; // Move unassigned workers to zone 0
@@ -92,7 +71,7 @@
    };
 
     const moveUnavailableWorkers = () => {
-      workers.value.forEach(worker => {
+      workers.value.forEach((worker: Worker) => {
         if (!worker.availability) {
           worker.zone_id = 0;
         }
@@ -124,8 +103,7 @@
       fetchAll();
       setInterval(refreshWorkersEveryXMinutes, 5000); // Emit every 5 seconds
     });
-
-    provideCompactMode();
+    
     </script>
 
     <style scoped>
@@ -143,7 +121,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 1rem;
       margin-bottom: 1rem;
     }
