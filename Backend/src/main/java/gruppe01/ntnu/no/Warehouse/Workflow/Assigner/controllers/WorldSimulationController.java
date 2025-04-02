@@ -31,7 +31,7 @@ public class WorldSimulationController {
 
     @PostMapping("/fastForward")
     public void fastForwardSimulation(@RequestParam int speedMultiplier) {
-        //worldSimulation.fastForwardSimulation(speedMultiplier);
+        worldSimulation.changeSimulationSpeed(speedMultiplier);
     }
 
     @GetMapping("/currentTime")

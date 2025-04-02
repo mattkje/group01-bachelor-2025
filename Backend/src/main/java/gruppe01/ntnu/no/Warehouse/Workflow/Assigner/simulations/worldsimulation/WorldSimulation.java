@@ -158,9 +158,11 @@ public class WorldSimulation {
                 }
                 if ((timetable.getRealEndTime().toLocalTime().isBefore(currentTime) ||
                         timetable.getRealEndTime().toLocalTime().equals(currentTime)) &&
-                        availableWorkers.contains(timetable.getWorker())) {
+                        (availableWorkers.contains(timetable.getWorker()) ||
+                        workersWaitingForTask.contains(timetable.getWorker()))) {
                     System.out.println(timetable.getWorker().getName() + " has stopped working");
                     availableWorkers.remove(timetable.getWorker());
+                    workersWaitingForTask.remove(timetable.getWorker());
                 }
                 if ((timetable.getStartTime().toLocalTime().plusHours(timetable.getEndTime().toLocalTime()
                         .minusHours(timetable.getStartTime().getHour()).getHour() / 2).minusMinutes(15L))
@@ -202,7 +204,7 @@ public class WorldSimulation {
                 if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
                     System.out.println(worker.getName() + " has ended their break");
                     worker.setBreakStartTime(null);
-                    if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
+                    if (!availableWorkers.contains(worker) && !workersWaitingForTask.contains(worker)) availableWorkers.add(worker);
                     onBreakIterator.remove();
                 }
             }
@@ -364,6 +366,12 @@ public class WorldSimulation {
         isPaused = !isPaused;
         if (!isPaused) {
             startSimulating();
+        }
+    }
+
+    public void changeSimulationSpeed(double speedFactor) {
+        if (speedFactor > 0) {
+            simulationSleepInMillis = (long) (TimeUnit.MINUTES.toMillis(1) / (1440 * speedFactor));
         }
     }
 
