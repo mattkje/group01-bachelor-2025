@@ -9,8 +9,6 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['updateCompletionTimes']);
-
 const isSpinning = ref(false);
 let completionTime = ref(null);
 let isPlaying = ref(false);
@@ -134,7 +132,6 @@ const runAllMonteCarloSimulations = async () => {
     }
 
     console.log(latestTimes);
-    emit('updateCompletionTimes', latestTimes);
   } catch (error) {
     console.error('Error running simulation:', error);
   } finally {

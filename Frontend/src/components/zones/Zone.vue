@@ -10,7 +10,6 @@ const props = defineProps<{
   title: string;
   zoneId: number;
   workers: WorkerClass[];
-  completionTime: string;
 }>();
 
 const emit = defineEmits(['refreshWorkers']);
@@ -22,7 +21,7 @@ const tasks = ref<Task[]>([]);
 const hasTasks = ref(false);
 const isSpinning = ref(false);
 const remainingTasks = computed(() => tasks.value.length);
-let completionTime = ref(null);
+let completionTime = ref<string>('');
 const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
@@ -49,7 +48,7 @@ const runMonteCarloSimulation = async () => {
     }
     const result = await response.json()
     console.log(result);
-    if (result.length < 2) {
+    if (result.length < 3) {
       completionTime = result[0];
     } else {
       notification.value = true;
@@ -82,6 +81,7 @@ const isWorkerQualifiedForAnyTask = (worker: WorkerClass) => {
     )
   );
 };
+
 
 onMounted(async () => {
   await fetchTasksForZone();

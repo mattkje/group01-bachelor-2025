@@ -2,7 +2,7 @@
       <div class="container">
         <div class="overview">
           <div class="grid">
-            <ZoneClass v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll" :completion-time="completionTimes[zone.id]"/>
+            <ZoneClass v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
         <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll" title="Unassigned" :zone-id="0"/>
@@ -18,7 +18,6 @@
     const zones = ref<Zone[]>([]);
     const workers = ref<Worker[]>([]);
     const taskLessWorkers = ref<Worker[]>([]);
-    const completionTimes = ref<{ [key: number]: string }>({});
 
     const getWorkersByZone = (zoneId: number): Worker[] => {
       return workers.value.filter((worker: Worker) => worker.zone === zoneId);
