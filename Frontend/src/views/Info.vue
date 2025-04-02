@@ -26,15 +26,15 @@
     <p>This project is developed by the following contributors:</p>
     <ul class="contributors-list">
       <li>
-        <img src="../assets/images/håkon.jpg" alt="Håkon Svensen Karlsen" class="contributor-image"/>
+        <img src="../assets/images/haakon.png" alt="Håkon Svensen Karlsen" class="contributor-image"/>
         <span>Håkon Svensen Karlsen - Project Lead and Developer</span>
       </li>
       <li>
-        <img src="@/assets/images/adrian.jpg" alt="Adrian Faustino Johansen" class="contributor-image"/>
+        <img src="@/assets/images/adrian.png" alt="Adrian Faustino Johansen" class="contributor-image"/>
         <span>Adrian Faustino Johansen - Backend Developer</span>
       </li>
       <li>
-        <img src="@/assets/images/matti.jpg" alt="Matti Kjellstadli" class="contributor-image"/>
+        <img src="@/assets/images/matti.png" alt="Matti Kjellstadli" class="contributor-image"/>
         <span>Matti Kjellstadli - Frontend Developer</span>
       </li>
     </ul>
