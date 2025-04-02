@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref, inject, computed} from "vue";
+import {onMounted, ref, inject, computed, defineEmits} from "vue";
 import axios from 'axios';
 
 const props = defineProps({
@@ -8,6 +8,8 @@ const props = defineProps({
     required: true
   },
 });
+
+const emit = defineEmits(['updateCompletionTimes']);
 
 const isSpinning = ref(false);
 let completionTime = ref(null);
@@ -112,36 +114,34 @@ const runAllMonteCarloSimulations = async () => {
       throw new Error('Failed to run simulation');
     }
     const result = await response.json();
-    console.log(result);
 
-    let latestTime = null;
+    let latestTimes = {};
     for (const zoneId in result) {
       const times = result[zoneId].filter(time => !time.includes('ERROR'));
       if (times.length > 0) {
         const currentTime = times[0];
-        if (!latestTime) {
-          latestTime = currentTime;
+        if (!latestTimes[zoneId]) {
+          latestTimes[zoneId] = currentTime;
         } else {
-          const [latestHours, latestMinutes] = latestTime.split(':').map(Number);
+          const [latestHours, latestMinutes] = latestTimes[zoneId].split(':').map(Number);
           const [currentHours, currentMinutes] = currentTime.split(':').map(Number);
 
           if (currentHours > latestHours || (currentHours === latestHours && currentMinutes > latestMinutes)) {
-            latestTime = currentTime;
+            latestTimes[zoneId] = currentTime;
           }
         }
       }
     }
 
-    completionTime.value = latestTime;
+    console.log(latestTimes);
+    emit('updateCompletionTimes', latestTimes);
   } catch (error) {
     console.error('Error running simulation:', error);
   } finally {
-    // wait for 1 second to show the spinning animation
     await new Promise(resolve => setTimeout(resolve, 1000));
     isSpinning.value = false;
   }
-};
-const isFinished = computed(() => {
+};const isFinished = computed(() => {
   if (completionTime.value === null) {
     return false;
   }

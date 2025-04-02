@@ -10,6 +10,7 @@ const props = defineProps<{
   title: string;
   zoneId: number;
   workers: WorkerClass[];
+  completionTime: string;
 }>();
 
 const emit = defineEmits(['refreshWorkers']);
@@ -186,7 +187,7 @@ const toggleNotificationBubble = () => {
           <img
               src="/src/assets/icons/warning.svg"
               alt="Check"
-              style="margin: auto; margin-top: 1rem; width: 50px; height: 50px;"
+              style="margin: 1rem auto auto;width: 50px; height: 50px;"
           />
           <p style="text-align: center; margin-top: 1rem;">
             No workers assigned
@@ -224,14 +225,14 @@ const toggleNotificationBubble = () => {
         </div>
       </div>
     </div>
-    <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
+   <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
   <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
 </template>
 
 <style scoped>
 .rounded-square {
-  width: 350px;
+  width: 280px;
   height: 100%;
   border: 1px solid #e5e5e5;
   border-radius: 15px;
