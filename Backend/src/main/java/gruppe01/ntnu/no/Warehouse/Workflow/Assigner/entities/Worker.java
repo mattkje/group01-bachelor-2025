@@ -62,11 +62,11 @@ public class Worker {
         this.availability = worker.availability;
     }
 
-    public Worker(String name, Long zone, String workTitle, double effectiveness, ArrayList<License> licenses, boolean availability) {
+    public Worker(String name, Long zone, String workTitle, double efficiency, ArrayList<License> licenses, boolean availability) {
         this.name = name;
         this.zone = zone;
         this.workTitle = workTitle;
-        this.efficiency = effectiveness;
+        this.efficiency = efficiency;
         this.licenses = new HashSet<>(licenses);
         this.availability = availability;
     }
@@ -83,8 +83,8 @@ public class Worker {
         this.workTitle = workerType;
     }
 
-    public void setEffectiveness(double effectiveness) {
-        this.efficiency = effectiveness;
+    public void setEfficiency(double efficiency) {
+        this.efficiency = efficiency;
     }
 
     public void setLicenses(Set<License> licenses) {
@@ -115,7 +115,7 @@ public class Worker {
         return workTitle;
     }
 
-    public double getEffectiveness() {
+    public double getEfficiency() {
         return efficiency;
     }
 

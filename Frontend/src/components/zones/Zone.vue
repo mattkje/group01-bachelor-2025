@@ -3,7 +3,7 @@ import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
 import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import {License, Task, Worker} from '@/assets/types';
+import {License, Task, Worker, Zone} from '@/assets/types';
 
 const props = defineProps<{
   title: string;
@@ -14,7 +14,7 @@ const props = defineProps<{
 const emit = defineEmits(['refreshWorkers']);
 
 const showPopup = ref(false);
-const selectedZone = ref({id: 0, name: ''});
+const selectedZone = ref<Zone | null>(null);
 const isDraggingOver = ref(false);
 const tasks = ref<Task[]>([]);
 const hasTasks = ref(false);
@@ -25,8 +25,8 @@ const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
 
-const openPopup = () => {
-  selectedZone.value = {id: props.zoneId, name: props.title};
+const openPopup = async () => {
+  selectedZone.value = await getThisZone();
   showPopup.value = true;
 };
 
@@ -34,6 +34,19 @@ const closePopup = () => {
   showPopup.value = false;
 };
 
+const getThisZone = async (): Promise<Zone | null> => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch zone');
+    }
+    const zone: Zone = await response.json();
+    return zone;
+  } catch (error) {
+    console.error('Error fetching zone:', error);
+    return null;
+  }
+};
 
 const runMonteCarloSimulation = async () => {
   isSpinning.value = true;

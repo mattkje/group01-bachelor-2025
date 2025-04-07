@@ -19,7 +19,7 @@
     try {
       const response = await axios.get(`http://localhost:8080/api/tasks/${taskId}`);
       task.value = response.data;
-      isTaskOverdue.value = new Date(task.value.dueDate) < new Date();
+      isTaskOverdue.value = new Date(task.value.maxTime) < new Date();
     } catch (error) {
       console.error('Failed to fetch task details:', error);
     }
@@ -55,7 +55,6 @@
       </div>
       <div class="workers-container">
         <div v-for="worker in workers" :key="worker.id" class="worker">
-          <img :src="worker.profileImageUrl" class="worker-image" />
           <div class="worker-name">{{ worker.name }}</div>
         </div>
       </div>
@@ -70,6 +69,7 @@
     flex-direction: column;
     background-color: #ececec;
     border-radius: 10px;
+    max-height: 40px;
     padding: 0.5rem;
     margin-bottom: 0.5rem;
     user-select: none !important;
@@ -88,13 +88,13 @@
   }
 
   .task-name {
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     color: #505050;
     font-weight: bold;
   }
 
   .task-status {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
     color: #ff4b4b;
   }
 

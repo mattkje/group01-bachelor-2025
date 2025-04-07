@@ -177,7 +177,16 @@ onMounted(async () => {
   </div>
 </template>
 <style scoped>
+.worker-task-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
 .worker-compact {
+  width: 100%;
   position: relative;
   display: flex;
   justify-content: space-between;

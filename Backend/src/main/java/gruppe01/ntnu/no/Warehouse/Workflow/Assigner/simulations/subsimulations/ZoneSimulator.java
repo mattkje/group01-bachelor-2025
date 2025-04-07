@@ -153,10 +153,10 @@ public class ZoneSimulator {
     int minWorkers = activeTask.getTask().getMinWorkers();
     List<Worker> workers = activeTask.getWorkers();
 
-    double totalEffectiveness = workers.stream()
-        .mapToDouble(Worker::getEffectiveness)
+    double totalEfficiency = workers.stream()
+        .mapToDouble(Worker::getEfficiency)
         .sum();
-    double efficiency = totalEffectiveness / workers.size();
+    double efficiency = totalEfficiency / workers.size();
     double adjustedDuration = maxDuration -
         ((double) (workers.size() - minWorkers) / (maxWorkers - minWorkers)) *
             (maxDuration - minDuration);

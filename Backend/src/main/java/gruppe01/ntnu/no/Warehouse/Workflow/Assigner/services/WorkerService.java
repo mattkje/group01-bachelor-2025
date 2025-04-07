@@ -55,7 +55,7 @@ public class WorkerService {
         Worker updatedWorker = workerRepository.findById(id).get();
         updatedWorker.setAvailability(worker.isAvailability());
         updatedWorker.setName(worker.getName());
-        updatedWorker.setEffectiveness(worker.getEffectiveness());
+        updatedWorker.setEfficiency(worker.getEfficiency());
         updatedWorker.setLicenses(worker.getLicenses());
         updatedWorker.setZone(worker.getZone());
         updatedWorker.setWorkerType(worker.getWorkerType());
