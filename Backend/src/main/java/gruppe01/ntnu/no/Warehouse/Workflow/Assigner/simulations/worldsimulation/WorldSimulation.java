@@ -356,8 +356,7 @@ public class WorldSimulation {
 
     public LocalDateTime getEndTime(ActiveTask task) {
         Task task1 = task.getTask();
-        double workerFactor = (double) (activeTaskService.getWorkersAssignedToTask(task.getId()).size() - task1.getMinWorkers()) /
-                Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
+        double workerFactor = 1.0 / Math.max(1, activeTaskService.getWorkersAssignedToTask(task.getId()).size());
         double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
         double averageEffectiveness = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
                 .mapToDouble(Worker::getEffectiveness)
