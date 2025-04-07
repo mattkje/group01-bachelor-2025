@@ -59,7 +59,11 @@ public class SimulationController {
 
   @GetMapping("/run-world-simulation")
   public void runWorldSimulation() throws Exception {
-    worldSimulation.runWorldSimulation(2);
+    worldSimulation.runWorldSimulation(2, LocalDate.now());
   }
 
+  @GetMapping("/simulate-one-year")
+  public void simulateOneYear() throws Exception {
+    worldSimulation.simulateOneYear();
+  }
 }

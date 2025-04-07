@@ -16,7 +16,7 @@ public class WorldSimulationController {
 
     @PostMapping("/start")
     public void startSimulation(@RequestParam int simulationTime) throws Exception {
-        worldSimulation.runWorldSimulation(simulationTime);
+        worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
     }
 
     @PostMapping("/pause")
@@ -30,7 +30,7 @@ public class WorldSimulationController {
     }
 
     @PostMapping("/fastForward")
-    public void fastForwardSimulation(@RequestParam int speedMultiplier) {
+    public void fastForwardSimulation(@RequestParam double speedMultiplier) {
         worldSimulation.changeSimulationSpeed(speedMultiplier);
     }
 
