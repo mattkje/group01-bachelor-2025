@@ -17,9 +17,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class handles the machine learning model for predicting time spent on tasks.
+ * It uses a Random Forest model from the Smile library.
+ */
 @Component
 public class MachineLearningModel {
 
+    /**
+     * Starts the machine learning model process.
+     * It loads an existing model if available, otherwise it trains a new one.
+     *
+     * @throws IOException If there is an error reading the CSV or saving/loading the model.
+     */
     public void startModel() throws IOException {
         String filePath = "random_forest_model.ser";
 
@@ -82,6 +92,12 @@ public class MachineLearningModel {
         }
     }
 
+    /**
+     * Loads a RandomForest model from a file.
+     *
+     * @param filePath The path to the model file.
+     * @return The loaded RandomForest model, or null if no model was found.
+     */
     public RandomForest loadModel(String filePath) {
         try {
             return ModelLoader.loadModel(filePath);
@@ -91,6 +107,12 @@ public class MachineLearningModel {
         }
     }
 
+    /**
+     * Saves the RandomForest model to a file.
+     *
+     * @param model    The RandomForest model to save.
+     * @param filePath The path to save the model file.
+     */
     public void saveModel(RandomForest model, String filePath) {
         try {
             ModelSaver.saveModel(model, filePath);
