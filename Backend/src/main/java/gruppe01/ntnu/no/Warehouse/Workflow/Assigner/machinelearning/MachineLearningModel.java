@@ -40,56 +40,91 @@ public class MachineLearningModel {
             // If no model exists, train a new one
             String csvFilePath = "csv_output/task_1.csv";
 
-            // Read the CSV with Apache Commons CSV
-            FileReader reader = new FileReader(csvFilePath);
-            CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+            // Parse CSV and create DataFrame
+            DataFrame data = parseCsvToDataFrame(csvFilePath);
 
-            List<Integer> timeSpentList = new ArrayList<>();
-            List<Integer> amountWorkersList = new ArrayList<>();
-
-            for (CSVRecord record : parser) {
-                timeSpentList.add(Integer.parseInt(record.get("TimeSpent")));
-                amountWorkersList.add(Integer.parseInt(record.get("AmountWorkers")));
-            }
-
-            // Convert to arrays
-            int[] timeSpentArray = timeSpentList.stream().mapToInt(i -> i).toArray();
-            int[] amountWorkersArray = amountWorkersList.stream().mapToInt(i -> i).toArray();
-
-            // Build DataFrame manually for Smile
-            DataFrame data = DataFrame.of(
-                    IntVector.of("TimeSpent", timeSpentArray),
-                    IntVector.of("AmountWorkers", amountWorkersArray)
-            );
-
-            System.out.println("Detected columns: " + Arrays.toString(data.names()));
-            System.out.println("DataFrame: " + data.toString());
-
-            String target = "TimeSpent";
-            if (!Arrays.asList(data.names()).contains(target)) {
-                throw new IllegalArgumentException(
-                        "Column '" + target + "' not found in CSV. Detected columns: " +
-                                Arrays.toString(data.names()));
-            }
-
-            Formula formula = Formula.lhs(target);
-
-            // Train the RandomForest model
-            model = RandomForest.fit(formula, data);
-
-            // Make predictions
-            double[] predictions = model.predict(data);
-
-            // Sort predictions and compute bounds
-            Arrays.sort(predictions);
-            double minBound = predictions[(int) (0.05 * predictions.length)];
-            double maxBound = predictions[(int) (0.95 * predictions.length)];
-
-            System.out.printf("RandomForest Predicted Boundaries: Min = %.2f, Max = %.2f\n", minBound, maxBound);
+            // Train the model
+            model = trainModel(data);
 
             // Save the trained model
             saveModel(model, filePath);
         }
+    }
+
+    /**
+     * Parses a CSV file to create a DataFrame.
+     * The CSV file should contain two columns: "TimeSpent" and "AmountWorkers".
+     *
+     * @param csvFilePath The path to the CSV file.
+     * @return A DataFrame containing the parsed data.
+     * @throws IOException If there is an error reading the CSV file.
+     */
+    private DataFrame parseCsvToDataFrame(String csvFilePath) throws IOException {
+        FileReader reader = new FileReader(csvFilePath);
+        CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+
+        List<Integer> timeSpentList = new ArrayList<>();
+        List<Integer> amountWorkersList = new ArrayList<>();
+
+        for (CSVRecord record : parser) {
+            timeSpentList.add(Integer.parseInt(record.get("TimeSpent")));
+            amountWorkersList.add(Integer.parseInt(record.get("AmountWorkers")));
+        }
+
+        // Convert to arrays and build DataFrame
+        int[] timeSpentArray = timeSpentList.stream().mapToInt(i -> i).toArray();
+        int[] amountWorkersArray = amountWorkersList.stream().mapToInt(i -> i).toArray();
+
+        return DataFrame.of(
+                IntVector.of("TimeSpent", timeSpentArray),
+                IntVector.of("AmountWorkers", amountWorkersArray)
+        );
+    }
+
+    /**
+     * Trains a RandomForest model using the provided DataFrame.
+     *
+     * @param data The DataFrame containing the training data.
+     * @return The trained RandomForest model.
+     */
+    private RandomForest trainModel(DataFrame data) {
+        System.out.println("Detected columns: " + Arrays.toString(data.names()));
+        System.out.println("DataFrame: " + data.toString());
+
+        String target = "TimeSpent";
+        if (!Arrays.asList(data.names()).contains(target)) {
+            throw new IllegalArgumentException(
+                    "Column '" + target + "' not found in CSV. Detected columns: " +
+                            Arrays.toString(data.names()));
+        }
+
+        Formula formula = Formula.lhs(target);
+
+        // Train the RandomForest model
+        RandomForest model = RandomForest.fit(formula, data);
+
+        // Calculate prediction boundaries
+        calculatePredictionBoundaries(model, data);
+
+        return model;
+    }
+
+    /**
+     * Calculates the prediction boundaries for the RandomForest model.
+     * This is done by sorting the predictions and finding the 5th and 95th percentiles.
+     *
+     * @param model The trained RandomForest model.
+     * @param data  The DataFrame used for training.
+     */
+    private void calculatePredictionBoundaries(RandomForest model, DataFrame data) {
+        double[] predictions = model.predict(data);
+
+        // Sort predictions and compute bounds
+        Arrays.sort(predictions);
+        double minBound = predictions[(int) (0.05 * predictions.length)];
+        double maxBound = predictions[(int) (0.95 * predictions.length)];
+
+        System.out.printf("RandomForest Predicted Boundaries: Min = %.2f, Max = %.2f\n", minBound, maxBound);
     }
 
     /**
