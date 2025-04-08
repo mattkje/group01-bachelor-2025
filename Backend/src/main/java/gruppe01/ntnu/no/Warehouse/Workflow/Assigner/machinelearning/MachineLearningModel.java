@@ -20,54 +20,82 @@ import java.util.List;
 @Component
 public class MachineLearningModel {
 
-  public void startModel() throws IOException, URISyntaxException {
-    String filePath = "csv_output/task_1.csv";
+    public void startModel() throws IOException {
+        String filePath = "random_forest_model.ser";
 
-    // Read the CSV with Apache Commons CSV
-    FileReader reader = new FileReader(filePath);
-    CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+        // Attempt to load an existing model
+        RandomForest model = loadModel(filePath);
 
-    List<Integer> timeSpentList = new ArrayList<>();
-    List<Integer> amountWorkersList = new ArrayList<>();
+        if (model == null) {
+            // If no model exists, train a new one
+            String csvFilePath = "csv_output/task_1.csv";
 
-    for (CSVRecord record : parser) {
-      timeSpentList.add(Integer.parseInt(record.get("TimeSpent")));
-      amountWorkersList.add(Integer.parseInt(record.get("AmountWorkers")));
+            // Read the CSV with Apache Commons CSV
+            FileReader reader = new FileReader(csvFilePath);
+            CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+
+            List<Integer> timeSpentList = new ArrayList<>();
+            List<Integer> amountWorkersList = new ArrayList<>();
+
+            for (CSVRecord record : parser) {
+                timeSpentList.add(Integer.parseInt(record.get("TimeSpent")));
+                amountWorkersList.add(Integer.parseInt(record.get("AmountWorkers")));
+            }
+
+            // Convert to arrays
+            int[] timeSpentArray = timeSpentList.stream().mapToInt(i -> i).toArray();
+            int[] amountWorkersArray = amountWorkersList.stream().mapToInt(i -> i).toArray();
+
+            // Build DataFrame manually for Smile
+            DataFrame data = DataFrame.of(
+                    IntVector.of("TimeSpent", timeSpentArray),
+                    IntVector.of("AmountWorkers", amountWorkersArray)
+            );
+
+            System.out.println("Detected columns: " + Arrays.toString(data.names()));
+            System.out.println("DataFrame: " + data.toString());
+
+            String target = "TimeSpent";
+            if (!Arrays.asList(data.names()).contains(target)) {
+                throw new IllegalArgumentException(
+                        "Column '" + target + "' not found in CSV. Detected columns: " +
+                                Arrays.toString(data.names()));
+            }
+
+            Formula formula = Formula.lhs(target);
+
+            // Train the RandomForest model
+            model = RandomForest.fit(formula, data);
+
+            // Make predictions
+            double[] predictions = model.predict(data);
+
+            // Sort predictions and compute bounds
+            Arrays.sort(predictions);
+            double minBound = predictions[(int) (0.05 * predictions.length)];
+            double maxBound = predictions[(int) (0.95 * predictions.length)];
+
+            System.out.printf("RandomForest Predicted Boundaries: Min = %.2f, Max = %.2f\n", minBound, maxBound);
+
+            // Save the trained model
+            saveModel(model, filePath);
+        }
     }
 
-    // Convert to arrays
-    int[] timeSpentArray = timeSpentList.stream().mapToInt(i -> i).toArray();
-    int[] amountWorkersArray = amountWorkersList.stream().mapToInt(i -> i).toArray();
-
-    // Build DataFrame manually for Smile
-    DataFrame data = DataFrame.of(
-        IntVector.of("TimeSpent", timeSpentArray),
-        IntVector.of("AmountWorkers", amountWorkersArray)
-    );
-
-    System.out.println("Detected columns: " + Arrays.toString(data.names()));
-    System.out.println("DataFrame: " + data.toString());
-
-    String target = "TimeSpent";
-    if (!Arrays.asList(data.names()).contains(target)) {
-      throw new IllegalArgumentException(
-          "Column '" + target + "' not found in CSV. Detected columns: " +
-              Arrays.toString(data.names()));
+    public RandomForest loadModel(String filePath) {
+        try {
+            return ModelLoader.loadModel(filePath);
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("No existing model found. A new model will be trained.");
+            return null;
+        }
     }
 
-    Formula formula = Formula.lhs(target);
-
-    // Train the RandomForest model
-    RandomForest model = RandomForest.fit(formula, data);
-
-    // Make predictions
-    double[] predictions = model.predict(data);
-
-    // Sort predictions and compute bounds
-    Arrays.sort(predictions);
-    double minBound = predictions[(int) (0.05 * predictions.length)];
-    double maxBound = predictions[(int) (0.95 * predictions.length)];
-
-    System.out.printf("RandomForest Predicted Boundaries: Min = %.2f, Max = %.2f\n", minBound, maxBound);
-  }
+    public void saveModel(RandomForest model, String filePath) {
+        try {
+            ModelSaver.saveModel(model, filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
