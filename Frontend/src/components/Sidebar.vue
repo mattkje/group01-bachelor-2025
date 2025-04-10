@@ -13,6 +13,8 @@
   import tasksIconSelected from '../assets/icons/tasksSelected.svg';
   import settingsIconSelected from '../assets/icons/settingsSelected.svg';
   import infoIconSelected from '../assets/icons/infoSelected.svg';
+  import cpIcon from '../assets/icons/cp.svg';
+  import cpIconSelected from '../assets/icons/cpSelected.svg';
 
   const tabs = ref([
     { name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/' },
@@ -20,7 +22,9 @@
     { name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff' },
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
     { separator: true },
+    { name: 'Control Panel', icon: cpIcon, iconSelected: cpIconSelected, path: '/controlpanel' },
     { name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info' },
+
   ]);
 
   const route = useRoute();

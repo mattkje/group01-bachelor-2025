@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +44,7 @@ public class TimeTableGenerator {
     int[] endHours = {3,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
 
     List<Worker> workers = workerService.getAllWorkers();
+    workers.stream().filter(worker -> !worker.isDead()).collect(Collectors.toList());
 
     while (!startDate.isAfter(endDate)){
       double workerPercentage = minWorkersPercentage + (Math.random() * (maxWorkersPercentage - minWorkersPercentage));

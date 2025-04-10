@@ -71,9 +71,9 @@ public class WorldSimulation {
     @Autowired
     private WorkerService workerService;
 
-    public void runWorldSimulation(int simulationTime) throws Exception {
+    public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
         isPlaying = true;
-        workday = LocalDate.now();
+        workday = startDate;
         boolean activeTasksExistForWorkday = false;
 
         while (!activeTasksExistForWorkday) {
@@ -90,7 +90,11 @@ public class WorldSimulation {
         currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
         endTime = LocalTime.MIDNIGHT;
         // 1440 minutes in a day
-        simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
+        if (simulationTime == 0) {
+            simulationSleepInMillis = 0;
+        } else {
+            simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
+        }
         Random random = new Random();
         availableWorkers = new ArrayList<>();
         busyWorkers = new ArrayList<>();
@@ -352,8 +356,7 @@ public class WorldSimulation {
 
     public LocalDateTime getEndTime(ActiveTask task) {
         Task task1 = task.getTask();
-        double workerFactor = (double) (activeTaskService.getWorkersAssignedToTask(task.getId()).size() - task1.getMinWorkers()) /
-                Math.max(1, (task1.getMaxWorkers() - task1.getMinWorkers()));
+        double workerFactor = 1.0 / Math.max(1, activeTaskService.getWorkersAssignedToTask(task.getId()).size());
         double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
         double averageEfficiency = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
                 .mapToDouble(Worker::getEfficiency)
@@ -387,5 +390,14 @@ public class WorldSimulation {
         } else  {
             return -1;
         }
+    }
+
+    public void simulateOneYear() throws Exception {
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        int numDays = 365;
+        for (int i = 0; i < numDays; i++) {
+            runWorldSimulation(0, startDate.plusDays(i));
+        }
+
     }
 }

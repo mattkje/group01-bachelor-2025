@@ -7,6 +7,7 @@ import Staff from "../views/Staff.vue";
 import Settings from "../views/Settings.vue";
 import Info from "../views/Info.vue";
 import WorkerProfile from "../views/WorkerProfile.vue";
+import ControlPanel from "../views/ControlPanel.vue";
 
 const routes = [
   { path: '/', component: Overview },
@@ -16,6 +17,7 @@ const routes = [
   { path: '/settings', component: Settings},
   { path: '/info', component: Info},
   { path: '/worker', component: WorkerProfile},
+  { path: '/controlpanel', component: ControlPanel},
 ];
 
 const router = createRouter({
