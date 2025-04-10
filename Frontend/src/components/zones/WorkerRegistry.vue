@@ -1,18 +1,8 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
-import Worker from '@/components/zones/RegistryWorker.vue';
+import WorkerClass from '@/components/zones/RegistryWorker.vue';
+import {Worker} from '@/assets/types';
 
-interface License {
-  id: number;
-  name: string;
-}
-
-interface Worker {
-  id: number;
-  name: string;
-  licenses: License[];
-  availability: boolean;
-}
 
 const props = defineProps<{
   title: string;
@@ -110,7 +100,7 @@ const onDragLeave = () => {
       </div>
     </div>
     <div class="vertical-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
-      <Worker
+      <WorkerClass
           v-for="(worker, index) in filteredWorkers"
           :key="index"
           :name="worker.name"

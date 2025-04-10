@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import ZoneSidebar from "@/components/zones/ZoneSidebar.vue";
 import ZoneTasks from "@/components/zones/ZoneTasks.vue";
-
-interface Zone {
-  id: number;
-  name: string;
-  data: string;
-}
+import { Zone } from "@/assets/types";
 
 const props = defineProps<{ zone: Zone }>();
 const activeTab = ref('Overview');

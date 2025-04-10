@@ -29,9 +29,9 @@
 
   const route = useRoute();
 
-const activeTab = computed(() => {
-  return tabs.value.find(tab => tab.path === route.path) || tabs.value.find(tab => tab.name === 'Overview');
-});
+  const activeTab = computed(() => {
+    return tabs.value.find(tab => tab.path === route.path) || { path: '/', name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected };
+  });
   </script>
 
   <template>
