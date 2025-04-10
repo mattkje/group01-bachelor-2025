@@ -29,30 +29,39 @@ import java.util.List;
 public class MachineLearningModelPicking {
 
   /**
-   * Starts the machine learning model process.
+   * Creates a model if one does not exist
    * It loads an existing model if available, otherwise it trains a new one.
    *
    * @throws IOException If there is an error reading the CSV or saving/loading the model.
+   * @param department The department for which the model is being created.
+   * @return A message indicating the result of the model creation.
    */
-  public List<Double> startModel() throws IOException {
-    String filePath = "pickroute_DRY.ser";
+  public String createModel(String department) throws IOException {
+    // If a model exists, update it
+    // TODO: Add method for updating the ML Model
+    String filePath = "pickroute_"+department.toUpperCase()+".ser";
 
     // Attempt to load an existing model
     RandomForest model = loadModel(filePath);
 
+    // If model is null, train a new one
     if (model == null) {
-      // If no model exists, train a new one
-      String csvFilePath =
-          "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_DRY_time.csv";
+
+      // If no model exists, train a new one on an existing dataset
+      String csvFilePath = "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"+department.toUpperCase()+"_time.csv";
 
       // Parse CSV and create DataFrame
       DataFrame data = parseCsvToDataFrame(csvFilePath);
-      // Train the model
-      model = trainModel(data);
-      // Save the trained model
-      saveModel(model, filePath);
+      if (data != null) {
+        // Train the model
+        model = trainModel(data);
+        // Save the trained model
+        saveModel(model, filePath);
+        return "";
+      }
+      return "Error: No data exists for: " + department.toUpperCase() + ".";
     }
-    return getWeights(model);
+    return "Model already exists. No new model trained.";
   }
 
   private List<Double> getWeights(RandomForest model) {
@@ -86,37 +95,57 @@ public class MachineLearningModelPicking {
    * @return A DataFrame containing the parsed data.
    * @throws IOException If there is an error reading the CSV file.
    */
-  private DataFrame parseCsvToDataFrame(String csvFilePath) throws IOException {
-    FileReader reader = new FileReader(csvFilePath);
-    CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+private DataFrame parseCsvToDataFrame(String csvFilePath) {
+      FileReader reader = null;
+      CSVParser parser = null;
 
-    // Get headers from the CSV file and exclude the first one
-    List<String> headers = parser.getHeaderNames().subList(1, parser.getHeaderNames().size());
-    List<List<Double>> columnData = new ArrayList<>();
+      try {
+          reader = new FileReader(csvFilePath);
+          parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
 
-    // Initialize lists for each column (excluding the first header)
-    for (String header : headers) {
-      columnData.add(new ArrayList<>());
-    }
+          // Get headers from the CSV file and exclude the first one
+          List<String> headers = parser.getHeaderNames().subList(1, parser.getHeaderNames().size());
+          List<List<Double>> columnData = new ArrayList<>();
 
-    // Parse each record and populate the columns (excluding the first column)
-    for (CSVRecord record : parser) {
-      for (int i = 1; i < record.size(); i++) { // Start from index 1 to skip the first column
-        String value = record.get(i); // Skip the first column
-        columnData.get(i - 1).add(Double.parseDouble(value)); // Adjust index for columnData
+          // Initialize lists for each column (excluding the first header)
+          for (String header : headers) {
+              columnData.add(new ArrayList<>());
+          }
+
+          // Parse each record and populate the columns (excluding the first column)
+          for (CSVRecord record : parser) {
+              for (int i = 1; i < record.size(); i++) { // Start from index 1 to skip the first column
+                  String value = record.get(i); // Skip the first column
+                  columnData.get(i - 1).add(Double.parseDouble(value)); // Adjust index for columnData
+              }
+          }
+
+          // Convert lists to arrays and build the DataFrame
+          smile.data.vector.DoubleVector[] vectors = new smile.data.vector.DoubleVector[headers.size()];
+          for (int i = 0; i < headers.size(); i++) {
+              double[] columnArray = columnData.get(i).stream().mapToDouble(Double::doubleValue).toArray();
+              vectors[i] = smile.data.vector.DoubleVector.of(headers.get(i), columnArray);
+          }
+
+          return DataFrame.of(vectors);
+
+      } catch (IOException | NumberFormatException e) {
+          System.err.println("Error parsing CSV file: " + e.getMessage());
+          e.printStackTrace();
+          return null;
+      } finally {
+          try {
+              if (parser != null) {
+                  parser.close();
+              }
+              if (reader != null) {
+                  reader.close();
+              }
+          } catch (IOException e) {
+              System.err.println("Error closing resources: " + e.getMessage());
+          }
       }
-    }
-
-    // Convert lists to arrays and build the DataFrame
-    smile.data.vector.DoubleVector[] vectors = new smile.data.vector.DoubleVector[headers.size()];
-    for (int i = 0; i < headers.size(); i++) {
-      double[] columnArray = columnData.get(i).stream().mapToDouble(Double::doubleValue).toArray();
-      vectors[i] = smile.data.vector.DoubleVector.of(headers.get(i), columnArray);
-    }
-
-    return DataFrame.of(vectors);
   }
-
   /**
    * Trains a RandomForest model using the provided DataFrame.
    *
@@ -209,9 +238,13 @@ public class MachineLearningModelPicking {
       List<List<Double>> minMaxValues = getMinMaxValues(data);
 
       mcValues.put(weights, minMaxValues);
+    } else {
+      // If no model exists, train a new one on an existing dataset
+      if (createModel(department).isEmpty()){
+        // if the model is created, get the mc values
+        return getMcValues(department);
+      }
     }
-
-    System.out.println("MC values: " + mcValues);
     return mcValues;
   }
 }

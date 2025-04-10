@@ -35,9 +35,9 @@ public class MachineLearningController {
         machineLearningModel.startModel();
     }
 
-    @GetMapping("/get-starting-parameters")
-    public List<Double> getStartingParameters() throws IOException, URISyntaxException {
-        return machineLearningModelPicking.startModel();
+    @GetMapping("/train-model/{department}")
+    public String getStartingParameters(@PathVariable String department) throws IOException, URISyntaxException {
+        return machineLearningModelPicking.createModel(department);
     }
 
     @GetMapping("/get-mc-values/{department}")
