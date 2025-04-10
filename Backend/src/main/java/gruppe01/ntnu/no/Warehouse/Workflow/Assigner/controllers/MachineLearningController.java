@@ -2,8 +2,12 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.CsvGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModel;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +22,8 @@ public class MachineLearningController {
     private CsvGenerator csvGenerator;
     @Autowired
     private MachineLearningModel machineLearningModel;
+    @Autowired
+    private MachineLearningModelPicking machineLearningModelPicking;
 
     @GetMapping("/create-csv")
     public void createCsv() {
@@ -27,5 +33,15 @@ public class MachineLearningController {
     @GetMapping("/start-model")
     public void startModel() throws IOException, URISyntaxException {
         machineLearningModel.startModel();
+    }
+
+    @GetMapping("/get-starting-parameters")
+    public List<Double> getStartingParameters() throws IOException, URISyntaxException {
+        return machineLearningModelPicking.startModel();
+    }
+
+    @GetMapping("/get-mc-values/{department}")
+    public Map<List<Double>,List<List<Double>>> getMcValues(@PathVariable String department) throws IOException, URISyntaxException {
+        return machineLearningModelPicking.getMcValues(department);
     }
 }
