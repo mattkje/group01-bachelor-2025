@@ -4,6 +4,8 @@
       "@/*": ["./src/*"]
     },
     "lib": ["ES2015", "DOM"],
+    "include": ["src/**/*"],
+    "allowSyntheticDefaultImports": true
   },
   "exclude": ["node_modules", "dist"]
 }

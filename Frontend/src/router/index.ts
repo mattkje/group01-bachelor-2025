@@ -8,6 +8,7 @@ import Settings from "../views/Settings.vue";
 import Info from "../views/Info.vue";
 import WorkerProfile from "../views/WorkerProfile.vue";
 import ControlPanel from "../views/ControlPanel.vue";
+import ZoneMenu from "../views/ZoneMenu.vue";
 
 const routes = [
   { path: '/', component: Overview },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/info', component: Info},
   { path: '/worker', component: WorkerProfile},
   { path: '/controlpanel', component: ControlPanel},
+  { path: '/zones/:id', component: ZoneMenu },
 ];
 
 const router = createRouter({

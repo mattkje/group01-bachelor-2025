@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
-import ZoneMenu from "@/components/zones/ZoneMenu.vue";
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
 import {License, Task, Worker, Zone} from '@/assets/types';
 
@@ -25,14 +24,6 @@ const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
 
-const openPopup = async () => {
-  selectedZone.value = await getThisZone();
-  showPopup.value = true;
-};
-
-const closePopup = () => {
-  showPopup.value = false;
-};
 
 const getThisZone = async (): Promise<Zone | null> => {
   try {
@@ -153,9 +144,9 @@ const toggleNotificationBubble = () => {
       <hr>
       <div class="zone-options">
         <div class="zone-option">
-          <button class="icon-button" @click="openPopup">
-            <img src="/src/assets/icons/tasks.svg" alt="Assign"/>
-          </button>
+          <router-link :to="`/zones/${props.zoneId}`">
+              <img src="/src/assets/icons/zones.svg" alt="Assign"/>
+          </router-link>
           <div class="status-popup">Tasks</div>
         </div>
         <div class="zone-option">
@@ -216,7 +207,6 @@ const toggleNotificationBubble = () => {
       </div>
     <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
-  <ZoneMenu v-if="showPopup" :zone="selectedZone" @close="closePopup"/>
 </template>
 
 <style scoped>
