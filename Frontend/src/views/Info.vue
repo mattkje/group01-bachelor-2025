@@ -26,6 +26,14 @@
     <p>This project is developed by the following contributors:</p>
     <ul class="contributors-list">
       <li>
+        <img src="@/assets/images/ntnu.png" alt="NTNU" class="contributor-image"/>
+       <span>NTNU - Academic Partner</span>
+      </li>
+      <li>
+        <img src="@/assets/images/solwr.png" alt="Solwr" class="contributor-image"/>
+        <span>Solwr Robotics - Project Partner and Mentor</span>
+      </li>
+      <li>
         <img src="../assets/images/haakon.png" alt="Håkon Svensen Karlsen" class="contributor-image"/>
         <span>Håkon Svensen Karlsen - Project Lead and Developer</span>
       </li>
@@ -38,7 +46,6 @@
         <span>Matti Kjellstadli - Frontend Developer</span>
       </li>
     </ul>
-    <p>In collaboration with <a href="https://www.ntnu.no/" target="_blank">NTNU</a> and Solwr Robotics.</p>
   </div>
 </template>
 

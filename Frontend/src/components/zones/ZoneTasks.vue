@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue';
 import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
+import {ActiveTask, Zone} from "@/assets/types";
 
 interface Task {
   id: number;
@@ -14,21 +15,7 @@ interface Task {
   maxWorkers: number;
 }
 
-interface Worker {
-  id: number;
-  name: string;
-}
 
-interface ActiveTask {
-  id: number;
-  workers: Worker[];
-  task: Task;
-}
-
-interface Zone {
-  id: number;
-  name: string;
-}
 
 const props = defineProps<{
   zone: Zone;
@@ -124,7 +111,7 @@ const prevPage = () => {
 
 <template>
   <div class="content">
-    <br><h1>Active Tasks</h1><br>
+    <h2>Active Tasks</h2>
     <div class="activeTaskContainer">
       <div class="placeholder" v-if="activeTasks.length === 0">No tasks remaining...</div>
       <active-task-component v-for="activeTask in activeTasks" :key="activeTask.id" :active-task="activeTask"/>
@@ -142,7 +129,7 @@ const prevPage = () => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin: 0;
+  margin: 0 3.5rem;
   height: calc(100vh - 4rem);
 }
 
@@ -152,7 +139,6 @@ const prevPage = () => {
   align-content: flex-start;
   gap: 10px;
   height: 100%;
-  padding: 1rem;
   flex: 1;
   overflow-y: auto;
 }
@@ -187,11 +173,8 @@ ul li::before {
 }
 
 .placeholder {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #888;
   text-align: center;
-  position: fixed;
-  left: 50%;
-  top: 50%;
 }
 </style>
