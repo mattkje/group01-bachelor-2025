@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS picker_task
     time_s         DOUBLE,
     date           DATE,
     zone_id        BIGINT NOT NULL,
-    worker_id      BIGINT NOT NULL,
+    worker_id      BIGINT,
     FOREIGN KEY (worker_id) REFERENCES worker (id),
     FOREIGN KEY (zone_id) REFERENCES zone (id)
 );

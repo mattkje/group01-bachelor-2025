@@ -31,4 +31,12 @@ public class PickerTaskService {
         }
         return pickerTasks;
     }
+
+    public PickerTask savePickerTask(PickerTask pickerTask) {
+        if (pickerTask != null) {
+            return pickerTaskRepository.save(pickerTask);
+        }
+
+        return null;
+    }
 }

@@ -3,6 +3,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
 @Entity
 public class PickerTask {
     @Id
@@ -38,6 +40,9 @@ public class PickerTask {
     @OneToOne
     @JoinColumn(name = "workerId")
     private Worker worker;
+
+    @Column(name = "date")
+    private LocalDate date;
 
     public PickerTask() {
     }
@@ -93,6 +98,10 @@ public class PickerTask {
         return zone;
     }
 
+    public LocalDate getDate() {
+        return date;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -133,6 +142,7 @@ public class PickerTask {
         this.worker = worker;
     }
 
-
-
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 }
