@@ -41,11 +41,13 @@ public class CsvGenerator {
         tasksGroupedByTask.forEach((task, taskList) -> {
             String fileName = directoryPath + File.separator + "task_" + task.getId() + ".csv";
             try (FileWriter writer = new FileWriter(fileName)) {
-                writer.append("TimeSpent,AmountWorkers\n");
+                writer.append("TimeSpent,AmountWorkers,MinTime,MaxTime\n");
                 for (ActiveTask activeTask : taskList) {
                     int workerCount = activeTask.getWorkers().size() / (4 * activeTask.getTask().getMinWorkers());
                     writer.append(String.valueOf(calculateTimeSpent(activeTask))).append(",")
-                            .append(String.valueOf(workerCount)).append("\n");
+                            .append(String.valueOf(workerCount)).append(",")
+                            .append(String.valueOf(activeTask.getTask().getMinTime())).append(",")
+                            .append(String.valueOf(activeTask.getTask().getMaxTime())).append("\n");
 
                 }
             } catch (IOException e) {

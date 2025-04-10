@@ -22,6 +22,9 @@ public class Zone {
   private Set<Task> tasks;
 
   @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  private Set<PickerTask> pickerTask;
+
+  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
   private Set<Worker> workers;
 
   public Zone() {
@@ -55,6 +58,8 @@ public class Zone {
     this.workers = workers;
   }
 
+  public void setPickerTask(Set<PickerTask> pickerTask) {}
+
   public Long getId() {
     return id;
   }
@@ -73,5 +78,9 @@ public class Zone {
 
   public Set<Worker> getWorkers() {
     return workers;
+  }
+
+  public Set<PickerTask> getPickerTask() {
+    return pickerTask;
   }
 }

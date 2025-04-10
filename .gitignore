@@ -2,3 +2,4 @@
 Backend/env.env
 .idea/dataSources.xml
 datasets
+Backend/target/
