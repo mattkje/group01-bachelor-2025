@@ -1,9 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +38,11 @@ public class ZoneController {
     @GetMapping("/{id}/active-tasks")
     public Set<ActiveTask> getActiveTasksByZoneId(@PathVariable Long id) {
         return zoneService.getActiveTasksByZoneId(id);
+    }
+
+    @GetMapping("/{id}/picker-tasks")
+    public Set<PickerTask> getPickerTasksByZoneId(@PathVariable Long id) {
+        return zoneService.getPickerTasksByZoneId(id);
     }
 
     @GetMapping("/{id}/active-tasks-now")

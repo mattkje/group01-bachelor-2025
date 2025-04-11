@@ -4,6 +4,14 @@ import jakarta.persistence.*;
 
 import java.util.Set;
 
+/**
+ * Represents a Task in the warehouse system. A Task can represent
+ * multiple ActiveTask entities and is associated with a specific Zone.
+ * Task objects are reusable in the sense that the same task can have
+ * multiple ActiveTask instances associated with it. A Task is
+ * associated with a specific Zone and can have multiple licenses
+ * required for its execution.
+ */
 @Entity
 public class Task {
 

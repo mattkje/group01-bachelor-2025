@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -356,13 +357,27 @@ public class WorldSimulation {
 
     public LocalDateTime getEndTime(ActiveTask task) {
         Task task1 = task.getTask();
-        double workerFactor = 1.0 / Math.max(1, task1.getMinWorkers() - activeTaskService.getWorkersAssignedToTask(task.getId()).size());
-        double taskDuration = task1.getMinTime() + workerFactor * (task1.getMaxTime() - task1.getMinTime());
+        int assignedWorkers = activeTaskService.getWorkersAssignedToTask(task.getId()).size();
+        int minWorkers = task1.getMinWorkers();
+        int maxWorkers = task1.getMaxWorkers();
+
+        double interpolationFactor = 0.0;
+        if (maxWorkers > minWorkers) {
+            interpolationFactor = Math.min(1.0, Math.max(0.0, (double)(assignedWorkers - minWorkers) / (maxWorkers - minWorkers)));
+        }
+
+        double taskDuration = task1.getMaxTime() - interpolationFactor * (task1.getMaxTime() - task1.getMinTime());
+
         double averageEfficiency = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
                 .mapToDouble(Worker::getEfficiency)
-                .average().orElse(1);
+                .average().orElse(1.0);
+
         double actualDuration = taskDuration / averageEfficiency;
-        return task.getStartTime().plusMinutes((int) actualDuration);
+
+        // Add random offset between -5 and +5 minutes
+        int randomOffset = ThreadLocalRandom.current().nextInt(-5, 6); // Inclusive of -5 and +5
+
+        return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
     }
 
     public void pauseSimulation() throws InterruptedException {

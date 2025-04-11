@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a timetable entity in the system.
+ * A timetable is used to schedule the working hours of a worker.
+ */
 @Entity
 public class Timetable {
     @GeneratedValue

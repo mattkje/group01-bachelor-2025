@@ -8,6 +8,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
 
+/**
+ * Represents a Worker entity in the warehouse system.
+ * Each worker gets assigned to a specific zone where they
+ * will perform several tasks. A worker's efficiency is what
+ * determines how fast they can complete a task. The worker's
+ * current task is also tracked, and they are also assigned
+ * a set of licenses that determine what tasks they can perform.
+ */
 @Entity
 public class Worker {
 

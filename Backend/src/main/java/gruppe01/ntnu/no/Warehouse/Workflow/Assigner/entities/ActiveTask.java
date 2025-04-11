@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -9,6 +8,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents an active task in the warehouse workflow system.
+ * This class is used to manage tasks that are currently being processed
+ * or have finished. An ActiveTask is connected to a specific Task and can
+ * have multiple workers assigned to it.
+ */
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ActiveTask {

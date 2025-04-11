@@ -5,6 +5,13 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
+/**
+ * Represents a PickerTask entity in the warehouse system.
+ * This class is different from an ActiveTask in that it is more detailed
+ * and meant for picker tasks specifically.
+ * A PickerTask is associated with a specific zone and can be assigned to a single worker.
+ */
+
 @Entity
 public class PickerTask {
     @Id

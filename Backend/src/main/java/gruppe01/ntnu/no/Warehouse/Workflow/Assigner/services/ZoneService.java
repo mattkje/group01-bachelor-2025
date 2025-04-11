@@ -1,9 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
@@ -69,6 +66,14 @@ public class ZoneService {
     return activeTasks;
   }
 
+  public Set<PickerTask> getPickerTasksByZoneId(Long id) {
+    Zone zone = zoneRepository.findById(id).orElse(null);
+    if (zone != null) {
+      return zone.getPickerTask();
+    }
+    return null;
+  }
+
   public Set<ActiveTask> getTodaysUnfinishedTasksByZoneId(Long id) {
       LocalDate today = LocalDate.now();
       return getActiveTasksByZoneId(id).stream()
@@ -77,19 +82,23 @@ public class ZoneService {
   }
 
   public Zone addZone(Zone zone) {
-    if (zone != null) {
+    if (zone != null && (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty())) {
       return zoneRepository.save(zone);
     }
     return null;
   }
 
   public Zone updateZone(Long id, Zone zone) {
-    Zone updatedZone = zoneRepository.findById(id).get();
-    updatedZone.setName(zone.getName());
-    updatedZone.setWorkers(zone.getWorkers());
-    updatedZone.setTasks(zone.getTasks());
-    updatedZone.setCapacity(zone.getCapacity());
-    return zoneRepository.save(updatedZone);
+    if (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty()) {
+      Zone updatedZone = zoneRepository.findById(id).get();
+      updatedZone.setName(zone.getName());
+      updatedZone.setWorkers(zone.getWorkers());
+      updatedZone.setTasks(zone.getTasks());
+      updatedZone.setPickerTask(zone.getPickerTask());
+      updatedZone.setCapacity(zone.getCapacity());
+      return zoneRepository.save(updatedZone);
+    }
+    return null;
   }
 
   public Zone addTaskToZone(Long id, Long taskId) {

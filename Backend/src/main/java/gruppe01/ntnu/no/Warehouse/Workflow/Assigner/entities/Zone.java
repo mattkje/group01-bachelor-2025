@@ -2,9 +2,15 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 
-import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents a Zone entity in the system.
+ * A zone is a specific area in the warehouse where tasks are assigned.
+ * Zones can have multiple tasks and workers associated with them.
+ * A zone is either a picking zone or a non-picking zone.
+ * A zone can not have both pickerTasks and Tasks at the same time.
+ */
 @Entity
 public class Zone {
 

@@ -6,6 +6,11 @@ import jakarta.persistence.*;
 
 import java.util.Set;
 
+/**
+ * Represents a License entity in the system.
+ * Both workers and tasks can have licenses.
+ * A license is a requirement for a worker to perform a task.
+ */
 @Entity
 public class License {
 
