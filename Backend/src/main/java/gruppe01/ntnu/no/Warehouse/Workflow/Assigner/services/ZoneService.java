@@ -31,6 +31,18 @@ public class ZoneService {
     return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
   }
 
+  public List<Zone> getAllTaskZones() {
+    return zoneRepository.findAll().stream()
+        .filter(zone -> !zone.isPickerZone())
+        .collect(Collectors.toList());
+  }
+
+  public List<Zone> getAllPickerZones() {
+    return zoneRepository.findAll().stream()
+        .filter(Zone::isPickerZone)
+        .collect(Collectors.toList());
+  }
+
   public Zone getZoneById(Long id) {
     return zoneRepository.findById(id).orElse(null);
   }
@@ -89,16 +101,17 @@ public class ZoneService {
   }
 
   public Zone updateZone(Long id, Zone zone) {
-    if (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty()) {
-      Zone updatedZone = zoneRepository.findById(id).get();
+    Zone updatedZone = zoneRepository.findById(id).get();
+
+    if ((zone.getPickerTask().isEmpty() && !zone.isPickerZone()) || (zone.getTasks().isEmpty() && zone.isPickerZone())) {
       updatedZone.setName(zone.getName());
       updatedZone.setWorkers(zone.getWorkers());
       updatedZone.setTasks(zone.getTasks());
       updatedZone.setPickerTask(zone.getPickerTask());
       updatedZone.setCapacity(zone.getCapacity());
-      return zoneRepository.save(updatedZone);
+      updatedZone.setPickerZone(zone.isPickerZone());
     }
-    return null;
+    return zoneRepository.save(updatedZone);
   }
 
   public Zone addTaskToZone(Long id, Long taskId) {
@@ -133,5 +146,14 @@ public class ZoneService {
       zoneRepository.delete(zone);
     }
     return zone;
+  }
+
+  public Zone changeIsPickerZone(Long id) {
+    Zone zone = zoneRepository.findById(id).orElse(null);
+    if (zone != null) {
+      zone.setPickerZone(!zone.isPickerZone());
+      return zoneRepository.save(zone);
+    }
+    return null;
   }
 }

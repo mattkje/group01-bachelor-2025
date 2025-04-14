@@ -9,6 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Repository interface for ActiveTask entity.
+ */
 @Repository
 public interface ActiveTaskRepository extends JpaRepository<ActiveTask, Long> {
 

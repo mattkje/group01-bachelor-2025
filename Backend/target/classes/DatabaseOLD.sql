@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS zone
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
     name        VARCHAR(255) NOT NULL,
+    is_picker_zone BOOLEAN DEFAULT FALSE,
     capacity    INT          NOT NULL
 );
 
@@ -97,6 +98,23 @@ CREATE TABLE IF NOT EXISTS timetable
     FOREIGN KEY (worker_id) REFERENCES worker (id)
 );
 
+CREATE TABLE IF NOT EXISTS picker_task
+(
+    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    distance       DOUBLE,
+    pack_amount    INT,
+    lines_amount   INT,
+    weight_g       INT,
+    volume_ml      INT,
+    avg_height_m   INT,
+    time_s         DOUBLE DEFAULT NULL,
+    date           DATE,
+    zone_id        BIGINT NOT NULL,
+    worker_id      BIGINT,
+    FOREIGN KEY (worker_id) REFERENCES worker (id),
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
+);
+
 CREATE TRIGGER update_worker_zone
     BEFORE INSERT ON active_task_worker
     FOR EACH ROW
@@ -150,19 +168,27 @@ VALUES
     (36,'George Nickel', 6, 'Warehouse Supervisor', 0.95, true),
     (37,'Holly Zinc', 7, 'Warehouse Technician', 0.85, true),
     (38,'Ian Lead', 1, 'Warehouse Engineer', 1.2, true),
-    (39,'Judy Tin', 2, 'Warehouse Specialist', 1.1, true);
+    (39,'Judy Tin', 2, 'Warehouse Specialist', 1.1, true),
+    (41, 'Oliver Stone', 10, 'Warehouse Operator', 1.1, true),
+    (42, 'Emma Watson', 10, 'Inventory Specialist', 1.2, true),
+    (43, 'Liam Brown', 11, 'Logistics Coordinator', 0.95, true),
+    (44, 'Sophia Green', 11, 'Shipping Manager', 1.05, true),
+    (45, 'Noah White', 12, 'Quality Control', 1.0, true);
 
 
-INSERT INTO zone (name, capacity)
-VALUES ('Receiving', 10),
-       ('Storage', 15),
-       ('Picking', 5),
-       ('Packing', 7),
-       ('Shipping', 8),
-       ('Quality Control', 4),
-       ('Planning', 6),
-       ('Execution', 14),
-       ('Monitoring', 2);
+INSERT INTO zone (name, capacity, is_picker_zone)
+VALUES ('Receiving', 10, false),
+       ('Storage', 15, false),
+       ('Picking', 5, false),
+       ('Packing', 7, false),
+       ('Shipping', 8, false),
+       ('Quality Control', 4, false),
+       ('Planning', 6, false),
+       ('Execution', 14, false),
+       ('Monitoring', 2, false),
+       ('Dry', 10, true),
+       ('Fruit', 15, true),
+       ('Freeze', 8, true);
 
 INSERT INTO license (name)
 VALUES ('Truck License'),
@@ -269,4 +295,22 @@ VALUES (1, 3),
        (17, 3),
          (18, 3),
          (19, 3);
+
+INSERT INTO picker_task (distance, pack_amount, lines_amount, weight_g, volume_ml, avg_height_m, time_s, date, zone_id, worker_id)
+VALUES
+    (120.5, 10, 5, 1500, 2000, 1.2, 3600, '2025-01-01', 10, 41),
+    (95.3, 8, 4, 1200, 1800, 1.1, 3200, '2025-01-01',10, 41),
+    (110.7, 12, 6, 1800, 2500, 1.3, 4000, '2025-01-01',10, 41),
+    (85.2, 7, 3, 1000, 1500, 1.0, 2800, '2025-01-01',10, 42),
+    (130.4, 15, 8, 2000, 3000, 1.4, 4500, '2025-01-01',10, 42),
+    (105.6, 9, 5, 1400, 2200, 1.2, 3500, '2025-01-01',11, 43),
+    (90.8, 6, 3, 1100, 1600, 1.1, 3000, '2025-01-01',11, 43),
+    (115.9, 11, 7, 1700, 2400, 1.3, 3800, '2025-01-01',11, 43),
+    (100.2, 8, 4, 1300, 1900, 1.2, 3300, '2025-01-01',11, 44),
+    (125.3, 14, 9, 1900, 2800, 1.4, 4200, '2025-01-01',11, 44),
+    (92.7, 7, 4, 1150, 1700, 1.1, 3100,'2025-01-01', 11, 44),
+    (108.4, 10, 6, 1600, 2300, 1.3, 3700, '2025-01-01',12, 45),
+    (87.5, 5, 2, 950, 1400, 1.0, 2700,'2025-01-01', 12, 45),
+    (135.6, 16, 10, 2100, 3200, 1.5, 4600, '2025-01-01',12, 45),
+    (98.3, 9, 5, 1250, 1800, 1.2, 3400, '2025-01-01',12, 45);
 

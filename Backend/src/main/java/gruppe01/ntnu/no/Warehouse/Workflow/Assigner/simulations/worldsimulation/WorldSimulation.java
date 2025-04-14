@@ -1,11 +1,10 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerator;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +62,8 @@ public class WorldSimulation {
 
     private List<ActiveTask> activeTasksToday;
 
+    private List<PickerTask> pickerTasksToday;
+
     private long simulationSleepInMillis;
 
     private boolean isPaused;
@@ -71,6 +72,12 @@ public class WorldSimulation {
 
     @Autowired
     private WorkerService workerService;
+
+    @Autowired
+    private PickerTaskGenerator pickerTaskGenerator;
+
+    @Autowired
+    private PickerTaskService pickerTaskService;
 
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
         isPlaying = true;
@@ -81,6 +88,7 @@ public class WorldSimulation {
             if (activeTaskService.getActiveTaskByDate(workday).isEmpty()) {
                 activeTaskGenerator.generateActiveTasks(workday, 1);
                 timeTableGenerator.generateTimeTable(workday, 1);
+                pickerTaskGenerator.generatePickerTasks(workday, 1, 20);
                 activeTasksExistForWorkday = true;
             } else {
                 workday = workday.plusDays(1);
@@ -131,6 +139,10 @@ public class WorldSimulation {
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
                         activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
                 //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
+                .collect(Collectors.toList());
+
+        pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
+                .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
                 .collect(Collectors.toList());
 
         for (Timetable timetable : timetables) {
@@ -264,6 +276,12 @@ public class WorldSimulation {
                         }
                     }
                 }
+            }
+
+            Iterator<PickerTask> pickerTaskIterator = pickerTasksToday.iterator();
+            while (pickerTaskIterator.hasNext()) {
+                PickerTask task = pickerTaskIterator.next();
+
             }
 
             // Assign tasks to available workers

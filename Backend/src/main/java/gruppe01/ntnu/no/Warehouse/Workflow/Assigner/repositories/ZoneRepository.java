@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository interface for Zone entity.
+ */
 @Repository
 public interface ZoneRepository extends JpaRepository<Zone, Long> {
 

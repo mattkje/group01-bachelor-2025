@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS zone
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
     name        VARCHAR(255) NOT NULL,
+    is_picker_zone BOOLEAN DEFAULT FALSE,
     capacity    INT          NOT NULL
 );
 
@@ -106,7 +107,7 @@ CREATE TABLE IF NOT EXISTS picker_task
     weight_g       INT,
     volume_ml      INT,
     avg_height_m   INT,
-    time_s         DOUBLE,
+    time_s         DOUBLE DEFAULT NULL,
     date           DATE,
     zone_id        BIGINT NOT NULL,
     worker_id      BIGINT,
@@ -175,19 +176,19 @@ VALUES
     (45, 'Noah White', 12, 'Quality Control', 1.0, true);
 
 
-INSERT INTO zone (name, capacity)
-VALUES ('Receiving', 10),
-       ('Storage', 15),
-       ('Picking', 5),
-       ('Packing', 7),
-       ('Shipping', 8),
-       ('Quality Control', 4),
-       ('Planning', 6),
-       ('Execution', 14),
-       ('Monitoring', 2),
-       ('Dry', 10),
-       ('Fruit', 15),
-       ('Freeze', 8);
+INSERT INTO zone (name, capacity, is_picker_zone)
+VALUES ('Receiving', 10, false),
+       ('Storage', 15, false),
+       ('Picking', 5, false),
+       ('Packing', 7, false),
+       ('Shipping', 8, false),
+       ('Quality Control', 4, false),
+       ('Planning', 6, false),
+       ('Execution', 14, false),
+       ('Monitoring', 2, false),
+       ('Dry', 10, true),
+       ('Fruit', 15, true),
+       ('Freeze', 8, true);
 
 INSERT INTO license (name)
 VALUES ('Truck License'),

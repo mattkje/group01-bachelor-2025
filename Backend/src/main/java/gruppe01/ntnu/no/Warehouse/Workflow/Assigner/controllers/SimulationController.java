@@ -60,11 +60,11 @@ public class SimulationController {
     timeTableGenerator.generateTimeTable(startDate, numDays);
   }
 
-  @GetMapping("/generate-picker-tasks/{date}/{numDays}/{numOfTasksPerDay}/{zoneId}")
+  @GetMapping("/generate-picker-tasks/{date}/{numDays}/{numOfTasksPerDay}")
   public void generatePickerTasks(@PathVariable String date, @PathVariable int numDays,
-      @PathVariable int numOfTasksPerDay, @PathVariable Long zoneId) throws Exception {
+      @PathVariable int numOfTasksPerDay) throws Exception {
     LocalDate startDate = LocalDate.parse(date);
-    pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay, zoneId);
+    pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay);
   }
 
   @GetMapping("/run-world-simulation")

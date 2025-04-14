@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository interface for Worker entity.
+ */
 @Repository
 public interface WorkerRepository extends JpaRepository<Worker, Long> {
 
