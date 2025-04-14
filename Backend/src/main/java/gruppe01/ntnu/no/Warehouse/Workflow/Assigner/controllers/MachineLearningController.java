@@ -18,30 +18,46 @@ import java.net.URISyntaxException;
 @RequestMapping("/api/ml")
 public class MachineLearningController {
 
-    @Autowired
-    private CsvGenerator csvGenerator;
-    @Autowired
-    private MachineLearningModel machineLearningModel;
-    @Autowired
-    private MachineLearningModelPicking machineLearningModelPicking;
+  @Autowired
+  private CsvGenerator csvGenerator;
+  @Autowired
+  private MachineLearningModel machineLearningModel;
+  @Autowired
+  private MachineLearningModelPicking machineLearningModelPicking;
 
-    @GetMapping("/create-csv")
-    public void createCsv() {
-        csvGenerator.createCsvForML();
-    }
+  @GetMapping("/create-csv")
+  public void createCsv() {
+    csvGenerator.createCsvForML();
+  }
 
-    @GetMapping("/start-model")
-    public void startModel() throws IOException, URISyntaxException {
-        machineLearningModel.startModel();
-    }
+  @GetMapping("/start-model")
+  public void startModel() throws IOException, URISyntaxException {
+    machineLearningModel.startModel();
+  }
 
-    @GetMapping("/train-model/{department}")
-    public String getStartingParameters(@PathVariable String department) throws IOException, URISyntaxException {
-        return machineLearningModelPicking.createModel(department);
-    }
+  @GetMapping("/train-model/{department}")
+  public String getStartingParameters(@PathVariable String department)
+      throws IOException, URISyntaxException {
+    return machineLearningModelPicking.createModel(department);
+  }
 
-    @GetMapping("/get-mc-values/{department}")
-    public Map<List<Double>,List<List<Double>>> getMcValues(@PathVariable String department) throws IOException, URISyntaxException {
-        return machineLearningModelPicking.getMcValues(department);
-    }
+  @GetMapping("/get-mc-values/{department}")
+  public Map<List<Double>, List<List<Double>>> getMcValues(@PathVariable String department)
+      throws IOException, URISyntaxException {
+    return machineLearningModelPicking.getMcValues(department);
+  }
+
+  @GetMapping("/get-weights/{department}")
+  public List<Double> getWeights(@PathVariable String department)
+      throws IOException, URISyntaxException {
+    return machineLearningModelPicking.getMcWeights(department);
+  }
+
+  @GetMapping("/get-starting-efficiency/{department}")
+  public List<Double> getStartingEfficiency(@PathVariable String department)
+      throws IOException, URISyntaxException {
+    return machineLearningModelPicking.getMcWorkerEfficiency(department);
+  }
+
+
 }
