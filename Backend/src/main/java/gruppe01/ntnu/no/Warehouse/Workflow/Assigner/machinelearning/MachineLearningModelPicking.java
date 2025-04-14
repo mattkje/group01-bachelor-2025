@@ -45,7 +45,7 @@ public class MachineLearningModelPicking {
     if (isWorkerEfficiency){
       filePath = "worker_efficiency_" + department.toUpperCase() + "_worker.ser";
     } else {
-       filePath = "pickroute_" + department.toUpperCase() + ".ser";
+      filePath = "pickroute_" + department.toUpperCase() + ".ser";
     }
 
     // Attempt to load an existing model
@@ -183,14 +183,14 @@ public class MachineLearningModelPicking {
     return RandomForest.fit(formula, data);
   }
 
-private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
+  private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
     String target = "picker";
 
     // Check if the target column exists
     if (!Arrays.asList(data.names()).contains(target)) {
-        throw new IllegalArgumentException(
-            "Column '" + target + "' not found in CSV. Detected columns: " +
-                Arrays.toString(data.names()));
+      throw new IllegalArgumentException(
+          "Column '" + target + "' not found in CSV. Detected columns: " +
+              Arrays.toString(data.names()));
     }
 
     // Factorize the target column (picker) into numerical categories
@@ -198,7 +198,7 @@ private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
 
     // Create dummy variables (one-hot encoding)
     DataFrame dummyVariables = DataFrame.of(
-        IntStream.range(0, factorized.length).mapToObj(i -> new int[]{factorized[i]}).toArray(int[][]::new));
+        Arrays.stream(factorized).mapToObj(j -> new int[] {j}).toArray(int[][]::new));
     // Merge dummy variables with the original data
     DataFrame encodedData = data.merge(dummyVariables);
 
@@ -210,7 +210,7 @@ private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
 
     // Train the RandomForest model
     return RandomForest.fit(formula, encodedData);
-}
+  }
 
 
   /**
@@ -328,37 +328,38 @@ private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
   }
 
   public List<Double> getMcWorkerEfficiency(String department) throws IOException {
-      String filePath = "worker_efficiency_" + department.toUpperCase() + "_worker.ser";
-      RandomForest model = loadModel(filePath);
+    String filePath = "worker_efficiency_" + department.toUpperCase() + "_worker.ser";
+    RandomForest model = loadModel(filePath);
 
-      if (model == null) {
-          // Train a new model if it doesn't exist
-          if (createModel(department, true).isEmpty()) {
-              return getMcWorkerEfficiency(department);
-          }
+    if (model == null) {
+      // Train a new model if it doesn't exist
+      if (createModel(department, true).isEmpty()) {
+        return getMcWorkerEfficiency(department);
       }
+    }
 
-      // Parse the dataset to create a DataFrame for predictions
-      String csvFilePath = "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
-                           + department.toUpperCase() + "_time.csv";
-      DataFrame data = parseCsvToDataFrame(csvFilePath);
+    // Parse the dataset to create a DataFrame for predictions
+    String csvFilePath = "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
+        + department.toUpperCase() + "_time.csv";
+    DataFrame data = parseCsvToDataFrame(csvFilePath);
 
-      if (data == null) {
-          throw new IllegalStateException("Failed to parse the dataset for predictions.");
-      }
+    if (data == null) {
+      throw new IllegalStateException("Failed to parse the dataset for predictions.");
+    }
 
-      // Use the model to predict worker efficiency
+    // Use the model to predict worker efficiency
     assert model != null;
     double[] predictions = model.predict(data);
 
-      // Convert predictions to a list of doubles
-      List<Double> efficiencyValues = new ArrayList<>();
-      for (double prediction : predictions) {
-          efficiencyValues.add(prediction);
-      }
+    // Convert predictions to a list of doubles
+    List<Double> efficiencyValues = new ArrayList<>();
+    for (double prediction : predictions) {
+      efficiencyValues.add(prediction);
+    }
 
-      return efficiencyValues;
+    return efficiencyValues;
   }
 
 
 }
+

@@ -93,14 +93,17 @@ public class MonteCarloNormalZone {
         Map<Long, Double> zoneDurations = new HashMap<>();
 
         for (Zone zone : zonesCopy) {
-          List<ActiveTask> zoneTasks = activeTasksCopy.stream()
-              .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
-              .toList();
-
           warehouseExecutor.submit(() -> {
             try {
-              String result =
-                  zoneSimulator.runZoneSimulation(zone, zoneTasks, totalTaskTime, finalI);
+              String result = "";
+              if(zone.getPickerTask().isEmpty()){
+                List<ActiveTask> zoneTasks = activeTasksCopy.stream()
+                    .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
+                    .toList();
+                result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, null ,totalTaskTime, finalI);
+              } else {
+                result = ZoneSimulator.runZoneSimulation(zone, null, zone.getPickerTask(), totalTaskTime, finalI);
+              }
               try {
                 double parsedResult = Double.parseDouble(result);
                 synchronized (zoneDurations) {

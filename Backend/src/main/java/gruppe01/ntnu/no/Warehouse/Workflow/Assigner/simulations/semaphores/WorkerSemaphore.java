@@ -101,4 +101,9 @@ public class WorkerSemaphore {
     workers.addAll(allWorkers);
     semaphore.release(allWorkers.size());
   }
+
+  public void release(Worker worker) {
+    workers.add(worker);
+    semaphore.release();
+  }
 }
