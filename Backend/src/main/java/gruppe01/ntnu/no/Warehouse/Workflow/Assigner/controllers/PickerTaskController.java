@@ -4,10 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,5 +28,15 @@ public class PickerTaskController {
     @GetMapping("/zone/{zoneId}")
     public List<PickerTask> getPickerTasksByZoneId(@PathVariable Long zoneId) {
         return pickerTaskService.getPickerTaskByZoneId(zoneId);
+    }
+
+    @PutMapping("/{id}")
+    public PickerTask updatePickerTask(@PathVariable Long id, @RequestBody PickerTask pickerTask) {
+        return pickerTaskService.updatePickerTask(id, pickerTask);
+    }
+
+    @PutMapping("/assign-worker/{pickerTaskId}/{workerId}")
+    public PickerTask assignWorkerToPickerTask(@PathVariable Long pickerTaskId, @PathVariable Long workerId) {
+        return pickerTaskService.assignWorkerToPickerTask(pickerTaskId, workerId);
     }
 }

@@ -3,6 +3,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerato
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
@@ -10,6 +11,8 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,13 +59,19 @@ public class WorldSimulation {
 
     private List<Worker> busyWorkers;
 
-    private Map<ActiveTask, LocalDateTime> taskEndTimes;
+    private Map<ActiveTask, LocalDateTime> activeTaskEndTimes;
+
+    private Map<PickerTask, LocalDateTime> pickerTaskEndTimes;
 
     private List<ActiveTask> activeTasksInProgress;
+
+    private List<PickerTask> pickerTasksInProgress;
 
     private List<ActiveTask> activeTasksToday;
 
     private List<PickerTask> pickerTasksToday;
+
+    private MachineLearningModelPicking machineLearningModelPicking;
 
     private long simulationSleepInMillis;
 
@@ -104,6 +113,7 @@ public class WorldSimulation {
         } else {
             simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
         }
+
         Random random = new Random();
         availableWorkers = new ArrayList<>();
         busyWorkers = new ArrayList<>();
@@ -111,7 +121,9 @@ public class WorldSimulation {
         workersDelayedBreak = new ArrayList<>();
         activeTasksInProgress = new ArrayList<>();
         workersWaitingForTask = new ArrayList<>();
-        taskEndTimes = new HashMap<>();
+        activeTaskEndTimes = new HashMap<>();
+        pickerTasksInProgress = new ArrayList<>();
+        pickerTaskEndTimes = new HashMap<>();
 
         timetables = timetableService.getTimetablesByDate(workday);
 
@@ -145,6 +157,8 @@ public class WorldSimulation {
                 .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
                 .collect(Collectors.toList());
 
+        machineLearningModelPicking = new MachineLearningModelPicking();
+
         for (Timetable timetable : timetables) {
             LocalDateTime timetableStartTime = timetable.getStartTime();
             LocalDateTime timetableEndTime = timetable.getEndTime();
@@ -165,7 +179,7 @@ public class WorldSimulation {
 
     }
 
-    private void startSimulating() throws InterruptedException {
+    private void startSimulating() throws InterruptedException, IOException {
         while (!currentTime.equals(endTime) && !isPaused) {
             for (Timetable timetable : timetables) {
                 if (timetable.getRealStartTime().toLocalTime().equals(currentTime) &&
@@ -261,7 +275,7 @@ public class WorldSimulation {
                         task.setWorkers(new ArrayList<>(workersAssignedToTask));
                         task.setStartTime(LocalDateTime.of(workday, currentTime));
 
-                        taskEndTimes.put(task, getEndTime(task));
+                        activeTaskEndTimes.put(task, getEndTime(task));
 
                         activeTasksInProgress.add(task);
                         activeTaskWithDueDatesIterator.remove();
@@ -279,10 +293,35 @@ public class WorldSimulation {
             }
 
             Iterator<PickerTask> pickerTaskIterator = pickerTasksToday.iterator();
-            while (pickerTaskIterator.hasNext()) {
-                PickerTask task = pickerTaskIterator.next();
+            if (!availableWorkers.isEmpty()) {
+                while (pickerTaskIterator.hasNext()) {
+                    PickerTask task = pickerTaskIterator.next();
 
+                    List<Worker> workers = new ArrayList<>(availableWorkers.stream()
+                            .filter(worker -> worker.getZone().equals(task.getZone().getId()))
+                            .collect(Collectors.toList()));
+                    Iterator<Worker> workerIterator = workers.iterator();
+
+                    if (workers.isEmpty()) {
+                        continue;
+                    }
+
+                    Worker worker = workerIterator.next();
+                    worker.setCurrentPickerTask(task);
+                    task.setStartTime(LocalDateTime.of(workday, currentTime));
+                    pickerTaskEndTimes.put(task, getPickerEndTime(task, worker));
+                    busyWorkers.add(worker);
+                    availableWorkers.remove(worker);
+                    pickerTaskService.assignWorkerToPickerTask(task.getId(), worker.getId());
+                    workerService.updateWorker(worker.getId(), worker);
+                    System.out.println(worker.getName() + " has started working on task: " +
+                            task.getId());
+                    pickerTasksInProgress.add(task);
+                    pickerTaskIterator.remove();
+                    pickerTaskService.updatePickerTask(task.getId(), task);
+                }
             }
+
 
             // Assign tasks to available workers
             Iterator<ActiveTask> activeTaskIterator = activeTasksToday.iterator();
@@ -320,7 +359,7 @@ public class WorldSimulation {
                         workersAssigned++;
                     }
                     task.setStartTime(LocalDateTime.of(workday, currentTime));
-                    taskEndTimes.put(task, getEndTime(task));
+                    activeTaskEndTimes.put(task, getEndTime(task));
                     task.setWorkers(workersAssignedToTask);
                     activeTasksInProgress.add(task);
                     activeTaskIterator.remove();
@@ -328,12 +367,31 @@ public class WorldSimulation {
                 }
             }
 
+            Iterator<PickerTask> pickerTaskInProgressIterator = pickerTasksInProgress.iterator();
+            while (pickerTaskInProgressIterator.hasNext()) {
+                PickerTask task = pickerTaskInProgressIterator.next();
+                LocalDateTime computedEndTime = pickerTaskEndTimes.get(task);
+
+                if (computedEndTime != null && !computedEndTime.toLocalTime().isAfter(currentTime)) {
+                    task.setEndTime(computedEndTime);
+                    task.setTime(Duration.between(task.getStartTime(), computedEndTime).toSeconds());
+                    pickerTaskService.updatePickerTask(task.getId(), task);
+                    Worker worker = task.getWorker();
+                    worker.setCurrentPickerTask(null);
+                    workerService.updateWorker(worker.getId(), worker);
+                    System.out.println(worker.getName() + " has completed task: " + task.getId());
+                    availableWorkers.add(worker);
+                    busyWorkers.remove(worker);
+                    pickerTaskInProgressIterator.remove();
+                    pickerTaskEndTimes.remove(task);
+                }
+            }
 
             //Check if tasks are completed
             Iterator<ActiveTask> activeTaskInProgressIterator = activeTasksInProgress.iterator();
             while (activeTaskInProgressIterator.hasNext()) {
                 ActiveTask task = activeTaskInProgressIterator.next();
-                LocalDateTime computedEndTime = taskEndTimes.get(task);
+                LocalDateTime computedEndTime = activeTaskEndTimes.get(task);
 
                 if (computedEndTime != null && !computedEndTime.toLocalTime().isAfter(currentTime)) {
                     // Now set endTime since we are processing completion
@@ -349,9 +407,11 @@ public class WorldSimulation {
 
                     // Remove task from progress and map
                     activeTaskInProgressIterator.remove();
-                    taskEndTimes.remove(task);
+                    activeTaskEndTimes.remove(task);
                 }
             }
+
+            Iterator<PickerTask> pickerTasksInProgressIterator = pickerTasksToday.iterator();
 
             Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
             availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
@@ -398,7 +458,19 @@ public class WorldSimulation {
         return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
     }
 
-    public void pauseSimulation() throws InterruptedException {
+    public LocalDateTime getPickerEndTime(PickerTask task, Worker worker) throws IOException {
+        return task.getStartTime().plusSeconds(machineLearningModelPicking.estimateTimeUsingWeights(task.getZone().getName(), task.getDistance(),
+                task.getPackAmount(), task.getLinesAmount(), task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()));
+    }
+
+    private double normalize(double value, List<Double> minMax) {
+        double min = minMax.get(0);
+        double max = minMax.get(1);
+        if (max - min == 0) return 0.0; // Prevent division by zero
+        return (value - min) / (max - min);
+    }
+
+    public void pauseSimulation() throws InterruptedException, IOException {
         isPaused = !isPaused;
         if (!isPaused) {
             startSimulating();

@@ -360,5 +360,39 @@ private RandomForest trainModelForWorkerEfficiency(DataFrame data) {
       return efficiencyValues;
   }
 
+  public long estimateTimeUsingWeights(
+          String department,
+          double distance, double dpack, double lines,
+          double weight, double volume, double avgHeight, long picker
+  ) throws IOException {
+    // Get weights from trained model
+    List<Double> weights = getMcWeights(department);
+
+    // Load CSV data to get min-max values for normalization
+    String csvFilePath =
+            "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+                    department.toUpperCase() + "_time.csv";
+
+    DataFrame data = parseCsvToDataFrame(csvFilePath);
+    List<List<Double>> minMaxValues = getMinMaxValues(data);
+
+    // Your input features
+    double[] features = new double[]{distance, dpack, lines, weight, volume, avgHeight, picker};
+
+    double estimatedTime = 0.0;
+    for (int i = 0; i < features.length; i++) {
+      double min = minMaxValues.get(i).get(0);
+      double max = minMaxValues.get(i).get(1);
+
+      double normalized = (features[i] - min) / (max - min);
+      estimatedTime += weights.get(i) * normalized;
+    }
+
+    // Optional: scale to actual average time
+    double[] actualTimes = data.column("time_s").toDoubleArray();
+    double averageTime = Arrays.stream(actualTimes).average().orElse(1.0); // fallback
+    return (long) (estimatedTime * averageTime);
+  }
+
 
 }

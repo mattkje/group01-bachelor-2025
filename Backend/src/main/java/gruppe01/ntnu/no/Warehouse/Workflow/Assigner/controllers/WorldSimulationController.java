@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -20,7 +21,7 @@ public class WorldSimulationController {
     }
 
     @PostMapping("/pause")
-    public void pauseSimulation() throws InterruptedException {
+    public void pauseSimulation() throws InterruptedException, IOException {
         worldSimulation.pauseSimulation();
     }
 

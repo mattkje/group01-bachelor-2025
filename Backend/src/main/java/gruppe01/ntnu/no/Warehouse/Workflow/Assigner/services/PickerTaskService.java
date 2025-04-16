@@ -1,7 +1,10 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.PickerTaskRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +16,8 @@ public class PickerTaskService {
 
     @Autowired
     private PickerTaskRepository pickerTaskRepository;
+    @Autowired
+    private WorkerRepository workerRepository;
 
     public List<PickerTask> getAllPickerTasks() {
         return pickerTaskRepository.findAll();
@@ -36,7 +41,24 @@ public class PickerTaskService {
         if (pickerTask != null) {
             return pickerTaskRepository.save(pickerTask);
         }
-
         return null;
+    }
+
+    public PickerTask assignWorkerToPickerTask(Long pickerTaskId, Long workerId) {
+        PickerTask pickerTask = getPickerTaskById(pickerTaskId);
+        Worker worker = workerRepository.findById(workerId).orElse(null);
+        if (pickerTask != null && worker != null) {
+            pickerTask.setWorker(worker);
+            return savePickerTask(pickerTask);
+        }
+        return null;
+    }
+
+    public PickerTask updatePickerTask(Long id, PickerTask pickerTask) {
+        PickerTask updatedActiveTask = pickerTaskRepository.findById(id).get();
+        if (updatedActiveTask.getId().equals(pickerTask.getId())) {
+            updatedActiveTask = pickerTask;
+        }
+        return pickerTaskRepository.save(updatedActiveTask);
     }
 }

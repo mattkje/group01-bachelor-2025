@@ -69,7 +69,7 @@ public class Zone {
 
   public void setPickerTask(Set<PickerTask> pickerTask) {}
 
-  public void setPickerZone(boolean isPickerZone) {
+  public void setIsPickerZone(boolean isPickerZone) {
     this.isPickerZone = isPickerZone;
   }
 
@@ -97,7 +97,7 @@ public class Zone {
     return pickerTask;
   }
 
-  public boolean isPickerZone() {
+  public boolean getIsPickerZone() {
     return isPickerZone;
   }
 }

@@ -8,7 +8,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
@@ -33,6 +32,10 @@ public class PickerTaskGenerator {
 
         Map<List<Double>, List<List<Double>>> mcValues = new HashMap<>();
         List<List<Double>> valueList = new ArrayList<>();
+        List<Map<List<Double>, List<List<Double>>>> mcValuesList = new ArrayList<>();
+        mcValuesList.add(machineLearningModelPicking.getMcValues("dry"));
+        mcValuesList.add(machineLearningModelPicking.getMcValues("freeze"));
+        mcValuesList.add(machineLearningModelPicking.getMcValues("fruit"));
 
         Random random = new Random();
 
@@ -40,11 +43,11 @@ public class PickerTaskGenerator {
         for (Zone zone : zoneService.getAllPickerZones()) {
 
             if (zone.getName().equalsIgnoreCase("freeze")) {
-                mcValues = machineLearningModelPicking.getMcValues("freeze");
+                mcValues = mcValuesList.get(1);
             } else if (zone.getName().equalsIgnoreCase("fruit")) {
-                mcValues = machineLearningModelPicking.getMcValues("fruit");
+                mcValues = mcValuesList.get(2);
             } else {
-                mcValues = machineLearningModelPicking.getMcValues("dry");
+                mcValues = mcValuesList.getFirst();
             }
 
             valueList = mcValues.values().iterator().next();

@@ -6,7 +6,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,14 +32,14 @@ public class ZoneService {
 
   public List<Zone> getAllTaskZones() {
     return zoneRepository.findAll().stream()
-        .filter(zone -> !zone.isPickerZone())
+        .filter(zone -> !zone.getIsPickerZone())
         .collect(Collectors.toList());
   }
 
   public List<Zone> getAllPickerZones() {
     return zoneRepository.findAll().stream()
-        .filter(Zone::isPickerZone)
-        .collect(Collectors.toList());
+        .filter(zone -> zone.getIsPickerZone())
+            .collect(Collectors.toList());
   }
 
   public Zone getZoneById(Long id) {
@@ -103,13 +102,13 @@ public class ZoneService {
   public Zone updateZone(Long id, Zone zone) {
     Zone updatedZone = zoneRepository.findById(id).get();
 
-    if ((zone.getPickerTask().isEmpty() && !zone.isPickerZone()) || (zone.getTasks().isEmpty() && zone.isPickerZone())) {
+    if ((zone.getPickerTask().isEmpty() && !zone.getIsPickerZone()) || (zone.getTasks().isEmpty() && zone.getIsPickerZone())) {
       updatedZone.setName(zone.getName());
       updatedZone.setWorkers(zone.getWorkers());
       updatedZone.setTasks(zone.getTasks());
       updatedZone.setPickerTask(zone.getPickerTask());
       updatedZone.setCapacity(zone.getCapacity());
-      updatedZone.setPickerZone(zone.isPickerZone());
+      updatedZone.setIsPickerZone(zone.getIsPickerZone());
     }
     return zoneRepository.save(updatedZone);
   }
@@ -151,7 +150,7 @@ public class ZoneService {
   public Zone changeIsPickerZone(Long id) {
     Zone zone = zoneRepository.findById(id).orElse(null);
     if (zone != null) {
-      zone.setPickerZone(!zone.isPickerZone());
+      zone.setIsPickerZone(!zone.getIsPickerZone());
       return zoneRepository.save(zone);
     }
     return null;

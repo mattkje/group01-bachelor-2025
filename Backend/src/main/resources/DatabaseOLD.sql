@@ -108,6 +108,8 @@ CREATE TABLE IF NOT EXISTS picker_task
     volume_ml      INT,
     avg_height_m   INT,
     time_s         DOUBLE DEFAULT NULL,
+    start_time    TIMESTAMP,
+    end_time      TIMESTAMP,
     date           DATE,
     zone_id        BIGINT NOT NULL,
     worker_id      BIGINT,

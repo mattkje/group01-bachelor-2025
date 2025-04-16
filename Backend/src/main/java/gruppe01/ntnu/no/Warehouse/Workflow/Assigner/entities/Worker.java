@@ -40,7 +40,11 @@ public class Worker {
 
     @ManyToOne
     @JsonIgnore
-    private ActiveTask currentTask;
+    private ActiveTask currentActiveTask;
+
+    @OneToOne
+    @JsonIgnore
+    private PickerTask currentPickerTask;
 
     @Column(name = "break_start_time")
     private LocalTime breakStartTime;
@@ -100,7 +104,7 @@ public class Worker {
     }
 
     public void setCurrentTask(ActiveTask currentTask) {
-        this.currentTask = currentTask;
+        this.currentActiveTask = currentTask;
     }
 
     public void setBreakStartTime(LocalTime breakStartTime) {
@@ -109,6 +113,10 @@ public class Worker {
 
     public void setDead(boolean dead) {
         this.dead = dead;
+    }
+
+    public void setCurrentPickerTask(PickerTask currentPickerTask) {
+        this.currentPickerTask = currentPickerTask;
     }
 
     public Long getId() {
@@ -132,7 +140,7 @@ public class Worker {
     }
 
     public ActiveTask getCurrentTask() {
-        return currentTask;
+        return currentActiveTask;
     }
 
     public boolean isDead() {
@@ -170,5 +178,9 @@ public class Worker {
 
     public boolean hasAllLicenses(Set<License> requiredLicenses) {
         return licenses.containsAll(requiredLicenses);
+    }
+
+    public PickerTask getCurrentPickerTask() {
+        return currentPickerTask;
     }
 }
