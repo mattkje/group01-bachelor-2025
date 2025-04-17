@@ -3,10 +3,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Represents a Worker entity in the warehouse system.
@@ -51,6 +50,13 @@ public class Worker {
 
     @Column(name = "dead")
     private boolean dead;
+
+    @ElementCollection
+    @CollectionTable(name = "worker_schedule", joinColumns = @JoinColumn(name = "worker_id"))
+    @MapKeyColumn(name = "day_of_week")
+    @MapKeyEnumerated(EnumType.STRING)
+    @Column(name = "work_schedule")
+    private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -119,6 +125,10 @@ public class Worker {
         this.currentPickerTask = currentPickerTask;
     }
 
+    public void setWorkSchedule(Map<DayOfWeek, WorkerTimeRange> workSchedule) {
+        this.workSchedule = workSchedule;
+    }
+
     public Long getId() {
         return id;
     }
@@ -182,5 +192,9 @@ public class Worker {
 
     public PickerTask getCurrentPickerTask() {
         return currentPickerTask;
+    }
+
+    public Map<DayOfWeek, WorkerTimeRange> getWorkSchedule() {
+        return workSchedule;
     }
 }
