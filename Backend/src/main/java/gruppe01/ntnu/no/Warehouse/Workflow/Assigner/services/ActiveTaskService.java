@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -193,5 +194,69 @@ public class ActiveTaskService {
             return activeTask.getWorkers();
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * Creates new active tasks for the next month based on the recurrence type of existing active tasks.
+     * RecurrenceTyoe 1 = Monthly, 2 = Weekly, 3 = Every 2 days, 4 = Daily
+     */
+    public void CreateRepeatingActiveTasks() {
+        List<ActiveTask> activeTasks = activeTaskRepository.findAll();
+        for (ActiveTask activeTask : activeTasks) {
+            if (activeTask.getRecurrenceType() == 1) {
+                createNewTasks(activeTask, 1, "MONTHS");
+            } else if (activeTask.getRecurrenceType() == 2) {
+                createNewTasks(activeTask, 1, "WEEKS");
+            } else if (activeTask.getRecurrenceType() == 3) {
+                createNewTasks(activeTask, 2, "DAYS");
+            } else if (activeTask.getRecurrenceType() == 4) {
+                createNewTasks(activeTask, 1, "DAYS");
+            }
+        }
+    }
+
+    /**
+     * Creates new tasks based on the given active task's date and recurrence type.
+     *
+     * @param activeTask The active task to base the new tasks on.
+     * @param increment  The amount to increment the date by.
+     * @param unit      The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     */
+    private void createNewTasks(ActiveTask activeTask, int increment, String unit) {
+        LocalDate tempDate = incrementDate(activeTask.getDate(), increment, unit);
+        activeTask.setRecurrenceType(0);
+
+        while (tempDate.isBefore(LocalDate.now().plusMonths(1))) {
+            ActiveTask newTask = new ActiveTask(activeTask);
+            newTask.setDate(tempDate);
+            newTask.setRecurrenceType(0);
+            newTask.setStartTime(null);
+            newTask.setEndTime(null);
+            newTask.setWorkers(new ArrayList<>());
+
+            if (tempDate.isAfter(LocalDate.now().plusMonths(1))) {
+                newTask.setRecurrenceType(activeTask.getRecurrenceType());
+            }
+
+            activeTaskRepository.save(newTask);
+            tempDate = incrementDate(tempDate, increment, unit);
+        }
+    }
+
+    /**
+     * Increments the given date by the specified amount and unit.
+     *
+     * @param date    The date to increment.
+     * @param increment The amount to increment.
+     * @param unit    The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     * @return The incremented date.
+     */
+    private LocalDate incrementDate(LocalDate date, int increment, String unit) {
+        return switch (unit) {
+            case "MONTHS" -> date.plusMonths(increment);
+            case "WEEKS" -> date.plusWeeks(increment);
+            case "DAYS" -> date.plusDays(increment);
+            default -> throw new IllegalArgumentException("Invalid time unit: " + unit);
+        };
     }
 }

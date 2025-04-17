@@ -40,6 +40,11 @@ public class ActiveTask {
     @Column(name="date")
     private LocalDate date;
 
+    // Recurrence type: 0 = no recurrence, 1 = monthly, 2 = weekly,
+    // 3 = every other day, 4 = daily
+    @Column(name = "recurrence_type")
+    private int recurrenceType;
+
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
@@ -103,6 +108,10 @@ public class ActiveTask {
         this.date = date;
     }
 
+    public void setRecurrenceType(int recurrenceType) {
+        this.recurrenceType = recurrenceType;
+    }
+
     public LocalDateTime getDueDate() {
         return dueDate;
     }
@@ -137,5 +146,9 @@ public class ActiveTask {
 
     public LocalDate getDate() {
         return date;
+    }
+
+    public int getRecurrenceType() {
+        return recurrenceType;
     }
 }
