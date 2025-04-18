@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -122,6 +123,11 @@ public class PickerTask {
 
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    @JsonProperty("zoneId")
+    public Long getZoneId() {
+        return zone.getId();
     }
 
     public void setId(Long id) {

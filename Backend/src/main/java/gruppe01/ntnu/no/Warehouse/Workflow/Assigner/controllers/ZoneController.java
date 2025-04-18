@@ -60,6 +60,11 @@ public class ZoneController {
         return zoneService.getTodaysUnfinishedTasksByZoneId(id);
     }
 
+    @GetMapping("/{id}/picker-tasks-now")
+    public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
+        return zoneService.getTodaysUnfinishedPickerTasksByZoneId(id);
+    }
+
     @PostMapping
     public Zone addZone(@RequestBody Zone zone) {
         return zoneService.addZone(zone);

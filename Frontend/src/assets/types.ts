@@ -7,6 +7,8 @@ export interface Zone {
     id: number;
     name: string;
     capacity: number;
+    isPickerZone: boolean;
+    pickerTasks: PickerTask[];
     tasks: Task[];
     workers: Worker[];
 }
@@ -53,5 +55,21 @@ export interface TimeTable {
     endTime: string;
     realStartTime: string;
     realEndTime: string;
+    worker: Worker;
+}
+
+export interface PickerTask {
+    id: number;
+    distance: number;
+    packAmount: number;
+    linesAmount: number;
+    weight: number;
+    volume: number;
+    avgHeight: number;
+    time: number;
+    startTime: string;
+    endTime: string;
+    date: string;
+    zoneId: number;
     worker: Worker;
 }

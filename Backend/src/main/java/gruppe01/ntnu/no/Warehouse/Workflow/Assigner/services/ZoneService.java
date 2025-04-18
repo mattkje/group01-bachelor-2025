@@ -96,6 +96,13 @@ public class ZoneService {
           .collect(Collectors.toSet());
   }
 
+  public Set<PickerTask> getTodaysUnfinishedPickerTasksByZoneId(Long id) {
+    LocalDate today = LocalDate.now();
+    return getPickerTasksByZoneId(id).stream()
+            .filter(pickerTask -> pickerTask.getDate().equals(today) && pickerTask.getEndTime() == null)
+            .collect(Collectors.toSet());
+  }
+
   public Zone addZone(Zone zone) {
     if (zone != null && (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty())) {
       return zoneRepository.save(zone);
