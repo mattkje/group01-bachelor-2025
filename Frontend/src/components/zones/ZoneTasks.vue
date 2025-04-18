@@ -50,6 +50,7 @@ const fetchActiveTasks = async (id: number) => {
       throw new Error('Network response was not ok');
     }
     activeTasks.value = await response.json();
+    activeTasks.value.sort((a, b) => a.id - b.id);
   } catch (error) {
     console.error('Failed to fetch active tasks:', error);
   }
@@ -62,6 +63,7 @@ const fetchPickerTasks = async (id: number) => {
       throw new Error('Network response was not ok');
     }
     pickerTasks.value = await response.json();
+    pickerTasks.value.sort((a, b) => a.id - b.id);
   } catch (error) {
     console.error('Failed to fetch picker tasks:', error);
   }
@@ -125,6 +127,16 @@ const prevPage = () => {
     currentPage.value--;
   }
 };
+
+const taskDeleted = () => {
+  fetchTasks();
+  if (props.zone.isPickerZone) {
+    fetchPickerTasks(props.zone.id);
+  } else {
+    fetchActiveTasks(props.zone.id);
+  }
+  fetchZones();
+};
 </script>
 
 <template>
@@ -133,8 +145,18 @@ const prevPage = () => {
     <h2 v-if="zone.isPickerZone">Picker Tasks</h2>
     <div class="activeTaskContainer">
       <div class="placeholder" v-if="activeTasks.length === 0 && pickerTasks.length === 0">No tasks remaining...</div>
-      <active-task-component v-if="!zone.isPickerZone" v-for="activeTask in activeTasks" :key="activeTask.id" :active-task="activeTask"/>
-      <picker-task-component v-if="zone.isPickerZone" v-for="pickerTask in pickerTasks" :key="pickerTask.id" :picker-task="pickerTask"/>
+      <active-task-component
+          v-if="!zone.isPickerZone"
+          v-for="activeTask in activeTasks"
+          :key="activeTask.id"
+          :active-task="activeTask"
+          @task-deleted="taskDeleted"/>
+      <picker-task-component
+          v-if="zone.isPickerZone"
+          v-for="pickerTask in pickerTasks"
+          :key="pickerTask.id"
+          :picker-task="pickerTask"
+          @task-deleted="taskDeleted"/>
     </div>
     <div class="pagination" v-if="activeTasks.length > 0">
       <button @click="prevPage" :disabled="currentPage === 1">Previous</button>

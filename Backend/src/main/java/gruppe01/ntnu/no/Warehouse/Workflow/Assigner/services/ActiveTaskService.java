@@ -178,7 +178,14 @@ public class ActiveTaskService {
 
     public ActiveTask deleteActiveTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
-        if (activeTask != null && !activeTask.getWorkers().isEmpty()) {
+        if (activeTask != null) {
+            activeTask.getWorkers().clear();
+            for (Worker worker : activeTask.getWorkers()) {
+                if (worker.getCurrentTask() == activeTask) {
+                    worker.setCurrentTask(null);
+                    workerRepository.save(worker);
+                }
+            }
             activeTaskRepository.delete(activeTask);
         }
         return activeTask;

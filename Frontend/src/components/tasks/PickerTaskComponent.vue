@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import {defineProps, onBeforeUnmount, onMounted, ref} from 'vue';
 import { PickerTask } from '@/assets/types';
-
-interface Worker {
-  id: number;
-  name: string;
-}
+import TaskDropdown from "@/components/tasks/TaskDropdown.vue";
 
 const props = defineProps<{ pickerTask: PickerTask }>();
+
+const emit = defineEmits(["taskDeleted"]);
+
+const handleTaskDeleted = () => {
+  emit("taskDeleted");
+};
 </script>
 
 <template>
   <div class="task-info-box">
+    <div class="task-header">
     <div class="task-name">{{ props.pickerTask.id}}</div>
+      <TaskDropdown :pickerTask="props.pickerTask" @task-deleted="handleTaskDeleted"></TaskDropdown>
+    </div>
     <div class="task-details">
       <div class="workers-info">
         <div>{{ Math.floor(props.pickerTask.weight / 1000) }} kg</div>
@@ -34,12 +39,19 @@ const props = defineProps<{ pickerTask: PickerTask }>();
   background-color: #FFF2F2;
   color: #E77474;
   max-height: 120px;
+  position: relative;
 }
 
 .task-name {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .task-details {

@@ -1,35 +1,23 @@
 <script setup lang="ts">
   import { defineProps } from 'vue';
-
-  interface Task {
-    id: number;
-    name: string;
-    description: string;
-    requiredLicense: { name: string }[];
-    maxTime: number;
-    minTime: number;
-    zoneId: number;
-    minWorkers: number;
-    maxWorkers: number;
-  }
-
-  interface Worker {
-    id: number;
-    name: string;
-  }
-
-  interface ActiveTask {
-    id: number;
-    workers: Worker[];
-    task: Task;
-  }
+  import TaskDropdown from "@/components/tasks/TaskDropdown.vue";
+  import {ActiveTask} from "@/assets/types";
 
   const props = defineProps<{ activeTask: ActiveTask }>();
+
+  const emit = defineEmits(["taskDeleted"]);
+
+  const handleTaskDeleted = () => {
+    emit("taskDeleted");
+  };
   </script>
 
   <template>
     <div class="task-info-box">
-      <div class="task-name">{{ props.activeTask.task.name}}</div>
+      <div class="task-header">
+        <div class="task-name">{{ props.activeTask.task.name}}</div>
+        <TaskDropdown :activeTask="props.activeTask" @task-deleted="handleTaskDeleted"></TaskDropdown>
+      </div>
       <div class="task-details">
         <div class="workers-info">
           <div>{{ props.activeTask.workers.length }} / {{ props.activeTask.task.maxWorkers}} workers</div>
@@ -51,6 +39,12 @@
     background-color: #FFF2F2;
     color: #E77474;
     max-height: 120px;
+  }
+
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .task-name {

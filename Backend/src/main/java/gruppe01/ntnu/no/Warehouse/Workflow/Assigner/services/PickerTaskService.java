@@ -48,6 +48,20 @@ public class PickerTaskService {
         Worker worker = workerRepository.findById(workerId).orElse(null);
         if (pickerTask != null && worker != null) {
             pickerTask.setWorker(worker);
+            worker.setCurrentPickerTask(pickerTask);
+            workerRepository.save(worker);
+            return savePickerTask(pickerTask);
+        }
+        return null;
+    }
+
+    public PickerTask removeWorkerFromPickerTask(Long pickerTaskId, Long workerId) {
+        PickerTask pickerTask = getPickerTaskById(pickerTaskId);
+        Worker worker = workerRepository.findById(workerId).orElse(null);
+        if (pickerTask.getWorker().getId().equals(workerId) && worker != null) {
+            worker.setCurrentPickerTask(null);
+            pickerTask.setWorker(null);
+            workerRepository.save(worker);
             return savePickerTask(pickerTask);
         }
         return null;
@@ -59,5 +73,16 @@ public class PickerTaskService {
             updatedActiveTask = pickerTask;
         }
         return pickerTaskRepository.save(updatedActiveTask);
+    }
+
+    public void deletePickerTask(Long id) {
+        PickerTask pickerTask = pickerTaskRepository.findById(id).orElse(null);
+        if (pickerTask != null) {
+            if (pickerTask.getWorker() != null) {
+                pickerTask.getWorker().setCurrentPickerTask(null);
+                workerRepository.save(pickerTask.getWorker());
+            }
+            pickerTaskRepository.delete(pickerTask);
+        }
     }
 }

@@ -38,4 +38,14 @@ public class PickerTaskController {
     public PickerTask assignWorkerToPickerTask(@PathVariable Long pickerTaskId, @PathVariable Long workerId) {
         return pickerTaskService.assignWorkerToPickerTask(pickerTaskId, workerId);
     }
+
+    @PutMapping("/remove-worker/{pickerTaskId}/{workerId}")
+    public PickerTask removeWorkerFromPickerTask(@PathVariable Long pickerTaskId, @PathVariable Long workerId) {
+        return pickerTaskService.removeWorkerFromPickerTask(pickerTaskId, workerId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletePickerTask(@PathVariable Long id) {
+        pickerTaskService.deletePickerTask(id);
+    }
 }
