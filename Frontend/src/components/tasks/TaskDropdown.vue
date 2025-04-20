@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from "vue";
 import { PickerTask, ActiveTask } from "@/assets/types";
+import EditTaskModal from "@/components/tasks/EditTaskModal.vue";
 
 const props = defineProps<{
   pickerTask?: PickerTask;
@@ -15,6 +16,22 @@ if (!props.pickerTask && !props.activeTask) {
 }
 
 const isDropdownOpen = ref(false);
+const isEditModalOpen = ref(false);
+
+const openEditModal = (event: MouseEvent) => {
+  event.stopPropagation();
+  isEditModalOpen.value = true;
+  toggleDropdown();
+};
+
+const closeEditModal = () => {
+  isEditModalOpen.value = false;
+};
+
+const handleTaskUpdated = (updatedTask: any) => {
+  console.log("Task updated:", updatedTask);
+  closeEditModal();
+}
 
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -55,6 +72,13 @@ const deleteTask = async () => {
   }
 };
 
+const promptDeleteConfirmation = () => {
+  const confirmation = confirm("Are you sure you want to delete this task?");
+  if (confirmation) {
+    deleteTask();
+  }
+};
+
 onMounted(() => {
   document.addEventListener('click', closeDropdown);
 });
@@ -65,6 +89,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <div>
   <div class="dropdown-container">
     <button class="dropdown-button" @click="toggleDropdown">⋮</button>
     <div
@@ -72,9 +97,16 @@ onBeforeUnmount(() => {
         class="dropdown-menu"
         :class="{ 'dropdown-menu-visible': isDropdownOpen }"
     >
-      <div class="dropdown-item">Edit</div>
-      <div class="dropdown-item" @click="deleteTask">Delete</div>
+      <div class="dropdown-item" @click="openEditModal($event)">Edit</div>
+      <div class="dropdown-item" @click="promptDeleteConfirmation">Delete</div>
     </div>
+  </div>
+  <EditTaskModal
+    v-if="isEditModalOpen"
+    :task="props.pickerTask || props.activeTask"
+    @close="closeEditModal"
+    @task-updated="handleTaskUpdated"
+    />
   </div>
 </template>
 
