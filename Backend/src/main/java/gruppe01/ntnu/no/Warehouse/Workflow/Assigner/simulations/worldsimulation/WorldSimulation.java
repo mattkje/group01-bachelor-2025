@@ -319,7 +319,7 @@ public class WorldSimulation {
                             task.getId());
                     pickerTasksInProgress.add(task);
                     pickerTaskIterator.remove();
-                    pickerTaskService.updatePickerTask(task.getId(), task);
+                    pickerTaskService.updatePickerTask(task.getId(), task.getZone().getId(), task);
                 }
             }
 
@@ -376,7 +376,7 @@ public class WorldSimulation {
                 if (computedEndTime != null && !computedEndTime.toLocalTime().isAfter(currentTime)) {
                     task.setEndTime(computedEndTime);
                     task.setTime(Duration.between(task.getStartTime(), computedEndTime).toSeconds());
-                    pickerTaskService.updatePickerTask(task.getId(), task);
+                    pickerTaskService.updatePickerTask(task.getId(), task.getZone().getId(), task);
                     Worker worker = task.getWorker();
                     worker.setCurrentPickerTask(null);
                     workerService.updateWorker(worker.getId(), worker);

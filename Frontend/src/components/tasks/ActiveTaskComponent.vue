@@ -5,10 +5,14 @@
 
   const props = defineProps<{ activeTask: ActiveTask }>();
 
-  const emit = defineEmits(["taskDeleted"]);
+  const emit = defineEmits(["taskDeleted", "taskUpdated"]);
 
   const handleTaskDeleted = () => {
     emit("taskDeleted");
+  };
+
+  const handleTaskUpdated = (updatedTask: ActiveTask) => {
+    emit("taskUpdated", updatedTask);
   };
   </script>
 
@@ -16,7 +20,7 @@
     <div class="task-info-box">
       <div class="task-header">
         <div class="task-name">{{ props.activeTask.task.name}}</div>
-        <TaskDropdown :activeTask="props.activeTask" @task-deleted="handleTaskDeleted"></TaskDropdown>
+        <TaskDropdown :activeTask="props.activeTask" @task-deleted="handleTaskDeleted" @task-updated="handleTaskUpdated"></TaskDropdown>
       </div>
       <div class="task-details">
         <div class="workers-info">

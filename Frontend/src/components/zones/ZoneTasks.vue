@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue';
 import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
-import {ActiveTask, Zone, PickerTasks} from "@/assets/types";
+import {ActiveTask, Zone, PickerTask} from "@/assets/types";
 import PickerTaskComponent from "@/components/tasks/PickerTaskComponent.vue";
 
 interface Task {
@@ -16,15 +16,13 @@ interface Task {
   maxWorkers: number;
 }
 
-
-
 const props = defineProps<{
   zone: Zone;
 }>();
 
 const tasks = ref<Task[]>([]);
 const activeTasks = ref<ActiveTask[]>([]);
-const pickerTasks = ref<PickerTasks[]>([]);
+const pickerTasks = ref<PickerTask[]>([]);
 const zones = ref<Zone[]>([]);
 
 const currentPage = ref(1);
@@ -128,7 +126,7 @@ const prevPage = () => {
   }
 };
 
-const taskDeleted = () => {
+const updateTasks = () => {
   fetchTasks();
   if (props.zone.isPickerZone) {
     fetchPickerTasks(props.zone.id);
@@ -150,13 +148,15 @@ const taskDeleted = () => {
           v-for="activeTask in activeTasks"
           :key="activeTask.id"
           :active-task="activeTask"
-          @task-deleted="taskDeleted"/>
+          @task-deleted="updateTasks"
+          @task-updated="updateTasks"/>
       <picker-task-component
           v-if="zone.isPickerZone"
           v-for="pickerTask in pickerTasks"
           :key="pickerTask.id"
           :picker-task="pickerTask"
-          @task-deleted="taskDeleted"/>
+          @task-deleted="updateTasks"
+          @task-updated="updateTasks"/>
     </div>
     <div class="pagination" v-if="activeTasks.length > 0">
       <button @click="prevPage" :disabled="currentPage === 1">Previous</button>

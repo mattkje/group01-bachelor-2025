@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import {ActiveTask, PickerTask} from "@/assets/types";
-import {computed, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 
 const props = defineProps<{ task: PickerTask | ActiveTask }>();
 const emit = defineEmits(["taskUpdated"]);
 
-const updatedTask = ref({ ...props.task });
+const updatedTask = reactive({ ...props.task });
 
 const isPickerTask = computed(() => "weight" in props.task);
 
 const saveChanges = () => {
-  emit("taskUpdated", updatedTask.value);
+  emit("taskUpdated", { ...updatedTask });
 };
 </script>
 
@@ -35,7 +35,7 @@ const saveChanges = () => {
         <input v-model="updatedTask.date" type="date" />
       </label>
       <label v-if="isPickerTask">
-        Distance:
+        Distance (m):
         <input v-model="updatedTask.distance" type="number" />
       </label>
       <label v-if="isPickerTask">
@@ -47,15 +47,15 @@ const saveChanges = () => {
         <input v-model="updatedTask.linesAmount" type="number" />
       </label>
       <label v-if="isPickerTask">
-        Weight:
+        Weight (g):
         <input v-model="updatedTask.weight" type="number" />
       </label>
       <label v-if="isPickerTask">
-        Volume:
+        Volume (mL):
         <input v-model="updatedTask.volume" type="number" />
       </label>
       <label v-if="isPickerTask">
-        Average Height:
+        Average Height (m):
         <input v-model="updatedTask.avgHeight" type="number" />
       </label>
       <div class="modal-actions">

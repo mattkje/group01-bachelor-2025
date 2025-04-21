@@ -8,7 +8,7 @@ const props = defineProps<{
   activeTask?: ActiveTask;
 }>();
 
-const emit = defineEmits(["taskDeleted"]);
+const emit = defineEmits(["taskDeleted", "taskUpdated"]);
 
 // Ensure at least one of the props is provided
 if (!props.pickerTask && !props.activeTask) {
@@ -28,8 +28,8 @@ const closeEditModal = () => {
   isEditModalOpen.value = false;
 };
 
-const handleTaskUpdated = (updatedTask: any) => {
-  console.log("Task updated:", updatedTask);
+const handleTaskUpdated = (updatedTask: PickerTask | ActiveTask) => {
+  updateTask(updatedTask);
   closeEditModal();
 }
 
@@ -66,6 +66,43 @@ const deleteTask = async () => {
         throw new Error('Network response was not ok');
       }
       emit("taskDeleted");
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  }
+};
+
+const updateTask = async (updatedTask: PickerTask | ActiveTask) => {
+  console.log(updatedTask);
+  if (props.activeTask) {
+    try {
+      const response = await fetch(`http://localhost:8080/api/active-tasks/${props.activeTask.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTask)
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      emit("taskUpdated");
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  } else if (props.pickerTask) {
+    try {
+      const response = await fetch(`http://localhost:8080/api/picker-tasks/${props.pickerTask.id}/zone/${updatedTask.zoneId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTask)
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      emit("taskUpdated");
     } catch (error) {
       console.error('Failed to delete task:', error);
     }

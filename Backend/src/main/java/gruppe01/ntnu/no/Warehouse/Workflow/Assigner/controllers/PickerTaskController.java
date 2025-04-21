@@ -29,9 +29,9 @@ public class PickerTaskController {
         return pickerTaskService.getPickerTaskByZoneId(zoneId);
     }
 
-    @PutMapping("/{id}")
-    public PickerTask updatePickerTask(@PathVariable Long id, @RequestBody PickerTask pickerTask) {
-        return pickerTaskService.updatePickerTask(id, pickerTask);
+    @PutMapping("/{pickerTaskId}/zone/{zoneId}")
+    public PickerTask updatePickerTask(@PathVariable Long pickerTaskId, @PathVariable Long zoneId, @RequestBody PickerTask pickerTask) {
+        return pickerTaskService.updatePickerTask(pickerTaskId, zoneId, pickerTask);
     }
 
     @PutMapping("/assign-worker/{pickerTaskId}/{workerId}")

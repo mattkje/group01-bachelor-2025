@@ -2,8 +2,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.PickerTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ public class PickerTaskService {
     private PickerTaskRepository pickerTaskRepository;
     @Autowired
     private WorkerRepository workerRepository;
+    @Autowired
+    private ZoneRepository zoneRepository;
 
     public List<PickerTask> getAllPickerTasks() {
         return pickerTaskRepository.findAll();
@@ -67,12 +71,33 @@ public class PickerTaskService {
         return null;
     }
 
-    public PickerTask updatePickerTask(Long id, PickerTask pickerTask) {
-        PickerTask updatedActiveTask = pickerTaskRepository.findById(id).get();
-        if (updatedActiveTask.getId().equals(pickerTask.getId())) {
-            updatedActiveTask = pickerTask;
-        }
-        return pickerTaskRepository.save(updatedActiveTask);
+    public PickerTask updatePickerTask(Long pickerTaskId, Long zoneId, PickerTask pickerTask) {
+        return pickerTaskRepository.findById(pickerTaskId).map(existingTask -> {
+            // Update fields
+            existingTask.setDistance(pickerTask.getDistance());
+            existingTask.setPackAmount(pickerTask.getPackAmount());
+            existingTask.setLinesAmount(pickerTask.getLinesAmount());
+            existingTask.setWeight(pickerTask.getWeight());
+            existingTask.setVolume(pickerTask.getVolume());
+            existingTask.setAvgHeight(pickerTask.getAvgHeight());
+            existingTask.setTime(pickerTask.getTime());
+            existingTask.setStartTime(pickerTask.getStartTime());
+            existingTask.setEndTime(pickerTask.getEndTime());
+            existingTask.setDate(pickerTask.getDate());
+            existingTask.setWorker(pickerTask.getWorker());
+
+            // Handle zone update
+            if (!existingTask.getZone().getId().equals(zoneId)) {
+                Zone zone = zoneRepository.findById(zoneId)
+                        .orElseThrow(() -> new IllegalArgumentException("Zone not found with id: " + pickerTask.getZoneId()));
+                if (zone.getIsPickerZone()) {
+                    existingTask.setZone(zone);
+                }
+            }
+
+            // Save and return the updated task
+            return pickerTaskRepository.save(existingTask);
+        }).orElseThrow(() -> new IllegalArgumentException("PickerTask not found with id: " + pickerTaskId));
     }
 
     public void deletePickerTask(Long id) {

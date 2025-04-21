@@ -5,10 +5,14 @@ import TaskDropdown from "@/components/tasks/TaskDropdown.vue";
 
 const props = defineProps<{ pickerTask: PickerTask }>();
 
-const emit = defineEmits(["taskDeleted"]);
+const emit = defineEmits(["taskDeleted", "taskUpdated"]);
 
 const handleTaskDeleted = () => {
   emit("taskDeleted");
+};
+
+const handleTaskUpdated = () => {
+  emit("taskUpdated");
 };
 </script>
 
@@ -16,7 +20,7 @@ const handleTaskDeleted = () => {
   <div class="task-info-box">
     <div class="task-header">
     <div class="task-name">{{ props.pickerTask.id}}</div>
-      <TaskDropdown :pickerTask="props.pickerTask" @task-deleted="handleTaskDeleted"></TaskDropdown>
+      <TaskDropdown :pickerTask="props.pickerTask" @task-deleted="handleTaskDeleted" @task-updated="handleTaskUpdated"></TaskDropdown>
     </div>
     <div class="task-details">
       <div class="workers-info">
