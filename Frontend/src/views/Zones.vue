@@ -73,7 +73,7 @@
        workers.value.forEach((worker: Worker) => {
          const isAssigned = tasks.some((task: any) => task.workers.some((w: any) => w.id === worker.id));
          if (!isAssigned) {
-           worker.zone_id = 0; // Move unassigned workers to zone 0
+           worker.zone = 0;
          }
        });
 
@@ -86,7 +86,7 @@
     const moveUnavailableWorkers = () => {
       workers.value.forEach((worker: Worker) => {
         if (!worker.availability) {
-          worker.zone_id = 0;
+          worker.zone = 0;
         }
       });
     };
@@ -119,7 +119,7 @@
 
     onMounted(() => {
       fetchAll();
-      setInterval(refreshWorkersEveryXMinutes, 5000); // Emit every 5 seconds
+      //setInterval(refreshWorkersEveryXMinutes, 5000); // Emit every 5 seconds
     });
 
     </script>

@@ -2,7 +2,7 @@
 import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import {License, Task, Worker, Zone} from '@/assets/types';
+import {License, PickerTask, Task, Worker, Zone} from '@/assets/types';
 
 const props = defineProps<{
   title: string;
@@ -16,13 +16,17 @@ const showPopup = ref(false);
 const selectedZone = ref<Zone | null>(null);
 const isDraggingOver = ref(false);
 const tasks = ref<Task[]>([]);
+const pickerTasks = ref<PickerTask[]>([]);
 const hasTasks = ref(false);
+const hasPickerTasks = ref(false);
 const isSpinning = ref(false);
 const remainingTasks = computed(() => tasks.value.length);
+const remainingPickerTasks = computed(() => pickerTasks.value.length);
 let completionTime = ref<string>('');
 const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
+const isPickerZone = ref(false);
 
 
 const getThisZone = async (): Promise<Zone | null> => {
@@ -77,7 +81,10 @@ const fetchTasksForZone = async () => {
   }
 };
 
-const isWorkerQualifiedForAnyTask = (worker: Worker) => {
+const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
+  if (isPickerZone.value) {
+    return true;
+  }
   return tasks.value.some((task: Task) =>
     task.requiredLicense.every((license: License) =>
       worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
@@ -85,9 +92,25 @@ const isWorkerQualifiedForAnyTask = (worker: Worker) => {
   );
 };
 
+const fetchPickerTasksForZone = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/picker-tasks`);
+    pickerTasks.value = await response.json();
+  } catch (error) {
+    console.error('Failed to fetch picker tasks for zone:', error);
+  }
+};
+
 onMounted(async () => {
-  await fetchTasksForZone();
-  hasTasks.value = tasks.value.length > 0;
+  if ((await getThisZone()).isPickerZone) {
+    isPickerZone.value = true;
+    await fetchPickerTasksForZone();
+    hasPickerTasks.value = pickerTasks.value.length > 0;
+  }
+  else {
+    await fetchTasksForZone();
+    hasTasks.value = tasks.value.length > 0;
+  }
 });
 
 const onDragStart = (event: DragEvent, worker: Worker) => {
@@ -138,7 +161,8 @@ const toggleNotificationBubble = () => {
         <div class="task-summary">
           Done by: {{ completionTime }}
           <br/>
-          Tasks: {{ remainingTasks }}
+          <p v-if="remainingTasks"> Tasks: {{ remainingTasks }}</p>
+          <p v-if="remainingPickerTasks"> Picker Tasks: {{ remainingPickerTasks }}</p>
         </div>
       </div>
       <hr>
@@ -170,7 +194,7 @@ const toggleNotificationBubble = () => {
         </div>
       </div>
     </div>
-      <div v-if="hasTasks" class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+      <div v-if="hasTasks || hasPickerTasks" class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
         <WorkerClass
             v-for="(worker, index) in workers"
             :key="index"
@@ -183,6 +207,7 @@ const toggleNotificationBubble = () => {
             :class="{ 'unavailable': !worker.availability }"
             @dragstart="(event) => onDragStart(event, worker)"
         />
+
         <div v-if="isDraggingOver" class="on-drop-worker-box"/>
         <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
           <img

@@ -27,7 +27,7 @@
 
   const fetchWorkersForTask = async (taskId: number) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/tasks/${taskId}/workers`);
+      const response = await axios.get(`http://localhost:8080/api/active-tasks/${taskId}/workers`);
       workers.value = response.data;
       createConnectionString();
     } catch (error) {

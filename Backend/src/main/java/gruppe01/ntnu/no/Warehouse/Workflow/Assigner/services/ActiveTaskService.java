@@ -306,4 +306,12 @@ public class ActiveTaskService {
             tempDate = incrementDate(tempDate, increment, unit);
         }
     }
+
+    public List<Worker> getWorkersAssignedToActiveTask(Long id) {
+        ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
+        if (activeTask != null) {
+            return activeTask.getWorkers();
+        }
+        return new ArrayList<>();
+    }
 }

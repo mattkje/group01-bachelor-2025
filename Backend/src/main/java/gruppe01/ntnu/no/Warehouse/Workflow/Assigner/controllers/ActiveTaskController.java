@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,6 +44,11 @@ public class ActiveTaskController {
     @GetMapping("/in-progress")
     public List<ActiveTask> getActiveTasksInProgress() {
         return activeTaskService.getActiveTasksInProgress();
+    }
+
+    @GetMapping("/{id}/workers")
+    public List<Worker> getWorkersAssignedToActiveTask(@PathVariable Long id) {
+        return activeTaskService.getWorkersAssignedToActiveTask(id);
     }
 
     @PostMapping("/{taskId}")
