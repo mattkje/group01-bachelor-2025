@@ -143,6 +143,9 @@ onMounted(async () => {
         :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
         :draggable="!activeTask">
       <div class="worker-profile">
+        <div class="worker-image-container">
+          <img class="worker-image" src="@/assets/icons/profile.svg" draggable="false"/>
+        </div>
         <div class="worker-name">{{ props.name }}</div>
       </div>
       <div class="status-container">
@@ -191,8 +194,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   background-color: #c0c0c0;
-  border-radius: 10px;
-  max-height: 40px;
+  border-radius: 7px;
+  max-height: 30px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none !important;
@@ -249,17 +252,26 @@ onMounted(async () => {
 }
 
 .worker-name {
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   font-weight: bold;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.worker-image {
-  width: 30px;
-  height: 30px;
+.worker-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
+  background-color: #f6f6f6;
   margin-right: 0.5rem;
+}
+
+.worker-image {
+  max-width: 70%;
+  max-height: 70%;
 }
 
 .warning-icon {

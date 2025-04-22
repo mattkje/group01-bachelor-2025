@@ -93,7 +93,10 @@ onMounted(async () => {
 <template>
   <div :class="['worker-compact', { 'rdy-worker-box': !task, 'hover-effect': !task }]" :draggable="!task">
     <div class="worker-profile">
-      <img v-if="false" class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
+      <div class="worker-image-container">
+        <img v-if="false" class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
+        <img v-else class="worker-image" src="@/assets/icons/profile.svg" />
+      </div>
       <div class="worker-name">{{ name }}</div>
     </div>
     <div class="status-container">
@@ -111,7 +114,7 @@ onMounted(async () => {
   background-color: #ececec;
   opacity: 0.5;
   border-radius: 10px;
-  max-height: 40px;
+  max-height: 30px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none !important;
@@ -165,17 +168,26 @@ onMounted(async () => {
 }
 
 .worker-name {
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   font-weight: bold;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-.worker-image {
-  width: 30px;
-  height: 30px;
+.worker-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
+  background-color: #f6f6f6;
   margin-right: 0.5rem;
+}
+
+.worker-image {
+  max-width: 70%;
+  max-height: 70%;
 }
 
 .warning-icon {

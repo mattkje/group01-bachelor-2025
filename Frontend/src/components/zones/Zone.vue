@@ -144,7 +144,7 @@ const toggleNotificationBubble = () => {
       <hr>
       <div class="zone-options">
         <div class="zone-option">
-          <router-link :to="`/zones/${props.zoneId}`">
+          <router-link :to="`/zones/${props.zoneId}`" class="icon-button">
               <img src="/src/assets/icons/zones.svg" alt="Assign"/>
           </router-link>
           <div class="status-popup">Tasks</div>
@@ -211,7 +211,7 @@ const toggleNotificationBubble = () => {
 
 <style scoped>
 .rounded-square {
-  width: 350px;
+  width: 250px;
   height: 100%;
   border: 1px solid #e5e5e5;
   border-radius: 15px;
@@ -221,7 +221,7 @@ const toggleNotificationBubble = () => {
 }
 
 .on-drop-worker-box {
-  height: 45px;
+  height: 30px;
   width: 100%;
   background-color: #ececec;
   border-radius: 7px;
@@ -326,6 +326,15 @@ const toggleNotificationBubble = () => {
 
 .zone-option {
   position: relative;
+  align-content: center;
+  justify-content: center;
+}
+
+.zone-option a {
+  text-decoration: none;
+  padding: 0;
+  margin: 0.2rem 0 0 0;
+  display: block;
 }
 
 .icon-button {
@@ -340,8 +349,8 @@ const toggleNotificationBubble = () => {
 }
 
 .icon-button img {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
 }
 
 .icon-button:hover {

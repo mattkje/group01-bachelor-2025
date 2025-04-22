@@ -1,8 +1,16 @@
 <template>
       <div class="container">
         <div class="overview">
+          <h2>Picker Zones</h2>
           <div class="grid">
-            <ZoneClass v-for="zone in zones" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
+            <!-- this should only display zones with no pickerTasks -->
+            <ZoneClass v-for="zone in zonesWithPickerTasks" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
+          </div>
+          <hr>
+          <h2>Non-Picker Zones</h2>
+          <div class="grid">
+            <!-- this should only display zones with pickerTasks -->
+            <ZoneClass v-for="zone in zonesWithoutPickerTasks" :key="zone.id" :zone-id="zone.id" :title="zone.name" :workers="getWorkersByZone(zone.id)" @refreshWorkers="fetchAll"/>
           </div>
         </div>
         <WorkerRegistry :workers="workers"  :zones="zones" :taskLessWorkers="taskLessWorkers" @refreshWorkers="fetchAll" title="Unassigned" :zone-id="0"/>
@@ -19,6 +27,10 @@
     const workers = ref<Worker[]>([]);
     const taskLessWorkers = ref<Worker[]>([]);
 
+    const zonesWithPickerTasks = ref<Zone[]>([]);
+    const zonesWithoutPickerTasks = ref<Zone[]>([]);
+
+
     const getWorkersByZone = (zoneId: number): Worker[] => {
       return workers.value.filter((worker: Worker) => worker.zone === zoneId);
     };
@@ -27,6 +39,7 @@
       try {
         const response = await fetch('http://localhost:8080/api/zones');
         zones.value = await response.json();
+        filterZonesByPickerTasks();
       } catch (error) {
         console.error('Failed to fetch zones:', error);
       }
@@ -88,6 +101,11 @@
       }
     };
 
+    const filterZonesByPickerTasks = () => {
+      zonesWithPickerTasks.value = zones.value.filter(zone => zone.isPickerZone);
+      zonesWithoutPickerTasks.value = zones.value.filter(zone => !zone.isPickerZone);
+    };
+
     const fetchAll = async () => {
       await fetchZones();
       await fetchWorkers();
@@ -114,16 +132,23 @@
 
     .overview {
       flex: 1;
-      padding: 1rem 1rem 0 1rem;
+      padding: 1rem 0 0 0;
       height: calc(100vh - 120px);
       overflow-y: auto;
     }
 
+    .overview h2 {
+      margin: 0 1rem;
+      font-size: 1.5rem;
+      color: #505050;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      justify-items: start;
       gap: 1rem;
-      margin-bottom: 1rem;
+      margin: 0 1rem;
     }
 
     .worker-registry {
@@ -140,5 +165,11 @@
       top: 0;
       width: 100%;
       z-index: 1000;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 1rem 0;
     }
     </style>
