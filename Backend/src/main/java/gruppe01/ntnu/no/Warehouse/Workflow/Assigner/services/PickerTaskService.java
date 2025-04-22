@@ -2,6 +2,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.PickerTaskRepository;
+import java.time.LocalDate;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,16 @@ public class PickerTaskService {
             }
         }
         return pickerTasks;
+    }
+
+    public Set<PickerTask> getPickerTasksForToday() {
+        List<PickerTask> pickerTasks = new ArrayList<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(LocalDate.now())) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return Set.copyOf(pickerTasks);
     }
 
     public PickerTask savePickerTask(PickerTask pickerTask) {

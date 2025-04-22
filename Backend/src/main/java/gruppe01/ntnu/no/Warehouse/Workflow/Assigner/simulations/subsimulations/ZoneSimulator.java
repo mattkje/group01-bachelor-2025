@@ -1,11 +1,11 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.MachineLearningController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -34,12 +34,17 @@ public class ZoneSimulator {
 
   static Random random = new Random();
 
-  private static final MachineLearningController mlController = new MachineLearningController();
+  private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
                                          Set<PickerTask> pickerTasks,
                                          AtomicDouble totalTaskTime, int simNo) {
     try {
+
+      if (zoneTasks.isEmpty() && pickerTasks.isEmpty()) {
+        return "ERROR: Zone " + zone.getId() +
+            " No tasks";
+      }
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
 
@@ -70,7 +75,7 @@ public class ZoneSimulator {
       CountDownLatch zoneLatch;
 
       // Iterate over the tasks in the zone
-      if (zoneTasks != null) {
+      if (!zoneTasks.isEmpty()) {
         zoneLatch = new CountDownLatch(zoneTasks.size());
         for (ActiveTask activeTask : zoneTasks) {
           String result = simulateTask(activeTask, zone,
@@ -81,10 +86,10 @@ public class ZoneSimulator {
           }
         }
       } else {
-        Map<List<Double>, List<List<Double>>> mlData = mlController.getMcValues(zone.getName());
-        zoneLatch = new CountDownLatch(zoneTasks.size());
+        Map<List<Double>, List<List<Double>>> mlData = mlModel.getMcValues(zone.getName());
+        zoneLatch = new CountDownLatch(pickerTasks.size());
         for (PickerTask pickerTask : pickerTasks) {
-          String result = simulatePickerTask(pickerTask, zone,
+          String result = simulatePickerTask(pickerTask,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
               isSimulationSuccessful, errorMessages, zoneTaskTime, simNo, mlData);
           if (!result.isEmpty()) {
@@ -112,7 +117,7 @@ public class ZoneSimulator {
     return "Zone " + zone.getId() + " simulation failed";
   }
 
-  private static String simulatePickerTask(PickerTask pickerTask, Zone zone,
+  private static String simulatePickerTask(PickerTask pickerTask,
                                            WorkerSemaphore availableZoneWorkersSemaphore,
                                            ExecutorService zoneExecutor, CountDownLatch zoneLatch,
                                            AtomicBoolean isSimulationSuccessful,
@@ -124,19 +129,13 @@ public class ZoneSimulator {
 
     int taskDuration = getPickerTaskDuration(pickerTask);
 
-    if (zone.getWorkers().isEmpty()) {
-      isSimulationSuccessful.set(false);
-      zoneLatch.countDown();
-      return "ERROR: ZONE " + zone.getId() + " - MISSING WORKERS. ";
-    }
     // Start a thread for a single task in a zone
     zoneExecutor.submit(() -> {
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
-          //TODO: FIX THIS
-          String acquireWorkerError = "";
-//                availableZoneWorkersSemaphore.acquireMultiple(pickerTask, simNo);
+
+          String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
           if (!acquireWorkerError.isEmpty()) {
             errorMessages.add(acquireWorkerError);
             isSimulationSuccessful.set(false);
@@ -170,7 +169,7 @@ public class ZoneSimulator {
    */
   private static int getPickerTaskDuration(PickerTask pickerTask)
       throws IOException, URISyntaxException {
-    List<Double> weights = mlController.getWeights(pickerTask.getZone().getName().toUpperCase());
+    List<Double> weights = mlModel.getMcWeights(pickerTask.getZone().getName().toUpperCase());
 
     return (int) ((int) pickerTask.getDistance() * weights.get(0) + pickerTask.getPackAmount() *weights.get(1) +
         pickerTask.getLinesAmount() * weights.get(2) + pickerTask.getWeight() * weights.get(3) +
@@ -226,12 +225,6 @@ public class ZoneSimulator {
     // TODO: Replace this with a ML learned number
     double epw = random.nextDouble() * 0.5 + 0.4;
 
-    if (zone.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-      isSimulationSuccessful.set(false);
-      zoneLatch.countDown();
-      return "ERROR: ZONE " + zone.getId() + " - MISSING WORKERS FOR TASK " +
-          activeTask.getId();
-    }
 
     long workersWithRequiredLicenses = zone.getWorkers().stream()
         .filter(worker -> worker.getLicenses()
@@ -251,7 +244,7 @@ public class ZoneSimulator {
         // Acquire the workers for the task
         while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
           String acquireWorkerError =
-              availableZoneWorkersSemaphore.acquireMultiple(activeTask, simNo);
+              availableZoneWorkersSemaphore.acquireMultiple(activeTask,null, simNo);
           if (!acquireWorkerError.isEmpty()) {
             errorMessages.add(acquireWorkerError);
             isSimulationSuccessful.set(false);

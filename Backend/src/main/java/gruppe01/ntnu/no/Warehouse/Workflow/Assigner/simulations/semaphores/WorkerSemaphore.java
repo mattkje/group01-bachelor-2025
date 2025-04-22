@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -45,21 +46,26 @@ public class WorkerSemaphore {
    * @return An empty string if successful, an error message if not
    * @throws InterruptedException
    */
-  public String acquireMultiple(ActiveTask activeTask,int simNo)
+  public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, int simNo)
       throws InterruptedException {
     lock.lock();
     try {
       synchronized (workers) {
-        // Check if the number of workers required is less than the number of workers available
-        int maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
-        int minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+
+        int maxWorkers = 1;
+        int minWorkers = 1;
+        if (activeTask != null) {
+          // Check if the number of workers required is less than the number of workers available
+           maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
+           minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+        }
 
         // Current permits from the semaphore
         int currentPermits = 0;
 
         // For each worker the task requires attempt to get a permit from the semaphore
         for (int i = 0; i < maxWorkers; i++) {
-          // If a permit is aquired, increment the current permits
+          // If a permit is acquired, increment the current permits
           if (semaphore.tryAcquire(1)) {
             currentPermits++;
             // If the current permits is equal to the max workers, break the loop
@@ -77,17 +83,31 @@ public class WorkerSemaphore {
         // acquired the worker permits
         List<Worker> workersToRemove = new ArrayList<>();
         // Iterate over the workers to check if they have the required licences for the task
-        for (Worker worker : workers) {// If the worker has the required licenses, add them to the workers to remove
-          if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
-            workersToRemove.add(worker);
-            // If the number of workers acquired is equal to the required number of workers, add them to the task
-            if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
-              activeTask.getWorkers().addAll(workersToRemove);
-              workersToRemove.forEach(workers::remove);
-              return "";
+        if (activeTask != null){
+          for (Worker worker : workers) {
+            // If the worker has the required licenses, add them to the workers to remove
+            if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+              workersToRemove.add(worker);
+              // If the number of workers acquired is equal to the required number of workers, add them to the task
+              if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
+                activeTask.getWorkers().addAll(workersToRemove);
+                workersToRemove.forEach(workers::remove);
+                return "";
+              }
             }
           }
+        } else {
+          for (Worker worker : workers) {
+              workersToRemove.add(worker);
+              // If the picker task does not have any worker
+              if (pickerTask.getWorker() == null) {
+                pickerTask.setWorker(worker);
+                workersToRemove.forEach(workers::remove);
+                return "";
+              }
+          }
         }
+
         // if the number of workers acquired is less than the required number of workers, relase the permits
         semaphore.release(currentPermits);
         return "";
@@ -96,6 +116,8 @@ public class WorkerSemaphore {
       lock.unlock();
     }
   }
+
+
 
   public void releaseAll(List<Worker> allWorkers) {
     workers.addAll(allWorkers);

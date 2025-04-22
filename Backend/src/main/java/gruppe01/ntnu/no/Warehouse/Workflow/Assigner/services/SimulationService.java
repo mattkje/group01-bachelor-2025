@@ -32,6 +32,8 @@ public class SimulationService {
 
   @Autowired
   private MonteCarloNormalZone monteCarloWithRealData;
+  @Autowired
+  private PickerTaskService pickerTaskService;
 
 
   /**
@@ -58,7 +60,7 @@ public class SimulationService {
     for (int i = 0; i < SIM_COUNT; i++) {
       AtomicDouble predictedTime = new AtomicDouble(0.0);
       String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-          activeTaskService.getRemainingTasksForTodayByZone(zoneId), predictedTime, i);
+          activeTaskService.getRemainingTasksForTodayByZone(zoneId),pickerTaskService.getPickerTasksForToday(), predictedTime, i);
       if (!result.isEmpty() && i == 0) {
         errorMessages.add(result);
       }
