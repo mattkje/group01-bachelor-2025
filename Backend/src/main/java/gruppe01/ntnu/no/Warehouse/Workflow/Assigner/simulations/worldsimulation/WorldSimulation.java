@@ -220,7 +220,7 @@ public class WorldSimulation {
             Iterator<Worker> delayedBreakIterator = workersDelayedBreak.iterator();
             while (delayedBreakIterator.hasNext()) {
                 Worker worker = delayedBreakIterator.next();
-                if (worker.getCurrentTask() == null && !workersOnBreak.contains(worker)) {
+                if (worker.getCurrentTaskId() == null && !workersOnBreak.contains(worker)) {
                     System.out.println(worker.getName() + " is on break");
                     worker.setBreakStartTime(currentTime);
                     workersOnBreak.add(worker);
@@ -412,8 +412,6 @@ public class WorldSimulation {
                 }
             }
 
-            Iterator<PickerTask> pickerTasksInProgressIterator = pickerTasksToday.iterator();
-
             Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
             availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
@@ -462,13 +460,6 @@ public class WorldSimulation {
     public LocalDateTime getPickerEndTime(PickerTask task, Worker worker) throws IOException {
         return task.getStartTime().plusSeconds(machineLearningModelPicking.estimateTimeUsingWeights(task.getZone().getName(), task.getDistance(),
                 task.getPackAmount(), task.getLinesAmount(), task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()));
-    }
-
-    private double normalize(double value, List<Double> minMax) {
-        double min = minMax.get(0);
-        double max = minMax.get(1);
-        if (max - min == 0) return 0.0; // Prevent division by zero
-        return (value - min) / (max - min);
     }
 
     public void pauseSimulation() throws InterruptedException, IOException {

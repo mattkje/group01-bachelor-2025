@@ -181,7 +181,7 @@ public class ActiveTaskService {
         if (activeTask != null) {
             activeTask.getWorkers().clear();
             for (Worker worker : activeTask.getWorkers()) {
-                if (worker.getCurrentTask() == activeTask) {
+                if (worker.getCurrentTaskId() == activeTask.getId()) {
                     worker.setCurrentTask(null);
                     workerRepository.save(worker);
                 }

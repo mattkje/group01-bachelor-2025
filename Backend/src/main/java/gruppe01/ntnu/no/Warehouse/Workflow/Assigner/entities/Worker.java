@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.DayOfWeek;
@@ -56,6 +57,7 @@ public class Worker {
     @MapKeyColumn(name = "day_of_week")
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "work_schedule")
+    @JsonIgnore
     private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -149,8 +151,23 @@ public class Worker {
         return licenses;
     }
 
-    public ActiveTask getCurrentTask() {
+    @JsonProperty("currentTaskId")
+    public Long getCurrentTaskId() {
+        if (currentActiveTask != null) {
+            return currentActiveTask.getId();
+        } else if (currentPickerTask != null) {
+            return currentPickerTask.getId();
+        } else {
+            return null;
+        }
+    }
+
+    public ActiveTask getCurrentActiveTask() {
         return currentActiveTask;
+    }
+
+    public PickerTask getCurrentPickerTask() {
+        return currentPickerTask;
     }
 
     public boolean isDead() {
@@ -188,10 +205,6 @@ public class Worker {
 
     public boolean hasAllLicenses(Set<License> requiredLicenses) {
         return licenses.containsAll(requiredLicenses);
-    }
-
-    public PickerTask getCurrentPickerTask() {
-        return currentPickerTask;
     }
 
     public Map<DayOfWeek, WorkerTimeRange> getWorkSchedule() {

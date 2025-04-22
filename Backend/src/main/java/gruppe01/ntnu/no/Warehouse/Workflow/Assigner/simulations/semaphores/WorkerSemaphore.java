@@ -28,9 +28,10 @@ public class WorkerSemaphore {
     // Upon creation of the semaphore, release all busy workers
     //TODO: Once world simulation is up change the localDate based on the simulated time
     for (Worker worker : workers) {
-      if (worker.getCurrentTask() != null && worker.getCurrentTask().getEndTime() == null &&
-          worker.getCurrentTask().getDate().isEqual(
-              LocalDate.now())) {
+      if (worker.getCurrentTaskId() != null &&
+              (worker.getCurrentActiveTask().getEndTime() == null && worker.getCurrentPickerTask().getEndTime() == null) &&
+              (worker.getCurrentActiveTask().getDate().isEqual(
+              LocalDate.now())) && worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
         workers.remove(worker);
         semaphore.release();
       }

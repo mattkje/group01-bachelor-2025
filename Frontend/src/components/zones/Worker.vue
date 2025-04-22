@@ -110,7 +110,7 @@ const isWorkerPresent = (workerId: number): boolean => {
   return timeTables.value.some((timeTable: TimeTable) => {
     const realStartTime = new Date(timeTable.realStartTime);
     const realEndTime = new Date(timeTable.realEndTime);
-    return timeTable.worker.id === workerId && realStartTime <= referenceTime.value! && realEndTime >= referenceTime.value!;
+    return timeTable.workerId === workerId && realStartTime <= referenceTime.value! && realEndTime >= referenceTime.value!;
   });
 };
 

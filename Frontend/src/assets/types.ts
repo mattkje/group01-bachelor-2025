@@ -55,7 +55,7 @@ export interface TimeTable {
     endTime: string;
     realStartTime: string;
     realEndTime: string;
-    worker: Worker;
+    workerId: number;
 }
 
 export interface PickerTask {

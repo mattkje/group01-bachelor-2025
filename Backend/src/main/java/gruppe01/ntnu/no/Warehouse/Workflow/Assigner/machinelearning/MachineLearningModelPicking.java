@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -29,6 +30,10 @@ import java.util.List;
  */
 @Component
 public class MachineLearningModelPicking {
+
+  private final Map<String, RandomForest> modelCache = new ConcurrentHashMap<>();
+  private final Map<String, DataFrame> dataCache = new ConcurrentHashMap<>();
+  private final Map<String, Double> averageTimeCache = new ConcurrentHashMap<>();
 
   /**
    * Creates a model if one does not exist
@@ -248,23 +253,27 @@ public class MachineLearningModelPicking {
    * Returns a list of lists containing the lowest and highest numerical values
    * from each attribute in the DataFrame.
    *
-   * @param data The DataFrame containing the data.
+   * @param department The department for which to get the min-max values.
    * @return A list of lists, where each inner list contains the minimum and maximum
    * values for a column in the DataFrame.
    */
-  public List<List<Double>> getMinMaxValues(DataFrame data) {
+  public List<List<Double>> getMinMaxValuesFromModel(String department) throws IOException {
+    // Load the RandomForest model from the .ser file
+    String filePath = "pickroute_" + department.toUpperCase() + ".ser";
+    RandomForest model = loadModel(filePath);
+
+    if (model == null) {
+      throw new IllegalArgumentException("Model not found for department: " + department);
+    }
+
+    // Get feature importance (weights) from the model
+    List<Double> weights = getWeights(model);
+
+    // Initialize min-max values based on weights
     List<List<Double>> minMaxValues = new ArrayList<>();
-
-    // Iterate through each column in the DataFrame
-    for (String columnName : data.names()) {
-      double[] columnData = data.column(columnName).toDoubleArray();
-
-      // Calculate the minimum and maximum values for the column
-      double min = Arrays.stream(columnData).min().orElse(Double.NaN);
-      double max = Arrays.stream(columnData).max().orElse(Double.NaN);
-
-      // Add the min and max values as a list to the result
-      minMaxValues.add(Arrays.asList(min, max));
+    for (Double weight : weights) {
+      // Assuming weights are normalized between 0 and 1
+      minMaxValues.add(Arrays.asList(0.0, weight));
     }
 
     return minMaxValues;
@@ -286,11 +295,7 @@ public class MachineLearningModelPicking {
     if (model != null) {
 
       List<Double> weights = getWeights(model);
-      String csvFilePath =
-          "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
-              department.toUpperCase() + "_time.csv";
-      DataFrame data = parseCsvToDataFrame(csvFilePath);
-      List<List<Double>> minMaxValues = getMinMaxValues(data);
+      List<List<Double>> minMaxValues = getMinMaxValuesFromModel(department);
 
       mcValues.put(weights, minMaxValues);
     } else {
@@ -365,16 +370,29 @@ public class MachineLearningModelPicking {
           double distance, double dpack, double lines,
           double weight, double volume, double avgHeight, long picker
   ) throws IOException {
-    // Get weights from trained model
-    List<Double> weights = getMcWeights(department);
+    // Load or retrieve the cached model
+    RandomForest model = modelCache.computeIfAbsent(department, dept -> {
+      return loadModel("pickroute_" + dept.toUpperCase() + ".ser");
+    });
 
-    // Load CSV data to get min-max values for normalization
-    String csvFilePath =
-            "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
-                    department.toUpperCase() + "_time.csv";
+    if (model == null) {
+      throw new IllegalStateException("Model not found for department: " + department);
+    }
 
-    DataFrame data = parseCsvToDataFrame(csvFilePath);
-    List<List<Double>> minMaxValues = getMinMaxValues(data);
+    // Load or retrieve the cached data
+    DataFrame data = dataCache.computeIfAbsent(department, dept -> {
+      String csvFilePath = "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
+              + dept.toUpperCase() + "_time.csv";
+      return parseCsvToDataFrame(csvFilePath);
+    });
+
+    if (data == null) {
+      throw new IllegalStateException("Data not found for department: " + department);
+    }
+
+    // Get weights and min-max values
+    List<Double> weights = getWeights(model);
+    List<List<Double>> minMaxValues = getMinMaxValuesFromModel(department);
 
     // Your input features
     double[] features = new double[]{distance, dpack, lines, weight, volume, avgHeight, picker};
@@ -388,12 +406,18 @@ public class MachineLearningModelPicking {
       estimatedTime += weights.get(i) * normalized;
     }
 
-    // Optional: scale to actual average time
+    // Calculate and cache the average time
     double[] actualTimes = data.column("time_s").toDoubleArray();
     double averageTime = Arrays.stream(actualTimes).average().orElse(1.0); // fallback
+    averageTimeCache.put(department, averageTime); // Cache the average time
+
     return (long) (estimatedTime * averageTime);
   }
 
+  // Method to retrieve the cached average time for a department
+  public Double getAverageTime(String department) {
+    return averageTimeCache.get(department);
+  }
 
 }
 

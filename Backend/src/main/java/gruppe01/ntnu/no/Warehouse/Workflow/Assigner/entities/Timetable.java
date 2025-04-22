@@ -1,5 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class Timetable {
 
     @ManyToOne
     @JoinColumn(name = "worker_id", nullable = false)
+    @JsonIgnore
     private Worker worker;
 
     public Timetable() {}
@@ -84,5 +87,10 @@ public class Timetable {
 
     public Worker getWorker() {
         return worker;
+    }
+
+    @JsonProperty("workerId")
+    public Long getWorkerId() {
+        return worker != null ? worker.getId() : null;
     }
 }
