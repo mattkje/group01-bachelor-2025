@@ -30,9 +30,10 @@ public class PickerTaskGenerator {
 
     public void generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay) throws IOException {
 
-        Map<List<Double>, List<List<Double>>> mcValues = new HashMap<>();
-        List<List<Double>> valueList = new ArrayList<>();
+        Map<List<Double>, List<List<Double>>> mcValues;
+        List<List<Double>> valueList;
         List<Map<List<Double>, List<List<Double>>>> mcValuesList = new ArrayList<>();
+
         mcValuesList.add(machineLearningModelPicking.getMcValues("dry"));
         mcValuesList.add(machineLearningModelPicking.getMcValues("freeze"));
         mcValuesList.add(machineLearningModelPicking.getMcValues("fruit"));
@@ -75,12 +76,12 @@ public class PickerTaskGenerator {
 
                     // Generate random values for the PickerTask attributes with +- 5% variation.
                     // The values are generated based on the given zone's average values.
-                    double distance = (sDistance + (rand / 100.0) * (bDistance - sDistance)) * (1 + (random.nextDouble() * 0.1 - 0.05));
+                    double distance = roundToTwoDecimals((sDistance + (rand / 100.0) * (bDistance - sDistance)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
                     int packAmount = (int) ((sPackAmount + (rand / 100.0) * (bPackAmount - sPackAmount)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
                     int linesAmount = (int) ((sLinesAmount + (rand / 100.0) * (bLinesAmount - sLinesAmount)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
                     int weight = (int) ((sWeight + (rand / 100.0) * (bWeight - sWeight)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
                     int volume = (int) ((sVolume + (rand / 100.0) * (bVolume - sVolume)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    double avgHeight = (sAvgHeight + (rand / 100.0) * (bAvgHeight - sAvgHeight)) * (1 + (random.nextDouble() * 0.1 - 0.05));
+                    double avgHeight = roundToTwoDecimals((sAvgHeight + (rand / 100.0) * (bAvgHeight - sAvgHeight)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
 
                     pickerTask.setDistance(distance);
                     pickerTask.setPackAmount(packAmount);
@@ -94,5 +95,8 @@ public class PickerTaskGenerator {
             }
         }
 
+    }
+    private double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 }
