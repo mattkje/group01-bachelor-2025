@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -72,5 +73,13 @@ public class ActiveTaskController {
     @DeleteMapping("/{id}")
     public ActiveTask deleteActiveTask(@PathVariable Long id) {
         return activeTaskService.deleteActiveTask(id);
+    }
+
+    /**
+     * Scheduled task to create repeating active tasks at the beginning of each month.
+     */
+    @Scheduled(cron = "0 0 0 1 * ?")
+    public void scheduleCreateRepeatingActiveTasks() {
+        activeTaskService.CreateRepeatingActiveTasks();
     }
 }

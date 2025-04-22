@@ -30,6 +30,9 @@ public class Zone {
   @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
   private Set<PickerTask> pickerTask;
 
+  @Column(name = "is_picker_zone")
+  boolean isPickerZone;
+
   @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
   private Set<Worker> workers;
 
@@ -66,6 +69,10 @@ public class Zone {
 
   public void setPickerTask(Set<PickerTask> pickerTask) {}
 
+  public void setIsPickerZone(boolean isPickerZone) {
+    this.isPickerZone = isPickerZone;
+  }
+
   public Long getId() {
     return id;
   }
@@ -88,5 +95,9 @@ public class Zone {
 
   public Set<PickerTask> getPickerTask() {
     return pickerTask;
+  }
+
+  public boolean getIsPickerZone() {
+    return isPickerZone;
   }
 }

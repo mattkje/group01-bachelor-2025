@@ -1,14 +1,20 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.License;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.WorkerTimeRange;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.LicenseRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TimetableRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -18,6 +24,8 @@ public class WorkerService {
     private WorkerRepository workerRepository;
     @Autowired
     private LicenseRepository licenseRepository;
+    @Autowired
+    private TimetableRepository timetableRepository;
 
     public List<Worker> getAllWorkers() {
         return workerRepository.findAllWithLicenses();
@@ -48,6 +56,7 @@ public class WorkerService {
     }
 
     public Worker addWorker(Worker worker) {
+        createTimetablesTillNextMonth(worker);
         return workerRepository.save(worker);
     }
 
@@ -59,6 +68,17 @@ public class WorkerService {
         updatedWorker.setLicenses(worker.getLicenses());
         updatedWorker.setZone(worker.getZone());
         updatedWorker.setWorkerType(worker.getWorkerType());
+
+        if (worker.getWorkSchedule() != updatedWorker.getWorkSchedule()) {
+            for (Timetable timetable : timetableRepository.findAll()) {
+                if (timetable.getWorker().getId().equals(updatedWorker.getId())) {
+                    timetableRepository.delete(timetable);
+                }
+            }
+            createTimetablesTillNextMonth(updatedWorker);
+        }
+
+        updatedWorker.setWorkSchedule(worker.getWorkSchedule());
         return workerRepository.save(updatedWorker);
     }
 
@@ -89,5 +109,65 @@ public class WorkerService {
         Worker updatedWorker = workerRepository.findById(workerId).get();
         updatedWorker.setZone(zoneId);
         return workerRepository.save(updatedWorker);
+    }
+
+    /**
+     * Creates timetables for all workers for the next month based on their work schedule.
+     */
+    public void createWorkerTimetablesForNextMonth() {
+        List<Worker> workers = workerRepository.findAll();
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusMonths(1);
+
+        List<Timetable> timetables = new ArrayList<>();
+
+        for (Worker worker : workers) {
+            Map<DayOfWeek, WorkerTimeRange> workSchedule = worker.getWorkSchedule();
+
+            for (LocalDate date = today; !date.isAfter(endDate); date = date.plusDays(1)) {
+                DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+                if (workSchedule.containsKey(dayOfWeek)) {
+                    WorkerTimeRange timeRange = workSchedule.get(dayOfWeek);
+
+                    Timetable timetable = new Timetable();
+                    timetable.setWorker(worker);
+                    timetable.setStartTime(date.atTime(timeRange.getStartTime()));
+                    timetable.setEndTime(date.atTime(timeRange.getEndTime()));
+
+                    timetables.add(timetable);
+                }
+            }
+        }
+
+        timetableRepository.saveAll(timetables);
+    }
+
+    /**
+     * Creates timetables for a specific worker for the next month based on their work schedule.
+     * @param worker The worker for whom to create timetables.
+     */
+    private void createTimetablesTillNextMonth(Worker worker) {
+        Map<DayOfWeek, WorkerTimeRange> workSchedule = worker.getWorkSchedule();
+        LocalDate today = LocalDate.now();
+        LocalDate startOfNextMonth = today.withDayOfMonth(1).plusMonths(1);
+
+        List<Timetable> timetables = new ArrayList<>();
+
+        for (LocalDate date = today; !date.isAfter(startOfNextMonth.minusDays(1)); date = date.plusDays(1)) {
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+            if (workSchedule.containsKey(dayOfWeek)) {
+                WorkerTimeRange timeRange = workSchedule.get(dayOfWeek);
+
+                Timetable timetable = new Timetable();
+                timetable.setWorker(worker);
+                timetable.setStartTime(date.atTime(timeRange.getStartTime()));
+                timetable.setEndTime(date.atTime(timeRange.getEndTime()));
+
+                timetables.add(timetable);
+            }
+        }
+        timetableRepository.saveAll(timetables);
     }
 }

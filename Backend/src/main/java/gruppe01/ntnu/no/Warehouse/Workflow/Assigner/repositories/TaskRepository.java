@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository interface for Task entity.
+ */
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 

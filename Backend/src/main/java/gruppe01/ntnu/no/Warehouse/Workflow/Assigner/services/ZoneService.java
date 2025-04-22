@@ -1,13 +1,16 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
+
+import java.time.LocalDate;
+import java.util.stream.Collectors;
+
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,18 @@ public class ZoneService {
 
   public List<Zone> getAllZones() {
     return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
+  }
+
+  public List<Zone> getAllTaskZones() {
+    return zoneRepository.findAll().stream()
+        .filter(zone -> !zone.getIsPickerZone())
+        .collect(Collectors.toList());
+  }
+
+  public List<Zone> getAllPickerZones() {
+    return zoneRepository.findAll().stream()
+        .filter(zone -> zone.getIsPickerZone())
+            .collect(Collectors.toList());
   }
 
   public Zone getZoneById(Long id) {
@@ -81,6 +96,13 @@ public class ZoneService {
           .collect(Collectors.toSet());
   }
 
+  public Set<PickerTask> getTodaysUnfinishedPickerTasksByZoneId(Long id) {
+    LocalDate today = LocalDate.now();
+    return getPickerTasksByZoneId(id).stream()
+            .filter(pickerTask -> pickerTask.getDate().equals(today) && pickerTask.getEndTime() == null)
+            .collect(Collectors.toSet());
+  }
+
   public Zone addZone(Zone zone) {
     if (zone != null && (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty())) {
       return zoneRepository.save(zone);
@@ -89,16 +111,17 @@ public class ZoneService {
   }
 
   public Zone updateZone(Long id, Zone zone) {
-    if (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty()) {
-      Zone updatedZone = zoneRepository.findById(id).get();
+    Zone updatedZone = zoneRepository.findById(id).get();
+
+    if ((zone.getPickerTask().isEmpty() && !zone.getIsPickerZone()) || (zone.getTasks().isEmpty() && zone.getIsPickerZone())) {
       updatedZone.setName(zone.getName());
       updatedZone.setWorkers(zone.getWorkers());
       updatedZone.setTasks(zone.getTasks());
       updatedZone.setPickerTask(zone.getPickerTask());
       updatedZone.setCapacity(zone.getCapacity());
-      return zoneRepository.save(updatedZone);
+      updatedZone.setIsPickerZone(zone.getIsPickerZone());
     }
-    return null;
+    return zoneRepository.save(updatedZone);
   }
 
   public Zone addTaskToZone(Long id, Long taskId) {
@@ -133,5 +156,14 @@ public class ZoneService {
       zoneRepository.delete(zone);
     }
     return zone;
+  }
+
+  public Zone changeIsPickerZone(Long id) {
+    Zone zone = zoneRepository.findById(id).orElse(null);
+    if (zone != null) {
+      zone.setIsPickerZone(!zone.getIsPickerZone());
+      return zoneRepository.save(zone);
+    }
+    return null;
   }
 }

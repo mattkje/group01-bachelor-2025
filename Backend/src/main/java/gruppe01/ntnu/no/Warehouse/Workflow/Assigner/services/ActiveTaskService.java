@@ -109,6 +109,7 @@ public class ActiveTaskService {
             if (activeTask.getTask() == null){
                 Task task = taskRepository.findById(taskId).get();
                 activeTask.setTask(task);
+                createRepeatingActiveTaskUntilNextMonth(activeTask);
             }
             return activeTaskRepository.save(activeTask);
         }
@@ -123,6 +124,15 @@ public class ActiveTaskService {
         updatedActiveTask.setEndTime(activeTask.getEndTime());
         updatedActiveTask.setDueDate(activeTask.getDueDate());
         updatedActiveTask.setStrictStart(activeTask.getStrictStart());
+        if (updatedActiveTask.getRecurrenceType() != activeTask.getRecurrenceType()) {
+            for (Task task : taskRepository.findAll()) {
+                if (task.getZoneId().equals(activeTask.getTask().getZoneId()) && task.getId().equals(id)) {
+                    taskRepository.delete(task);
+                }
+            }
+            createRepeatingActiveTaskUntilNextMonth(activeTask);
+        }
+        updatedActiveTask.setRecurrenceType(activeTask.getRecurrenceType());
         return activeTaskRepository.save(updatedActiveTask);
     }
 
@@ -168,7 +178,14 @@ public class ActiveTaskService {
 
     public ActiveTask deleteActiveTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
-        if (activeTask != null && !activeTask.getWorkers().isEmpty()) {
+        if (activeTask != null) {
+            activeTask.getWorkers().clear();
+            for (Worker worker : activeTask.getWorkers()) {
+                if (worker.getCurrentTask() == activeTask) {
+                    worker.setCurrentTask(null);
+                    workerRepository.save(worker);
+                }
+            }
             activeTaskRepository.delete(activeTask);
         }
         return activeTask;
@@ -193,5 +210,100 @@ public class ActiveTaskService {
             return activeTask.getWorkers();
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * Creates new active tasks for the next month based on the recurrence type of existing active tasks.
+     * RecurrenceTyoe 1 = Monthly, 2 = Weekly, 3 = Every 2 days, 4 = Daily, 0 = No recurrence
+     */
+    public void CreateRepeatingActiveTasks() {
+        List<ActiveTask> activeTasks = activeTaskRepository.findAll();
+        for (ActiveTask activeTask : activeTasks) {
+            if (activeTask.getRecurrenceType() == 1) {
+                createNewTasks(activeTask, 1, "MONTHS");
+            } else if (activeTask.getRecurrenceType() == 2) {
+                createNewTasks(activeTask, 1, "WEEKS");
+            } else if (activeTask.getRecurrenceType() == 3) {
+                createNewTasks(activeTask, 2, "DAYS");
+            } else if (activeTask.getRecurrenceType() == 4) {
+                createNewTasks(activeTask, 1, "DAYS");
+            }
+        }
+    }
+
+    /**
+     * Creates new tasks based on the given active task's date and recurrence type.
+     *
+     * @param activeTask The active task to base the new tasks on.
+     * @param increment  The amount to increment the date by.
+     * @param unit      The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     */
+    private void createNewTasks(ActiveTask activeTask, int increment, String unit) {
+        LocalDate tempDate = incrementDate(activeTask.getDate(), increment, unit);
+        activeTask.setRecurrenceType(0);
+
+        while (tempDate.isBefore(LocalDate.now().plusMonths(1))) {
+            ActiveTask newTask = new ActiveTask(activeTask);
+            newTask.setDate(tempDate);
+            newTask.setRecurrenceType(0);
+            newTask.setStartTime(null);
+            newTask.setEndTime(null);
+            newTask.setWorkers(new ArrayList<>());
+
+            if (tempDate.isAfter(LocalDate.now().plusMonths(1))) {
+                newTask.setRecurrenceType(activeTask.getRecurrenceType());
+            }
+
+            activeTaskRepository.save(newTask);
+            tempDate = incrementDate(tempDate, increment, unit);
+        }
+    }
+
+    /**
+     * Increments the given date by the specified amount and unit.
+     *
+     * @param date    The date to increment.
+     * @param increment The amount to increment.
+     * @param unit    The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     * @return The incremented date.
+     */
+    private LocalDate incrementDate(LocalDate date, int increment, String unit) {
+        return switch (unit) {
+            case "MONTHS" -> date.plusMonths(increment);
+            case "WEEKS" -> date.plusWeeks(increment);
+            case "DAYS" -> date.plusDays(increment);
+            default -> throw new IllegalArgumentException("Invalid time unit: " + unit);
+        };
+    }
+
+    public void createRepeatingActiveTaskUntilNextMonth(ActiveTask activeTask) {
+        LocalDate startOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
+
+        if (activeTask.getRecurrenceType() == 1) {
+            createNewTasksUntilNextMonth(activeTask, 1, "MONTHS", startOfNextMonth);
+        } else if (activeTask.getRecurrenceType() == 2) {
+            createNewTasksUntilNextMonth(activeTask, 1, "WEEKS", startOfNextMonth);
+        } else if (activeTask.getRecurrenceType() == 3) {
+            createNewTasksUntilNextMonth(activeTask, 2, "DAYS", startOfNextMonth);
+        } else if (activeTask.getRecurrenceType() == 4) {
+            createNewTasksUntilNextMonth(activeTask, 1, "DAYS", startOfNextMonth);
+        }
+    }
+
+    private void createNewTasksUntilNextMonth(ActiveTask activeTask, int increment, String unit, LocalDate startOfNextMonth) {
+        LocalDate tempDate = incrementDate(activeTask.getDate(), increment, unit);
+        activeTask.setRecurrenceType(0);
+
+        while (tempDate.isBefore(startOfNextMonth)) {
+            ActiveTask newTask = new ActiveTask(activeTask);
+            newTask.setDate(tempDate);
+            newTask.setRecurrenceType(0);
+            newTask.setStartTime(null);
+            newTask.setEndTime(null);
+            newTask.setWorkers(new ArrayList<>());
+
+            activeTaskRepository.save(newTask);
+            tempDate = incrementDate(tempDate, increment, unit);
+        }
     }
 }

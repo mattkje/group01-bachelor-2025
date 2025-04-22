@@ -1,9 +1,11 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Represents a PickerTask entity in the warehouse system.
@@ -38,6 +40,12 @@ public class PickerTask {
 
     @Column(name = "time_s")
     private double time;
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
 
     @ManyToOne
     @JoinColumn(name = "zoneId")
@@ -109,6 +117,19 @@ public class PickerTask {
         return date;
     }
 
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    @JsonProperty("zoneId")
+    public Long getZoneId() {
+        return zone.getId();
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -151,5 +172,13 @@ public class PickerTask {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 }

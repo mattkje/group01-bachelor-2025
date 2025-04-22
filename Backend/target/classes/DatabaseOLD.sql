@@ -15,6 +15,15 @@ CREATE TABLE IF NOT EXISTS worker
     dead          BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE IF NOT EXISTS worker_schedule (
+    worker_id BIGINT NOT NULL,
+    day_of_week VARCHAR(10) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    PRIMARY KEY (worker_id, day_of_week),
+    FOREIGN KEY (worker_id) REFERENCES worker (id)
+);
+
 CREATE TABLE IF NOT EXISTS license
 (
     id   BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -33,6 +42,7 @@ CREATE TABLE IF NOT EXISTS zone
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
     name        VARCHAR(255) NOT NULL,
+    is_picker_zone BOOLEAN DEFAULT FALSE,
     capacity    INT          NOT NULL
 );
 
@@ -58,6 +68,7 @@ CREATE TABLE IF NOT EXISTS active_task
     due_date   TIMESTAMP,
     start_time TIMESTAMP,
     end_time   TIMESTAMP,
+    recurrence_type INT DEFAULT 0,
     eta        DATETIME(6) DEFAULT NULL,
     FOREIGN KEY (task_id) REFERENCES task (id)
 );
@@ -106,7 +117,9 @@ CREATE TABLE IF NOT EXISTS picker_task
     weight_g       INT,
     volume_ml      INT,
     avg_height_m   INT,
-    time_s         DOUBLE,
+    time_s         DOUBLE DEFAULT NULL,
+    start_time    TIMESTAMP,
+    end_time      TIMESTAMP,
     date           DATE,
     zone_id        BIGINT NOT NULL,
     worker_id      BIGINT,
@@ -174,20 +187,226 @@ VALUES
     (44, 'Sophia Green', 11, 'Shipping Manager', 1.05, true),
     (45, 'Noah White', 12, 'Quality Control', 1.0, true);
 
+INSERT INTO worker_schedule (worker_id, day_of_week, start_time, end_time)
+VALUES
+    -- Worker 1 works every day
+    (1, 'MONDAY', '08:00:00', '16:00:00'),
+    (1, 'TUESDAY', '08:00:00', '16:00:00'),
+    (1, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (1, 'THURSDAY', '08:00:00', '16:00:00'),
+    (1, 'FRIDAY', '08:00:00', '16:00:00'),
+    (1, 'SATURDAY', '08:00:00', '12:00:00'),
+    (1, 'SUNDAY', '08:00:00', '12:00:00'),
 
-INSERT INTO zone (name, capacity)
-VALUES ('Receiving', 10),
-       ('Storage', 15),
-       ('Picking', 5),
-       ('Packing', 7),
-       ('Shipping', 8),
-       ('Quality Control', 4),
-       ('Planning', 6),
-       ('Execution', 14),
-       ('Monitoring', 2),
-       ('Dry', 10),
-       ('Fruit', 15),
-       ('Freeze', 8);
+    -- Worker 2 works only on weekdays
+    (2, 'MONDAY', '09:00:00', '17:00:00'),
+    (2, 'TUESDAY', '09:00:00', '17:00:00'),
+    (2, 'WEDNESDAY', '09:00:00', '17:00:00'),
+    (2, 'THURSDAY', '09:00:00', '17:00:00'),
+    (2, 'FRIDAY', '09:00:00', '17:00:00'),
+
+    -- Worker 3 works only on weekends
+    (3, 'SATURDAY', '10:00:00', '14:00:00'),
+    (3, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    -- Worker 4 works on Monday, Wednesday, and Friday
+    (4, 'MONDAY', '07:00:00', '15:00:00'),
+    (4, 'WEDNESDAY', '07:00:00', '15:00:00'),
+    (4, 'FRIDAY', '07:00:00', '15:00:00'),
+
+    -- Worker 5 works on Tuesday and Thursday
+    (5, 'TUESDAY', '06:00:00', '14:00:00'),
+    (5, 'THURSDAY', '06:00:00', '14:00:00'),
+
+    -- Worker 6 works every day except Sunday
+    (6, 'MONDAY', '08:00:00', '16:00:00'),
+    (6, 'TUESDAY', '08:00:00', '16:00:00'),
+    (6, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (6, 'THURSDAY', '08:00:00', '16:00:00'),
+    (6, 'FRIDAY', '08:00:00', '16:00:00'),
+    (6, 'SATURDAY', '08:00:00', '12:00:00'),
+
+    (7, 'MONDAY', '08:00:00', '16:00:00'),
+    (7, 'TUESDAY', '08:00:00', '16:00:00'),
+    (7, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (7, 'THURSDAY', '08:00:00', '16:00:00'),
+    (7, 'FRIDAY', '08:00:00', '16:00:00'),
+    (7, 'SATURDAY', '08:00:00', '12:00:00'),
+    (7, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    -- Worker 8 works only on weekends
+    (8, 'SATURDAY', '10:00:00', '14:00:00'),
+    (8, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    -- Worker 9 works on Monday, Wednesday, and Friday
+    (9, 'MONDAY', '07:00:00', '15:00:00'),
+    (9, 'WEDNESDAY', '07:00:00', '15:00:00'),
+    (9, 'FRIDAY', '07:00:00', '15:00:00'),
+
+    -- Worker 10 works on Tuesday and Thursday
+    (10, 'TUESDAY', '06:00:00', '14:00:00'),
+    (10, 'THURSDAY', '06:00:00', '14:00:00'),
+
+    -- Worker 11 works every day except Sunday
+    (11, 'MONDAY', '08:00:00', '16:00:00'),
+    (11, 'TUESDAY', '08:00:00', '16:00:00'),
+    (11, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (11, 'THURSDAY', '08:00:00', '16:00:00'),
+    (11, 'FRIDAY', '08:00:00', '16:00:00'),
+    (11, 'SATURDAY', '08:00:00', '12:00:00'),
+
+    -- Worker 12 works only on Monday and Friday
+    (12, 'MONDAY', '09:00:00', '17:00:00'),
+    (12, 'FRIDAY', '09:00:00', '17:00:00'),
+
+    -- Worker 13 works every day
+    (13, 'MONDAY', '08:00:00', '16:00:00'),
+    (13, 'TUESDAY', '08:00:00', '16:00:00'),
+    (13, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (13, 'THURSDAY', '08:00:00', '16:00:00'),
+    (13, 'FRIDAY', '08:00:00', '16:00:00'),
+    (13, 'SATURDAY', '08:00:00', '12:00:00'),
+    (13, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    -- Worker 14 works only on weekends
+    (14, 'SATURDAY', '10:00:00', '14:00:00'),
+    (14, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    -- Worker 15 works on Monday, Wednesday, and Friday
+    (15, 'MONDAY', '07:00:00', '15:00:00'),
+    (15, 'WEDNESDAY', '07:00:00', '15:00:00'),
+    (15, 'FRIDAY', '07:00:00', '15:00:00'),
+
+    (17, 'MONDAY', '09:00:00', '15:00:00'),
+    (17, 'WEDNESDAY', '09:00:00', '15:00:00'),
+
+    (18, 'SATURDAY', '10:00:00', '14:00:00'),
+    (18, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    (20, 'MONDAY', '08:00:00', '16:00:00'),
+    (20, 'TUESDAY', '08:00:00', '16:00:00'),
+    (20, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (20, 'THURSDAY', '08:00:00', '16:00:00'),
+    (20, 'FRIDAY', '08:00:00', '16:00:00'),
+    (20, 'SATURDAY', '08:00:00', '12:00:00'),
+
+    (21, 'TUESDAY', '07:00:00', '13:00:00'),
+    (21, 'THURSDAY', '07:00:00', '13:00:00'),
+
+    (22, 'MONDAY', '08:00:00', '16:00:00'),
+    (22, 'TUESDAY', '08:00:00', '16:00:00'),
+    (22, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (22, 'THURSDAY', '08:00:00', '16:00:00'),
+    (22, 'FRIDAY', '08:00:00', '16:00:00'),
+    (22, 'SATURDAY', '08:00:00', '12:00:00'),
+    (22, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    (23, 'FRIDAY', '09:00:00', '17:00:00'),
+
+    (25, 'MONDAY', '07:00:00', '15:00:00'),
+    (25, 'WEDNESDAY', '07:00:00', '15:00:00'),
+    (25, 'FRIDAY', '07:00:00', '15:00:00'),
+
+    (27, 'MONDAY', '08:00:00', '14:00:00'),
+    (27, 'FRIDAY', '08:00:00', '14:00:00'),
+
+    (28, 'MONDAY', '09:00:00', '17:00:00'),
+    (28, 'TUESDAY', '09:00:00', '17:00:00'),
+    (28, 'WEDNESDAY', '09:00:00', '17:00:00'),
+    (28, 'THURSDAY', '09:00:00', '17:00:00'),
+    (28, 'FRIDAY', '09:00:00', '17:00:00'),
+    (28, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    (29, 'SATURDAY', '10:00:00', '16:00:00'),
+    (29, 'SUNDAY', '10:00:00', '16:00:00'),
+
+    (30, 'TUESDAY', '07:00:00', '15:00:00'),
+    (30, 'WEDNESDAY', '07:00:00', '15:00:00'),
+    (30, 'THURSDAY', '07:00:00', '15:00:00'),
+
+    (31, 'MONDAY', '08:00:00', '16:00:00'),
+    (31, 'TUESDAY', '08:00:00', '16:00:00'),
+    (31, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (31, 'THURSDAY', '08:00:00', '16:00:00'),
+    (31, 'FRIDAY', '08:00:00', '16:00:00'),
+    (31, 'SATURDAY', '08:00:00', '12:00:00'),
+    (31, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    (33, 'MONDAY', '06:00:00', '14:00:00'),
+    (33, 'WEDNESDAY', '06:00:00', '14:00:00'),
+    (33, 'FRIDAY', '06:00:00', '14:00:00'),
+
+    (34, 'THURSDAY', '09:00:00', '17:00:00'),
+
+    (35, 'MONDAY', '08:00:00', '16:00:00'),
+    (35, 'TUESDAY', '08:00:00', '16:00:00'),
+    (35, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (35, 'THURSDAY', '08:00:00', '16:00:00'),
+    (35, 'FRIDAY', '08:00:00', '16:00:00'),
+    (35, 'SATURDAY', '08:00:00', '12:00:00'),
+
+    (36, 'MONDAY', '09:00:00', '15:00:00'),
+    (36, 'THURSDAY', '09:00:00', '15:00:00'),
+
+    (37, 'SATURDAY', '10:00:00', '14:00:00'),
+    (37, 'SUNDAY', '10:00:00', '14:00:00'),
+
+    (38, 'MONDAY', '08:00:00', '16:00:00'),
+    (38, 'TUESDAY', '08:00:00', '16:00:00'),
+    (38, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (38, 'THURSDAY', '08:00:00', '16:00:00'),
+    (38, 'SATURDAY', '08:00:00', '12:00:00'),
+    (38, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    (39, 'TUESDAY', '07:00:00', '13:00:00'),
+    (39, 'FRIDAY', '07:00:00', '13:00:00'),
+
+    (40, 'MONDAY', '08:00:00', '16:00:00'),
+    (40, 'TUESDAY', '08:00:00', '16:00:00'),
+    (40, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (40, 'THURSDAY', '08:00:00', '16:00:00'),
+    (40, 'FRIDAY', '08:00:00', '16:00:00'),
+    (40, 'SATURDAY', '08:00:00', '12:00:00'),
+    (40, 'SUNDAY', '08:00:00', '12:00:00'),
+
+    (41, 'MONDAY', '06:00:00', '14:00:00'),
+    (41, 'WEDNESDAY', '06:00:00', '14:00:00'),
+    (41, 'SATURDAY', '06:00:00', '14:00:00'),
+
+    (42, 'THURSDAY', '09:00:00', '17:00:00'),
+
+    (43, 'MONDAY', '08:00:00', '16:00:00'),
+    (43, 'TUESDAY', '08:00:00', '16:00:00'),
+    (43, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (43, 'THURSDAY', '08:00:00', '16:00:00'),
+    (43, 'FRIDAY', '08:00:00', '16:00:00'),
+    (43, 'SATURDAY', '08:00:00', '12:00:00'),
+
+    (44, 'TUESDAY', '07:00:00', '13:00:00'),
+    (44, 'SATURDAY', '07:00:00', '13:00:00'),
+
+    (45, 'MONDAY', '08:00:00', '16:00:00'),
+    (45, 'TUESDAY', '08:00:00', '16:00:00'),
+    (45, 'WEDNESDAY', '08:00:00', '16:00:00'),
+    (45, 'THURSDAY', '08:00:00', '16:00:00'),
+    (45, 'FRIDAY', '08:00:00', '16:00:00'),
+    (45, 'SATURDAY', '08:00:00', '12:00:00'),
+    (45, 'SUNDAY', '08:00:00', '12:00:00');
+
+
+INSERT INTO zone (name, capacity, is_picker_zone)
+VALUES ('Receiving', 10, false),
+       ('Storage', 15, false),
+       ('Picking', 5, false),
+       ('Packing', 7, false),
+       ('Shipping', 8, false),
+       ('Quality Control', 4, false),
+       ('Planning', 6, false),
+       ('Execution', 14, false),
+       ('Monitoring', 2, false),
+       ('Dry', 10, true),
+       ('Fruit', 15, true),
+       ('Freeze', 8, true);
 
 INSERT INTO license (name)
 VALUES ('Truck License'),

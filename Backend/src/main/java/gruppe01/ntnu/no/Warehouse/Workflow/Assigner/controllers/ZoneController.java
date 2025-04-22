@@ -20,6 +20,16 @@ public class ZoneController {
         return zoneService.getAllZones();
     }
 
+    @GetMapping("/task-zones")
+    public List<Zone> getAllTaskZones() {
+        return zoneService.getAllTaskZones();
+    }
+
+    @GetMapping("/picker-zones")
+    public List<Zone> getAllPickerZones() {
+        return zoneService.getAllPickerZones();
+    }
+
     @GetMapping("/{id}")
     public Zone getZoneById(@PathVariable Long id) {
         return zoneService.getZoneById(id);
@@ -50,6 +60,11 @@ public class ZoneController {
         return zoneService.getTodaysUnfinishedTasksByZoneId(id);
     }
 
+    @GetMapping("/{id}/picker-tasks-now")
+    public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
+        return zoneService.getTodaysUnfinishedPickerTasksByZoneId(id);
+    }
+
     @PostMapping
     public Zone addZone(@RequestBody Zone zone) {
         return zoneService.addZone(zone);
@@ -58,6 +73,11 @@ public class ZoneController {
     @PutMapping("/{id}")
     public Zone updateZone(@PathVariable Long id, @RequestBody Zone zone) {
         return zoneService.updateZone(id, zone);
+    }
+
+    @PutMapping("/is-picker-zone/{id}")
+    public Zone updatePickerZone(@PathVariable Long id) {
+        return zoneService.changeIsPickerZone(id);
     }
 
     @DeleteMapping("/{id}")

@@ -3,10 +3,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Represents a Worker entity in the warehouse system.
@@ -40,13 +39,24 @@ public class Worker {
 
     @ManyToOne
     @JsonIgnore
-    private ActiveTask currentTask;
+    private ActiveTask currentActiveTask;
+
+    @OneToOne
+    @JsonIgnore
+    private PickerTask currentPickerTask;
 
     @Column(name = "break_start_time")
     private LocalTime breakStartTime;
 
     @Column(name = "dead")
     private boolean dead;
+
+    @ElementCollection
+    @CollectionTable(name = "worker_schedule", joinColumns = @JoinColumn(name = "worker_id"))
+    @MapKeyColumn(name = "day_of_week")
+    @MapKeyEnumerated(EnumType.STRING)
+    @Column(name = "work_schedule")
+    private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -100,7 +110,7 @@ public class Worker {
     }
 
     public void setCurrentTask(ActiveTask currentTask) {
-        this.currentTask = currentTask;
+        this.currentActiveTask = currentTask;
     }
 
     public void setBreakStartTime(LocalTime breakStartTime) {
@@ -109,6 +119,14 @@ public class Worker {
 
     public void setDead(boolean dead) {
         this.dead = dead;
+    }
+
+    public void setCurrentPickerTask(PickerTask currentPickerTask) {
+        this.currentPickerTask = currentPickerTask;
+    }
+
+    public void setWorkSchedule(Map<DayOfWeek, WorkerTimeRange> workSchedule) {
+        this.workSchedule = workSchedule;
     }
 
     public Long getId() {
@@ -132,7 +150,7 @@ public class Worker {
     }
 
     public ActiveTask getCurrentTask() {
-        return currentTask;
+        return currentActiveTask;
     }
 
     public boolean isDead() {
@@ -170,5 +188,13 @@ public class Worker {
 
     public boolean hasAllLicenses(Set<License> requiredLicenses) {
         return licenses.containsAll(requiredLicenses);
+    }
+
+    public PickerTask getCurrentPickerTask() {
+        return currentPickerTask;
+    }
+
+    public Map<DayOfWeek, WorkerTimeRange> getWorkSchedule() {
+        return workSchedule;
     }
 }

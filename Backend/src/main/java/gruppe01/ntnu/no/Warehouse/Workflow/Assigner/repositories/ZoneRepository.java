@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository interface for Zone entity.
+ */
 @Repository
 public interface ZoneRepository extends JpaRepository<Zone, Long> {
 

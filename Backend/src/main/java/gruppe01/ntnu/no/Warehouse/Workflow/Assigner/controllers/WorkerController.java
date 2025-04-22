@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,5 +64,13 @@ public class WorkerController {
     @DeleteMapping("/{id}")
     public Worker deleteWorker(@PathVariable Long id) {
         return workerService.deleteWorker(id);
+    }
+
+    /**
+     * Scheduled task to create timetables for the next month.
+     */
+    @Scheduled(cron = "0 0 0 1 * ?")
+    public void createTimetablesForNewMonth() {
+        workerService.createWorkerTimetablesForNextMonth();
     }
 }

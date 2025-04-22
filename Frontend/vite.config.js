@@ -11,15 +11,15 @@ export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'src/assets/temp-data.csv',
-          dest: 'assets',
-        },
-      ],
-    }),
-    raw(),
+    // viteStaticCopy({
+    //   targets: [
+    //     {
+    //       src: 'src/assets/temp-data.csv',
+    //       dest: 'assets',
+    //     },
+    //   ],
+    // }),
+    // raw(),
   ],
   resolve: {
     alias: {

@@ -195,13 +195,13 @@ const toggleNotificationBubble = () => {
           </p>
         </div>
       </div>
-      <div v-else class="vertical-box" style="opacity: 0.5">
+      <div v-else class="vertical-box" style="text-align: center; margin-top: 1rem; opacity: 0.5">
         <img
             src="/src/assets/icons/check.svg"
             alt="Check"
             style="margin: 10px auto; margin-top: 1rem; width: 50px; height: 50px;"
         />
-        <p style="text-align: center;">
+        <p style="text-align: center; margin-top: 1rem;">
           All tasks completed
         </p>
       </div>
