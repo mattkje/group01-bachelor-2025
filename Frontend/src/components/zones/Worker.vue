@@ -143,7 +143,6 @@ onMounted(async () => {
         :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
         :draggable="!activeTask">
       <div class="worker-profile">
-        <img class="worker-image" :src="getRandomProfileImageUrl(props.workerId)" draggable="false"/>
         <div class="worker-name">{{ props.name }}</div>
       </div>
       <div class="status-container">

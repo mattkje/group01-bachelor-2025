@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Frontend/Frontend.iml" filepath="$PROJECT_DIR$/Frontend/Frontend.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Backend/Warehouse-Workflow-Assigner.iml" filepath="$PROJECT_DIR$/Backend/Warehouse-Workflow-Assigner.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/group01-bachelor-2025.iml" filepath="$PROJECT_DIR$/.idea/group01-bachelor-2025.iml" />
     </modules>
   </component>
