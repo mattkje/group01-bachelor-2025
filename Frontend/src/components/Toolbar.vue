@@ -20,7 +20,7 @@ const fetchPausedState = async () => {
   try {
     const response = await axios.get('http://localhost:8080/api/simulation/getStatus');
     isPaused.value = response.data;
-    if (state.value === 0) {
+    if (!state.value || state.value === 0) {
       isPlaying.value = false;
       isPaused.value = false
     }

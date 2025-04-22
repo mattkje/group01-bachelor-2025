@@ -1,20 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
-
-interface License {
-  id: number;
-  name: string;
-}
-
-interface Task {
-  id: number;
-  requiredLicense: License[];
-}
-
-interface Worker {
-  id: number;
-  licenses: License[];
-}
+import {License} from "@/assets/types";
 
 const props = defineProps<{
   name: string;
@@ -23,56 +8,6 @@ const props = defineProps<{
   availability: boolean;
   zoneId: number;
 }>();
-
-const task = ref<Task | null>(null);
-const qualified = ref(false);
-const qualifiedForAnyTask = ref(false);
-const overtime = ref(false);
-
-const getTaskByWorker = async (workerId: number) => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/active-tasks`);
-    const tasks = await response.json();
-    const workerTask = tasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
-    qualified.value = isWorkerQualified(workerTask);
-    return workerTask;
-  } catch (error) {
-    console.error('Failed to fetch worker task:', error);
-  }
-};
-
-const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${zoneId}/tasks`);
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to fetch tasks for zone:', error);
-    return [];
-  }
-};
-
-const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, worker: Worker): Promise<boolean> => {
-  const tasks = await fetchTasksForZone(zoneId);
-  return tasks.some(task =>
-      task.requiredLicense.some(license =>
-          worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
-      )
-  );
-};
-
-const isWorkerQualified = (task: any) => {
-  if (props.zoneId === 0) return true;
-  if (task) {
-    return task.task.requiredLicense.every((license: any) => props.licenses.some((workerLicense: License) => workerLicense.id === license.id));
-  } else {
-    return true;
-  }
-};
-
-const overtimeOccurance = (task: any) => {
-  if (!task || !task.eta || task.task.maxTime) return false;
-  return task.task.maxTime < task.eta;
-};
 
 const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
   if (isToon) {
@@ -83,24 +18,17 @@ const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
     return `https://randomuser.me/api/portraits/thumb/${gender}/${id}.jpg`;
   }
 };
-onMounted(async () => {
-  task.value = await getTaskByWorker(props.workerId);
-  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, { id: props.workerId, licenses: props.licenses });
-  overtimeOccurance(task.value) ? overtime.value = true : overtime.value = false;
-});
+
 </script>
 
 <template>
-  <div :class="['worker-compact', { 'rdy-worker-box': !task, 'hover-effect': !task }]" :draggable="!task">
+  <div class="worker-compact rdy-worker-box">
     <div class="worker-profile">
       <div class="worker-image-container">
         <img v-if="false" class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
         <img v-else class="worker-image" src="@/assets/icons/profile.svg" />
       </div>
       <div class="worker-name">{{ name }}</div>
-    </div>
-    <div class="status-container">
-      <div v-if="overtime" class="status-popup">Error occured</div>
     </div>
   </div>
 </template>
@@ -124,8 +52,6 @@ onMounted(async () => {
 .worker-compact:hover {
   background-color: #dcdcdc;
 }
-
-
 
 @keyframes pulse-border {
   0% {
