@@ -1,5 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerator;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -33,7 +36,7 @@ public class Zone {
   private Set<PickerTask> pickerTask;
 
   @Column(name = "is_picker_zone")
-  boolean isPickerZone;
+  private boolean isPickerZone;
 
   @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
   private Set<Worker> workers;

@@ -42,7 +42,7 @@ public class ZoneService {
 
   public List<Zone> getAllPickerZones() {
     return zoneRepository.findAll().stream()
-        .filter(zone -> zone.getIsPickerZone())
+        .filter(Zone::getIsPickerZone)
             .collect(Collectors.toList());
   }
 

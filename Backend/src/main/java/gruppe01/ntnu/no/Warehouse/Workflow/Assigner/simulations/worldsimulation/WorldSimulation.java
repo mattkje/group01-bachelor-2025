@@ -5,10 +5,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerato
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -80,6 +77,12 @@ public class WorldSimulation {
 
     private boolean isPlaying;
 
+    private HashMap<String, List<List<Double>>> minMaxValues;
+
+    private HashMap<String, Double> avgTime;
+
+    private HashMap<String, List<Double>> weightValues;
+
     @Autowired
     private WorkerService workerService;
 
@@ -88,6 +91,8 @@ public class WorldSimulation {
 
     @Autowired
     private PickerTaskService pickerTaskService;
+    @Autowired
+    private ZoneService zoneService;
 
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
         isPlaying = true;
@@ -159,6 +164,16 @@ public class WorldSimulation {
                 .collect(Collectors.toList());
 
         machineLearningModelPicking = new MachineLearningModelPicking();
+        minMaxValues = new HashMap<>();
+        avgTime = new HashMap<>();
+        weightValues = new HashMap<>();
+
+        for (Zone zone : zoneService.getAllPickerZones()) {
+            Map<List<Double>, List<List<Double>>> mcValuesList = machineLearningModelPicking.getMcValues(zone.getName().toUpperCase());
+            minMaxValues.put(zone.getName().toUpperCase(), mcValuesList.values().iterator().next());
+            avgTime.put(zone.getName().toUpperCase(), machineLearningModelPicking.calculateAverageTime(zone.getName().toUpperCase()));
+            weightValues.put(zone.getName().toUpperCase(), machineLearningModelPicking.getMcWeights(zone.getName().toUpperCase()));
+        }
 
         for (Timetable timetable : timetables) {
             LocalDateTime timetableStartTime = timetable.getStartTime();
@@ -458,8 +473,25 @@ public class WorldSimulation {
     }
 
     public LocalDateTime getPickerEndTime(PickerTask task, Worker worker) throws IOException {
-        return task.getStartTime().plusSeconds(machineLearningModelPicking.estimateTimeUsingWeights(task.getZone().getName(), task.getDistance(),
-                task.getPackAmount(), task.getLinesAmount(), task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()));
+        List<List<Double>> minMaxPickerValues = minMaxValues.get(task.getZone().getName().toUpperCase());
+        Double avgPickerTime = avgTime.get(task.getZone().getName().toUpperCase());
+        List<Double> weights = weightValues.get(task.getZone().getName().toUpperCase());
+
+        double[] features = new double[]{task.getDistance(), task.getPackAmount(), task.getLinesAmount(),
+                task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()
+        };
+
+        double estimatedTime = 0.0;
+        for (int i = 0; i < features.length; i++) {
+            double min = minMaxPickerValues.get(i).get(0);
+            double max = minMaxPickerValues.get(i).get(1);
+
+            double normalized = (features[i] - min) / (max - min);
+            estimatedTime += weights.get(i) * normalized;
+        }
+
+        estimatedTime = avgPickerTime * estimatedTime;
+        return task.getStartTime().plusSeconds((int) estimatedTime);
     }
 
     public void pauseSimulation() throws InterruptedException, IOException {
