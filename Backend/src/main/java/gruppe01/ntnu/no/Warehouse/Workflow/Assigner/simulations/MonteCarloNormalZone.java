@@ -2,9 +2,11 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
@@ -13,6 +15,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.Z
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,6 +64,8 @@ public class MonteCarloNormalZone {
   ZoneSimulator zoneSimulator = new ZoneSimulator();
 
   private static final Random random = new Random();
+  @Autowired
+  private PickerTaskService pickerTaskService;
 
   /**
    * Runner class for the Monte Carlo Simulation
@@ -80,15 +85,22 @@ public class MonteCarloNormalZone {
     List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
     List<Zone> zones = zoneService.getAllZones();
 
+
     for (int i = 0; i < simCount; i++) {
+      System.out.println("Running simulation " + (i + 1) + " of " + simCount);
       int finalI = i;
       futures.add(simulationExecutor.submit(() -> {
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
         AtomicDouble totalTaskTime = new AtomicDouble(0);
 
-        List<Zone> zonesCopy = zones.stream().map(Zone::new).collect(Collectors.toList());
+        List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
         List<ActiveTask> activeTasksCopy =
-            activeTasks.stream().map(ActiveTask::new).collect(Collectors.toList());
+            activeTasks.stream().map(ActiveTask::new).toList();
+
+        Set<PickerTask> pickerTasksCopy =
+            pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new).collect(Collectors.toSet());
+
+        System.out.println("Picker tasks: " + pickerTasksCopy.size());
 
         Map<Long, Double> zoneDurations = new HashMap<>();
 
@@ -96,13 +108,18 @@ public class MonteCarloNormalZone {
           warehouseExecutor.submit(() -> {
             try {
               String result = "";
-              if(zone.getPickerTask().isEmpty()){
+              if(!zone.getIsPickerZone()) {
+                //System.out.println("Zone: " + zone.getId() + " has active tasks " + zone.getIsPickerZone());
                 List<ActiveTask> zoneTasks = activeTasksCopy.stream()
                     .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
                     .toList();
                 result = ZoneSimulator.runZoneSimulation(zone, zoneTasks, null ,totalTaskTime, finalI);
               } else {
-                result = ZoneSimulator.runZoneSimulation(zone, null, zone.getPickerTask(), totalTaskTime, finalI);
+                Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
+                    .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
+                    .collect(Collectors.toSet());
+                System.out.println("Zone: " + zone.getId() + " has "+ zoneTasks.size() +" picker tasks");
+                result = ZoneSimulator.runZoneSimulation(zone, null,zoneTasks, totalTaskTime, finalI);
               }
               try {
                 double parsedResult = Double.parseDouble(result);

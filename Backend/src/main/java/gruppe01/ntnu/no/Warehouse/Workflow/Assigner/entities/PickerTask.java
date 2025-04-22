@@ -73,7 +73,21 @@ public class PickerTask {
         this.zone = zone;
     }
 
-    public Worker getWorker() {
+  public PickerTask(PickerTask pickerTask) {
+        this.id = pickerTask.getId();
+        this.distance = pickerTask.getDistance();
+        this.packAmount = pickerTask.getPackAmount();
+        this.linesAmount = pickerTask.getLinesAmount();
+        this.weight = pickerTask.getWeight();
+        this.volume = pickerTask.getVolume();
+        this.avgHeight = pickerTask.getAvgHeight();
+        this.time = pickerTask.getTime();
+        this.zone = new Zone(pickerTask.getZone());
+        this.worker = pickerTask.getWorker();
+        this.date = pickerTask.getDate();
+  }
+
+  public Worker getWorker() {
         return worker;
     }
 

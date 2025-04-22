@@ -2,7 +2,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a Zone entity in the system.
@@ -45,6 +47,7 @@ public class Zone {
     this.capacity = zone.getCapacity();
     this.tasks = zone.getTasks();
     this.workers = zone.getWorkers();
+    this.isPickerZone = zone.getIsPickerZone();
   }
 
   public void setId(Long id) {

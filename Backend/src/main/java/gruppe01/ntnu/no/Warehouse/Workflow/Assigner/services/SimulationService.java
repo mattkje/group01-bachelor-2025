@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 100;
+  private static final int SIM_COUNT = 2;
 
   @Autowired
   private ActiveTaskService activeTaskService;

@@ -36,14 +36,14 @@ public class ZoneSimulator {
 
   private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
-  public static String runZoneSimulation(Zone zone, List<ActiveTask> zoneTasks,
+  public static String runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
                                          Set<PickerTask> pickerTasks,
                                          AtomicDouble totalTaskTime, int simNo) {
     try {
 
-      if (zoneTasks.isEmpty() && pickerTasks.isEmpty()) {
-        return "ERROR: Zone " + zone.getId() +
-            " No tasks";
+      if ((activeTasks == null || activeTasks.isEmpty()) &&
+          (pickerTasks == null || pickerTasks.isEmpty())) {
+        return "ERROR: Zone " + zone.getId() + " No tasks";
       }
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
@@ -75,9 +75,9 @@ public class ZoneSimulator {
       CountDownLatch zoneLatch;
 
       // Iterate over the tasks in the zone
-      if (!zoneTasks.isEmpty()) {
-        zoneLatch = new CountDownLatch(zoneTasks.size());
-        for (ActiveTask activeTask : zoneTasks) {
+      if (activeTasks != null && !activeTasks.isEmpty()) {
+        zoneLatch = new CountDownLatch(activeTasks.size());
+        for (ActiveTask activeTask : activeTasks) {
           String result = simulateTask(activeTask, zone,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
               isSimulationSuccessful, errorMessages, zoneTaskTime, simNo);
@@ -127,15 +127,17 @@ public class ZoneSimulator {
       throws IOException, URISyntaxException {
     // Gets a random duration for the task from the ML model
 
-    int taskDuration = getPickerTaskDuration(pickerTask);
 
+    int taskDuration = getPickerTaskDuration(pickerTask);
+    System.out.println("Picker task: " + pickerTask.getId() + "has duration of: " + taskDuration);
     // Start a thread for a single task in a zone
     zoneExecutor.submit(() -> {
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
 
-          String acquireWorkerError = availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
+          String acquireWorkerError =
+              availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
           if (!acquireWorkerError.isEmpty()) {
             errorMessages.add(acquireWorkerError);
             isSimulationSuccessful.set(false);
@@ -147,6 +149,7 @@ public class ZoneSimulator {
         TimeUnit.MILLISECONDS.sleep(taskDuration);
         // Release the workers when the task is finished
         availableZoneWorkersSemaphore.release(pickerTask.getWorker());
+        System.out.println("Picker task: " + pickerTask.getId() + " has finished");
         // Add the task duration to the total task time
         zoneTaskTime.addAndGet(taskDuration);
       } catch (InterruptedException e) {
@@ -164,16 +167,18 @@ public class ZoneSimulator {
    * Each parameter in a picker task has a set weight attribute which helps calculate
    * the potential time it takes to complete the task
    * Each weight has a range given by the ML that represents the 5th and 95th percentile.
+   *
    * @param pickerTask The picker task to get the duration for
    * @return time in minutes (simulated in milliseconds)
    */
   private static int getPickerTaskDuration(PickerTask pickerTask)
-      throws IOException, URISyntaxException {
+      throws IOException {
     List<Double> weights = mlModel.getMcWeights(pickerTask.getZone().getName().toUpperCase());
 
-    return (int) ((int) pickerTask.getDistance() * weights.get(0) + pickerTask.getPackAmount() *weights.get(1) +
+    return (int) ((int) pickerTask.getDistance() * weights.get(0) +
+        pickerTask.getPackAmount() * weights.get(1) +
         pickerTask.getLinesAmount() * weights.get(2) + pickerTask.getWeight() * weights.get(3) +
-        pickerTask.getVolume() *weights.get(4) + pickerTask.getAvgHeight() * weights.get(5));
+        pickerTask.getVolume() * weights.get(4) + pickerTask.getAvgHeight() * weights.get(5));
 
   }
 
@@ -244,7 +249,7 @@ public class ZoneSimulator {
         // Acquire the workers for the task
         while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
           String acquireWorkerError =
-              availableZoneWorkersSemaphore.acquireMultiple(activeTask,null, simNo);
+              availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, simNo);
           if (!acquireWorkerError.isEmpty()) {
             errorMessages.add(acquireWorkerError);
             isSimulationSuccessful.set(false);
