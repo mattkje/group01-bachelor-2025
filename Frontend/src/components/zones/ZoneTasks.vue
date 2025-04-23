@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue';
 import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
-import {ActiveTask, Zone, PickerTask} from "@/assets/types";
+import {ActiveTask, Zone, PickerTask, Task} from "@/assets/types";
 import PickerTaskComponent from "@/components/tasks/PickerTaskComponent.vue";
 
-interface Task {
-  id: number;
-  name: string;
-  description: string;
-  requiredLicense: { name: string }[];
-  maxTime: number;
-  minTime: number;
-  zoneId: number;
-  minWorkers: number;
-  maxWorkers: number;
-}
 
 const props = defineProps<{
   zone: Zone;

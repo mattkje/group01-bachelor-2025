@@ -19,8 +19,8 @@
   const tabs = ref([
     { name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/' },
     { name: 'Zones', icon: zonesIcon, iconSelected: zonesIconSelected, path: '/zones' },
-    { name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff' },
     { name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks' },
+    { name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff' },
     { separator: true },
     { name: 'Control Panel', icon: cpIcon, iconSelected: cpIconSelected, path: '/controlpanel' },
     { name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info' },
