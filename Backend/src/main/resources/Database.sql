@@ -181,11 +181,11 @@ VALUES
     (37,'Holly Zinc', 7, 'Warehouse Technician', 0.85, true),
     (38,'Ian Lead', 1, 'Warehouse Engineer', 1.2, true),
     (39,'Judy Tin', 2, 'Warehouse Specialist', 1.1, true),
-    (41, 'Oliver Stone', 10, 'Warehouse Operator', 1.1, true),
-    (42, 'Emma Watson', 10, 'Inventory Specialist', 1.2, true),
-    (43, 'Liam Brown', 11, 'Logistics Coordinator', 0.95, true),
-    (44, 'Sophia Green', 11, 'Shipping Manager', 1.05, true),
-    (45, 'Noah White', 12, 'Quality Control', 1.0, true);
+    (42, 'Oliver Stone', 10, 'Warehouse Operator', 1.1, true),
+    (43, 'Emma Watson', 10, 'Inventory Specialist', 1.2, true),
+    (44, 'Liam Brown', 11, 'Logistics Coordinator', 0.95, true),
+    (45, 'Sophia Green', 11, 'Shipping Manager', 1.05, true),
+    (46, 'Noah White', 12, 'Quality Control', 1.0, true);
 
 INSERT INTO worker_schedule (worker_id, day_of_week, start_time, end_time)
 VALUES
@@ -369,9 +369,9 @@ VALUES
     (40, 'SATURDAY', '08:00:00', '12:00:00'),
     (40, 'SUNDAY', '08:00:00', '12:00:00'),
 
-    (41, 'MONDAY', '06:00:00', '14:00:00'),
-    (41, 'WEDNESDAY', '06:00:00', '14:00:00'),
-    (41, 'SATURDAY', '06:00:00', '14:00:00'),
+    (46, 'MONDAY', '06:00:00', '14:00:00'),
+    (46, 'WEDNESDAY', '06:00:00', '14:00:00'),
+    (46, 'SATURDAY', '06:00:00', '14:00:00'),
 
     (42, 'THURSDAY', '09:00:00', '17:00:00'),
 
@@ -516,9 +516,9 @@ VALUES (1, 3),
 
 INSERT INTO picker_task (distance, pack_amount, lines_amount, weight_g, volume_ml, avg_height_m, time_s, date, zone_id, worker_id)
 VALUES
-    (120.5, 10, 5, 1500, 2000, 1.2, 3600, '2025-01-01', 10, 41),
-    (95.3, 8, 4, 1200, 1800, 1.1, 3200, '2025-01-01',10, 41),
-    (110.7, 12, 6, 1800, 2500, 1.3, 4000, '2025-01-01',10, 41),
+    (120.5, 10, 5, 1500, 2000, 1.2, 3600, '2025-01-01', 10, 46),
+    (95.3, 8, 4, 1200, 1800, 1.1, 3200, '2025-01-01',10, 46),
+    (110.7, 12, 6, 1800, 2500, 1.3, 4000, '2025-01-01',10, 46),
     (85.2, 7, 3, 1000, 1500, 1.0, 2800, '2025-01-01',10, 42),
     (130.4, 15, 8, 2000, 3000, 1.4, 4500, '2025-01-01',10, 42),
     (105.6, 9, 5, 1400, 2200, 1.2, 3500, '2025-01-01',11, 43),

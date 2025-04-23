@@ -33,7 +33,13 @@ const fetchPausedState = async () => {
       isPaused.value = true
     }
     else {
-      console.error('Invalid state value:', state.value);
+      if (!state.value || state.value === 0) {
+        isPlaying.value = false;
+        isPaused.value = false
+      }
+      else {
+        console.error('Invalid state value:', state.value);
+      }
     }
   } catch (error) {
     console.error('Error fetching paused state:', error);

@@ -2,7 +2,8 @@
 import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import {License, PickerTask, Task, Worker, Zone} from '@/assets/types';
+import {ActiveTask, License, PickerTask, Task, Worker, Zone} from '@/assets/types';
+import axios from "axios";
 
 const props = defineProps<{
   title: string;
@@ -15,20 +16,32 @@ const emit = defineEmits(['refreshWorkers']);
 const showPopup = ref(false);
 const selectedZone = ref<Zone | null>(null);
 const isDraggingOver = ref(false);
-const tasks = ref<Task[]>([]);
+const tasks = ref<ActiveTask[]>([]);
 const pickerTasks = ref<PickerTask[]>([]);
 const hasTasks = ref(false);
 const hasPickerTasks = ref(false);
 const isSpinning = ref(false);
-const remainingTasks = computed(() => tasks.value.length);
-const remainingPickerTasks = computed(() => pickerTasks.value.length);
 let completionTime = ref<string>('');
 const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
 const isPickerZone = ref(false);
+const currentDate = ref<string>('');
 
+const fetchCurrentDateFromBackend = async () => {
+  const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
+  return response.data;
+};
 
+const today = new Date(currentDate.value).toDateString();
+
+const remainingTasks = computed(() =>
+    tasks.value.filter(task => new Date(task.date).toDateString() === today).length
+);
+
+const remainingPickerTasks = computed(() =>
+    pickerTasks.value.filter(task => new Date(task.date).toDateString() === today).length
+);
 const getThisZone = async (): Promise<Zone | null> => {
   try {
     const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}`);
@@ -85,8 +98,8 @@ const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
   if (isPickerZone.value) {
     return true;
   }
-  return tasks.value.some((task: Task) =>
-    task.requiredLicense.every((license: License) =>
+  return tasks.value.some((task: ActiveTask) =>
+    task.task.requiredLicense.every((license: License) =>
       worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
     )
   );
@@ -102,6 +115,7 @@ const fetchPickerTasksForZone = async () => {
 };
 
 onMounted(async () => {
+  currentDate.value = await fetchCurrentDateFromBackend();
   if ((await getThisZone()).isPickerZone) {
     isPickerZone.value = true;
     await fetchPickerTasksForZone();
