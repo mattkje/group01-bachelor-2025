@@ -1,5 +1,9 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerator;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -13,6 +17,7 @@ import java.util.stream.Collectors;
  * A zone is either a picking zone or a non-picking zone.
  * A zone can not have both pickerTasks and Tasks at the same time.
  */
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 public class Zone {
 
@@ -26,16 +31,16 @@ public class Zone {
   @Column(name = "capacity")
   private int capacity;
 
-  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
   private Set<Task> tasks;
 
-  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
   private Set<PickerTask> pickerTask;
 
   @Column(name = "is_picker_zone")
-  boolean isPickerZone;
+  private boolean isPickerZone;
 
-  @OneToMany(mappedBy = "zone", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
   private Set<Worker> workers;
 
   public Zone() {
@@ -70,7 +75,9 @@ public class Zone {
     this.workers = workers;
   }
 
-  public void setPickerTask(Set<PickerTask> pickerTask) {}
+  public void setPickerTask(Set<PickerTask> pickerTask) {
+    this.pickerTask = pickerTask;
+  }
 
   public void setIsPickerZone(boolean isPickerZone) {
     this.isPickerZone = isPickerZone;
