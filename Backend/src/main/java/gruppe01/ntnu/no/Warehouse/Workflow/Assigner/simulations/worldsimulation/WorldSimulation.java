@@ -91,6 +91,7 @@ public class WorldSimulation {
 
     @Autowired
     private PickerTaskService pickerTaskService;
+
     @Autowired
     private ZoneService zoneService;
 
