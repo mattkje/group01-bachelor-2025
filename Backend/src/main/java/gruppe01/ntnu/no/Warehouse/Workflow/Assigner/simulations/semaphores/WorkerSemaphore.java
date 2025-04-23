@@ -5,6 +5,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
@@ -29,9 +30,11 @@ public class WorkerSemaphore {
     //TODO: Once world simulation is up change the localDate based on the simulated time
     for (Worker worker : workers) {
       if (worker.getCurrentTaskId() != null &&
-              (worker.getCurrentActiveTask().getEndTime() == null && worker.getCurrentPickerTask().getEndTime() == null) &&
-              (worker.getCurrentActiveTask().getDate().isEqual(
-              LocalDate.now())) && worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
+          (worker.getCurrentActiveTask().getEndTime() == null &&
+              worker.getCurrentPickerTask().getEndTime() == null) &&
+          (worker.getCurrentActiveTask().getDate().isEqual(
+              LocalDate.now())) &&
+          worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
         workers.remove(worker);
         semaphore.release();
       }
@@ -57,8 +60,8 @@ public class WorkerSemaphore {
         int minWorkers = 1;
         if (activeTask != null) {
           // Check if the number of workers required is less than the number of workers available
-           maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
-           minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+          maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
+          minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
         }
 
         // Current permits from the semaphore
@@ -83,9 +86,13 @@ public class WorkerSemaphore {
         }
         // acquired the worker permits
         List<Worker> workersToRemove = new ArrayList<>();
+
+        // Randomness element within the MC simulation
+        List<Worker> workerList = new ArrayList<>(workers);
+        Collections.shuffle(workerList);
         // Iterate over the workers to check if they have the required licences for the task
-        if (activeTask != null){
-          for (Worker worker : workers) {
+        if (activeTask != null) {
+          for (Worker worker : workerList) {
             // If the worker has the required licenses, add them to the workers to remove
             if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
               workersToRemove.add(worker);
@@ -98,14 +105,14 @@ public class WorkerSemaphore {
             }
           }
         } else {
-          for (Worker worker : workers) {
-              workersToRemove.add(worker);
-              // If the picker task does not have any worker
-              if (pickerTask.getWorker() == null) {
-                pickerTask.setWorker(worker);
-                workersToRemove.forEach(workers::remove);
-                return "";
-              }
+          for (Worker worker : workerList) {
+            workersToRemove.add(worker);
+            // If the picker task does not have any worker
+            if (pickerTask.getWorker() == null) {
+              pickerTask.setWorker(worker);
+              workersToRemove.forEach(workers::remove);
+              return "";
+            }
           }
         }
 
@@ -117,7 +124,6 @@ public class WorkerSemaphore {
       lock.unlock();
     }
   }
-
 
 
   public void releaseAll(List<Worker> allWorkers) {

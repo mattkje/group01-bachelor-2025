@@ -161,6 +161,7 @@ public class MonteCarlo {
     simulationExecutor.shutdown();
     simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
 
+    System.out.println("Simulation complete");
     return results;
   }
 

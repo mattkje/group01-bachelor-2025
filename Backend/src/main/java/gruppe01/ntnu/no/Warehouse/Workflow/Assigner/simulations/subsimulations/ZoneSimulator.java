@@ -75,7 +75,7 @@ public class ZoneSimulator {
 
       new CountDownLatch(1);
       CountDownLatch zoneLatch;
-
+      
       // Iterate over the tasks in the zone
       if (activeTasks != null && !activeTasks.isEmpty()) {
         zoneLatch = new CountDownLatch(activeTasks.size());
@@ -134,14 +134,7 @@ public class ZoneSimulator {
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
-
-          String acquireWorkerError =
-              availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
-          if (!acquireWorkerError.isEmpty()) {
-            errorMessages.add(acquireWorkerError);
-            isSimulationSuccessful.set(false);
-            return;
-          }
+          availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
         }
         // Divide time by 60 as the ML model returns time in seconds
         // TODO: ADD SOME VARIANCE TO THE TIME
@@ -222,7 +215,6 @@ public class ZoneSimulator {
                                      AtomicDouble zoneTaskTime,
                                      int simNo) {
     // Gets a random duration for the task
-    // TODO: Replace this with a machine learning model for typical taskduration
     int taskDuration =
         random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
             activeTask.getTask().getMinTime();
