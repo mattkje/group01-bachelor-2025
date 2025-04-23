@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import com.google.common.util.concurrent.AtomicDouble;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
@@ -46,6 +47,7 @@ public class SimulationService {
    */
   public List<String> runZoneSimulation(Long zoneId) {
 
+    ZoneSimulator zoneSimulator = new ZoneSimulator();
     // Ensure the zoneID exists
     if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
       throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
@@ -60,7 +62,7 @@ public class SimulationService {
 
     for (int i = 0; i < SIM_COUNT; i++) {
       AtomicDouble predictedTime = new AtomicDouble(0.0);
-      String result = ZoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
+      String result = zoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
           activeTaskService.getRemainingTasksForTodayByZone(zoneId),
           pickerTaskService.getPickerTasksForToday(), predictedTime, i);
       if (!result.isEmpty() && i == 0) {
@@ -111,7 +113,7 @@ public class SimulationService {
           for (SimulationResult result : results) {
             if (result.getZoneDurations().containsKey(zoneId)) {
               newResult.put(zoneId,
-                  result.getErrorMessages().stream().filter(s -> s.contains("ZONE " + zoneId))
+                  result.getErrorMessages().stream().filter(s -> s.contains("Zone " + zoneId))
                       .findFirst().map(List::of).orElse(List.of()));
               break;
             }

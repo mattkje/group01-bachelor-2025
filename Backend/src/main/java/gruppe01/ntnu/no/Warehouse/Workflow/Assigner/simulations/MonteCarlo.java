@@ -56,6 +56,7 @@ public class MonteCarlo {
   private PickerTaskService pickerTaskService;
 
 
+
   //TODO: Save the result of the simulation to a file for quicker access between pages
 
   /**
@@ -70,6 +71,7 @@ public class MonteCarlo {
   public List<SimulationResult> monteCarlo(int simCount)
       throws InterruptedException, ExecutionException {
 
+    ZoneSimulator zoneSimulator = new ZoneSimulator();
     // List of potential error messages
     List<String> errorMessages = new ArrayList<>();
     // Create a thread pool for the simulations
@@ -79,7 +81,7 @@ public class MonteCarlo {
     List<Future<SimulationResult>> futures = new ArrayList<>();
     // List of zones to run the simulation on
     List<Zone> zones = zoneService.getAllZones();
-
+    List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
     // this for loop represents one warehouse simulation
     for (int i = 0; i < simCount; i++) {
       System.out.println("Running simulation " + (i + 1) + " of " + simCount);
@@ -92,7 +94,7 @@ public class MonteCarlo {
         // Creating hard copies of each object to avoid concurrency issues
         List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
         List<ActiveTask> activeTasksCopy =
-            activeTaskService.getActiveTasksForToday().stream().map(ActiveTask::new).toList();
+            activeTasks.stream().map(ActiveTask::new).toList();
         Set<PickerTask> pickerTasksCopy =
             pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
                 .collect(Collectors.toSet());
@@ -114,15 +116,14 @@ public class MonteCarlo {
                     .toList();
                 // run zone simulation
                 result =
-                    ZoneSimulator.runZoneSimulation(zone, zoneTasks, null, totalTaskTime, finalI);
+                    zoneSimulator.runZoneSimulation(zone, zoneTasks, null, totalTaskTime, finalI);
               } else { // If zone is a picker zone
                 // Filter the picker tasks for the zone
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
                 // run zone simulation
-                result =
-                    ZoneSimulator.runZoneSimulation(zone, null, zoneTasks, totalTaskTime, finalI);
+                result = zoneSimulator.runZoneSimulation(zone, null, zoneTasks, totalTaskTime, finalI);
               }
               try {
                 // Ensure the result is a number
