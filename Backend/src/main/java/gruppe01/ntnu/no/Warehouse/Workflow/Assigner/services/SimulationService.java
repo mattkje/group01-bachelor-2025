@@ -1,7 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloNormalZone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import java.time.LocalDateTime;
@@ -31,7 +31,7 @@ public class SimulationService {
   private ZoneService zoneService;
 
   @Autowired
-  private MonteCarloNormalZone monteCarloWithRealData;
+  private MonteCarlo monteCarloWithRealData;
   @Autowired
   private PickerTaskService pickerTaskService;
 

@@ -4,7 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerato
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarloNormalZone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import java.time.LocalDate;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
@@ -24,7 +24,7 @@ public class SimulationController {
   private ActiveTaskGenerator activeTaskGeneratorService;
 
   @Autowired
-  private MonteCarloNormalZone monteCarloWithRealData;
+  private MonteCarlo monteCarloWithRealData;
   @Autowired
   private TimeTableGenerator timeTableGenerator;
   @Autowired
