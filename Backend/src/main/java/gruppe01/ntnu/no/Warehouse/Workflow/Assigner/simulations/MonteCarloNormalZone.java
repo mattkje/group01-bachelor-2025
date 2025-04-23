@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
@@ -61,7 +62,7 @@ public class MonteCarloNormalZone {
   @Autowired
   private LicenseService licenseService;
 
-  ZoneSimulator zoneSimulator = new ZoneSimulator();
+  private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
   private static final Random random = new Random();
   @Autowired
@@ -96,12 +97,8 @@ public class MonteCarloNormalZone {
         List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
         List<ActiveTask> activeTasksCopy =
             activeTasks.stream().map(ActiveTask::new).toList();
-
         Set<PickerTask> pickerTasksCopy =
             pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new).collect(Collectors.toSet());
-
-        System.out.println("Picker tasks: " + pickerTasksCopy.size());
-
         Map<Long, Double> zoneDurations = new HashMap<>();
 
         for (Zone zone : zonesCopy) {
@@ -109,7 +106,6 @@ public class MonteCarloNormalZone {
             try {
               String result = "";
               if(!zone.getIsPickerZone()) {
-                //System.out.println("Zone: " + zone.getId() + " has active tasks " + zone.getIsPickerZone());
                 List<ActiveTask> zoneTasks = activeTasksCopy.stream()
                     .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(), zone.getId()))
                     .toList();
@@ -118,7 +114,6 @@ public class MonteCarloNormalZone {
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
-                System.out.println("Zone: " + zone.getId() + " has "+ zoneTasks.size() +" picker tasks");
                 result = ZoneSimulator.runZoneSimulation(zone, null,zoneTasks, totalTaskTime, finalI);
               }
               try {
@@ -155,6 +150,8 @@ public class MonteCarloNormalZone {
 
     return results;
   }
+
+
 
 
 }

@@ -12,7 +12,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import smile.regression.RandomForest;
 
 /**
  * Simulates a zone in a warehouse
@@ -38,7 +38,8 @@ public class ZoneSimulator {
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
                                          Set<PickerTask> pickerTasks,
-                                         AtomicDouble totalTaskTime, int simNo) {
+                                         AtomicDouble totalTaskTime,
+                                         int simNo) {
     try {
 
       if ((activeTasks == null || activeTasks.isEmpty()) &&
@@ -61,6 +62,7 @@ public class ZoneSimulator {
           zoneWorkers.add(new Worker(worker));
         }
       }
+
 
       // Error message list for any errors that occur during the completion of tasks
       List<String> errorMessages = new ArrayList<>();
@@ -86,12 +88,13 @@ public class ZoneSimulator {
           }
         }
       } else {
-        Map<List<Double>, List<List<Double>>> mlData = mlModel.getMcValues(zone.getName());
         zoneLatch = new CountDownLatch(pickerTasks.size());
+        RandomForest randomForest = mlModel.getModel(zone.getName(), false);
         for (PickerTask pickerTask : pickerTasks) {
           String result = simulatePickerTask(pickerTask,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
-              isSimulationSuccessful, errorMessages, zoneTaskTime, simNo, mlData);
+              isSimulationSuccessful, errorMessages, zoneTaskTime, simNo,
+              randomForest);
           if (!result.isEmpty()) {
             return result;
           }
@@ -122,14 +125,10 @@ public class ZoneSimulator {
                                            ExecutorService zoneExecutor, CountDownLatch zoneLatch,
                                            AtomicBoolean isSimulationSuccessful,
                                            List<String> errorMessages, AtomicDouble zoneTaskTime,
-                                           int simNo,
-                                           Map<List<Double>, List<List<Double>>> mlData)
+                                           int simNo, RandomForest randomForest)
       throws IOException, URISyntaxException {
     // Gets a random duration for the task from the ML model
 
-
-    int taskDuration = getPickerTaskDuration(pickerTask);
-    System.out.println("Picker task: " + pickerTask.getId() + "has duration of: " + taskDuration);
     // Start a thread for a single task in a zone
     zoneExecutor.submit(() -> {
       try {
@@ -144,6 +143,11 @@ public class ZoneSimulator {
             return;
           }
         }
+        // Divide time by 60 as the ML model returns time in seconds
+        // TODO: ADD SOME VARIANCE TO THE TIME
+        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
+        System.out.println(
+            "Picker task: " + pickerTask.getId() + " has duration of: " + taskDuration);
         // Simulate the task duration
         // TODO: Find a quicker way of doing this so that the simulation runs faster
         TimeUnit.MILLISECONDS.sleep(taskDuration);
@@ -154,6 +158,8 @@ public class ZoneSimulator {
         zoneTaskTime.addAndGet(taskDuration);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       } finally {
         zoneLatch.countDown();
       }
@@ -171,15 +177,11 @@ public class ZoneSimulator {
    * @param pickerTask The picker task to get the duration for
    * @return time in minutes (simulated in milliseconds)
    */
-  private static int getPickerTaskDuration(PickerTask pickerTask)
+  private static int getPickerTaskDuration(PickerTask pickerTask, RandomForest randomForest)
       throws IOException {
-    List<Double> weights = mlModel.getMcWeights(pickerTask.getZone().getName().toUpperCase());
 
-    return (int) ((int) pickerTask.getDistance() * weights.get(0) +
-        pickerTask.getPackAmount() * weights.get(1) +
-        pickerTask.getLinesAmount() * weights.get(2) + pickerTask.getWeight() * weights.get(3) +
-        pickerTask.getVolume() * weights.get(4) + pickerTask.getAvgHeight() * weights.get(5));
-
+    return (int) mlModel.estimateTimeUsingModel(
+        randomForest, pickerTask);
   }
 
 
@@ -240,7 +242,7 @@ public class ZoneSimulator {
       isSimulationSuccessful.set(false);
       zoneLatch.countDown();
       return "ERROR: ZONE " + zone.getId() +
-          " - " + activeTask.getTask().getName() + "!Missing workers with required licenses";
+          " - " + activeTask.getTask().getName() + " Missing workers with required licenses";
     }
 
     // Start a thread for a single task in a zone
