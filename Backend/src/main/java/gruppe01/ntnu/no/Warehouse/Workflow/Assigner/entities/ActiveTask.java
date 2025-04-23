@@ -1,6 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -49,7 +51,7 @@ public class ActiveTask {
     @JoinColumn(name = "task_id")
     private Task task;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany
     @JoinTable(
             name = "active_task_worker",
             joinColumns = @JoinColumn(name = "active_task_id"),
@@ -125,7 +127,16 @@ public class ActiveTask {
     }
 
     public List<Worker> getWorkers() {
-        return workers;
+        List<Worker> workerList = new ArrayList<>();
+        if (this.workers == null) {
+            this.workers = new ArrayList<>();
+        }
+        for (Worker worker : workers) {
+            if (!workerList.contains(worker)) {
+                workerList.add(worker);
+            }
+        }
+        return workerList;
     }
 
     public Task getTask() {
@@ -150,5 +161,14 @@ public class ActiveTask {
 
     public int getRecurrenceType() {
         return recurrenceType;
+    }
+
+    public void addWorker(Worker worker) {
+        if (this.workers == null) {
+            this.workers = new ArrayList<>();
+        }
+        if (!this.workers.contains(worker)) {
+            this.workers.add(worker);
+        }
     }
 }

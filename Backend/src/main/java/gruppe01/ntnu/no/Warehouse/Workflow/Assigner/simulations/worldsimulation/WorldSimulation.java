@@ -8,6 +8,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearn
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import smile.regression.RandomForest;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -77,11 +78,13 @@ public class WorldSimulation {
 
     private boolean isPlaying;
 
-    private HashMap<String, List<List<Double>>> minMaxValues;
+//    private HashMap<String, List<List<Double>>> minMaxValues;
+//
+//    private HashMap<String, Double> avgTime;
+//
+//    private HashMap<String, List<Double>> weightValues;
 
-    private HashMap<String, Double> avgTime;
-
-    private HashMap<String, List<Double>> weightValues;
+    private HashMap<String, RandomForest> randomForests;
 
     @Autowired
     private WorkerService workerService;
@@ -145,7 +148,6 @@ public class WorldSimulation {
         System.out.println("Workers present today: " + workersPresentToday.size());
 
         activeTasksToday = activeTaskService.getAllActiveTasks();
-        System.out.println("Active tasks today: " + activeTasksToday.size());
 
         LocalDate finalWorkday = workday;
 
@@ -160,20 +162,25 @@ public class WorldSimulation {
                 //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
                 .collect(Collectors.toList());
 
+        System.out.println("Active tasks today: " + activeTasksToday.size());
+
         pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
                 .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
                 .collect(Collectors.toList());
 
         machineLearningModelPicking = new MachineLearningModelPicking();
-        minMaxValues = new HashMap<>();
-        avgTime = new HashMap<>();
-        weightValues = new HashMap<>();
+//        minMaxValues = new HashMap<>();
+//        avgTime = new HashMap<>();
+//        weightValues = new HashMap<>();
+        randomForests = new HashMap<>();
 
         for (Zone zone : zoneService.getAllPickerZones()) {
-            Map<List<Double>, List<List<Double>>> mcValuesList = machineLearningModelPicking.getMcValues(zone.getName().toUpperCase());
-            minMaxValues.put(zone.getName().toUpperCase(), mcValuesList.values().iterator().next());
-            avgTime.put(zone.getName().toUpperCase(), machineLearningModelPicking.calculateAverageTime(zone.getName().toUpperCase()));
-            weightValues.put(zone.getName().toUpperCase(), machineLearningModelPicking.getMcWeights(zone.getName().toUpperCase()));
+            String zoneName = zone.getName().toUpperCase();
+//            Map<List<Double>, List<List<Double>>> mcValuesList = machineLearningModelPicking.getMcValues(zoneName);
+//            minMaxValues.put(zoneName, mcValuesList.values().iterator().next());
+//            avgTime.put(zoneName, machineLearningModelPicking.calculateAverageTime(zone.getName().toUpperCase()));
+//            weightValues.put(zoneName, machineLearningModelPicking.getMcWeights(zone.getName().toUpperCase()));
+            randomForests.put(zoneName, machineLearningModelPicking.getModel(zone.getName(), false));
         }
 
         for (Timetable timetable : timetables) {
@@ -190,6 +197,19 @@ public class WorldSimulation {
         if (isPaused) {
             System.out.println("Simulation paused");
         } else {
+            for (ActiveTask activeTask : activeTasksInProgress) {
+                activeTask.setEndTime(activeTaskEndTimes.get(activeTask));
+                for (Worker worker : activeTask.getWorkers()) {
+                    worker.setCurrentTask(null);
+                }
+                activeTaskService.updateActiveTask(activeTask.getId(), activeTask);
+            }
+
+            for (PickerTask pickerTask : pickerTasksInProgress) {
+                pickerTask.setEndTime(pickerTaskEndTimes.get(pickerTask));
+                pickerTask.getWorker().setCurrentPickerTask(null);
+                pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
+            }
             System.out.println("Simulation finished");
             isPlaying = false;
         }
@@ -326,10 +346,10 @@ public class WorldSimulation {
                     Worker worker = workerIterator.next();
                     worker.setCurrentPickerTask(task);
                     task.setStartTime(LocalDateTime.of(workday, currentTime));
-                    pickerTaskEndTimes.put(task, getPickerEndTime(task, worker));
+                    pickerTaskService.assignWorkerToPickerTask(task.getId(), worker.getId());
+                    pickerTaskEndTimes.put(task, getPickerEndTime(task));
                     busyWorkers.add(worker);
                     availableWorkers.remove(worker);
-                    pickerTaskService.assignWorkerToPickerTask(task.getId(), worker.getId());
                     workerService.updateWorker(worker.getId(), worker);
                     System.out.println(worker.getName() + " has started working on task: " +
                             task.getId());
@@ -397,7 +417,7 @@ public class WorldSimulation {
                     worker.setCurrentPickerTask(null);
                     workerService.updateWorker(worker.getId(), worker);
                     System.out.println(worker.getName() + " has completed task: " + task.getId());
-                    availableWorkers.add(worker);
+                    if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
                     busyWorkers.remove(worker);
                     pickerTaskInProgressIterator.remove();
                     pickerTaskEndTimes.remove(task);
@@ -473,25 +493,26 @@ public class WorldSimulation {
         return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
     }
 
-    public LocalDateTime getPickerEndTime(PickerTask task, Worker worker) throws IOException {
-        List<List<Double>> minMaxPickerValues = minMaxValues.get(task.getZone().getName().toUpperCase());
-        Double avgPickerTime = avgTime.get(task.getZone().getName().toUpperCase());
-        List<Double> weights = weightValues.get(task.getZone().getName().toUpperCase());
-
-        double[] features = new double[]{task.getDistance(), task.getPackAmount(), task.getLinesAmount(),
-                task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()
-        };
-
-        double estimatedTime = 0.0;
-        for (int i = 0; i < features.length; i++) {
-            double min = minMaxPickerValues.get(i).get(0);
-            double max = minMaxPickerValues.get(i).get(1);
-
-            double normalized = (features[i] - min) / (max - min);
-            estimatedTime += weights.get(i) * normalized;
-        }
-
-        estimatedTime = avgPickerTime * estimatedTime;
+    public LocalDateTime getPickerEndTime(PickerTask task) throws IOException {
+//        List<List<Double>> minMaxPickerValues = minMaxValues.get(task.getZone().getName().toUpperCase());
+//        Double avgPickerTime = avgTime.get(task.getZone().getName().toUpperCase());
+//        List<Double> weights = weightValues.get(task.getZone().getName().toUpperCase());
+//
+//        double[] features = new double[]{task.getDistance(), task.getPackAmount(), task.getLinesAmount(),
+//                task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()
+//        };
+//
+//        double estimatedTime = 0.0;
+//        for (int i = 0; i < features.length; i++) {
+//            double min = minMaxPickerValues.get(i).get(0);
+//            double max = minMaxPickerValues.get(i).get(1);
+//
+//            double normalized = (features[i] - min) / (max - min);
+//            estimatedTime += weights.get(i) * normalized;
+//        }
+//
+//        estimatedTime = avgPickerTime * estimatedTime;
+        long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(randomForests.get(task.getZone().getName().toUpperCase()), task);
         return task.getStartTime().plusSeconds((int) estimatedTime);
     }
 

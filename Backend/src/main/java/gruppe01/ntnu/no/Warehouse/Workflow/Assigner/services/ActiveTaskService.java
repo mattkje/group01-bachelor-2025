@@ -143,10 +143,8 @@ public class ActiveTaskService {
             if (worker != null) {
                 worker.setZone(activeTask.getTask().getZoneId());
                 worker.setCurrentTask(activeTask);
-                if (activeTask.getWorkers() == null) {
-                    activeTask.setWorkers(new ArrayList<>());
-                }
-                activeTask.getWorkers().add(worker);
+                if (activeTask.getWorkers() == null) activeTask.setWorkers(new ArrayList<>());
+                if (!activeTask.getWorkers().contains(worker)) activeTask.addWorker(worker);
                 return activeTaskRepository.save(activeTask);
             }
             return null;

@@ -20,11 +20,11 @@ public class License {
     @Column(name = "name")
     private String name;
 
-    @ManyToMany(mappedBy = "licenses")
+    @ManyToMany(mappedBy = "licenses", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<Worker> workers;
 
-    @ManyToMany(mappedBy = "requiredLicense")
+    @ManyToMany(mappedBy = "requiredLicense", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<Task> tasks;
 
