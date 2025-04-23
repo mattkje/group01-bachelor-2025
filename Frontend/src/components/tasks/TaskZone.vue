@@ -79,8 +79,8 @@ onMounted( () => {
   <div class="rounded-square">
     <div class="title-bar">
       <div class="top-bar">
-        {{ title }}
-        <button class="add-task-button" @click="onAddTask">Add Task</button>
+        <p>{{ title }}</p>
+        <router-link class="add-task-button" :to="`/zones/${props.zoneId}/tasks`">Manage</router-link>
       </div>
       <div class="task-summary">
         <p v-if="activeTasksToday.length > 0">Tasks: {{ activeTasksToday.length }}</p>
@@ -140,7 +140,7 @@ onMounted( () => {
   </div>
 </template>
 
-    <style scoped>
+<style scoped>
     .rounded-square {
       width: 250px;
       height: min-content;
@@ -170,6 +170,7 @@ onMounted( () => {
       justify-content: space-between;
       align-items: flex-start;
       font-size: 0.8rem;
+
     }
 
     .vertical-task-box {
@@ -234,6 +235,7 @@ onMounted( () => {
       margin: 1rem 0;
       background: none;
       color: #7b7b7b;
+      font-size: 1rem;
       border: none;
       border-radius: 5px;
       cursor: pointer;
@@ -255,5 +257,11 @@ onMounted( () => {
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .top-bar p {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
     </style>

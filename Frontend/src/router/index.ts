@@ -9,6 +9,7 @@ import Info from "../views/Info.vue";
 import WorkerProfile from "../views/WorkerProfile.vue";
 import ControlPanel from "../views/ControlPanel.vue";
 import ZoneMenu from "../views/ZoneMenu.vue";
+import TaskMenu from "../views/TaskMenu.vue";
 
 const routes = [
   { path: '/', component: Overview },
@@ -20,6 +21,7 @@ const routes = [
   { path: '/worker', component: WorkerProfile},
   { path: '/controlpanel', component: ControlPanel},
   { path: '/zones/:id', component: ZoneMenu },
+  { path: '/zones/:id/tasks', component: TaskMenu },
 ];
 
 const router = createRouter({
