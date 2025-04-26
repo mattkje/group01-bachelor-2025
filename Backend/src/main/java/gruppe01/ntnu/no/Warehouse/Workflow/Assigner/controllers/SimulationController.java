@@ -54,10 +54,10 @@ public class SimulationController {
     return simulationService.runZoneSimulation(id);
   }
 
-  @GetMapping("/generate-timetable/{date}/{numDays}")
-  public void generateTimeTable(@PathVariable String date, @PathVariable int numDays) {
+  @GetMapping("/generate-timetable/{date}")
+  public void generateTimeTable(@PathVariable String date) {
     LocalDate startDate = LocalDate.parse(date);
-    timeTableGenerator.generateTimeTable(startDate, numDays);
+    timeTableGenerator.generateTimeTable(startDate);
   }
 
   @GetMapping("/generate-picker-tasks/{date}/{numDays}/{numOfTasksPerDay}")

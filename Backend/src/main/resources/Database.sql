@@ -1,7 +1,40 @@
 CREATE DATABASE IF NOT EXISTS warehouse;
 USE warehouse;
 
+CREATE TABLE IF NOT EXISTS zone
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
+    name        VARCHAR(255) NOT NULL,
+    is_picker_zone BOOLEAN DEFAULT FALSE,
+    capacity    INT          NOT NULL
+);
 
+CREATE TABLE IF NOT EXISTS task
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name         VARCHAR(255) NOT NULL,
+    description  TEXT,
+    min_duration INT          NOT NULL,
+    max_duration INT          NOT NULL,
+    min_workers  INT          NOT NULL,
+    max_workers  INT          NOT NULL,
+    zone_id      BIGINT,
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
+);
+
+CREATE TABLE IF NOT EXISTS active_task
+(
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    task_id    BIGINT NOT NULL,
+    strict_start TIMESTAMP DEFAULT NULL,
+    date       DATE NOT NULL,
+    due_date   TIMESTAMP,
+    start_time TIMESTAMP,
+    end_time   TIMESTAMP,
+    recurrence_type INT DEFAULT 0,
+    eta        DATETIME(6) DEFAULT NULL,
+    FOREIGN KEY (task_id) REFERENCES task (id)
+);
 
 CREATE TABLE IF NOT EXISTS worker
 (
@@ -36,41 +69,6 @@ CREATE TABLE IF NOT EXISTS worker_license
     license_id BIGINT NOT NULL,
     FOREIGN KEY (worker_id) REFERENCES worker (id),
     FOREIGN KEY (license_id) REFERENCES license (id)
-);
-
-CREATE TABLE IF NOT EXISTS zone
-(
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL ,
-    name        VARCHAR(255) NOT NULL,
-    is_picker_zone BOOLEAN DEFAULT FALSE,
-    capacity    INT          NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS task
-(
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name         VARCHAR(255) NOT NULL,
-    description  TEXT,
-    min_duration INT          NOT NULL,
-    max_duration INT          NOT NULL,
-    min_workers  INT          NOT NULL,
-    max_workers  INT          NOT NULL,
-    zone_id      BIGINT,
-    FOREIGN KEY (zone_id) REFERENCES zone (id)
-);
-
-CREATE TABLE IF NOT EXISTS active_task
-(
-    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    task_id    BIGINT NOT NULL,
-    strict_start TIMESTAMP DEFAULT NULL,
-    date       DATE NOT NULL,
-    due_date   TIMESTAMP,
-    start_time TIMESTAMP,
-    end_time   TIMESTAMP,
-    recurrence_type INT DEFAULT 0,
-    eta        DATETIME(6) DEFAULT NULL,
-    FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
 CREATE TABLE IF NOT EXISTS active_task_worker

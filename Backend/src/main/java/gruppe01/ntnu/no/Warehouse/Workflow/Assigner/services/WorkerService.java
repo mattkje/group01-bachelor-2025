@@ -56,7 +56,7 @@ public class WorkerService {
     }
 
     public Worker addWorker(Worker worker) {
-        createTimetablesTillNextMonth(worker);
+        createTimetablesTillNextMonth(LocalDate.now(), worker);
         return workerRepository.save(worker);
     }
 
@@ -75,7 +75,7 @@ public class WorkerService {
                     timetableRepository.delete(timetable);
                 }
             }
-            createTimetablesTillNextMonth(updatedWorker);
+            createTimetablesTillNextMonth(LocalDate.now(), updatedWorker);
         }
 
         updatedWorker.setWorkSchedule(worker.getWorkSchedule());
@@ -114,10 +114,10 @@ public class WorkerService {
     /**
      * Creates timetables for all workers for the next month based on their work schedule.
      */
-    public void createWorkerTimetablesForNextMonth() {
+    public void createWorkerTimetablesForNextMonth(LocalDate currentDate) {
         List<Worker> workers = workerRepository.findAll();
-        LocalDate today = LocalDate.now();
-        LocalDate endDate = today.plusMonths(1);
+        LocalDate today = currentDate.plusMonths(1).withDayOfMonth(1);
+        LocalDate endDate = today.plusMonths(2).withDayOfMonth(1).minusDays(1);
 
         List<Timetable> timetables = new ArrayList<>();
 
@@ -147,14 +147,13 @@ public class WorkerService {
      * Creates timetables for a specific worker for the next month based on their work schedule.
      * @param worker The worker for whom to create timetables.
      */
-    private void createTimetablesTillNextMonth(Worker worker) {
+    public void createTimetablesTillNextMonth(LocalDate dateNow, Worker worker) {
         Map<DayOfWeek, WorkerTimeRange> workSchedule = worker.getWorkSchedule();
-        LocalDate today = LocalDate.now();
-        LocalDate startOfNextMonth = today.withDayOfMonth(1).plusMonths(1);
+        LocalDate startOfNextMonth = dateNow.withDayOfMonth(1).plusMonths(1);
 
         List<Timetable> timetables = new ArrayList<>();
 
-        for (LocalDate date = today; !date.isAfter(startOfNextMonth.minusDays(1)); date = date.plusDays(1)) {
+        for (LocalDate date = dateNow; !date.isAfter(startOfNextMonth.minusDays(1)); date = date.plusDays(1)) {
             DayOfWeek dayOfWeek = date.getDayOfWeek();
 
             if (workSchedule.containsKey(dayOfWeek)) {

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,8 +70,8 @@ public class WorkerController {
     /**
      * Scheduled task to create timetables for the next month.
      */
-    @Scheduled(cron = "0 0 0 1 * ?")
+    @Scheduled(cron = "0 0 0 15 * ?")
     public void createTimetablesForNewMonth() {
-        workerService.createWorkerTimetablesForNextMonth();
+        workerService.createWorkerTimetablesForNextMonth(LocalDate.now());
     }
 }

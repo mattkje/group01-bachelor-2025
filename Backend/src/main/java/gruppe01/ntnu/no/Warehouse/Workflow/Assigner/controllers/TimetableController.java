@@ -3,10 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,5 +17,25 @@ public class TimetableController {
     @GetMapping
     public List<Timetable> getTimetables() {
         return timetableService.getAllTimetables();
+    }
+
+    @GetMapping("/today/zone/{zoneId}")
+    public List<Timetable> getTodaysTimetable(@PathVariable Long zoneId) {
+        return timetableService.getTodaysTimetablesByZone(zoneId);
+    }
+
+    @GetMapping("zone/{zoneId}")
+    public List<Timetable> getAllTimetablesByZone(@PathVariable Long zoneId) {
+        return timetableService.getAllTimetablesByZone(zoneId);
+    }
+
+    @PutMapping("/{id}/set-start-time")
+    public Timetable setStartTime(@PathVariable Long id) {
+        return timetableService.setStartTime(id);
+    }
+
+    @PutMapping("/{id}")
+    public Timetable updateTimetable(@PathVariable Long id, @RequestBody Timetable timetable) {
+        return timetableService.updateTimetable(id, timetable);
     }
 }

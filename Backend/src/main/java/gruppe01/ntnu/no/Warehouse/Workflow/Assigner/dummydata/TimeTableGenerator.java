@@ -27,45 +27,52 @@ public class TimeTableGenerator {
   private TimetableService timetableService;
 
 
-  public void generateTimeTable(LocalDate startDate, int numDays) {
+//  public void generateTimeTable(LocalDate startDate, int numDays) {
+//
+//    startDate = Objects.requireNonNullElse(startDate, LocalDate.now());
+//    numDays = Math.max(numDays, 1);
+//
+//    LocalDate endDate = startDate.plusDays(numDays - 1);
+//
+//    // range of change that a percentage of workers are available
+//    double minWorkersPercentage = 0.7;
+//    double maxWorkersPercentage = 0.9;
+//
+//    // Times in which works starts and ends
+//    int[] startHours = {3,4,5,6,7,8,9,15};
+//    int[] minutes = {0,30};
+//    int[] endHours = {3,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
+//
+//    List<Worker> workers = workerService.getAllWorkers();
+//    workers.stream().filter(worker -> !worker.isDead()).collect(Collectors.toList());
+//
+//    while (!startDate.isAfter(endDate)){
+//      double workerPercentage = minWorkersPercentage + (Math.random() * (maxWorkersPercentage - minWorkersPercentage));
+//      for (Worker worker : workers){
+//        if (Math.random() < workerPercentage){
+//
+//          int startHour = startHours[(int) (Math.random() * startHours.length)];
+//          int endHour = startHour + 8;
+//          int startMinute = minutes[(int) (Math.random() * minutes.length)];
+//          int endMinute = minutes[(int) (Math.random() * minutes.length)];
+//
+//          LocalDateTime startTime = startDate.atTime(startHour, startMinute);
+//          LocalDateTime endTime = startDate.atTime(endHour, endMinute);
+//
+//          timetableService.addTimetable(new Timetable(startTime, endTime, worker));
+//
+//        }
+//
+//      }
+//
+//        startDate = startDate.plusDays(1);
+//    }
+//
+//  }
 
-    startDate = Objects.requireNonNullElse(startDate, LocalDate.now());
-    numDays = Math.max(numDays, 1);
-
-    LocalDate endDate = startDate.plusDays(numDays - 1);
-
-    // range of change that a percentage of workers are available
-    double minWorkersPercentage = 0.7;
-    double maxWorkersPercentage = 0.9;
-
-    // Times in which works starts and ends
-    int[] startHours = {3,4,5,6,7,8,9,15};
-    int[] minutes = {0,30};
-    int[] endHours = {3,8,9,10,11,12,13,14,15,16,17,18,19,20,21};
-
-    List<Worker> workers = workerService.getAllWorkers();
-    workers.stream().filter(worker -> !worker.isDead()).collect(Collectors.toList());
-
-    while (!startDate.isAfter(endDate)){
-      double workerPercentage = minWorkersPercentage + (Math.random() * (maxWorkersPercentage - minWorkersPercentage));
-      for (Worker worker : workers){
-        if (Math.random() < workerPercentage){
-
-          int startHour = startHours[(int) (Math.random() * startHours.length)];
-          int endHour = startHour + 8;
-          int startMinute = minutes[(int) (Math.random() * minutes.length)];
-          int endMinute = minutes[(int) (Math.random() * minutes.length)];
-
-          LocalDateTime startTime = startDate.atTime(startHour, startMinute);
-          LocalDateTime endTime = startDate.atTime(endHour, endMinute);
-
-          timetableService.addTimetable(new Timetable(startTime, endTime, worker));
-
-        }
-
-      }
-
-        startDate = startDate.plusDays(1);
+  public void generateTimeTable(LocalDate date) {
+    for (Worker worker : workerService.getAllWorkers()) {
+      workerService.createTimetablesTillNextMonth(date, worker);
     }
 
   }

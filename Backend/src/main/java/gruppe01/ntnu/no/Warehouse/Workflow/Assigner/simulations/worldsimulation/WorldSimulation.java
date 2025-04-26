@@ -106,7 +106,9 @@ public class WorldSimulation {
         while (!activeTasksExistForWorkday) {
             if (activeTaskService.getActiveTaskByDate(workday).isEmpty()) {
                 activeTaskGenerator.generateActiveTasks(workday, 1);
-                timeTableGenerator.generateTimeTable(workday, 1);
+                if (timetableService.getTimetablesByDate(workday).isEmpty()) {
+                    timeTableGenerator.generateTimeTable(workday);
+                }
                 pickerTaskGenerator.generatePickerTasks(workday, 1, 20);
                 activeTasksExistForWorkday = true;
             } else {
