@@ -81,7 +81,11 @@ onMounted(() => {
 });
 
 const filteredTasks = computed(() => {
-  return tasks.value.filter(task => task.zoneId === props.zone.id);
+  if (props.zone.isPickerZone) {
+    return pickerTasks.value.filter(task => task.zoneId === props.zone.id);
+  } else {
+    return activeTasks.value.filter(task => task.task.zoneId === props.zone.id);
+  }
 });
 
 const getWorkersForTask = (taskId: number) => {
@@ -147,11 +151,6 @@ const updateTasks = () => {
           @task-deleted="updateTasks"
           @task-updated="updateTasks"/>
     </div>
-    <div class="pagination" v-if="activeTasks.length > 0">
-      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
-    </div>
   </div>
 </template>
 
@@ -159,9 +158,8 @@ const updateTasks = () => {
 .content {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   margin: 0 3.5rem;
-  height: calc(100vh - 4rem);
+  height: 100%;
 }
 
 .activeTaskContainer {
@@ -169,19 +167,9 @@ const updateTasks = () => {
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 10px;
-  height: 100%;
-  flex: 1;
+  max-height: calc(100vh - 625px);
   overflow-y: auto;
-}
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  bottom: 10px;
-  width: 100%;
-  padding: 10px;
-  max-width: calc(100% - 2rem);
-  margin-top: auto;
+  flex: 1;
 }
 
 ul {

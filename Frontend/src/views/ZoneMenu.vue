@@ -224,6 +224,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="container-container">
   <div class="container" v-if="currentZone">
     <div class="zone-info">
       <div class="zone-menu">
@@ -233,11 +234,13 @@ onMounted(() => {
         <p>Tasks: {{ currentZone.tasks.length }}</p>
         <button @click="$emit('runSimulation', currentZone.id)">Run Simulation</button>
       </div>
-      <div class="workers">
+      <div class="workers-container">
         <h3>Workers</h3>
-        <ul>
-          <li v-for="worker in currentZone.workers" :key="worker.id">{{ worker.name }}</li>
-        </ul>
+        <div class="workers">
+        <div class="worker" v-for="worker in currentZone.workers" :key="worker.id">
+          {{ worker.name }}
+        </div>
+        </div>
       </div>
     </div>
     <div class="vertical-separator"/>
@@ -250,9 +253,14 @@ onMounted(() => {
   </div>
   <hr>
   <ZoneTasks v-if="currentZone" class="zone-tasks" :zone="currentZone" :tasks="currentZone.tasks" />
+  </div>
 </template>
 
 <style scoped>
+.container-container {
+  height: 100vh;
+}
+
 .container {
   width: 100%;
   margin: 0;
@@ -301,22 +309,19 @@ onMounted(() => {
   background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  height: 150px;
+  overflow-y: auto;
 }
 
-.workers h3 {
-  margin-bottom: 10px;
-}
-
-.workers ul {
-  list-style: none;
-  padding: 0;
-}
-
-.workers li {
-  margin: 5px 0;
-  padding: 5px;
+.worker {
+  padding: 10px;
   background-color: #f1f1f1;
+  height: 45px;
   border-radius: 4px;
+  text-align: center;
 }
 
 .monte-carlo-graph {
