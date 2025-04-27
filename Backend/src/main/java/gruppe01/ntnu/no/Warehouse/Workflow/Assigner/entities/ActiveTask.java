@@ -171,4 +171,15 @@ public class ActiveTask {
             this.workers.add(worker);
         }
     }
+
+    public void addMultilpleWorkers(List<Worker> workers) {
+        if (this.workers == null) {
+            this.workers = new ArrayList<>();
+        }
+        for (Worker worker : workers) {
+            if (!this.workers.contains(worker)) {
+                this.workers.add(worker);
+            }
+        }
+    }
 }

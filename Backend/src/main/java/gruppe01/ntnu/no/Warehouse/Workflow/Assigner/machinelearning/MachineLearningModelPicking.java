@@ -443,4 +443,14 @@ public class MachineLearningModelPicking {
 
     return model;
   }
+
+  public Map<String,RandomForest> getAllModels() throws IOException {
+    Map<String,RandomForest> models = new HashMap<>();
+    String[] departments = {"DRY", "FREEZE", "FRUIT"};
+    for (String department : departments) {
+      RandomForest model = getModel(department, false);
+      models.put(department, model);
+    }
+    return models;
+  }
 }

@@ -5,6 +5,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 1;
+  private static final int SIM_COUNT = 10;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -64,7 +65,7 @@ public class SimulationService {
       AtomicDouble predictedTime = new AtomicDouble(0.0);
       String result = zoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
           activeTaskService.getRemainingTasksForTodayByZone(zoneId),
-          pickerTaskService.getPickerTasksForToday(), predictedTime, i);
+          pickerTaskService.getPickerTasksForToday(),null, predictedTime, i);
       if (!result.isEmpty() && i == 0) {
         errorMessages.add(result);
       }
@@ -91,7 +92,7 @@ public class SimulationService {
    * Call it by using the following: /api/monte-carlo
    */
   public Map<Long, List<String>> runCompleteSimulation()
-      throws ExecutionException, InterruptedException {
+      throws ExecutionException, InterruptedException, IOException {
     List<SimulationResult> results = monteCarloWithRealData.monteCarlo(SIM_COUNT);
     HashMap<Long, List<String>> newResult = new HashMap<>();
 

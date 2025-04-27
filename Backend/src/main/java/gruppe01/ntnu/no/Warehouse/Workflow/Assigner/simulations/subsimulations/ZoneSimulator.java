@@ -38,6 +38,7 @@ public class ZoneSimulator {
 
   public static String runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
                                          Set<PickerTask> pickerTasks,
+                                         RandomForest randomForest,
                                          AtomicDouble totalTaskTime,
                                          int simNo) {
     try {
@@ -72,28 +73,29 @@ public class ZoneSimulator {
 
       AtomicBoolean isSimulationSuccessful = new AtomicBoolean(true);
       AtomicDouble zoneTaskTime = new AtomicDouble(0.0);
+      AtomicDouble totalWaitingTime = new AtomicDouble(0.0);
 
       new CountDownLatch(1);
       CountDownLatch zoneLatch;
-      
+
       // Iterate over the tasks in the zone
       if (activeTasks != null && !activeTasks.isEmpty()) {
         zoneLatch = new CountDownLatch(activeTasks.size());
         for (ActiveTask activeTask : activeTasks) {
           String result = simulateTask(activeTask, zone,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
-              isSimulationSuccessful, errorMessages, zoneTaskTime, simNo);
+              isSimulationSuccessful, errorMessages, zoneTaskTime,totalWaitingTime, simNo);
           if (!result.isEmpty()) {
             return result;
           }
         }
       } else {
         zoneLatch = new CountDownLatch(pickerTasks.size());
-        RandomForest randomForest = mlModel.getModel(zone.getName(), false);
+
         for (PickerTask pickerTask : pickerTasks) {
           String result = simulatePickerTask(pickerTask,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
-              isSimulationSuccessful, errorMessages, zoneTaskTime, simNo,
+              isSimulationSuccessful, errorMessages, zoneTaskTime,totalWaitingTime, simNo,
               randomForest);
           if (!result.isEmpty()) {
             return result;
@@ -112,10 +114,6 @@ public class ZoneSimulator {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
     }
     return "Zone " + zone.getId() + " simulation failed";
   }
@@ -125,57 +123,31 @@ public class ZoneSimulator {
                                            ExecutorService zoneExecutor, CountDownLatch zoneLatch,
                                            AtomicBoolean isSimulationSuccessful,
                                            List<String> errorMessages, AtomicDouble zoneTaskTime,
-                                           int simNo, RandomForest randomForest)
-      throws IOException, URISyntaxException {
-    // Gets a random duration for the task from the ML model
-
-    // Start a thread for a single task in a zone
+                                           AtomicDouble totalWaitingTime, // New parameter
+                                           int simNo, RandomForest randomForest) {
     zoneExecutor.submit(() -> {
+      long waitingStartTime = System.currentTimeMillis(); // Start tracking waiting time
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
           availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, simNo);
         }
-        // Divide time by 60 as the ML model returns time in seconds
-        // TODO: ADD SOME VARIANCE TO THE TIME
-        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
-        System.out.println(
-            "Picker task: " + pickerTask.getId() + " has duration of: " + taskDuration);
+        long waitingEndTime = System.currentTimeMillis(); // End tracking waiting time
+        totalWaitingTime.addAndGet((waitingEndTime - waitingStartTime) / 1000.0); // Add waiting time in seconds
         // Simulate the task duration
-        // TODO: Find a quicker way of doing this so that the simulation runs faster
+        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
         TimeUnit.MILLISECONDS.sleep(taskDuration);
-        // Release the workers when the task is finished
         availableZoneWorkersSemaphore.release(pickerTask.getWorker());
-        System.out.println("Picker task: " + pickerTask.getId() + " has finished");
-        // Add the task duration to the total task time
         zoneTaskTime.addAndGet(taskDuration);
-      } catch (InterruptedException e) {
+      } catch (InterruptedException | IOException e) {
         Thread.currentThread().interrupt();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
       } finally {
         zoneLatch.countDown();
       }
     });
     return "";
-
   }
 
-  /**
-   * Gets the duration of a picker task using ranges given by the ML Model
-   * Each parameter in a picker task has a set weight attribute which helps calculate
-   * the potential time it takes to complete the task
-   * Each weight has a range given by the ML that represents the 5th and 95th percentile.
-   *
-   * @param pickerTask The picker task to get the duration for
-   * @return time in minutes (simulated in milliseconds)
-   */
-  private static int getPickerTaskDuration(PickerTask pickerTask, RandomForest randomForest)
-      throws IOException {
-
-    return (int) mlModel.estimateTimeUsingModel(
-        randomForest, pickerTask);
-  }
 
 
   /**
@@ -213,54 +185,44 @@ public class ZoneSimulator {
                                      AtomicBoolean isSimulationSuccessful,
                                      List<String> errorMessages,
                                      AtomicDouble zoneTaskTime,
+                                     AtomicDouble totalWaitingTime, // New parameter
                                      int simNo) {
-    // Gets a random duration for the task
-    int taskDuration =
-        random.nextInt(activeTask.getTask().getMaxTime() - activeTask.getTask().getMinTime()) +
-            activeTask.getTask().getMinTime();
-
-    // Set a random EPW for the task (Efficiency gained per worker)
-    // Currently at  a range between 0.4 and 0.9
-    // TODO: Replace this with a ML learned number
-    double epw = random.nextDouble() * 0.5 + 0.4;
-
-
-    long workersWithRequiredLicenses = zone.getWorkers().stream()
-        .filter(worker -> worker.getLicenses()
-            .containsAll(activeTask.getTask().getRequiredLicense()))
-        .count();
-
-    if (workersWithRequiredLicenses < activeTask.getTask().getMinWorkers()) {
-      isSimulationSuccessful.set(false);
-      zoneLatch.countDown();
-      return "ERROR: ZONE " + zone.getId() +
-          " - " + activeTask.getTask().getName() + " Missing workers with required licenses";
-    }
-
-    // Start a thread for a single task in a zone
     zoneExecutor.submit(() -> {
+      long waitingStartTime = System.currentTimeMillis(); // Start tracking waiting time
       try {
+        int check = 0;
         // Acquire the workers for the task
         while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+
           String acquireWorkerError =
               availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, simNo);
           if (!acquireWorkerError.isEmpty()) {
+            System.out.println("Simulation failed");
             errorMessages.add(acquireWorkerError);
             isSimulationSuccessful.set(false);
             return;
           }
+          check++;
+          if (check == 101) {
+            System.out.println("Trying to acquire workers for task " + activeTask.getId() + " Available permits: " +
+                availableZoneWorkersSemaphore.getAvailablePermits());
+          }
         }
+        long waitingEndTime = System.currentTimeMillis(); // End tracking waiting time
+        totalWaitingTime.addAndGet((waitingEndTime - waitingStartTime) / 1000.0); // Add waiting time in seconds
+
         // Simulate the task duration
-        // TODO: Find a quicker way of doing this so that the simulation runs faster
         TimeUnit.MILLISECONDS.sleep(calculateSleepTime(activeTask));
-        // Release the workers when the task is finished
         availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
-        // Add the task duration to the total task time
-        zoneTaskTime.addAndGet(taskDuration);
+        zoneTaskTime.addAndGet(calculateSleepTime(activeTask));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } finally {
         zoneLatch.countDown();
+        System.out.println("Task " + activeTask.getId() + " simulation complete in zone " + zone.getId() + " with " +
+            activeTask.getWorkers().size() + " workers");
+        System.out.println("Zone " + zone.getId() +  " workers: " + zone.getWorkers().size() + " Semaphore permits: " +
+            availableZoneWorkersSemaphore.getAvailablePermits());
       }
     });
     return "";

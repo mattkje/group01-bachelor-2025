@@ -26,6 +26,8 @@ public class WorkerSemaphore {
     this.workers = workers;
     this.semaphore = new Semaphore(workers.size());
 
+
+
     // Upon creation of the semaphore, release all busy workers
     //TODO: Once world simulation is up change the localDate based on the simulated time
     for (Worker worker : workers) {
@@ -39,7 +41,6 @@ public class WorkerSemaphore {
         semaphore.release();
       }
     }
-
   }
 
   /**
@@ -55,7 +56,6 @@ public class WorkerSemaphore {
     lock.lock();
     try {
       synchronized (workers) {
-
         int maxWorkers = 1;
         int minWorkers = 1;
         if (activeTask != null) {
@@ -89,19 +89,24 @@ public class WorkerSemaphore {
 
         // Randomness element within the MC simulation
         List<Worker> workerList = new ArrayList<>(workers);
-        Collections.shuffle(workerList);
-        // Iterate over the workers to check if they have the required licences for the task
+        Collections.shuffle(workerList);// Iterate over the workers to check if they have the required licences for the task
         if (activeTask != null) {
           for (Worker worker : workerList) {
             // If the worker has the required licenses, add them to the workers to remove
             if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
               workersToRemove.add(worker);
               // If the number of workers acquired is equal to the required number of workers, add them to the task
-              if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
-                activeTask.getWorkers().addAll(workersToRemove);
+              if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
+                activeTask.addMultilpleWorkers(workersToRemove);
                 workersToRemove.forEach(workers::remove);
                 return "";
               }
+            }
+            if (workersToRemove.size() > activeTask.getTask().getMinWorkers()) {
+              activeTask.addMultilpleWorkers(workersToRemove);
+              workersToRemove.forEach(workers::remove);
+              semaphore.release(currentPermits - activeTask.getWorkers().size());
+              return "";
             }
           }
         } else {
@@ -134,5 +139,9 @@ public class WorkerSemaphore {
   public void release(Worker worker) {
     workers.add(worker);
     semaphore.release();
+  }
+
+  public int getAvailablePermits() {
+    return semaphore.availablePermits();
   }
 }

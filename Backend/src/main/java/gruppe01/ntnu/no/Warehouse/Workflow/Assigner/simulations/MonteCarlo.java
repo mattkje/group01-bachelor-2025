@@ -13,11 +13,14 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
+import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import smile.regression.RandomForest;
 
 @Service
 public class MonteCarlo {
@@ -55,7 +59,7 @@ public class MonteCarlo {
   @Autowired
   private PickerTaskService pickerTaskService;
 
-
+  private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
   //TODO: Save the result of the simulation to a file for quicker access between pages
 
@@ -68,102 +72,89 @@ public class MonteCarlo {
    * @throws InterruptedException - if the thread is interrupted
    * @throws ExecutionException   - if the simulation fails
    */
-  public List<SimulationResult> monteCarlo(int simCount)
-      throws InterruptedException, ExecutionException {
+@Transactional
+public List<SimulationResult> monteCarlo(int simCount)
+    throws InterruptedException, ExecutionException, IOException {
+  System.out.println("Starting simulations");
+  ZoneSimulator zoneSimulator = new ZoneSimulator();
+  List<String> errorMessages = new ArrayList<>();
+  ExecutorService simulationExecutor =
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+  List<Future<SimulationResult>> futures = new ArrayList<>();
+  List<Zone> zones = zoneService.getAllZones();
+  List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
+  Map<String,RandomForest> models = mlModel.getAllModels();
+  // Initialize lazy-loaded collections
+  activeTasks.forEach(task -> Hibernate.initialize(task.getWorkers()));
 
-    ZoneSimulator zoneSimulator = new ZoneSimulator();
-    // List of potential error messages
-    List<String> errorMessages = new ArrayList<>();
-    // Create a thread pool for the simulations
-    ExecutorService simulationExecutor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    // List of futures to store the results of the simulations
-    List<Future<SimulationResult>> futures = new ArrayList<>();
-    // List of zones to run the simulation on
-    List<Zone> zones = zoneService.getAllZones();
-    List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
-    // this for loop represents one warehouse simulation
-    for (int i = 0; i < simCount; i++) {
-      System.out.println("Running simulation " + (i + 1) + " of " + simCount);
-      int finalI = i;
-      futures.add(simulationExecutor.submit(() -> {
-        // Create a thread pool for the warehouse simulation that is the size of the amount of zones in the warehouse
-        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
-        // Create an atomic double to store the total task time for the simulation
-        AtomicDouble totalTaskTime = new AtomicDouble(0);
-        // Creating hard copies of each object to avoid concurrency issues
-        List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
-        List<ActiveTask> activeTasksCopy =
-            activeTasks.stream().map(ActiveTask::new).toList();
-        Set<PickerTask> pickerTasksCopy =
-            pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
-                .collect(Collectors.toSet());
+  for (int i = 0; i < simCount; i++) {
+    System.out.println("Running simulation " + (i + 1) + " of " + simCount);
+    int finalI = i;
+    futures.add(simulationExecutor.submit(() -> {
+      ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+      AtomicDouble totalTaskTime = new AtomicDouble(0);
+      List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
+      List<ActiveTask> activeTasksCopy = activeTasks.stream()
+          .map(ActiveTask::new)
+          .toList();
+      Set<PickerTask> pickerTasksCopy =
+          pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
+              .collect(Collectors.toSet());
+      Map<Long, Double> zoneDurations = new HashMap<>();
 
-        // Individual zone simulation results
-        Map<Long, Double> zoneDurations = new HashMap<>();
-
-        // Run the simulation for each zone in parallel
-        for (Zone zone : zonesCopy) {
-          warehouseExecutor.submit(() -> {
-            try {
-              String result = "";
-              // If zone is a normal zone
-              if (!zone.getIsPickerZone()) {
-                // Filter the active tasks for the zone
-                List<ActiveTask> zoneTasks = activeTasksCopy.stream()
-                    .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(),
-                        zone.getId()))
-                    .toList();
-                // run zone simulation
-                result =
-                    zoneSimulator.runZoneSimulation(zone, zoneTasks, null, totalTaskTime, finalI);
-              } else { // If zone is a picker zone
-                // Filter the picker tasks for the zone
-                Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
-                    .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
-                    .collect(Collectors.toSet());
-                // run zone simulation
-                result = zoneSimulator.runZoneSimulation(zone, null, zoneTasks, totalTaskTime, finalI);
-              }
-              try {
-                // Ensure the result is a number
-                double parsedResult = Double.parseDouble(result);
-                synchronized (zoneDurations) {
-                  zoneDurations.put(zone.getId(), parsedResult);
-                }
-              } catch (NumberFormatException e) {
-                // If the result is not a number, add it to the error messages (Error happened during simulation)
-                synchronized (errorMessages) {
-                  // Default 0.0 for the zone duration
-                  zoneDurations.put(zone.getId(), 0.0);
-                  errorMessages.add(result);
-                }
-              }
-            } catch (Exception e) {
-              e.printStackTrace();
+      for (Zone zone : zonesCopy) {
+        warehouseExecutor.submit(() -> {
+          try {
+            String result = "";
+            if (!zone.getIsPickerZone()) {
+              List<ActiveTask> zoneTasks = activeTasksCopy.stream()
+                  .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(),
+                      zone.getId()))
+                  .toList();
+              result = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,totalTaskTime, finalI);
+            } else {
+              Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
+                  .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
+                  .collect(Collectors.toSet());
+              result = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,models.get(zone.getName().toUpperCase()), totalTaskTime, finalI);
             }
-          });
-        }
+            try {
+              double parsedResult = Double.parseDouble(result);
+              synchronized (zoneDurations) {
+                zoneDurations.put(zone.getId(), parsedResult);
+              }
+            } catch (NumberFormatException e) {
+              synchronized (errorMessages) {
+                zoneDurations.put(zone.getId(), 0.0);
+                errorMessages.add(result);
+              }
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          } finally {
+           // System.out.println("Zone " + zone.getId() + " simulation complete ");
+          }
+        });
+      }
 
-        warehouseExecutor.shutdown();
-        warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-        // Calculate the average completion time for the simulation
-        double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
-        return new SimulationResult(averageCompletionTime, zoneDurations, errorMessages);
-      }));
-    }
-
-    List<SimulationResult> results = new ArrayList<>();
-    for (Future<SimulationResult> future : futures) {
-      results.add(future.get());
-    }
-
-    simulationExecutor.shutdown();
-    simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
-
-    System.out.println("Simulation complete");
-    return results;
+      warehouseExecutor.shutdown();
+      warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
+      double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
+      return new SimulationResult(averageCompletionTime, zoneDurations, errorMessages);
+    }));
   }
+
+  List<SimulationResult> results = new ArrayList<>();
+  for (Future<SimulationResult> future : futures) {
+    results.add(future.get());
+  }
+
+  simulationExecutor.shutdown();
+  simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
+
+  System.out.println("Simulation complete");
+  return results;
+}
 
 
 }
