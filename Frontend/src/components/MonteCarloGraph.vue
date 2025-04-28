@@ -32,39 +32,44 @@ for (let i = 1; i <= numPoints; i++) {
 
   estimates.value.push((4 * insideCircle.value) / i);
 }
-const labels = Array.from({length: 24}, (_, i) => `${i === 0 ? 12 : i % 12}${i < 12 ? 'am' : 'pm'}`);
-const dataValues = [0, 5, 12, 15, 20, 25, 30, 35, 36, 40, 45];
+const dataValues = [0, 20, 30, 45, 50, 65, 65, 75];
 const currentTimeIndex = dataValues.length - 1;
 
 
+const taskCount = 190; // Random task count between last value and last value + 100
 
-// Generate simulated values that always increase
+// Generate simulated values that stop increasing when reaching the task count
 const simulatedValues = [];
 let lastValue = dataValues[dataValues.length - 1]; // Start from the last real data value
 for (let i = 0; i < 30; i++) {
-  const increment = Math.random() * 5 + 1; // Random increment between 1 and 5
-  lastValue += increment;
-  simulatedValues.push(lastValue);
+  if (lastValue >= taskCount) {
+    simulatedValues.push(taskCount); // Ensure the value doesn't exceed the task count
+  } else {
+    const increment = Math.random() * 9 + 1; // Random increment between 1 and 5
+    lastValue += increment;
+    if (lastValue > taskCount) {
+      lastValue = taskCount; // Cap the value at the task count
+    }
+    simulatedValues.push(lastValue);
+  }
 }
-
-const taskCount = Math.max(...simulatedValues);
 
 // Extend labels for the simulated hours
-const extendedLabels = [...labels];
-for (let i = 1; i <= simulatedValues.length; i++) {
-  const nextHour = (currentTimeIndex + i) % 24;
-  extendedLabels.push(`${nextHour === 0 ? 12 : nextHour % 12}${nextHour < 12 ? 'am' : 'pm'}`);
-}
+// Extend labels for the simulated hours, ensuring only 24 hours are included
+const extendedLabels = Array.from({ length: 24 }, (_, i) => `${i === 0 ? 12 : i % 12}${i < 12 ? 'am' : 'pm'}`);
 
 const simulatedDatasets = [];
 const baseColor = [150, 150, 150];
 
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 50; i++) {
   const simulatedValues = [];
   let lastValue = dataValues[dataValues.length - 1]; // Start from the last real data value
-  for (let j = 0; j < 40; j++) {
-    const increment = Math.random() * 5 + 1; // Random increment between 1 and 5
+  while (lastValue < taskCount) {
+    const increment = Math.random() * 20 + 1; // Random increment between 1 and 5
     lastValue += increment;
+    if (lastValue > taskCount) {
+      lastValue = taskCount; // Cap the value at the task count
+    }
     simulatedValues.push(lastValue);
   }
 
@@ -82,29 +87,62 @@ for (let i = 0; i < 20; i++) {
   });
 }
 
-let bestCaseIndex = 0;
-let worstCaseIndex = 0;
-let bestCaseValue = -Infinity; // Initialize to a very low value for best case
-let worstCaseValue = Infinity; // Initialize to a very high value for worst case
+let bestCaseIndex = -1;
+let worstCaseIndex = -1;
+let bestCaseValue = Infinity; // Start with the smallest possible index
+let worstCaseValue = -Infinity; // Start with the largest possible index
 
 simulatedDatasets.forEach((dataset, index) => {
-  const maxValue = Math.max(...dataset.data.filter((value) => value !== null));
-  if (maxValue > bestCaseValue) { // Best case is the highest value
-    bestCaseValue = maxValue;
-    bestCaseIndex = index;
-  }
-  if (maxValue < worstCaseValue) { // Worst case is the lowest value
-    worstCaseValue = maxValue;
-    worstCaseIndex = index;
+  const firstCompletionIndex = dataset.data.findIndex((value) => value >= taskCount);
+
+  if (firstCompletionIndex !== -1) {
+    // Update best case (earliest completion)
+    if (firstCompletionIndex < bestCaseValue) {
+      bestCaseValue = firstCompletionIndex;
+      bestCaseIndex = index;
+    }
+    // Update worst case (latest completion)
+    if (firstCompletionIndex > worstCaseValue) {
+      worstCaseValue = firstCompletionIndex;
+      worstCaseIndex = index;
+    }
   }
 });
 
 // Apply distinct styles to best and worst cases
-simulatedDatasets[bestCaseIndex].borderColor = 'rgb(98,183,127)'; // Green for best case
-simulatedDatasets[bestCaseIndex].borderWidth = 3;
+if (bestCaseIndex !== -1) {
+  simulatedDatasets[bestCaseIndex].borderColor = 'rgb(126,196,177)'; // Green for best case
+  simulatedDatasets[bestCaseIndex].borderWidth = 3;
+}
 
-simulatedDatasets[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)'; // Red for worst case
-simulatedDatasets[worstCaseIndex].borderWidth = 3;
+if (worstCaseIndex !== -1) {
+  simulatedDatasets[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)'; // Red for worst case
+  simulatedDatasets[worstCaseIndex].borderWidth = 3;
+}
+
+// Calculate regression data starting from the end of dataValues
+const regressionData = [];
+const startIndex = dataValues.length - 1; // Start from the last index of dataValues
+const regressionSlope = 10; // Example slope for the regression line
+const regressionIntercept = dataValues[startIndex];
+
+for (let i = 0; i < simulatedValues.length; i++) {
+  const y = regressionSlope * i + regressionIntercept;
+  regressionData.push(y);
+}
+
+// Add regression line dataset
+const regressionLine = {
+  label: 'Regression Line',
+  data: [...Array(startIndex).fill(null), ...regressionData], // Align with simulated data
+  borderColor: 'rgb(126, 161, 196)',
+  tension: 0.1,
+  pointRadius: 0,
+  fill: false,
+};
+
+simulatedDatasets.push(regressionLine); // Add regression line to datasets
+
 
 
 const data = {
@@ -221,11 +259,40 @@ onMounted(() => {
 
 <template>
   <div class="monte-carlo-graph">
+    <p>
+      <span class="color-indicator best-case"></span> Best Case:
+    </p>
+    <p>
+      <span class="color-indicator probable-case"></span> Probable Case:
+    </p>
+    <p>
+      <span class="color-indicator worst-case"></span> Worst Case:
+    </p>
     <Line :data="data" :options="chartOptions" />
   </div>
 </template>
 
 <style scoped>
+.color-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.best-case {
+  background-color: rgb(126, 196, 177); /* Green */
+}
+
+.probable-case {
+  background-color: rgb(126, 161, 196);
+}
+
+.worst-case {
+  background-color: rgba(255, 99, 132, 1); /* Red */
+}
+
 .monte-carlo-graph {
   width: 100%;
   height: 100%;
