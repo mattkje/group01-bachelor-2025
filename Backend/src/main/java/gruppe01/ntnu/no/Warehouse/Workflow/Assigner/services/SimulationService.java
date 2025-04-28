@@ -1,8 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.Utils;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 10;
+  private static final int SIM_COUNT = 1;
 
   @Autowired
   private ActiveTaskService activeTaskService;
@@ -65,7 +65,7 @@ public class SimulationService {
       AtomicDouble predictedTime = new AtomicDouble(0.0);
       String result = zoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
           activeTaskService.getRemainingTasksForTodayByZone(zoneId),
-          pickerTaskService.getPickerTasksForToday(),null, predictedTime, i);
+          pickerTaskService.getPickerTasksForToday(), null, predictedTime, i);
       if (!result.isEmpty() && i == 0) {
         errorMessages.add(result);
       }
@@ -91,39 +91,28 @@ public class SimulationService {
    * The rest of the elements contain any error messages
    * Call it by using the following: /api/monte-carlo
    */
-  public Map<Long, List<String>> runCompleteSimulation()
+  public Map<Long,String> runCompleteSimulation()
       throws ExecutionException, InterruptedException, IOException {
     List<SimulationResult> results = monteCarloWithRealData.monteCarlo(SIM_COUNT);
-    HashMap<Long, List<String>> newResult = new HashMap<>();
-
+    HashMap<Long, String> newResult = new HashMap<>();
 
     if (!results.isEmpty()) {
       // Get the current time
       LocalDateTime currentTime = LocalDateTime.now();
-      // Calculate the average zone durations
-      Map<Long, Double> averageZoneDurations =
-          SimulationResult.calculateAverageZoneDurations(results);
+      // Calculate the average zone durations using the current time as the reference
+      Map<Long, Double> averageZoneDurations = Utils.getSimResultAverages(results);
 
       // Format the predicted completion time for each zone
       averageZoneDurations.forEach((zoneId, averageDuration) -> {
         if (averageDuration > 0) {
-          String formattedTime = formatPredictedCompletionTime(currentTime, averageDuration);
-          newResult.put(zoneId, List.of(formattedTime));
+          newResult.put(zoneId, formatPredictedCompletionTime(currentTime, averageDuration));
         } else {
-          // Find the error messages for the zone
-          for (SimulationResult result : results) {
-            if (result.getZoneDurations().containsKey(zoneId)) {
-              newResult.put(zoneId,
-                  result.getErrorMessages().stream().filter(s -> s.contains("Zone " + zoneId))
-                      .findFirst().map(List::of).orElse(List.of()));
-              break;
-            }
-          }
+          newResult.put(zoneId, results.getFirst().getErrorMessage(zoneId));
         }
       });
 
     } else {
-      newResult.put(-1L, List.of("No simulation results available."));
+      newResult.put(-1L, "No simulation results available.");
     }
 
     return newResult;

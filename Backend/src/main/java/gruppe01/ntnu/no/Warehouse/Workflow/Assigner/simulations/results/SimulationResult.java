@@ -1,55 +1,27 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
 
-    import java.util.HashMap;
-    import java.util.List;
+    import java.time.LocalDateTime;
     import java.util.Map;
 
-    public class SimulationResult {
-        private final double averageCompletionTime;
-        private final Map<Long, Double> zoneDurations;
-        private final List<String> errorMessages;
+    public record SimulationResult(
+          Object latestEndTime, Map<Long, ZoneSimResult> zoneSimResults) {
 
-        public SimulationResult(double averageCompletionTime, Map<Long, Double> zoneDurations, List<String> errorMessages) {
-            this.averageCompletionTime = averageCompletionTime;
-            this.zoneDurations = zoneDurations;
-            this.errorMessages = errorMessages;
-        }
-
-        public double getAverageCompletionTime() {
-            return averageCompletionTime;
-        }
-
-        public Map<Long, Double> getZoneDurations() {
-            return zoneDurations;
-        }
-
-        public List<String> getErrorMessages() {
-            return errorMessages;
-        }
-
-        public static Map<Long, Double> calculateAverageZoneDurations(List<SimulationResult> results) {
-            Map<Long, Double> totalDurations = new HashMap<>();
-            Map<Long, Integer> countDurations = new HashMap<>();
-
-            for (SimulationResult result : results) {
-                for (Map.Entry<Long, Double> entry : result.getZoneDurations().entrySet()) {
-                    Long zoneId = entry.getKey();
-                    Double duration = entry.getValue();
-
-                    totalDurations.put(zoneId, totalDurations.getOrDefault(zoneId, 0.0) + duration);
-                    countDurations.put(zoneId, countDurations.getOrDefault(zoneId, 0) + 1);
-                }
+        public LocalDateTime getLatestEndTime() {
+            if (latestEndTime == null || !(latestEndTime instanceof LocalDateTime)) {
+                throw new IllegalStateException("Latest end time is not set.");
             }
+            return (LocalDateTime) latestEndTime;
+        }
 
-            Map<Long, Double> averageDurations = new HashMap<>();
-            for (Map.Entry<Long, Double> entry : totalDurations.entrySet()) {
-                Long zoneId = entry.getKey();
-                Double totalDuration = entry.getValue();
-                Integer count = countDurations.get(zoneId);
+        public Map<Long, ZoneSimResult> getZoneSimResults() {
+            return zoneSimResults;
+        }
 
-                averageDurations.put(zoneId, totalDuration / count);
+        public String getErrorMessage(Long zoneId) {
+            ZoneSimResult zoneSimResult = zoneSimResults.get(zoneId);
+            if (zoneSimResult != null) {
+                return zoneSimResult.getErrorMessage();
             }
-
-            return averageDurations;
+            return null;
         }
     }

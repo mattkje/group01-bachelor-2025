@@ -12,9 +12,12 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator2;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -72,89 +76,77 @@ public class MonteCarlo {
    * @throws InterruptedException - if the thread is interrupted
    * @throws ExecutionException   - if the simulation fails
    */
-@Transactional
-public List<SimulationResult> monteCarlo(int simCount)
-    throws InterruptedException, ExecutionException, IOException {
-  System.out.println("Starting simulations");
-  ZoneSimulator zoneSimulator = new ZoneSimulator();
-  List<String> errorMessages = new ArrayList<>();
-  ExecutorService simulationExecutor =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  List<Future<SimulationResult>> futures = new ArrayList<>();
-  List<Zone> zones = zoneService.getAllZones();
-  List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
-  Map<String,RandomForest> models = mlModel.getAllModels();
-  // Initialize lazy-loaded collections
-  activeTasks.forEach(task -> Hibernate.initialize(task.getWorkers()));
+  @Transactional
+  public List<SimulationResult> monteCarlo(int simCount)
+      throws InterruptedException, ExecutionException, IOException {
+    System.out.println("Starting simulations");
+    ZoneSimulator2 zoneSimulator = new ZoneSimulator2();
+    List<String> errorMessages = new ArrayList<>();
+    ExecutorService simulationExecutor =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    List<Future<SimulationResult>> futures = new ArrayList<>();
+    List<Zone> zones = zoneService.getAllZones();
+    List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
+    Map<String, RandomForest> models = mlModel.getAllModels();
+    // Initialize lazy-loaded collections
+    activeTasks.forEach(task -> Hibernate.initialize(task.getWorkers()));
 
-  for (int i = 0; i < simCount; i++) {
-    System.out.println("Running simulation " + (i + 1) + " of " + simCount);
-    int finalI = i;
-    futures.add(simulationExecutor.submit(() -> {
-      ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
-      AtomicDouble totalTaskTime = new AtomicDouble(0);
-      List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
-      List<ActiveTask> activeTasksCopy = activeTasks.stream()
-          .map(ActiveTask::new)
-          .toList();
-      Set<PickerTask> pickerTasksCopy =
-          pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
-              .collect(Collectors.toSet());
-      Map<Long, Double> zoneDurations = new HashMap<>();
-
-      for (Zone zone : zonesCopy) {
-        warehouseExecutor.submit(() -> {
-          try {
-            String result = "";
-            if (!zone.getIsPickerZone()) {
-              List<ActiveTask> zoneTasks = activeTasksCopy.stream()
-                  .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(),
-                      zone.getId()))
-                  .toList();
-              result = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,totalTaskTime, finalI);
-            } else {
-              Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
-                  .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
-                  .collect(Collectors.toSet());
-              result = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,models.get(zone.getName().toUpperCase()), totalTaskTime, finalI);
-            }
+    for (int i = 0; i < simCount; i++) {
+      System.out.println("Running simulation " + (i + 1) + " of " + simCount);
+      futures.add(simulationExecutor.submit(() -> {
+        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+        List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
+        List<ActiveTask> activeTasksCopy = activeTasks.stream()
+            .map(ActiveTask::new)
+            .toList();
+        Set<PickerTask> pickerTasksCopy =
+            pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
+                .collect(Collectors.toSet());
+        Map<Long,ZoneSimResult> zoneSimResults = new HashMap<>();
+        for (Zone zone : zonesCopy) {
+          warehouseExecutor.submit(() -> {
             try {
-              double parsedResult = Double.parseDouble(result);
-              synchronized (zoneDurations) {
-                zoneDurations.put(zone.getId(), parsedResult);
+              ZoneSimResult zoneSimResult = new ZoneSimResult();
+              if (!zone.getIsPickerZone()) {
+                List<ActiveTask> zoneTasks = activeTasksCopy.stream()
+                    .filter(activeTask -> Objects.equals(activeTask.getTask().getZoneId(),
+                        zone.getId()))
+                    .toList();
+                zoneSimResult = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,
+                    LocalDateTime.now());
+              } else {
+                Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
+                    .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
+                    .collect(Collectors.toSet());
+                zoneSimResult = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,
+                    models.get(zone.getName().toUpperCase()), LocalDateTime.now());
               }
-            } catch (NumberFormatException e) {
-              synchronized (errorMessages) {
-                zoneDurations.put(zone.getId(), 0.0);
-                errorMessages.add(result);
+              synchronized (zoneSimResults) {
+                zoneSimResults.put(zone.getId(), zoneSimResult);
               }
+            } catch (Exception e) {
+              e.printStackTrace();
             }
-          } catch (Exception e) {
-            e.printStackTrace();
-          } finally {
-           // System.out.println("Zone " + zone.getId() + " simulation complete ");
-          }
-        });
-      }
+          });
+        }
 
-      warehouseExecutor.shutdown();
-      warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-      double averageCompletionTime = totalTaskTime.get() / zonesCopy.size();
-      return new SimulationResult(averageCompletionTime, zoneDurations, errorMessages);
-    }));
+        warehouseExecutor.shutdown();
+        warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
+        return new SimulationResult(Utils.getLatestEndTime(zoneSimResults),zoneSimResults);
+      }));
+    }
+
+    List<SimulationResult> results = new ArrayList<>();
+    for (Future<SimulationResult> future : futures) {
+      results.add(future.get());
+    }
+
+    simulationExecutor.shutdown();
+    simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
+
+    System.out.println("Simulation complete");
+    return results;
   }
-
-  List<SimulationResult> results = new ArrayList<>();
-  for (Future<SimulationResult> future : futures) {
-    results.add(future.get());
-  }
-
-  simulationExecutor.shutdown();
-  simulationExecutor.awaitTermination(1, TimeUnit.DAYS);
-
-  System.out.println("Simulation complete");
-  return results;
-}
 
 
 }

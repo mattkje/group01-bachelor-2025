@@ -45,7 +45,7 @@ public class SimulationController {
   }
 
   @GetMapping("/monte-carlo")
-  public Map<Long,List<String>> monteCarlo() throws Exception {
+  public Map<Long,String> monteCarlo() throws Exception {
     return simulationService.runCompleteSimulation();
   }
 
