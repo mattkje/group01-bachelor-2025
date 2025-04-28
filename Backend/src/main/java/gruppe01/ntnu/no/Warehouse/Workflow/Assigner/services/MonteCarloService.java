@@ -30,4 +30,8 @@ public class MonteCarloService {
 
     }
 
+    public void dropAllData() {
+        monteCarloDataRepository.deleteAll();
+    }
+
 }

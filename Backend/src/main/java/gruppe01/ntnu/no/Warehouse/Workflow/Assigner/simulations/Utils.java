@@ -61,13 +61,13 @@ public class Utils {
   }
 
   public void saveSimulationResults(List<SimulationResult> simulationResults) {
+    monteCarloService.dropAllData();
     for (int i = 0; i < simulationResults.size(); i++) {
       SimulationResult simulationResult = simulationResults.get(i);
       Map<LocalDateTime, Integer> timestamps =
           getTotalTasksCompleted(simulationResult.getZoneSimResultList());
 
       int highestValue = findHighestValue(timestamps);
-
       int finalI = i;
       timestamps.entrySet().stream()
           .sorted(Map.Entry.comparingByKey())
