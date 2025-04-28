@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/data")
-public class MonteCarloDataController {
+public class MonteCarloController {
 
     @Autowired
     private WorldSimService worldSimService;
@@ -25,12 +25,12 @@ public class MonteCarloDataController {
         return worldSimService.getMostRecentWorldSimDataByZone(date, zoneId);
     }
 
-    @PostMapping
+    @PostMapping("/world-sim")
     public void generateWorldSimData(LocalDateTime now) {
         worldSimService.generateWorldSimData(now, true);
     }
 
-    @PostMapping
+    @PostMapping("/monte-carlo")
     public void generateMonteCarloData(LocalDateTime now) {
         monteCarloService.generateMonteCarloData(now, true);
     }
