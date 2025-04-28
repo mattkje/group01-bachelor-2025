@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
@@ -104,6 +105,16 @@ public class ActiveTaskService {
         return activeTasksInProgress;
     }
 
+    public int getActiveTasksDoneForTodayInZone(LocalDate date, long zoneId) {
+        int count = 0;
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().isEqual(date) && activeTask.getEndTime() != null && activeTask.getTask().getZoneId().equals(zoneId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
         if (activeTask != null) {
             if (activeTask.getTask() == null){
@@ -123,7 +134,6 @@ public class ActiveTaskService {
         updatedActiveTask.setStartTime(activeTask.getStartTime());
         updatedActiveTask.setEndTime(activeTask.getEndTime());
         updatedActiveTask.setDueDate(activeTask.getDueDate());
-        updatedActiveTask.setStrictStart(activeTask.getStrictStart());
         if (updatedActiveTask.getRecurrenceType() != activeTask.getRecurrenceType()) {
             for (Task task : taskRepository.findAll()) {
                 if (task.getZoneId().equals(activeTask.getTask().getZoneId()) && task.getId().equals(id)) {

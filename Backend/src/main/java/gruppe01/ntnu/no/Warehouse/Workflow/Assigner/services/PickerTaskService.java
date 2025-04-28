@@ -52,6 +52,26 @@ public class PickerTaskService {
         return Set.copyOf(pickerTasks);
     }
 
+    public int getPickerTasksDoneForTodayInZone(LocalDate date, long zoneId) {
+        int count = 0;
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() != null && pickerTask.getZone().getId().equals(zoneId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getItemsPickedByZone(LocalDate date, long zoneId) {
+        int count = 0;
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() != null && pickerTask.getZone().getId().equals(zoneId)) {
+                count += pickerTask.getPackAmount();
+            }
+        }
+        return count;
+    }
+
     public PickerTask savePickerTask(PickerTask pickerTask) {
         if (pickerTask != null) {
             return pickerTaskRepository.save(pickerTask);

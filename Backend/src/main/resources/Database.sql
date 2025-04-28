@@ -125,6 +125,17 @@ CREATE TABLE IF NOT EXISTS picker_task
     FOREIGN KEY (zone_id) REFERENCES zone (id)
 );
 
+CREATE TABLE IF NOT EXISTS monte_carlo_data
+(
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    time            TIMESTAMP,
+    completed_tasks INT,
+    items_picked    INT,
+    real_data       BOOLEAN,
+    zone_id         BIGINT NOT NULL,
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
+);
+
 CREATE TRIGGER update_worker_zone
     BEFORE INSERT ON active_task_worker
     FOR EACH ROW

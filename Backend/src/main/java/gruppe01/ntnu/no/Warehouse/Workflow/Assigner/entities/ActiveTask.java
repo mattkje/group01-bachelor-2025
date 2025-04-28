@@ -36,9 +36,6 @@ public class ActiveTask {
     @Column(name = "eta")
     private LocalDate eta;
 
-    @Column(name = "strict_start")
-    private LocalDateTime strict_start;
-
     @Column(name="date")
     private LocalDate date;
 
@@ -68,7 +65,6 @@ public class ActiveTask {
         this.startTime = activeTask.getStartTime();
         this.endTime = activeTask.getEndTime();
         this.eta = activeTask.getEta();
-        this.strict_start = activeTask.getStrictStart();
         this.date = activeTask.getDate();
         this.task = activeTask.getTask();
         this.workers = new ArrayList<>(activeTask.getWorkers());
@@ -96,10 +92,6 @@ public class ActiveTask {
 
     public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
-    }
-
-    public void setStrictStart(LocalDateTime strict_start) {
-        this.strict_start = strict_start;
     }
 
     public void setEta(LocalDate eta) {
@@ -145,10 +137,6 @@ public class ActiveTask {
 
     public Long getId() {
         return id;
-    }
-
-    public LocalDateTime getStrictStart() {
-        return strict_start;
     }
 
     public LocalDate getEta() {
