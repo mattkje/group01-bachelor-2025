@@ -4,6 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,10 +63,24 @@ public class Utils {
   public void saveSimulationResults(List<SimulationResult> simulationResults) {
     for (int i = 0; i < simulationResults.size(); i++) {
       SimulationResult simulationResult = simulationResults.get(i);
-      Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList());
-      for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet()) {
-        monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue());
-      }
+      Map<LocalDateTime, Integer> timestamps =
+          getTotalTasksCompleted(simulationResult.getZoneSimResultList());
+
+      int highestValue = findHighestValue(timestamps);
+
+      int finalI = i;
+      timestamps.entrySet().stream()
+          .sorted(Map.Entry.comparingByKey())
+          .forEachOrdered(entry -> {
+            if (entry.getValue() < highestValue) {
+              monteCarloService.generateSimulationDataPoint(finalI, entry.getKey(),
+                  entry.getValue());
+            }
+          });
     }
+  }
+
+  private Integer findHighestValue(Map<LocalDateTime, Integer> timestamps) {
+    return Collections.max(timestamps.values());
   }
 }

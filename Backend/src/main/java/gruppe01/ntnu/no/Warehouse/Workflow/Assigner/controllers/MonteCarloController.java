@@ -29,4 +29,5 @@ public class MonteCarloController {
     public void generateWorldSimData(LocalDateTime now) {
         worldSimService.generateWorldSimData(now, true);
     }
+
 }
