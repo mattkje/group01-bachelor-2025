@@ -1,33 +1,61 @@
 <template>
   <div class="overview">
-    <div class="large-rounded-square" v-for="n in 4" :key="n">
-      <p>Widget {{ n }}</p>
+    <MonteCarloGraph class="monte-carlo-graph" :zone-id="99" />
+    <div class="day-status">
+      <div class="status-text-box">
+        <p>Tasks Remaining:</p>
+        <p>5</p>
+      </div>
+      <div class="status-text-box">
+        <p>Tasks In Completed:</p>
+        <p>2</p>
+      </div>
+      <div class="status-text-box">
+        <p>Workers Available:</p>
+        <p>3</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Toolbar from "@/components/Toolbar.vue";
+import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 </script>
 
 <style scoped>
 .overview {
+  height: 100%;
   padding: 2rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.large-rounded-square {
-  width: 450px;
-  height: 300px;
+.monte-carlo-graph {
+  width: 50%;
+  height: 50%;
+  border-radius: 2rem;
   border: 1px solid #e5e5e5;
-  border-radius: 15px;
+}
+
+.day-status {
+  height: 20%;
+  border: 1px solid #e5e5e5;
+  flex-direction: row;
+  border-radius: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
   font-size: 1.2rem;
+  gap: 2rem;
   color: #7B7B7B;
+}
+
+.status-text-box {
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 </style>
