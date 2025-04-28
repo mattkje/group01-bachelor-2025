@@ -15,6 +15,8 @@ import settingsIconSelected from '../assets/icons/settingsSelected.svg';
 import infoIconSelected from '../assets/icons/infoSelected.svg';
 import cpIcon from '../assets/icons/cp.svg';
 import cpIconSelected from '../assets/icons/cpSelected.svg';
+import management from '../assets/icons/management.svg';
+import managementSelected from '../assets/icons/managementSelected.svg';
 
 const tabs = ref([
   {name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/'},
@@ -23,6 +25,7 @@ const tabs = ref([
   {name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff'},
   {separator: true},
   {name: 'Control Panel', icon: cpIcon, iconSelected: cpIconSelected, path: '/controlpanel'},
+  {name: 'Management', icon: management, iconSelected: managementSelected, path: '/management'},
   {name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info'},
 
 ]);

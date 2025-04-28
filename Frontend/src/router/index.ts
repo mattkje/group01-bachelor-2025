@@ -10,6 +10,7 @@ import WorkerProfile from "../views/WorkerProfile.vue";
 import ControlPanel from "../views/ControlPanel.vue";
 import ZoneMenu from "../views/ZoneMenu.vue";
 import TaskMenu from "../views/TaskMenu.vue";
+import Management from "@/views/Management.vue";
 
 const routes = [
   { path: '/', component: Overview },
@@ -20,6 +21,7 @@ const routes = [
   { path: '/info', component: Info},
   { path: '/worker', component: WorkerProfile},
   { path: '/controlpanel', component: ControlPanel},
+  { path: '/management', component: Management},
   { path: '/zones/:id', component: ZoneMenu },
   { path: '/zones/:id/tasks', component: TaskMenu },
 ];
