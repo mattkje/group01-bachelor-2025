@@ -7,13 +7,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-public class MonteCarloData {
+public class WorldSimData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "sim_no")
-    private int simNo;
 
     @Column(name = "time")
     private LocalDateTime time;
@@ -24,12 +21,15 @@ public class MonteCarloData {
     @Column(name = "items_picked")
     private int itemsPicked;
 
+    @Column(name = "real_data")
+    private boolean realData;
+
     @OneToOne
     @JoinColumn(name = "zoneId")
     @JsonIgnore
     private Zone zone;
 
-    public MonteCarloData() {}
+    public WorldSimData() {}
 
     public LocalDateTime getTime() {
         return time;
@@ -61,6 +61,14 @@ public class MonteCarloData {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean isRealData() {
+        return realData;
+    }
+
+    public void setRealData(boolean realData) {
+        this.realData = realData;
     }
 
     public Zone getZone() {

@@ -125,13 +125,24 @@ CREATE TABLE IF NOT EXISTS picker_task
     FOREIGN KEY (zone_id) REFERENCES zone (id)
 );
 
-CREATE TABLE IF NOT EXISTS monte_carlo_data
+CREATE TABLE IF NOT EXISTS world_sim_data
 (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     time            TIMESTAMP,
     completed_tasks INT,
     items_picked    INT,
     real_data       BOOLEAN,
+    zone_id         BIGINT NOT NULL,
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
+);
+
+CREATE TABLE IF NOT EXISTS monte_carlo_data
+(
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sim_no          INT,
+    time            TIMESTAMP,
+    completed_tasks INT,
+    items_picked    INT,
     zone_id         BIGINT NOT NULL,
     FOREIGN KEY (zone_id) REFERENCES zone (id)
 );

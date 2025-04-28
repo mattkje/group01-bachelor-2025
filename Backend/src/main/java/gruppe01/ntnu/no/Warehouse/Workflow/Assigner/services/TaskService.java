@@ -23,9 +23,13 @@ public class TaskService {
 
     public Task createTask(Task task, Long zoneId) {
         if (task != null) {
-            Zone zone = zoneRepository.findById(zoneId).get();
-            task.setZone(zone);
-            return taskRepository.save(task);
+            if (task.getMinTime() > task.getMaxTime() || task.getMinTime() < 0 || task.getMaxTime() < 0 || task.getMaxWorkers() < task.getMinWorkers()) {
+                throw new IllegalArgumentException("Invalid time range");
+            } else {
+                Zone zone = zoneRepository.findById(zoneId).get();
+                task.setZone(zone);
+                return taskRepository.save(task);
+            }
         }
         return null;
     }

@@ -98,7 +98,7 @@ public class WorldSimulation {
     @Autowired
     private ZoneService zoneService;
     @Autowired
-    private MonteCarloService monteCarloService;
+    private WorldSimService worldSimService;
 
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
         isPlaying = true;
@@ -457,7 +457,7 @@ public class WorldSimulation {
 
             if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
                 System.out.println("Current time: " + currentTime);
-                monteCarloService.generateMonteCarloData(workday.atTime(currentTime), false);
+                worldSimService.generateWorldSimData(workday.atTime(currentTime), false);
             }
             currentSimulationTime = currentTime;
             currentTime = currentTime.plusMinutes(1);

@@ -1,27 +1,37 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.WorldSimData;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorldSimService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/data")
 public class MonteCarloDataController {
+
+    @Autowired
+    private WorldSimService worldSimService;
 
     @Autowired
     private MonteCarloService monteCarloService;
 
-    @Scheduled(cron = "0 */10 * * * *")
-    public void generateMonteCarloData() {
-        LocalDateTime now = LocalDateTime.now();
-        monteCarloService.generateMonteCarloData(now, true);
+    @GetMapping("/{zoneId}/{date}")
+    public List<WorldSimData> getWorldSimData(@PathVariable LocalDate date, @PathVariable long zoneId) {
+        return worldSimService.getMostRecentWorldSimDataByZone(date, zoneId);
     }
 
     @PostMapping
-    public void generateMonteCarloDataNow(LocalDateTime now) {
-        monteCarloService.generateMonteCarloData(now, false);
+    public void generateWorldSimData(LocalDateTime now) {
+        worldSimService.generateWorldSimData(now, true);
+    }
+
+    @PostMapping
+    public void generateMonteCarloData(LocalDateTime now) {
+        monteCarloService.generateMonteCarloData(now, true);
     }
 }
