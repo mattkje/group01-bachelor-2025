@@ -27,6 +27,7 @@ const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
 const isPickerZone = ref(false);
 const currentDate = ref<string>('');
+const loading = ref(true);
 
 const fetchCurrentDateFromBackend = async () => {
   const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
@@ -98,11 +99,15 @@ const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
   if (isPickerZone.value) {
     return true;
   }
-  return tasks.value.some((task: ActiveTask) =>
-    task.task.requiredLicense.every((license: License) =>
-      worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
-    )
-  );
+  return tasks.value.some((task: ActiveTask) => {
+    // Ensure task.task is defined before accessing requiredLicense
+    if (!task.task || !task.task.requiredLicense) {
+      return false;
+    }
+    return task.task.requiredLicense.every((license: License) =>
+        worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+    );
+  });
 };
 
 const fetchPickerTasksForZone = async () => {
@@ -116,15 +121,16 @@ const fetchPickerTasksForZone = async () => {
 
 onMounted(async () => {
   currentDate.value = await fetchCurrentDateFromBackend();
-  if ((await getThisZone()).isPickerZone) {
+  const zone = await getThisZone();
+  if (zone?.isPickerZone) {
     isPickerZone.value = true;
     await fetchPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
-  }
-  else {
+  } else {
     await fetchTasksForZone();
     hasTasks.value = tasks.value.length > 0;
   }
+  loading.value = false; // Set loading to false after data is fetched
 });
 
 const onDragStart = (event: DragEvent, worker: Worker) => {
@@ -168,6 +174,10 @@ const toggleNotificationBubble = () => {
 </script>
 
 <template>
+  <div v-if="loading">
+    <p>Loading...</p>
+  </div>
+  <div v-else>
   <div class="rounded-square">
     <div class="title-bar">
       <div class="title-bar-status">
@@ -245,6 +255,7 @@ const toggleNotificationBubble = () => {
         </p>
       </div>
     <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
+  </div>
   </div>
 </template>
 

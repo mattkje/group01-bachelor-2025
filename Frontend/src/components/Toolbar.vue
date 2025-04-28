@@ -71,7 +71,7 @@ const updateSimulatedTime = () => {
 let intervalId: number | null = null;
 
 let speedIndex = 0;
-const speeds = [5/10, 5/5, 5/2, 5];
+const speeds = [1/60, 2/60, 5/60, 10/60];
 
 const startClock = async () => {
   isPlaying.value = true;

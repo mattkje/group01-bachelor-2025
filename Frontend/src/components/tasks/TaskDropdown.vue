@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from "vue";
 import { PickerTask, ActiveTask } from "@/assets/types";
-import EditTaskModal from "@/components/tasks/EditTaskModal.vue";
+import EditActiveTaskModal from "@/components/tasks/EditActiveTaskModal.vue";
 
 const props = defineProps<{
   pickerTask?: PickerTask;
@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
       <div class="dropdown-item" @click="promptDeleteConfirmation">Delete</div>
     </div>
   </div>
-  <EditTaskModal
+  <EditActiveTaskModal
     v-if="isEditModalOpen"
     :task="props.pickerTask || props.activeTask"
     @close="closeEditModal"

@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import {ActiveTask, PickerTask} from "@/assets/types";
-import {computed, reactive, ref} from "vue";
+import { ActiveTask, PickerTask } from "@/assets/types";
+import { computed, reactive } from "vue";
 
 const props = defineProps<{ task: PickerTask | ActiveTask }>();
 const emit = defineEmits(["taskUpdated"]);
 
-const updatedTask = reactive({ ...props.task });
-
 const isPickerTask = computed(() => "weight" in props.task);
 
+const updatedTask = reactive({
+  ...props.task,
+});
+
 const saveChanges = () => {
-  emit("taskUpdated", { ...updatedTask });
+  if (isPickerTask.value) {
+    emit("taskUpdated", { ...updatedTask } as PickerTask);
+  } else {
+    emit("taskUpdated", { ...updatedTask } as ActiveTask);
+  }
 };
 </script>
 

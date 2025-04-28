@@ -91,9 +91,11 @@
               <div class="staff-cards">
                 <div v-for="worker in filteredWorkers" :key="worker.id" class="staff-card">
                   <div class="card-header">
-                    <img :src="getRandomProfileImageUrl(worker.id)" alt="Profile" class="profile-portrait"/>
-                    <p :style="{ backgroundColor: getEfficiencyColor(worker.efficiency) }" class="efficiency-score">{{ worker.efficiency }}</p>
-                    <h3>{{ worker.name }}</h3>
+                    <div class="left-items">
+                      <p :style="{ backgroundColor: getEfficiencyColor(worker.efficiency) }" class="efficiency-score">{{ worker.efficiency }}</p>
+
+                      <h3>{{ worker.name }}</h3>
+                    </div>
                     <router-link :to="`/worker?id=${worker.id}`" class="edit-link">
                       <img src="@/assets/icons/edit.svg" alt="Edit" width="20" height="20"/>
                     </router-link>
@@ -228,4 +230,25 @@
             justify-content: center;
           }
 
+          .worker-image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #f6f6f6;
+            margin-right: 0.5rem;
+          }
+
+          .worker-image {
+            width: 30px;
+            height: 30px;
+          }
+
+          .left-items {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
           </style>

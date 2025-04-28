@@ -1,6 +1,8 @@
 <template>
   <div v-if="worker" class="staff-page">
-    <img class="profile-picture" :src="getRandomProfileImageUrl(worker.id)" draggable="false"/>
+    <div class="worker-image-container">
+      <img class="worker-image" src="@/assets/icons/profile.svg" draggable="false"/>
+    </div>
     <div class="worker-details">
       <p class="worker-name">{{ worker.name }}</p>
       <p class="worker-info">Zone: {{ getZoneName(worker.zone_id) }}</p>
@@ -282,5 +284,20 @@ onMounted(() => {
 
 .license-management button {
   margin-right: 1rem;
+}
+
+.worker-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-color: #f6f6f6;
+  margin-right: 0.5rem;
+}
+
+.worker-image {
+  width: 120px;
 }
 </style>

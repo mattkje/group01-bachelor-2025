@@ -3,6 +3,17 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Zone, Task, ActiveTask } from '@/assets/types';
 import axios from 'axios';
+import CreateActiveTask from "@/components/tasks/CreateActiveTask.vue";
+
+const showCreateActiveTask = ref(false);
+
+const openCreateActiveTask = () => {
+  showCreateActiveTask.value = true;
+};
+
+const closeCreateActiveTask = () => {
+  showCreateActiveTask.value = false;
+};
 
 const emit = defineEmits(['add-task']);
 const route = useRoute();
@@ -49,6 +60,20 @@ const fetchThisZone = async () => {
   }
 };
 
+const deleteActiveTask = async (activeTaskId: number) => {
+  try {
+    await axios.delete(`http://localhost:8080/api/active-tasks/${activeTaskId}`);
+    fetchActiveTasks();
+  } catch (error) {
+    console.error('Failed to delete active task:', error);
+  }
+};
+
+const handleActiveTaskAdded = () => {
+  fetchActiveTasks();
+  closeCreateActiveTask();
+};
+
 onMounted(() => {
   fetchThisZone();
   fetchTasks();
@@ -78,16 +103,22 @@ onMounted(() => {
                 <p class="task-status">Status: {{ activeTask.startTime ? "In Progress" : "Pending" }}</p>
                 <p class="task-footer">Due: {{ new Date(activeTask.date).toLocaleDateString() }}</p>
               </div>
-              <button class="icon-button">
+              <button class="icon-button" @click="deleteActiveTask(activeTask.id)">
                 <img src="@/assets/icons/trash.svg">
               </button>
             </div>
           </div>
-          <div class="task-item" @click="$emit('add-task', zone.id)">
+          <div class="task-item" @click="openCreateActiveTask">
             <div class="add-task-button">
               +
             </div>
           </div>
+          <CreateActiveTask
+              v-if="showCreateActiveTask"
+              :zoneId="zone?.id"
+              @close="closeCreateActiveTask"
+              @activeTaskAdded="handleActiveTaskAdded"
+          />
         </div>
       </div>
       <div class="active-task-list">
@@ -107,7 +138,7 @@ onMounted(() => {
                 <p class="task-status">Status: {{ activeTask.startTime ? "In Progress" : "Pending" }}</p>
                 <p class="task-footer">Due: {{ new Date(activeTask.date).toLocaleDateString() }}</p>
               </div>
-              <button class="icon-button">
+              <button class="icon-button" @click="deleteActiveTask(activeTask.id)">
                 <img src="@/assets/icons/trash.svg">
               </button>
             </div>
@@ -208,6 +239,7 @@ onMounted(() => {
   font-weight: bold;
   border: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .add-task-button:hover {

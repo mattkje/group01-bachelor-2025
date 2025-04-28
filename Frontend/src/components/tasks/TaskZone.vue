@@ -80,7 +80,7 @@ onMounted( () => {
     <div class="title-bar">
       <div class="top-bar">
         <p>{{ title }}</p>
-        <router-link class="add-task-button" :to="`/zones/${props.zoneId}/tasks`">Manage</router-link>
+        <router-link v-if="tasks" class="add-task-button" :to="`/zones/${props.zoneId}/tasks`">Manage</router-link>
       </div>
       <div class="task-summary">
         <p v-if="activeTasksToday.length > 0">Tasks: {{ activeTasksToday.length }}</p>
