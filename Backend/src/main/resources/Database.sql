@@ -143,8 +143,7 @@ CREATE TABLE IF NOT EXISTS monte_carlo_data
     time            TIMESTAMP,
     completed_tasks INT,
     items_picked    INT,
-    zone_id         BIGINT NOT NULL,
-    FOREIGN KEY (zone_id) REFERENCES zone (id)
+    zone_id         BIGINT NOT NULL
 );
 
 CREATE TRIGGER update_worker_zone

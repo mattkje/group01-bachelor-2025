@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import java.time.LocalDateTime;
@@ -7,32 +8,64 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Utils {
 
-  public static Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
+  @Autowired
+  private MonteCarloService monteCarloService;
+
+  public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
     return zoneSimResults.values().stream()
         .map(ZoneSimResult::getLastEndTime)
-        .filter(Objects::nonNull) // Exclude null values
-        .max(LocalDateTime::compareTo) // Get the latest LocalDateTime
-        .orElse(null); // Return null if no valid end times are found
+        .filter(Objects::nonNull)
+        .max(LocalDateTime::compareTo)
+        .orElse(null);
   }
 
-  public static Map<Long, Double> getSimResultAverages(List<SimulationResult> simulationResults) {
-      Map<Long, Double> averages = new HashMap<>();
-      for (SimulationResult simulationResult : simulationResults) {
-          Map<Long, ZoneSimResult> zoneSimResults = simulationResult.getZoneSimResults();
-          for (Map.Entry<Long, ZoneSimResult> entry : zoneSimResults.entrySet()) {
-              Long zoneId = entry.getKey();
-              ZoneSimResult zoneSimResult = entry.getValue();
-              // Convert Duration to double (in minutes) and default to 0.0 if null
-              double totalDuration = zoneSimResult.getTotalDuration() != null
-                  ? zoneSimResult.getTotalDuration().toMinutes()
-                  : 0.0;
-              averages.put(zoneId, totalDuration);
-          }
+  public Map<LocalDateTime, Integer> getTotalTasksCompleted(List<ZoneSimResult> zoneSimResults) {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
+    Map<LocalDateTime, Integer> taskCompletionMap = new HashMap<>();
+
+    for (LocalDateTime time = now; !time.isAfter(endOfDay); time = time.plusMinutes(10)) {
+      int totalCompletedTasks = 0;
+
+      for (ZoneSimResult zoneSimResult : zoneSimResults) {
+        totalCompletedTasks += zoneSimResult.getCompletedTaskCountAtTime(time);
       }
-      return averages;
+
+      taskCompletionMap.put(time, totalCompletedTasks);
+    }
+
+    return taskCompletionMap;
   }
 
+  public Map<Long, Double> getSimResultAverages(List<SimulationResult> simulationResults) {
+    Map<Long, Double> averages = new HashMap<>();
+    for (SimulationResult simulationResult : simulationResults) {
+      Map<Long, ZoneSimResult> zoneSimResults = simulationResult.getZoneSimResults();
+      for (Map.Entry<Long, ZoneSimResult> entry : zoneSimResults.entrySet()) {
+        Long zoneId = entry.getKey();
+        ZoneSimResult zoneSimResult = entry.getValue();
+        double totalDuration = zoneSimResult.getTotalDuration() != null
+            ? zoneSimResult.getTotalDuration().toMinutes()
+            : 0.0;
+        averages.put(zoneId, totalDuration);
+      }
+    }
+    return averages;
+  }
+
+  public void saveSimulationResults(List<SimulationResult> simulationResults) {
+    for (int i = 0; i < simulationResults.size(); i++) {
+      SimulationResult simulationResult = simulationResults.get(i);
+      Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList());
+      for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet()) {
+        monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue());
+      }
+    }
+  }
 }

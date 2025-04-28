@@ -29,9 +29,4 @@ public class MonteCarloController {
     public void generateWorldSimData(LocalDateTime now) {
         worldSimService.generateWorldSimData(now, true);
     }
-
-    @PostMapping("/monte-carlo")
-    public void generateMonteCarloData(LocalDateTime now) {
-        monteCarloService.generateMonteCarloData(now, true);
-    }
 }

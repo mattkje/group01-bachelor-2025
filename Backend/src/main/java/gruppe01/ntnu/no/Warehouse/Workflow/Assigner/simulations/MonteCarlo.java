@@ -63,6 +63,9 @@ public class MonteCarlo {
   @Autowired
   private PickerTaskService pickerTaskService;
 
+  @Autowired
+  private Utils utils;
+
   private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
   //TODO: Save the result of the simulation to a file for quicker access between pages
@@ -132,7 +135,7 @@ public class MonteCarlo {
 
         warehouseExecutor.shutdown();
         warehouseExecutor.awaitTermination(1, TimeUnit.DAYS);
-        return new SimulationResult(Utils.getLatestEndTime(zoneSimResults),zoneSimResults);
+        return new SimulationResult(utils.getLatestEndTime(zoneSimResults),zoneSimResults);
       }));
     }
 

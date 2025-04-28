@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import jdk.jshell.execution.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,8 @@ public class SimulationService {
   private MonteCarlo monteCarloWithRealData;
   @Autowired
   private PickerTaskService pickerTaskService;
+  @Autowired
+  private Utils utils;
 
 //TODO: Fix this to work with a picker zone
 
@@ -100,7 +103,7 @@ public class SimulationService {
       // Get the current time
       LocalDateTime currentTime = LocalDateTime.now();
       // Calculate the average zone durations using the current time as the reference
-      Map<Long, Double> averageZoneDurations = Utils.getSimResultAverages(results);
+      Map<Long, Double> averageZoneDurations = utils.getSimResultAverages(results);
 
       // Format the predicted completion time for each zone
       averageZoneDurations.forEach((zoneId, averageDuration) -> {
@@ -110,7 +113,7 @@ public class SimulationService {
           newResult.put(zoneId, results.getFirst().getErrorMessage(zoneId));
         }
       });
-
+      utils.saveSimulationResults(results);
     } else {
       newResult.put(-1L, "No simulation results available.");
     }

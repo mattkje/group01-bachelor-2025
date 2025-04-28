@@ -24,12 +24,18 @@ public class MonteCarloData {
     @Column(name = "items_picked")
     private int itemsPicked;
 
-    @OneToOne
-    @JoinColumn(name = "zoneId")
-    @JsonIgnore
-    private Zone zone;
+    @Column(name = "zone_id")
+    private long zoneId;
 
     public MonteCarloData() {}
+
+    public void setSimNo(int simNo) {
+        this.simNo = simNo;
+    }
+
+    public int getSimNo() {
+        return simNo;
+    }
 
     public LocalDateTime getTime() {
         return time;
@@ -63,16 +69,10 @@ public class MonteCarloData {
         return id;
     }
 
-    public Zone getZone() {
-        return zone;
+    public long getZone() {
+        return zoneId;
     }
-
-    @JsonProperty
-    public long getZoneId() {
-        return zone != null ? zone.getId() : null;
-    }
-
-    public void setZone(Zone zone) {
-        this.zone = zone;
+    public void setZone(long zoneId) {
+        this.zoneId = zoneId;
     }
 }

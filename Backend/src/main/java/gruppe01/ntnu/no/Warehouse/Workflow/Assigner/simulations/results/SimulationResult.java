@@ -1,13 +1,14 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
 
     import java.time.LocalDateTime;
+    import java.util.List;
     import java.util.Map;
 
     public record SimulationResult(
           Object latestEndTime, Map<Long, ZoneSimResult> zoneSimResults) {
 
         public LocalDateTime getLatestEndTime() {
-            if (latestEndTime == null || !(latestEndTime instanceof LocalDateTime)) {
+            if (!(latestEndTime instanceof LocalDateTime)) {
                 throw new IllegalStateException("Latest end time is not set.");
             }
             return (LocalDateTime) latestEndTime;
@@ -15,6 +16,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
 
         public Map<Long, ZoneSimResult> getZoneSimResults() {
             return zoneSimResults;
+        }
+
+        public List<ZoneSimResult> getZoneSimResultList() {
+            return zoneSimResults.values().stream().toList();
         }
 
         public String getErrorMessage(Long zoneId) {
