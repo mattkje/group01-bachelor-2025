@@ -9,8 +9,13 @@ import java.util.Objects;
 public class ZoneSimResult {
 
   // Map to store tasks and their start and end times
+  private Long zoneId;
   private final Map<String, TaskTime> taskTimes = new HashMap<>();
   private String errormessage = "";
+
+  public void setZoneId(Long zoneId) {
+    this.zoneId = zoneId;
+  }
 
   public void setErrorMessage(String errorMessage) {
     this.errormessage = errorMessage;
@@ -65,6 +70,10 @@ public class ZoneSimResult {
         .filter(taskTime -> taskTime.startTime() != null && taskTime.endTime() != null)
         .filter(taskTime -> !taskTime.startTime().isAfter(time) && !taskTime.endTime().isAfter(time))
         .count();
+  }
+
+  public Long getZoneId() {
+    return zoneId;
   }
 
   // Inner class to represent the start and end times of a task

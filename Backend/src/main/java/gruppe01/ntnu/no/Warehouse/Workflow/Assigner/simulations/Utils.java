@@ -64,23 +64,52 @@ public class Utils {
     monteCarloService.dropAllData();
     for (int i = 0; i < simulationResults.size(); i++) {
       SimulationResult simulationResult = simulationResults.get(i);
-      Map<LocalDateTime, Integer> timestamps =
-          getTotalTasksCompleted(simulationResult.getZoneSimResultList());
-
-      int highestValue = findHighestValue(timestamps);
-      int finalI = i;
-      timestamps.entrySet().stream()
-          .sorted(Map.Entry.comparingByKey())
-          .forEachOrdered(entry -> {
-            if (entry.getValue() < highestValue) {
-              monteCarloService.generateSimulationDataPoint(finalI, entry.getKey(),
-                  entry.getValue());
-            }
-          });
+      saveGeneralSimulation(simulationResult,i);
+      saveZoneSimulation(simulationResult.getZoneSimResultList(), i);
     }
   }
-
   private Integer findHighestValue(Map<LocalDateTime, Integer> timestamps) {
     return Collections.max(timestamps.values());
   }
+
+  private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i) {
+   for (ZoneSimResult zoneSimResult : zoneSimResultList) {
+     Map<LocalDateTime,Integer> timestamps = new HashMap<>();
+     LocalDateTime now = LocalDateTime.now();
+     LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
+
+     for (LocalDateTime time = now; !time.isAfter(endOfDay); time = time.plusMinutes(10)) {
+       timestamps.put(time,  zoneSimResult.getCompletedTaskCountAtTime(time));
+     }
+     int highestValue = findHighestValue(timestamps);
+     timestamps.entrySet().stream()
+         .sorted(Map.Entry.comparingByKey())
+         .forEachOrdered(entry -> {
+           if (entry.getValue() < highestValue) {
+             monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
+                 entry.getValue(),zoneSimResult.getZoneId());
+           }
+         });
+
+   }
+
+
+
+  }
+
+  private void saveGeneralSimulation(SimulationResult simulationResult, int i){
+
+    Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList());
+
+    int highestValue = findHighestValue(timestamps);
+    timestamps.entrySet().stream()
+        .sorted(Map.Entry.comparingByKey())
+        .forEachOrdered(entry -> {
+          if (entry.getValue() < highestValue) {
+            monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
+                entry.getValue(),null);
+          }
+        });
+  }
+
 }

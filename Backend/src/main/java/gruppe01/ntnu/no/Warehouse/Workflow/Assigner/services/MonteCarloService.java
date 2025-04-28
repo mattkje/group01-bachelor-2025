@@ -17,15 +17,18 @@ public class MonteCarloService {
   @Autowired
   private ZoneRepository zoneRepository;
 
-    public void generateSimulationDataPoint(int simNo, LocalDateTime now, int tasksCompleted) {
+    public void generateSimulationDataPoint(int simNo, LocalDateTime now, int tasksCompleted, Long zoneId) {
 
 
         MonteCarloData monteCarloData = new MonteCarloData();
         monteCarloData.setSimNo(simNo);
         monteCarloData.setTime(now);
         monteCarloData.setCompletedTasks(tasksCompleted);
-        monteCarloData.setZone(0L);
-
+        if (zoneId != null){
+          monteCarloData.setZone(zoneId);
+        } else {
+          monteCarloData.setZone(0L);
+        }
         monteCarloDataRepository.save(monteCarloData);
 
     }

@@ -51,6 +51,7 @@ public class ZoneSimulator2 {
                                          RandomForest randomForest,
                                          LocalDateTime startTime) {
     ZoneSimResult zoneSimResult = new ZoneSimResult();
+    zoneSimResult.setZoneId(zone.getId());
     try {
       if ((activeTasks == null || activeTasks.isEmpty()) &&
           (pickerTasks == null || pickerTasks.isEmpty())) {
