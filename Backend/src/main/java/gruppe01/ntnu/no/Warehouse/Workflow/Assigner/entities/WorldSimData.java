@@ -25,7 +25,7 @@ public class WorldSimData {
     private boolean realData;
 
     @OneToOne
-    @JoinColumn(name = "zoneId")
+    @JoinColumn(name = "zone_id")
     @JsonIgnore
     private Zone zone;
 

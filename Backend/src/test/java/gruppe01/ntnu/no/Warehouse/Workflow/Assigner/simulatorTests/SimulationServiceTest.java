@@ -1,9 +1,10 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulatorTests;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+
 import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ public class SimulationServiceTest {
     @Test
     void testRunZoneSimulation() {
         Long zoneId = zoneService.getAllZones().getFirst().getId();
-        Zone mockZone = new Zone();
+        Timetable.Zone mockZone = new Timetable.Zone();
         when(zoneService.getZoneById(zoneId)).thenReturn(mockZone);
         when(activeTaskService.getRemainingTasksForTodayByZone(zoneId)).thenReturn(new ArrayList<>());
 

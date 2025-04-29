@@ -2,7 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.WorldSimData;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorldSimService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorldSimDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,19 +15,19 @@ import java.util.List;
 public class MonteCarloController {
 
     @Autowired
-    private WorldSimService worldSimService;
+    private WorldSimDataService worldSimDataService;
 
     @Autowired
     private MonteCarloService monteCarloService;
 
-    @GetMapping("/{zoneId}/{date}")
-    public List<WorldSimData> getWorldSimData(@PathVariable LocalDate date, @PathVariable long zoneId) {
-        return worldSimService.getMostRecentWorldSimDataByZone(date, zoneId);
+    @GetMapping("/{zoneId}")
+    public List<WorldSimData> getWorldSimData(@PathVariable long zoneId) {
+        return worldSimDataService.getMostRecentWorldSimDataByZone(zoneId);
     }
 
     @PostMapping("/world-sim")
     public void generateWorldSimData(LocalDateTime now) {
-        worldSimService.generateWorldSimData(now, true);
+        worldSimDataService.generateWorldSimData(now, true);
     }
 
 }

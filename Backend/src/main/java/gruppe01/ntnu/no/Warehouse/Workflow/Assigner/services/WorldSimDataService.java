@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.MonteCarloData;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.WorldSimData;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorldSimDataRepository;
@@ -14,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class WorldSimService {
+public class WorldSimDataService {
 
     @Autowired
     private WorldSimDataRepository worldSimDataRepository;
@@ -29,24 +28,27 @@ public class WorldSimService {
     public void generateWorldSimData(LocalDateTime dateTime, boolean realData) {
         for (Zone zone : zoneRepository.findAll()) {
             WorldSimData worldSimData = new WorldSimData();
-            worldSimData.setZone(zone);
-            worldSimData.setTime(dateTime);
-            worldSimData.setRealData(realData);
+            int completedTasks = pickerTaskService.getPickerTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId());
+
             if (zone.getIsPickerZone()) {
-                worldSimData.setCompletedTasks(pickerTaskService.getPickerTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId()));
+                worldSimData.setCompletedTasks(completedTasks);
                 worldSimData.setItemsPicked(pickerTaskService.getItemsPickedByZone(dateTime.toLocalDate(), zone.getId()));
             } else {
                 worldSimData.setCompletedTasks(activeTaskService.getActiveTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId()));
             }
+            worldSimData.setZone(zone);
+            worldSimData.setTime(dateTime);
+            worldSimData.setRealData(realData);
+
             worldSimDataRepository.save(worldSimData);
         }
     }
 
-    public List<WorldSimData> getMostRecentWorldSimDataByZone(LocalDate date, long zoneId) {
+    public List<WorldSimData> getMostRecentWorldSimDataByZone(long zoneId) {
         List<WorldSimData> worldSimDataList = new ArrayList<>();
 
         for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
-            if (worldSimData.getTime().toLocalDate().isEqual(date) && worldSimData.getZone().getId().equals(zoneId)) {
+            if (worldSimData.getZone().getId().equals(zoneId)) {
                 worldSimDataList.add(worldSimData);
             }
         }
