@@ -26,9 +26,6 @@ public class MonteCarloController {
 
     @GetMapping("/{zoneId}/values")
     public List<Integer> getWorldSimValues(@PathVariable long zoneId) {
-        if (zoneId == 0) {
-            return worldSimDataService.getAllWorldSimValues();
-        }
         return worldSimDataService.getWorldSimValues(zoneId);
     }
 

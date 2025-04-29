@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS world_sim_data
     completed_tasks INT,
     items_picked    INT,
     real_data       BOOLEAN,
-    zone_id         BIGINT NOT NULL,
+    zone_id         BIGINT,
     FOREIGN KEY (zone_id) REFERENCES zone (id)
 );
 
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS monte_carlo_data
     time            TIMESTAMP,
     completed_tasks INT,
     items_picked    INT,
-    zone_id         BIGINT NOT NULL
+    zone_id         BIGINT
 );
 
 CREATE TRIGGER update_worker_zone

@@ -26,22 +26,33 @@ public class WorldSimDataService {
     private ActiveTaskService activeTaskService;
 
     public void generateWorldSimData(LocalDateTime dateTime, boolean realData) {
+        int tasksCompleted = 0;
+        int itemsPicked = 0;
         for (Zone zone : zoneRepository.findAll()) {
             WorldSimData worldSimData = new WorldSimData();
             int completedTasks = pickerTaskService.getPickerTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId());
 
+
             if (zone.getIsPickerZone()) {
                 worldSimData.setCompletedTasks(completedTasks);
                 worldSimData.setItemsPicked(pickerTaskService.getItemsPickedByZone(dateTime.toLocalDate(), zone.getId()));
+                itemsPicked += worldSimData.getItemsPicked();
             } else {
                 worldSimData.setCompletedTasks(activeTaskService.getActiveTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId()));
             }
+            tasksCompleted += completedTasks;
             worldSimData.setZone(zone);
             worldSimData.setTime(dateTime);
             worldSimData.setRealData(realData);
 
             worldSimDataRepository.save(worldSimData);
         }
+        WorldSimData worldSimData = new WorldSimData();
+        worldSimData.setCompletedTasks(tasksCompleted);
+        worldSimData.setItemsPicked(itemsPicked);
+        worldSimData.setTime(dateTime);
+        worldSimData.setZone(null);
+        worldSimDataRepository.save(worldSimData);
     }
 
     public List<WorldSimData> getMostRecentWorldSimDataByZone(long zoneId) {
@@ -59,18 +70,11 @@ public class WorldSimDataService {
         List<Integer> worldSimValues = new ArrayList<>();
 
         for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
-            if (worldSimData.getZone().getId().equals(zoneId)) {
+            if (worldSimData.getZone() != null && worldSimData.getZone().getId().equals(zoneId)) {
+                worldSimValues.add(worldSimData.getCompletedTasks());
+            } else if (zoneId == 0) {
                 worldSimValues.add(worldSimData.getCompletedTasks());
             }
-        }
-        return worldSimValues;
-    }
-
-    public List<Integer> getAllWorldSimValues() {
-        List<Integer> worldSimValues = new ArrayList<>();
-
-        for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
-            worldSimValues.add(worldSimData.getCompletedTasks());
         }
         return worldSimValues;
     }

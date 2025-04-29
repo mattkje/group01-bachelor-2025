@@ -321,4 +321,14 @@ public class ActiveTaskService {
         }
         return new ArrayList<>();
     }
+
+    public List<ActiveTask> getActiveTasksForTodayByZone(Long zoneId) {
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(LocalDate.now()) && activeTask.getTask().getZoneId().equals(zoneId)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
 }

@@ -31,6 +31,11 @@ public class ActiveTaskController {
         return activeTaskService.getActiveTasksForToday();
     }
 
+    @GetMapping("/{zoneId}/today")
+    public List<ActiveTask> getActiveTasksForTodayByZone(@PathVariable Long zoneId) {
+        return activeTaskService.getActiveTasksForTodayByZone(zoneId);
+    }
+
     @GetMapping("/completed")
     public List<ActiveTask> getCompletedActiveTasks() {
         return activeTaskService.getCompletedActiveTasks();
