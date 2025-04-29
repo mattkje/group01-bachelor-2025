@@ -4,7 +4,7 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
 
-let selectedZoneId = ref<number | null>(null);
+let selectedZoneId = ref<number>(1);
 let zones = ref<Zone[]>([]);
 
 const fetchZones = async () => {

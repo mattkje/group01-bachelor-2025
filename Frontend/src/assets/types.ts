@@ -73,3 +73,12 @@ export interface PickerTask {
     zoneId: number;
     worker: Worker;
 }
+
+export interface WorldSimObject {
+    id: number;
+    time: string;
+    completedTasks: number;
+    itemsPicked: number;
+    realData: boolean;
+    zoneId: number;
+}

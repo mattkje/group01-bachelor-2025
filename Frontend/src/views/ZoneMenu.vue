@@ -49,7 +49,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="vertical-separator"/>
-    <MonteCarloGraph :zone-id="route.params.id" />
+    <MonteCarloGraph :zone-id="currentZone.id" />
   </div>
   <hr>
   <ZoneTasks v-if="currentZone" class="zone-tasks" :zone="currentZone" :tasks="currentZone.tasks" />
