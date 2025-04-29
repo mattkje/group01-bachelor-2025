@@ -25,6 +25,11 @@ public class MonteCarloController {
         return worldSimDataService.getMostRecentWorldSimDataByZone(zoneId);
     }
 
+    @GetMapping("/{zoneId}/values")
+    public List<Integer> getWorldSimValues(@PathVariable long zoneId) {
+        return worldSimDataService.getWorldSimValues(zoneId);
+    }
+
     @PostMapping("/world-sim")
     public void generateWorldSimData(LocalDateTime now) {
         worldSimDataService.generateWorldSimData(now, true);

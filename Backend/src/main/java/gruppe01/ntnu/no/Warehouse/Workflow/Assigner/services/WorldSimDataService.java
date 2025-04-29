@@ -54,4 +54,19 @@ public class WorldSimDataService {
         }
         return worldSimDataList;
     }
+
+    public List<Integer> getWorldSimValues(long zoneId) {
+        List<Integer> worldSimValues = new ArrayList<>();
+
+        for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
+            if (worldSimData.getZone().getId().equals(zoneId)) {
+                worldSimValues.add(worldSimData.getCompletedTasks());
+            }
+        }
+        return worldSimValues;
+    }
+
+    public void deleteAllData() {
+        worldSimDataRepository.deleteAll();
+    }
 }

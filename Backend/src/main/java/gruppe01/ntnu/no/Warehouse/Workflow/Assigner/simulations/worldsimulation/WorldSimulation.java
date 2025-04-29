@@ -21,6 +21,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * WorldSimulation class is responsible for simulating a single day of a warehouse.
+ * It handles the scheduling of workers, assigning tasks, and managing breaks
+ * and generates picker tasks and manages the simulation of active tasks.
+ * It uses a machine learning model to estimate the time required for picker tasks.
+ * It also provides methods to pause, resume, and change the speed of the simulation.
+ */
 @Component
 public class WorldSimulation {
 
@@ -78,12 +85,6 @@ public class WorldSimulation {
 
     private boolean isPlaying;
 
-//    private HashMap<String, List<List<Double>>> minMaxValues;
-//
-//    private HashMap<String, Double> avgTime;
-//
-//    private HashMap<String, List<Double>> weightValues;
-
     private HashMap<String, RandomForest> randomForests;
 
     @Autowired
@@ -100,11 +101,18 @@ public class WorldSimulation {
     @Autowired
     private WorldSimDataService worldSimDataService;
 
+    /**
+     * Runs the world simulation for a given simulation time and start date.
+     * @param simulationTime The simulation time in minutes. If 0, the simulation has no delay.
+     * @param startDate The start date for the simulation.
+     * @throws Exception If an error occurs during the simulation.
+     */
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
         isPlaying = true;
         workday = startDate;
         boolean activeTasksExistForWorkday = false;
 
+        //Finds the first workday without any active tasks to run the simulation on. Starts on the given date.
         while (!activeTasksExistForWorkday) {
             if (activeTaskService.getActiveTaskByDate(workday).isEmpty()) {
                 activeTaskGenerator.generateActiveTasks(workday, 1);
@@ -118,7 +126,10 @@ public class WorldSimulation {
             }
         }
 
+        //Deletes all worldSimData entries from previous simulations
+        worldSimDataService.deleteAllData();
 
+        //Decides the speed of the simulation, 0 if no delay.
         currentTime = LocalTime.MIDNIGHT.plusMinutes(1);
         endTime = LocalTime.MIDNIGHT;
         // 1440 minutes in a day
@@ -128,6 +139,7 @@ public class WorldSimulation {
             simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
         }
 
+        //Initialize variables used in the simulation
         Random random = new Random();
         availableWorkers = new ArrayList<>();
         busyWorkers = new ArrayList<>();
@@ -138,66 +150,32 @@ public class WorldSimulation {
         activeTaskEndTimes = new HashMap<>();
         pickerTasksInProgress = new ArrayList<>();
         pickerTaskEndTimes = new HashMap<>();
-
-        timetables = timetableService.getTimetablesByDate(workday);
-
-        LocalDate today = workday;
-        List<Worker> workersPresentToday = timetables.stream()
-                .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today) &&
-                        timetable.getWorker().isAvailability())
-                .map(Timetable::getWorker)
-                .distinct()
-                .toList();
-
-        System.out.println("Workers present today: " + workersPresentToday.size());
-
-        activeTasksToday = activeTaskService.getAllActiveTasks();
-
-        LocalDate finalWorkday = workday;
-
-        activeTasksWithDueDates = activeTasksToday.stream()
-                .filter(activeTask -> (activeTask.getDate().equals(finalWorkday) &&
-                        activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
-                .collect(Collectors.toList());
-
-        activeTasksToday = activeTasksToday.stream()
-                .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
-                        activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
-                //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
-                .collect(Collectors.toList());
-
-        System.out.println("Active tasks today: " + activeTasksToday.size());
-
-        pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
-                .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
-                .collect(Collectors.toList());
-
         machineLearningModelPicking = new MachineLearningModelPicking();
-//        minMaxValues = new HashMap<>();
-//        avgTime = new HashMap<>();
-//        weightValues = new HashMap<>();
         randomForests = new HashMap<>();
 
+        filterData();
+
+        //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
             String zoneName = zone.getName().toUpperCase();
-//            Map<List<Double>, List<List<Double>>> mcValuesList = machineLearningModelPicking.getMcValues(zoneName);
-//            minMaxValues.put(zoneName, mcValuesList.values().iterator().next());
-//            avgTime.put(zoneName, machineLearningModelPicking.calculateAverageTime(zone.getName().toUpperCase()));
-//            weightValues.put(zoneName, machineLearningModelPicking.getMcWeights(zone.getName().toUpperCase()));
             randomForests.put(zoneName, machineLearningModelPicking.getModel(zone.getName(), false));
         }
 
+        //Calculates the start time and end time for each worker
         for (Timetable timetable : timetables) {
             LocalDateTime timetableStartTime = timetable.getStartTime();
             LocalDateTime timetableEndTime = timetable.getEndTime();
-            int randomStartTime = random.nextInt(31) - 15;
-            int randomEndTime = random.nextInt(31) - 15;
+            int randomStartTime = random.nextInt(16);
+            int randomEndTime = random.nextInt(16);
             timetable.setRealStartTime(timetableStartTime.plusMinutes(randomStartTime));
             timetable.setRealEndTime(timetableEndTime.plusMinutes(randomEndTime));
             System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
         }
 
+        //Starts the simulation
         startSimulating();
+
+        //Last snippet of code that is run. If there are any unfinished tasks, they are set to finished.
         if (isPaused) {
             System.out.println("Simulation paused");
         } else {
@@ -220,6 +198,15 @@ public class WorldSimulation {
 
     }
 
+    /**
+     * Starts the simulation loop. Goes through all the workers and tasks and updates their status.
+     * It also handles breaks and assigns tasks to available workers. While assigning tasks to workers
+     * it also calculates the end time, which is put inside a Map which sets the end time when the task is completed.
+     * This code is run for each minute of the simulation.
+     *
+     * @throws InterruptedException if the simulation thread is interrupted during execution.
+     * @throws IOException
+     */
     private void startSimulating() throws InterruptedException, IOException {
         while (!currentTime.equals(endTime) && !isPaused) {
             for (Timetable timetable : timetables) {
@@ -499,24 +486,6 @@ public class WorldSimulation {
     }
 
     public LocalDateTime getPickerEndTime(PickerTask task) throws IOException {
-//        List<List<Double>> minMaxPickerValues = minMaxValues.get(task.getZone().getName().toUpperCase());
-//        Double avgPickerTime = avgTime.get(task.getZone().getName().toUpperCase());
-//        List<Double> weights = weightValues.get(task.getZone().getName().toUpperCase());
-//
-//        double[] features = new double[]{task.getDistance(), task.getPackAmount(), task.getLinesAmount(),
-//                task.getWeight(), task.getVolume(), task.getAvgHeight(), worker.getId()
-//        };
-//
-//        double estimatedTime = 0.0;
-//        for (int i = 0; i < features.length; i++) {
-//            double min = minMaxPickerValues.get(i).get(0);
-//            double max = minMaxPickerValues.get(i).get(1);
-//
-//            double normalized = (features[i] - min) / (max - min);
-//            estimatedTime += weights.get(i) * normalized;
-//        }
-//
-//        estimatedTime = avgPickerTime * estimatedTime;
         long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(randomForests.get(task.getZone().getName().toUpperCase()), task);
         return task.getStartTime().plusSeconds((int) estimatedTime);
     }
@@ -555,5 +524,43 @@ public class WorldSimulation {
             runWorldSimulation(0, startDate.plusDays(i));
         }
 
+    }
+
+    /**
+     * Filters the data for the current workday.
+     */
+    public void filterData() {
+        timetables = timetableService.getTimetablesByDate(workday);
+
+        LocalDate today = workday;
+        List<Worker> workersPresentToday = timetables.stream()
+                .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today) &&
+                        timetable.getWorker().isAvailability())
+                .map(Timetable::getWorker)
+                .distinct()
+                .toList();
+
+        System.out.println("Workers present today: " + workersPresentToday.size());
+
+        activeTasksToday = activeTaskService.getAllActiveTasks();
+
+        LocalDate finalWorkday = workday;
+
+        activeTasksWithDueDates = activeTasksToday.stream()
+                .filter(activeTask -> (activeTask.getDate().equals(finalWorkday) &&
+                        activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
+                .collect(Collectors.toList());
+
+        activeTasksToday = activeTasksToday.stream()
+                .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
+                        activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
+                //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
+                .collect(Collectors.toList());
+
+        System.out.println("Active tasks today: " + activeTasksToday.size());
+
+        pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
+                .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
+                .collect(Collectors.toList());
     }
 }
