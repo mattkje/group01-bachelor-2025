@@ -7,7 +7,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,15 +29,15 @@ public class WorldSimDataService {
         int itemsPicked = 0;
         for (Zone zone : zoneRepository.findAll()) {
             WorldSimData worldSimData = new WorldSimData();
-            int completedTasks = pickerTaskService.getPickerTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId());
-
-
+            int completedTasks = 0;
             if (zone.getIsPickerZone()) {
+                completedTasks = pickerTaskService.getPickerTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId());
                 worldSimData.setCompletedTasks(completedTasks);
                 worldSimData.setItemsPicked(pickerTaskService.getItemsPickedByZone(dateTime.toLocalDate(), zone.getId()));
                 itemsPicked += worldSimData.getItemsPicked();
             } else {
-                worldSimData.setCompletedTasks(activeTaskService.getActiveTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId()));
+                completedTasks = activeTaskService.getActiveTasksDoneForTodayInZone(dateTime.toLocalDate(), zone.getId());
+                worldSimData.setCompletedTasks(completedTasks);
             }
             tasksCompleted += completedTasks;
             worldSimData.setZone(zone);
@@ -72,7 +71,7 @@ public class WorldSimDataService {
         for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
             if (worldSimData.getZone() != null && worldSimData.getZone().getId().equals(zoneId)) {
                 worldSimValues.add(worldSimData.getCompletedTasks());
-            } else if (zoneId == 0) {
+            } else if (worldSimData.getZone() == null && zoneId == 0) {
                 worldSimValues.add(worldSimData.getCompletedTasks());
             }
         }
