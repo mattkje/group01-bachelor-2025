@@ -6,7 +6,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorldSimDataService
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,6 +26,9 @@ public class MonteCarloController {
 
     @GetMapping("/{zoneId}/values")
     public List<Integer> getWorldSimValues(@PathVariable long zoneId) {
+        if (zoneId == 0) {
+            return worldSimDataService.getAllWorldSimValues();
+        }
         return worldSimDataService.getWorldSimValues(zoneId);
     }
 

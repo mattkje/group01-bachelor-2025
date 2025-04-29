@@ -66,6 +66,15 @@ public class WorldSimDataService {
         return worldSimValues;
     }
 
+    public List<Integer> getAllWorldSimValues() {
+        List<Integer> worldSimValues = new ArrayList<>();
+
+        for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
+            worldSimValues.add(worldSimData.getCompletedTasks());
+        }
+        return worldSimValues;
+    }
+
     public void deleteAllData() {
         worldSimDataRepository.deleteAll();
     }

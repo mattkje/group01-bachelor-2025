@@ -6,6 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import smile.regression.RandomForest;
@@ -18,6 +19,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -205,69 +207,19 @@ public class WorldSimulation {
      * This code is run for each minute of the simulation.
      *
      * @throws InterruptedException if the simulation thread is interrupted during execution.
-     * @throws IOException
+     * @throws IOException if an error occurs while estimating the time using the machine learning model.
      */
     private void startSimulating() throws InterruptedException, IOException {
+        //Runs while the current time is not equal to the end time and the simulation is not paused, which is 00:00.
         while (!currentTime.equals(endTime) && !isPaused) {
             for (Timetable timetable : timetables) {
-                if (timetable.getRealStartTime().toLocalTime().equals(currentTime) &&
-                        timetable.getWorker().isAvailability()) {
-                    System.out.println(timetable.getWorker().getName() + " has started working");
-                    availableWorkers.add(timetable.getWorker());
-                }
-                if ((timetable.getRealEndTime().toLocalTime().isBefore(currentTime) ||
-                        timetable.getRealEndTime().toLocalTime().equals(currentTime)) &&
-                        (availableWorkers.contains(timetable.getWorker()) ||
-                        workersWaitingForTask.contains(timetable.getWorker()))) {
-                    System.out.println(timetable.getWorker().getName() + " has stopped working");
-                    availableWorkers.remove(timetable.getWorker());
-                    workersWaitingForTask.remove(timetable.getWorker());
-                }
-                if ((timetable.getStartTime().toLocalTime().plusHours(timetable.getEndTime().toLocalTime()
-                        .minusHours(timetable.getStartTime().getHour()).getHour() / 2).minusMinutes(15L))
-                        .equals(currentTime) && !availableWorkers.contains(timetable.getWorker()) &&
-                        !workersDelayedBreak.contains(timetable.getWorker())) {
-                    workersDelayedBreak.add(timetable.getWorker());
-                } else if ((timetable.getStartTime().toLocalTime().plusHours(timetable.getEndTime().toLocalTime()
-                        .minusHours(timetable.getStartTime().getHour()).getHour() / 2).equals(currentTime))
-                        && availableWorkers.contains(timetable.getWorker())) {
-                    availableWorkers.remove(timetable.getWorker());
-                    System.out.println(timetable.getWorker().getName() + " is on break");
-                }
-                if ((timetable.getStartTime().toLocalTime().plusHours(timetable.getEndTime().toLocalTime()
-                        .minusHours(timetable.getStartTime().getHour()).getHour() / 2).plusMinutes(15L))
-                        .equals(currentTime) && !workersDelayedBreak.contains(timetable.getWorker()) &&
-                        !workersOnBreak.contains(timetable.getWorker())) {
-                    System.out.println(timetable.getWorker().getName() + " has ended their lunch break");
-                    if (!availableWorkers.contains(timetable.getWorker())) availableWorkers.add(timetable.getWorker());
-                }
+                processTimetable(timetable);
             }
 
-            //Starts break halfway into the shift
-            Iterator<Worker> delayedBreakIterator = workersDelayedBreak.iterator();
-            while (delayedBreakIterator.hasNext()) {
-                Worker worker = delayedBreakIterator.next();
-                if (worker.getCurrentTaskId() == null && !workersOnBreak.contains(worker)) {
-                    System.out.println(worker.getName() + " is on break");
-                    worker.setBreakStartTime(currentTime);
-                    workersOnBreak.add(worker);
-                    availableWorkers.remove(worker);
-                    delayedBreakIterator.remove();
-                }
-            }
+            processWorkersOnBreak(workersDelayedBreak.iterator(), this::startBreak);
+            processWorkersOnBreak(workersOnBreak.iterator(), this::endBreak);
 
-            //Ends break after 30 minutes
-            Iterator<Worker> onBreakIterator = workersOnBreak.iterator();
-            while (onBreakIterator.hasNext()) {
-                Worker worker = onBreakIterator.next();
-                if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
-                    System.out.println(worker.getName() + " has ended their break");
-                    worker.setBreakStartTime(null);
-                    if (!availableWorkers.contains(worker) && !workersWaitingForTask.contains(worker)) availableWorkers.add(worker);
-                    onBreakIterator.remove();
-                }
-            }
-
+            // Assign tasks to available workers
             Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
             while (activeTaskWithDueDatesIterator.hasNext()) {
                 ActiveTask task = activeTaskWithDueDatesIterator.next();
@@ -320,6 +272,7 @@ public class WorldSimulation {
                 }
             }
 
+            // Assign picker tasks to available workers
             Iterator<PickerTask> pickerTaskIterator = pickerTasksToday.iterator();
             if (!availableWorkers.isEmpty()) {
                 while (pickerTaskIterator.hasNext()) {
@@ -562,5 +515,107 @@ public class WorldSimulation {
         pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
                 .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Processes the timetable for each worker. Calculates that the worker starts their break ca. halfway through
+     * their shift (break is 30 minutes) with a plus or minus 15 minute randomization.
+     *
+     * @param timetable The timetable for the worker.
+     */
+    private void processTimetable(Timetable timetable) {
+        LocalTime realStartTime = timetable.getRealStartTime().toLocalTime();
+        LocalTime realEndTime = timetable.getRealEndTime().toLocalTime();
+        LocalTime midpoint = timetable.getStartTime().toLocalTime()
+                .plusHours(timetable.getEndTime().toLocalTime().minusHours(timetable.getStartTime().getHour()).getHour() / 2);
+        LocalTime breakStart = midpoint.minusMinutes(15L);
+        LocalTime breakEnd = midpoint.plusMinutes(15L);
+
+        if (realStartTime.equals(currentTime) && timetable.getWorker().isAvailability()) {
+            logAndAddWorker(timetable.getWorker(), "has started working");
+        }
+
+        if ((realEndTime.isBefore(currentTime) || realEndTime.equals(currentTime)) &&
+                (availableWorkers.contains(timetable.getWorker()) || workersWaitingForTask.contains(timetable.getWorker()))) {
+            logAndRemoveWorker(timetable.getWorker(), "has stopped working");
+        }
+
+        if (breakStart.equals(currentTime) && !availableWorkers.contains(timetable.getWorker()) &&
+                !workersDelayedBreak.contains(timetable.getWorker())) {
+            workersDelayedBreak.add(timetable.getWorker());
+        } else if (midpoint.equals(currentTime) && availableWorkers.contains(timetable.getWorker())) {
+            logAndRemoveWorker(timetable.getWorker(), "is on break");
+        }
+
+        if (breakEnd.equals(currentTime) && !workersDelayedBreak.contains(timetable.getWorker()) &&
+                !workersOnBreak.contains(timetable.getWorker())) {
+            logAndAddWorker(timetable.getWorker(), "has ended their lunch break");
+        }
+    }
+
+    /**
+     * Logs the worker's status and adds them to the list of available workers.
+     *
+     * @param worker The worker to log and add.
+     * @param message The message to log.
+     */
+    private void logAndAddWorker(Worker worker, String message) {
+        System.out.println(worker.getName() + " " + message);
+        availableWorkers.add(worker);
+    }
+
+    /**
+     * Logs the worker's status and removes them from the list of available workers.
+     *
+     * @param worker The worker to log and remove.
+     * @param message The message to log.
+     */
+    private void logAndRemoveWorker(Worker worker, String message) {
+        System.out.println(worker.getName() + " " + message);
+        availableWorkers.remove(worker);
+        workersWaitingForTask.remove(worker);
+    }
+
+    /**
+     * Processes workers on break by applying the given action to each worker in the iterator.
+     *
+     * @param iterator The iterator for the workers on break.
+     * @param action The action to apply to each worker.
+     */
+    private void processWorkersOnBreak(Iterator<Worker> iterator, Consumer<Worker> action) {
+        while (iterator.hasNext()) {
+            Worker worker = iterator.next();
+            action.accept(worker);
+            iterator.remove();
+        }
+    }
+
+    /**
+     * Starts a break for the worker if they are not currently assigned to a task and are not already on break.
+     *
+     * @param worker The worker to start a break for.
+     */
+    private void startBreak(Worker worker) {
+        if (worker.getCurrentTaskId() == null && !workersOnBreak.contains(worker)) {
+            System.out.println(worker.getName() + " is on break");
+            worker.setBreakStartTime(currentTime);
+            workersOnBreak.add(worker);
+            availableWorkers.remove(worker);
+        }
+    }
+
+    /**
+     * Ends the break for the worker if they have been on break for 30 minutes.
+     *
+     * @param worker The worker to end the break for.
+     */
+    private void endBreak(Worker worker) {
+        if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
+            System.out.println(worker.getName() + " has ended their break");
+            worker.setBreakStartTime(null);
+            if (!availableWorkers.contains(worker) && !workersWaitingForTask.contains(worker)) {
+                availableWorkers.add(worker);
+            }
+        }
     }
 }
