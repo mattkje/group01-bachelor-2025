@@ -5,6 +5,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -63,6 +64,11 @@ public class ZoneController {
     @GetMapping("/{id}/picker-tasks-now")
     public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
         return zoneService.getTodaysUnfinishedPickerTasksByZoneId(id);
+    }
+
+    @GetMapping("/{zoneId}/{date}")
+    public Integer getNumberOfTasksForTodayByZone(@PathVariable Long zoneId, @PathVariable LocalDate date) {
+        return zoneService.getNumberOfTasksForTodayByZone(zoneId, date);
     }
 
     @PostMapping

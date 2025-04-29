@@ -6,10 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +25,8 @@ public class ZoneService {
   private TaskRepository taskRepository;
   @Autowired
   private ActiveTaskRepository activeTaskRepository;
+  @Autowired
+  private PickerTaskRepository pickerTaskRepository;
 
   public List<Zone> getAllZones() {
     return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
@@ -164,5 +163,31 @@ public class ZoneService {
       return zoneRepository.save(zone);
     }
     return null;
+  }
+
+  public Integer getNumberOfTasksForTodayByZone(Long zoneId, LocalDate date) {
+    int tasks = 0;
+
+    if (zoneId == 0 || !getZoneById(zoneId).getIsPickerZone()) {
+      for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+        if (activeTask.getDate().equals(date) && zoneId == 0) {
+          tasks++;
+        } else if (activeTask.getDate().equals(date) && activeTask.getTask().getZoneId().equals(zoneId)) {
+          tasks++;
+        }
+      }
+    }
+
+    if (zoneId == 0 || getZoneById(zoneId).getIsPickerZone()) {
+      for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+        if (pickerTask.getDate().equals(date) && zoneId == 0) {
+          tasks++;
+        } else if (pickerTask.getDate().equals(date) && pickerTask.getZone().getId().equals(zoneId)) {
+          tasks++;
+        }
+      }
+    }
+
+    return tasks;
   }
 }

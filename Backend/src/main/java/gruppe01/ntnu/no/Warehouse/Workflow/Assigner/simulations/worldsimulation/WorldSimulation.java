@@ -615,6 +615,7 @@ public class WorldSimulation {
             worker.setBreakStartTime(null);
             if (!availableWorkers.contains(worker) && !workersWaitingForTask.contains(worker)) {
                 availableWorkers.add(worker);
+                workersOnBreak.remove(worker);
             }
         }
     }
