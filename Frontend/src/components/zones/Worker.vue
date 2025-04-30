@@ -41,6 +41,7 @@ const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
 };
 
 const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, workerId: number): Promise<boolean> => {
+  if (await isZonePickerZone(zoneId)) return true;
   const tasks = await fetchTasksForZone(zoneId);
   return tasks.some((task: Task) =>
       task.requiredLicense.some((license: License) =>
@@ -81,7 +82,7 @@ const startPolling = () => {
     activeTask.value = await getTaskByWorker(props.workerId);
     qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, props.workerId);
     overtime.value = overtimeOccurance(activeTask.value);
-  }, 5000); // Poll every 5 seconds
+  }, 5000);
 };
 
 const referenceTime = ref<Date | null>(null);
@@ -102,7 +103,7 @@ const fetchCurrentTimeFromBackend = async (): Promise<void> => {
 
 const startFetchingTime = () => {
   fetchCurrentTimeFromBackend();
-  setInterval(fetchCurrentTimeFromBackend, 5000); // Fetch time every 5 seconds
+  setInterval(fetchCurrentTimeFromBackend, 5000);
 };
 
 const isWorkerPresent = (workerId: number): boolean => {
@@ -124,10 +125,15 @@ onMounted(() => {
   startFetchingTime();
   startPolling();
 });
-const getRandomProfileImageUrl = (workerId: number) => {
-  const gender = workerId % 2 === 0 ? 'men' : 'women';
-  const id = workerId % 100;
-  return `https://randomuser.me/api/portraits/thumb/${gender}/${id}.jpg`;
+const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
+  try {
+    const response = await fetch('http://localhost:8080/api/zones/picker-zones');
+    const pickerZones = await response.json();
+    return pickerZones.some((zone: any) => zone.id === zoneId);
+  } catch (error) {
+    console.error('Error fetching picker zones:', error);
+    return false;
+  }
 };
 
 onMounted(async () => {
@@ -194,7 +200,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   background-color: #c0c0c0;
-  border-radius: 7px;
+  border-radius: 10px 0 0 10px;
   max-height: 30px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
@@ -221,6 +227,7 @@ onMounted(async () => {
   background-color: #ffcccc; /* Red for unqualified and ready */
   border: 2px solid #ff4b4b;
   animation: pulse-border 2s infinite;
+  border-radius: 10px;
 }
 
 .unq-worker-box:hover {
@@ -231,6 +238,7 @@ onMounted(async () => {
 
 .rdy-worker-box {
   background-color: #bfffab;
+  border-radius: 10px
 }
 
 .rdy-worker-box:hover {
@@ -238,11 +246,12 @@ onMounted(async () => {
 }
 
 .busy-unq-worker-box {
-  background-color: #ffebc0; /* Yellow for busy and unqualified */
+  background-color: #ffebc0;
 }
 
 .not-present-worker-box {
   background: #ececec;
+  border-radius: 10px;
   opacity: 0.7;
 }
 

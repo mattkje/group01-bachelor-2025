@@ -53,12 +53,6 @@
         <div class="task-name">{{ props.name }}</div>
         <div class="task-status">{{ isTaskOverdue ? 'Overdue' : 'On Time' }}</div>
       </div>
-      <div class="workers-container">
-        <div v-for="worker in workers" :key="worker.id" class="worker">
-          <div class="worker-name">{{ worker.name }}</div>
-        </div>
-      </div>
-      <div class="connection-string">{{ connectionString }}</div>
     </div>
   </template>
 
@@ -67,10 +61,10 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background-color: #ececec;
-    border-radius: 10px;
-    max-height: 40px;
-    padding: 0.5rem;
+    background-color: #c0c0c0;
+    border-radius: 0 10px 10px 0;
+    max-height: 30px;
+    padding: 0 0.2rem;
     margin-bottom: 0.5rem;
     user-select: none !important;
     -webkit-user-select: none !important;
