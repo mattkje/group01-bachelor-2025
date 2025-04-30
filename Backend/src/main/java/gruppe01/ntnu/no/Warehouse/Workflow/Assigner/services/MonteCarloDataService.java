@@ -13,7 +13,6 @@ import java.util.Map;
 @Service
 public class MonteCarloDataService {
 
-
     @Autowired
     private MonteCarloDataRepository monteCarloDataRepository;
 
@@ -23,7 +22,7 @@ public class MonteCarloDataService {
     @Autowired
     private WorldSimDataService worldSimDataService;
     /**
-     * Gets world sim data values for a specific zone
+     * Gets world sim data values for a specific zone.
      * Zone 0 is for all zones
      * @param zoneId
      * @return

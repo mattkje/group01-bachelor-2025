@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,9 +20,6 @@ public class Utils {
 
   @Autowired
   private MonteCarloService monteCarloService;
-
-  @Autowired
-  private WorldSimulation worldSimulation;
 
   public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
     return zoneSimResults.values().stream()
@@ -65,22 +63,21 @@ public class Utils {
     return averages;
   }
 
-  public void saveSimulationResults(List<SimulationResult> simulationResults) {
+  public void saveSimulationResults(List<SimulationResult> simulationResults,LocalDateTime now) {
     monteCarloService.dropAllData();
     for (int i = 0; i < simulationResults.size(); i++) {
       SimulationResult simulationResult = simulationResults.get(i);
       saveGeneralSimulation(simulationResult,i);
-      saveZoneSimulation(simulationResult.getZoneSimResultList(), i);
+      saveZoneSimulation(simulationResult.getZoneSimResultList(), i,now);
     }
   }
   private Integer findHighestValue(Map<LocalDateTime, Integer> timestamps) {
     return Collections.max(timestamps.values());
   }
 
-  private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i) {
+  private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i, LocalDateTime now) {
    for (ZoneSimResult zoneSimResult : zoneSimResultList) {
      Map<LocalDateTime,Integer> timestamps = new HashMap<>();
-     LocalDateTime now = worldSimulation.getCurrentDateTime();
      LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
 
      int testInt = 0;

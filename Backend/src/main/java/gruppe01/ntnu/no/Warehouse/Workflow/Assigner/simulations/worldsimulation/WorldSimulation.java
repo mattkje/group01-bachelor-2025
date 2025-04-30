@@ -6,6 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -44,6 +46,10 @@ public class WorldSimulation {
 
     @Autowired
     private TimeTableGenerator timeTableGenerator;
+
+    @Autowired
+    private SimulationService SimulationService;
+    ;
 
     private LocalTime currentSimulationTime;
 
@@ -89,6 +95,8 @@ public class WorldSimulation {
 
     private HashMap<String, RandomForest> randomForests;
 
+    private Optional<LocalDateTime> firstWorkerTime;
+
     @Autowired
     private WorkerService workerService;
 
@@ -102,6 +110,8 @@ public class WorldSimulation {
     private ZoneService zoneService;
     @Autowired
     private WorldSimDataService worldSimDataService;
+    @Autowired
+    private SimulationService simulationService;
 
     /**
      * Runs the world simulation for a given simulation time and start date.
@@ -209,7 +219,7 @@ public class WorldSimulation {
      * @throws InterruptedException if the simulation thread is interrupted during execution.
      * @throws IOException if an error occurs while estimating the time using the machine learning model.
      */
-    private void startSimulating() throws InterruptedException, IOException {
+    private void startSimulating() throws InterruptedException, IOException, ExecutionException {
         //Runs while the current time is not equal to the end time and the simulation is not paused, which is 00:00.
         while (!currentTime.equals(endTime) && !isPaused) {
             for (Timetable timetable : timetables) {
@@ -398,6 +408,11 @@ public class WorldSimulation {
             if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
                 System.out.println("Current time: " + currentTime);
                 worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);
+                // Hinder the simulation from running if there are no workers present
+                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))){
+                    LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
+                    simulationService.runCompleteSimulation(randomForests,daytime);
+                }
             }
             currentSimulationTime = currentTime;
             currentTime = currentTime.plusMinutes(1);
@@ -443,7 +458,7 @@ public class WorldSimulation {
         return task.getStartTime().plusSeconds((int) estimatedTime);
     }
 
-    public void pauseSimulation() throws InterruptedException, IOException {
+    public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
         isPaused = !isPaused;
         if (!isPaused) {
             startSimulating();
@@ -492,6 +507,12 @@ public class WorldSimulation {
                 .map(Timetable::getWorker)
                 .distinct()
                 .toList();
+
+        firstWorkerTime = timetables.stream()
+                .filter(timetable -> timetable.getStartTime().toLocalDate().equals(today) &&
+                        timetable.getWorker().isAvailability())
+                .map(Timetable::getStartTime)
+                .min(LocalDateTime::compareTo);
 
         System.out.println("Workers present today: " + workersPresentToday.size());
 

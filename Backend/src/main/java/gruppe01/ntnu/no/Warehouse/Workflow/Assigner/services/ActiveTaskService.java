@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +32,13 @@ public class ActiveTaskService {
         return activeTaskRepository.findById(id).orElse(null);
     }
 
-    public List<ActiveTask> getActiveTasksForToday() {
-        LocalDate currentDate = LocalDate.now();
+    public List<ActiveTask> getActiveTasksForToday(LocalDateTime currentTime) {
+        if (currentTime == null) {
+            currentTime = LocalDateTime.now();
+        }
         List<ActiveTask> activeTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-            if (activeTask.getDate().equals(currentDate)) {
+            if (activeTask.getDate().equals(currentTime.toLocalDate()) && activeTask.getEndTime() == null) {
                 activeTasks.add(activeTask);
             }
         }

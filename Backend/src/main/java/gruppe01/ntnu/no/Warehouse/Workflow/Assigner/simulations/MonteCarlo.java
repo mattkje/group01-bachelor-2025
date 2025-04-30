@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -65,9 +66,6 @@ public class MonteCarlo {
   @Autowired
   private Utils utils;
 
-  @Autowired
-  private WorldSimulation worldSimulation;
-
   private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
   //TODO: Save the result of the simulation to a file for quicker access between pages
@@ -82,7 +80,7 @@ public class MonteCarlo {
    * @throws ExecutionException   - if the simulation fails
    */
   @Transactional
-  public List<SimulationResult> monteCarlo(int simCount)
+  public List<SimulationResult> monteCarlo(int simCount, Map<String, RandomForest> models, LocalDateTime currentTime)
       throws InterruptedException, ExecutionException, IOException {
     System.out.println("Starting simulations");
     ZoneSimulator2 zoneSimulator = new ZoneSimulator2();
@@ -91,13 +89,16 @@ public class MonteCarlo {
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     List<Future<SimulationResult>> futures = new ArrayList<>();
     List<Zone> zones = zoneService.getAllZones();
-    List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday();
-    Map<String, RandomForest> models = mlModel.getAllModels();
+    List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday(currentTime);
+    if (models == null){
+      models = mlModel.getAllModels();
+    }
     // Initialize lazy-loaded collections
     activeTasks.forEach(task -> Hibernate.initialize(task.getWorkers()));
 
     for (int i = 0; i < simCount; i++) {
       System.out.println("Running simulation " + (i + 1) + " of " + simCount);
+      Map<String, RandomForest> finalModels = models;
       futures.add(simulationExecutor.submit(() -> {
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
         List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
@@ -118,13 +119,13 @@ public class MonteCarlo {
                         zone.getId()))
                     .toList();
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,
-                    worldSimulation.getCurrentDateTime());
+                    currentTime);
               } else {
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,
-                    models.get(zone.getName().toUpperCase()), worldSimulation.getCurrentDateTime());
+                    finalModels.get(zone.getName().toUpperCase()), currentTime);
               }
               synchronized (zoneSimResults) {
                 zoneSimResults.put(zone.getId(), zoneSimResult);

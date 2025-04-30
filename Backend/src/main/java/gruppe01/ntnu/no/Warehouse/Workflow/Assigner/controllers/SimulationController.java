@@ -46,7 +46,7 @@ public class SimulationController {
 
   @GetMapping("/monte-carlo")
   public Map<Long,String> monteCarlo() throws Exception {
-    return simulationService.runCompleteSimulation();
+    return simulationService.runCompleteSimulation(null,null);
   }
 
   @GetMapping("/monte-carlo/zones/{id}")

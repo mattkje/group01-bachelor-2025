@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -28,7 +29,7 @@ public class ActiveTaskController {
 
     @GetMapping("/today")
     public List<ActiveTask> getActiveTasksForToday() {
-        return activeTaskService.getActiveTasksForToday();
+        return activeTaskService.getActiveTasksForToday(LocalDateTime.now());
     }
 
     @GetMapping("/completed")
