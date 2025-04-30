@@ -49,7 +49,6 @@ public class WorldSimulation {
 
     @Autowired
     private SimulationService simulationService;
-    ;
 
     private LocalTime currentSimulationTime;
 
@@ -124,6 +123,8 @@ public class WorldSimulation {
         boolean activeTasksExistForWorkday = false;
         machineLearningModelPicking = new MachineLearningModelPicking();
         randomForests = new HashMap<>();
+
+        flushAllWorkerTasks();
 
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
@@ -647,5 +648,14 @@ public class WorldSimulation {
             return LocalDateTime.now();
         }
         return LocalDateTime.of(workday, currentTime);
+    }
+
+    public void flushAllWorkerTasks() {
+        List<Worker> allWorkers = workerService.getAllWorkers();
+        for (Worker worker : allWorkers) {
+            worker.setCurrentTask(null);
+            worker.setCurrentPickerTask(null);
+            workerService.updateWorker(worker.getId(), worker);
+        }
     }
 }
