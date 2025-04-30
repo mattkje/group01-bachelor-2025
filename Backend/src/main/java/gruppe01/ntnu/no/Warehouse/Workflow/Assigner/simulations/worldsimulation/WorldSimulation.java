@@ -411,8 +411,7 @@ public class WorldSimulation {
                 // Hinder the simulation from running if there are no workers present
                 if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))){
                     LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
-                    //TODO: Add this back when MC sim stable
-                    //simulationService.runCompleteSimulation(randomForests,daytime);
+                    simulationService.runCompleteSimulation(randomForests,daytime);
                 }
             }
             currentSimulationTime = currentTime;
