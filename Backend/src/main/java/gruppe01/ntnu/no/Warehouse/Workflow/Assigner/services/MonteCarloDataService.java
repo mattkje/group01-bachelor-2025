@@ -19,6 +19,9 @@ public class MonteCarloDataService {
 
     @Autowired
     private ZoneService zoneService;
+
+    @Autowired
+    private WorldSimDataService worldSimDataService;
     /**
      * Gets world sim data values for a specific zone
      * Zone 0 is for all zones
@@ -28,13 +31,16 @@ public class MonteCarloDataService {
    public List<List<Integer>> getMCDataValues(long zoneId) {
        Map<Integer, List<Integer>> groupedBySimCount = new HashMap<>();
 
+       List<Integer> worldSimValues = worldSimDataService.getWorldSimValues(zoneId);
+       int lastvalue = worldSimValues.getLast();
+
        for (MonteCarloData monteCarloData : monteCarloDataRepository.findAll()) {
            if ((zoneService.getZoneById(zoneId) != null && monteCarloData.getZoneId() == zoneId && zoneId != 0) ||
                (zoneService.getZoneById(zoneId) == null && zoneId == 0)) {
 
                int simCount = monteCarloData.getSimNo();
                groupedBySimCount.putIfAbsent(simCount, new ArrayList<>());
-               groupedBySimCount.get(simCount).add(monteCarloData.getCompletedTasks());
+               groupedBySimCount.get(simCount).add(monteCarloData.getCompletedTasks() + lastvalue);
            }
        }
 

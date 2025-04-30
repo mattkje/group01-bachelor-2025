@@ -76,9 +76,6 @@ public class WorldSimDataService {
             }
         }
 
-        
-
-
         return worldSimValues;
     }
 
