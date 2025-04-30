@@ -51,28 +51,36 @@ const chartOptions = ref();
 function generateChartData() {
   currentTimeIndex = dataValues.value.length - 1;
   taskCount.value = activeTasks.value;
-
-  let lastValue = dataValues[dataValues.value.length - 1];
-  const simulatedValues = [];
-  simulatedValues.push(lastValue);
-  const baseColor = [150, 150, 150];
-
-  for (let i = 0; i < 50; i++) {
+  simulatedDatasets.value = [];
+  let lastValue = dataValues.value[dataValues.value.length - 1] || 0;
 
 
+  // This is a placeholder for the simulation data \/
+  const ListOfListsOfValues = [];
+  const case1 = [lastValue, ...Array.from({ length: 25 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
+  const case2 = [lastValue, ...Array.from({ length: 50 }, (_, i) => Math.min(lastValue + Math.floor(i / 10), 13, taskCount.value))];
+  const case3 = [lastValue, ...Array.from({ length: 95 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
+  const case4 = [lastValue, ...Array.from({ length: 32 }, (_, i) => Math.min(lastValue + Math.floor(i / 15), 13, taskCount.value))];
+  const case5 = [lastValue, ...Array.from({ length: 68 }, (_, i) => Math.min(lastValue + Math.floor(i / 11), 13,taskCount.value))];
+  ListOfListsOfValues.push(case1);
+  ListOfListsOfValues.push(case2);
+  ListOfListsOfValues.push(case3);
+  ListOfListsOfValues.push(case4);
+  ListOfListsOfValues.push(case5);
+  // Down to here /\
+
+  const baseColor = 'rgba(150, 150, 150, 0.3)';
+
+  ListOfListsOfValues.forEach((list, index) => {
     simulatedDatasets.value.push({
-      label: `Simulated Tasks ${i + 1}`,
-      data: [
-        ...Array(dataValues.value.length - 1).fill(null),
-        dataValues[dataValues.value.length - 1],
-        ...simulatedValues
-      ],
-      borderColor: `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.2)`,
+      label: `Case ${index + 1}`,
+      data: [...Array(dataValues.value.length - 1).fill(null), ...list],
+      borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
       fill: false,
     });
-  }
+  });
 
   let bestCaseIndex = -1;
   let worstCaseIndex = -1;
@@ -80,7 +88,7 @@ function generateChartData() {
   let worstCaseValue = -Infinity;
 
   simulatedDatasets.value.forEach((dataset, index) => {
-    const firstCompletionIndex = dataset.data.findIndex((value) => value >= taskCount);
+    const firstCompletionIndex = dataset.data.findIndex((value) => value >= taskCount.value);
 
     if (firstCompletionIndex !== -1) {
       if (firstCompletionIndex < bestCaseValue) {
@@ -95,13 +103,13 @@ function generateChartData() {
   });
 
   if (bestCaseIndex !== -1) {
-    simulatedDatasets[bestCaseIndex].borderColor = 'rgb(126,196,177)';
-    simulatedDatasets[bestCaseIndex].borderWidth = 3;
+    simulatedDatasets.value[bestCaseIndex].borderColor = 'rgb(126,196,177)';
+    simulatedDatasets.value[bestCaseIndex].borderWidth = 3;
   }
 
   if (worstCaseIndex !== -1) {
-    simulatedDatasets[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
-    simulatedDatasets[worstCaseIndex].borderWidth = 3;
+    simulatedDatasets.value[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
+    simulatedDatasets.value[worstCaseIndex].borderWidth = 3;
   }
 
   const extendedLabels = Array.from({length: 144}, (_, i) => {
@@ -115,10 +123,6 @@ function generateChartData() {
   const regressionSlope = 1.7;
   const regressionIntercept = dataValues[startIndex];
 
-  for (let i = 0; i < simulatedValues.length; i++) {
-    const y = regressionSlope * i + regressionIntercept;
-    regressionData.push(y);
-  }
 
   const regressionLine = {
     label: 'Regression Line',
@@ -249,7 +253,13 @@ const fetchActiveTasks = async () => {
     console.error('Failed to fetch active tasks:', error);
   }
   await fetchRealData();
-  pollingTimer = setInterval(fetchRealData, pollingInterval);
+  await fetchSimulationData();
+  pollingTimer = setInterval(fetchAllData, pollingInterval);
+};
+
+const fetchAllData = async () => {
+  await fetchRealData();
+  await fetchSimulationData();
 };
 
 const pollingInterval = 5000;
@@ -281,14 +291,13 @@ const fetchRealData = async () => {
 
 const fetchSimulationData = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/simulation/${props.zoneId}/values`);
+    const response = await fetch(`http://localhost:8080/api/data/${props.zoneId}/mcvalues`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    const data: number[] = await response.json();
+    const data: number[][] = await response.json();
+    if (data && data.length > 0) {
 
-    if (data && JSON.stringify(data) !== JSON.stringify(dataValues.value)) {
-      dataValues.value = data || [0];
     }
   } catch (error) {
     console.error('Failed to fetch simulation data:', error);
