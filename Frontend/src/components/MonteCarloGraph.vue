@@ -28,17 +28,14 @@ for (let i = 1; i <= numPoints; i++) {
   const x = Math.random();
   const y = Math.random();
   if (x * x + y * y <= 1) insideCircle.value++;
-
   estimates.value.push((4 * insideCircle.value) / i);
 }
 
 const activeTasks = ref<number>(0);
-
 const taskCount = ref(0);
 const dataValues = ref<number[]>([0]);
 const simulatedDatasets = ref<any[]>([]);
 const isDataReady = ref(false);
-
 
 watch(dataValues, (newValue) => {
   if (newValue.length > 1) {
@@ -54,7 +51,6 @@ const chartOptions = ref();
 function generateChartData() {
   currentTimeIndex = dataValues.value.length - 1;
   taskCount.value = activeTasks.value;
-
 
   let lastValue = dataValues[dataValues.value.length - 1];
   const simulatedValues = [];
@@ -124,10 +120,9 @@ function generateChartData() {
     regressionData.push(y);
   }
 
-
   const regressionLine = {
     label: 'Regression Line',
-    data: [...Array(startIndex).fill(null), ...regressionData], // Align with simulated data
+    data: [...Array(startIndex).fill(null), ...regressionData],
     borderColor: 'rgb(126, 161, 196)',
     tension: 0.1,
     pointRadius: 0,
@@ -135,7 +130,6 @@ function generateChartData() {
   };
 
   simulatedDatasets.value.push(regressionLine);
-
 
   chartData.value = {
     labels: extendedLabels,
@@ -151,7 +145,6 @@ function generateChartData() {
       ...simulatedDatasets.value,
     ],
   };
-
 
   chartOptions.value = {
     responsive: true,
@@ -172,7 +165,6 @@ function generateChartData() {
       },
     },
   };
-
 
   const horizontalLinePlugin = {
     id: 'horizontalLine',
@@ -227,9 +219,7 @@ function generateChartData() {
       }
     },
   };
-
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
-
 }
 
 const fetchDateFromBackend = async () => {
@@ -244,7 +234,6 @@ const fetchDateFromBackend = async () => {
     console.error('Failed to fetch date:', error);
     date.value = '';
   }
-
   await fetchActiveTasks();
 };
 

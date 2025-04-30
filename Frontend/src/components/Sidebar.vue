@@ -16,7 +16,21 @@ import infoIconSelected from '../assets/icons/infoSelected.svg';
 import cpIcon from '../assets/icons/cp.svg';
 import cpIconSelected from '../assets/icons/cpSelected.svg';
 
-const tabs = ref([
+type TabItem = {
+  name: string;
+  icon: string;
+  iconSelected: string;
+  path: string;
+  separator?: never;
+} | {
+  separator: true;
+  name?: never;
+  icon?: never;
+  iconSelected?: never;
+  path?: never;
+}
+
+const tabs = ref<TabItem[]>([
   {name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/'},
   {name: 'Zones', icon: zonesIcon, iconSelected: zonesIconSelected, path: '/zones'},
   {name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks'},
@@ -24,7 +38,6 @@ const tabs = ref([
   {separator: true},
   {name: 'Control Panel', icon: cpIcon, iconSelected: cpIconSelected, path: '/controlpanel'},
   {name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info'},
-
 ]);
 
 const route = useRoute();
@@ -45,11 +58,12 @@ const activeTab = computed(() => {
             v-else
             :to="tab.path"
             class="tab"
+            :class="{ 'active-tab': tab.path === activeTab }"
             active-class="active-tab"
             exact-active-class="exact-active-tab"
         >
           <img :src="tab.path === activeTab ? tab.iconSelected : tab.icon" alt="" class="tab-icon"/>
-          <span :class="{ 'active-tab': tab.path === activeTab }">{{ tab.name }}</span>
+          <span>{{ tab.name }}</span>
         </router-link>
       </template>
     </div>
@@ -91,7 +105,7 @@ const activeTab = computed(() => {
 
 .tab:hover {
   border-radius: 10px;
-  background-color: #f0f0f0; /* Light grey background on hover */
+  background-color: #f0f0f0;
 }
 
 .tab-icon {
@@ -99,21 +113,6 @@ const activeTab = computed(() => {
   height: 20px;
   margin-right: 0.5rem;
   margin-left: 0.5rem;
-}
-
-.settings-button {
-  border: none;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  background: none;
-  color: inherit;
-}
-
-.settings-button:hover {
-  border-radius: 10px;
-  background-color: #f0f0f0; /* Light grey background on hover */
 }
 
 hr {
