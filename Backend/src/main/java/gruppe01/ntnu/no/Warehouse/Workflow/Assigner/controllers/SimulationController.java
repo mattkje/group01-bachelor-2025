@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import java.time.LocalDate;
@@ -75,7 +76,8 @@ public class SimulationController {
   public void generatePickerTasks(@PathVariable String date, @PathVariable int numDays,
       @PathVariable int numOfTasksPerDay) throws Exception {
     LocalDate startDate = LocalDate.parse(date);
-    pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay);
+    MachineLearningModelPicking machineLearningModelPicking = new MachineLearningModelPicking();
+    pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay, machineLearningModelPicking);
   }
 
   @GetMapping("/run-world-simulation")

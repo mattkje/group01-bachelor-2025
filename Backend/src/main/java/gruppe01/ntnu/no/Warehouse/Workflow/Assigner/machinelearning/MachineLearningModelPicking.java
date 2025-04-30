@@ -5,8 +5,6 @@ import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -33,6 +31,9 @@ import smile.regression.RandomForest;
 @Component
 public class MachineLearningModelPicking {
 
+  Map<String, DataFrame> dataFrames = new HashMap<>();
+  Map<String, RandomForest> randomForests = new HashMap<>();
+
   /**
    * Creates a model if one does not exist
    * It loads an existing model if available, otherwise it trains a new one.
@@ -52,7 +53,7 @@ public class MachineLearningModelPicking {
     }
 
     // Attempt to load an existing model
-    RandomForest model = loadModel(filePath);
+    RandomForest model = loadModel(department, filePath);
 
     // If model is null, train a new one
     if (model == null) {
@@ -63,7 +64,7 @@ public class MachineLearningModelPicking {
               department.toUpperCase() + "_time.csv";
 
       // Parse CSV and create DataFrame
-      DataFrame data = parseCsvToDataFrame(csvFilePath);
+      DataFrame data = parseCsvToDataFrame(department, csvFilePath);
       if (data != null) {
         // Train the model
         if (isWorkerEfficiency) {
@@ -112,7 +113,11 @@ public class MachineLearningModelPicking {
    * @return A DataFrame containing the parsed data.
    * @throws IOException If there is an error reading the CSV file.
    */
-  private DataFrame parseCsvToDataFrame(String csvFilePath) {
+  private DataFrame parseCsvToDataFrame(String department, String csvFilePath) {
+    if (dataFrames.containsKey(csvFilePath)) {
+      return dataFrames.get(csvFilePath);
+    }
+
     FileReader reader = null;
     CSVParser parser = null;
 
@@ -145,7 +150,10 @@ public class MachineLearningModelPicking {
         vectors[i] = smile.data.vector.DoubleVector.of(headers.get(i), columnArray);
       }
 
-      return DataFrame.of(vectors);
+      DataFrame dataFrame = DataFrame.of(vectors);
+
+      dataFrames.put(department, dataFrame);
+      return dataFrame;
 
     } catch (IOException | NumberFormatException e) {
       System.err.println("Error parsing CSV file: " + e.getMessage());
@@ -220,9 +228,18 @@ public class MachineLearningModelPicking {
    * @param filePath The path to the model file.
    * @return The loaded RandomForest model, or null if no model was found.
    */
-  public RandomForest loadModel(String filePath) {
+  public RandomForest loadModel(String department, String filePath) {
+    for (String key : randomForests.keySet()) {
+      if (key.equalsIgnoreCase(department)) {
+        return randomForests.get(key);
+      }
+    }
     try {
-      return ModelLoader.loadModel(filePath);
+      RandomForest model = ModelLoader.loadModel(filePath);
+      if (model != null) {
+        randomForests.put(department, model);
+      }
+      return model;
     } catch (IOException | ClassNotFoundException e) {
       System.out.println("No existing model found. A new model will be trained.");
       return null;
@@ -282,15 +299,15 @@ public class MachineLearningModelPicking {
   public Map<List<Double>, List<List<Double>>> getMcValues(String department) throws IOException {
     String filePath = "pickroute_" + department.toUpperCase() + ".ser";
     // Attempt to load an existing model
-    RandomForest model = loadModel(filePath);
+    RandomForest model = loadModel(department, filePath);
     Map<List<Double>, List<List<Double>>> mcValues = new HashMap<>();
     if (model != null) {
 
       List<Double> weights = getWeights(model);
-      String csvFilePath =
-          "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+            String csvFilePath =
+            "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
               department.toUpperCase() + "_time.csv";
-      DataFrame data = parseCsvToDataFrame(csvFilePath);
+      DataFrame data = parseCsvToDataFrame(department, csvFilePath);
       List<List<Double>> minMaxValues = getMinMaxValues(data);
 
       mcValues.put(weights, minMaxValues);
@@ -314,7 +331,7 @@ public class MachineLearningModelPicking {
   public List<Double> getMcWeights(String department) throws IOException {
     String filePath = "pickroute_" + department.toUpperCase() + ".ser";
     // Attempt to load an existing model
-    RandomForest model = loadModel(filePath);
+    RandomForest model = loadModel(department, filePath);
     List<Double> weights = new ArrayList<>();
     if (model != null) {
       weights = getWeights(model);
@@ -330,7 +347,7 @@ public class MachineLearningModelPicking {
 
   public List<Double> getMcWorkerEfficiency(String department) throws IOException {
     String filePath = "worker_efficiency_" + department.toUpperCase() + "_worker.ser";
-    RandomForest model = loadModel(filePath);
+    RandomForest model = loadModel(department, filePath);
 
     if (model == null) {
       // Train a new model if it doesn't exist
@@ -343,7 +360,7 @@ public class MachineLearningModelPicking {
     String csvFilePath =
         "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
             + department.toUpperCase() + "_time.csv";
-    DataFrame data = parseCsvToDataFrame(csvFilePath);
+    DataFrame data = parseCsvToDataFrame(department, csvFilePath);
 
     if (data == null) {
       throw new IllegalStateException("Failed to parse the dataset for predictions.");
@@ -360,26 +377,6 @@ public class MachineLearningModelPicking {
     }
 
     return efficiencyValues;
-  }
-
-  public double calculateAverageTime(String department) throws IOException {
-    // Construct the CSV file path based on the department
-    String csvFilePath =
-        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
-            + department.toUpperCase() + "_time.csv";
-
-    // Parse the CSV file to create a DataFrame
-    DataFrame data = parseCsvToDataFrame(csvFilePath);
-
-    // Ensure the column "time_s" exists in the DataFrame
-    if (data == null || !Arrays.asList(data.names()).contains("time_s")) {
-      throw new IllegalArgumentException(
-          "Column 'time_s' not found in the dataset for department: " + department);
-    }
-
-    // Extract the "time_s" column and calculate the average
-    double[] timeValues = data.column("time_s").toDoubleArray();
-    return Arrays.stream(timeValues).average().orElse(0.0); // Return 0.0 if no values are present
   }
 
   public long estimateTimeUsingModel(
@@ -433,12 +430,12 @@ public class MachineLearningModelPicking {
     }
 
     // Attempt to load the model
-    RandomForest model = loadModel(filePath);
+    RandomForest model = loadModel(department, filePath);
 
     // If the model does not exist, create and return a new one
     if (model == null) {
       createModel(department, isWorkerEfficiency);
-      model = loadModel(filePath);
+      model = loadModel(department, filePath);
     }
 
     return model;

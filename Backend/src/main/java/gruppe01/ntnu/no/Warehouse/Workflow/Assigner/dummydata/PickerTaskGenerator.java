@@ -8,6 +8,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import smile.regression.RandomForest;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,10 +27,8 @@ public class PickerTaskGenerator {
     @Autowired
     private ZoneService zoneService;
 
-    @Autowired
-    private MachineLearningModelPicking machineLearningModelPicking;
-
-    public void generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay) throws IOException {
+    public void generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay,
+                                    MachineLearningModelPicking machineLearningModelPicking) throws IOException {
 
         Map<List<Double>, List<List<Double>>> mcValues;
         List<List<Double>> valueList;

@@ -108,10 +108,9 @@ public class WorldSimulation {
 
     @Autowired
     private ZoneService zoneService;
+
     @Autowired
     private WorldSimDataService worldSimDataService;
-    @Autowired
-    private SimulationService simulationService;
 
     /**
      * Runs the world simulation for a given simulation time and start date.
@@ -123,6 +122,16 @@ public class WorldSimulation {
         isPlaying = true;
         workday = startDate;
         boolean activeTasksExistForWorkday = false;
+        machineLearningModelPicking = new MachineLearningModelPicking();
+        randomForests = new HashMap<>();
+
+        //Initialize the random forests for each zone
+        for (Zone zone : zoneService.getAllPickerZones()) {
+            String zoneName = zone.getName().toUpperCase();
+            randomForests.put(zoneName, machineLearningModelPicking.getModel(zone.getName(), false));
+        }
+
+        System.out.println(randomForests.size());
 
         //Finds the first workday without any active tasks to run the simulation on. Starts on the given date.
         while (!activeTasksExistForWorkday) {
@@ -131,7 +140,7 @@ public class WorldSimulation {
                 if (timetableService.getTimetablesByDate(workday).isEmpty()) {
                     timeTableGenerator.generateTimeTable(workday);
                 }
-                pickerTaskGenerator.generatePickerTasks(workday, 1, 20);
+                pickerTaskGenerator.generatePickerTasks(workday, 1, 20, machineLearningModelPicking);
                 activeTasksExistForWorkday = true;
             } else {
                 workday = workday.plusDays(1);
@@ -162,16 +171,8 @@ public class WorldSimulation {
         activeTaskEndTimes = new HashMap<>();
         pickerTasksInProgress = new ArrayList<>();
         pickerTaskEndTimes = new HashMap<>();
-        machineLearningModelPicking = new MachineLearningModelPicking();
-        randomForests = new HashMap<>();
 
         filterData();
-
-        //Initialize the random forests for each zone
-        for (Zone zone : zoneService.getAllPickerZones()) {
-            String zoneName = zone.getName().toUpperCase();
-            randomForests.put(zoneName, machineLearningModelPicking.getModel(zone.getName(), false));
-        }
 
         //Calculates the start time and end time for each worker
         for (Timetable timetable : timetables) {
