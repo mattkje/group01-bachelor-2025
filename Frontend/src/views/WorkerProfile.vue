@@ -1,39 +1,40 @@
 <template>
-  <div v-if="worker" class="staff-page">
-    <div class="worker-image-container">
-      <img class="worker-image" src="@/assets/icons/profile.svg" draggable="false"/>
-    </div>
-    <div class="worker-details">
-      <p class="worker-name">{{ worker.name }}</p>
-      <p class="worker-info">Zone: {{ getZoneName(worker.zone_id) }}</p>
-      <p class="worker-info">Effectiveness: {{ worker.effectiveness }}</p>
-      <p class="worker-info">Licenses: {{ worker.licenses.map(license => license.name).join(', ') }}</p>
-      <p class="worker-info">Availability: {{ worker.availability ? 'Available' : 'Unavailable' }}</p>
-    </div>
-    <div class="license-management">
-      <select v-model="selectedLicenseId">
-        <option v-for="license in availableLicenses" :key="license.id" :value="license.id">
-          {{ license.name }}
-        </option>
-      </select>
-      <button @click="addLicense">Add License</button>
-      <div v-for="license in worker.licenses" :key="license.id">
-        <input type="checkbox" :id="`license-${license.id}`" :value="license.id" v-model="selectedLicenses"/>
-        <label :for="`license-${license.id}`">{{ license.name }}</label>
+  <div v-if="worker" class="page-content">
+    <div class="left-content">
+      <div class="staff-page">
+        <div class="worker-image-container">
+          <img class="worker-image" src="@/assets/icons/profile.svg" draggable="false"/>
+        </div>
+        <div class="worker-details-container">
+          <div class="worker-details">
+            <p class="worker-name">{{ worker.name }}</p>
+            <p class="worker-status">{{ workerStatus }}</p>
+            <Multiselect
+                v-model="worker.licenses"
+                :options="availableLicenses"
+                :multiple="true"
+                :close-on-select="false"
+                label="name"
+                track-by="id"
+                placeholder="Select required licenses"
+            />
+            <p class="worker-info">
+           <span
+               class="availability-indicator"
+               :class="{ 'available': worker.availability, 'unavailable': !worker.availability }">
+           </span>
+              {{ worker.availability ? 'Available' : 'Unavailable' }} - Working from 9:00 AM to 5:00 PM
+            </p>
+          </div>
+        </div>
       </div>
-      <button @click="removeSelectedLicenses">Remove Selected Licenses</button>
+      <div class="calendar-container">
+        Calendar goes here
+      </div>
     </div>
-    <div class="option-bar">
-      <button @click="changeWorkerAvailability" v-if="worker.name !== 'Vincent Holiday'">
-        <img src="/src/assets/icons/busy.svg" alt="Edit" />
-        <span v-if="!isAvailable">Make Available</span>
-        <span v-else>Make Unavailable</span>
-      </button>
-      <button @click="showDeleteConfirmation = true"  v-if="worker.name !== 'Vincent Holiday'">
-        <img src="/src/assets/icons/error.svg" alt="Edit"/>
-        <span>Delete Worker</span>
-      </button>
-    </div>
+    <div class="graph-container">
+      Graph goes here
+      </div>
   </div>
   <div v-else>
     <p>This worker does not exist</p>
@@ -52,6 +53,7 @@ import {ref, onMounted} from "vue";
 import {useRoute} from "vue-router";
 import Toolbar from "../components/Toolbar.vue";
 import BarChart from "../components/BarChart.vue";
+import {ActiveTask, PickerTask} from "@/assets/types";
 
 interface Zone {
   id: number;
@@ -71,6 +73,9 @@ interface Worker {
   licenses: License[];
   availability: boolean;
   profilePicture?: string;
+  activeTask?: ActiveTask;
+  pickerTask?: PickerTask;
+  zone?: Zone;
 }
 
 const route = useRoute();
@@ -113,6 +118,22 @@ const fetchZones = async () => {
     console.error('Failed to fetch zones:', error);
   }
 };
+
+import { computed } from "vue";
+import Multiselect from "vue-multiselect";
+
+const workerStatus = computed(() => {
+  if (worker.value) {
+    if (worker.value.activeTask) {
+      return `${worker.value.activeTask.task.name} at (${getZoneName(worker.value.zone_id)}) zone`;
+    } else if (worker.value.pickerTask) {
+      return `Picking task number ${worker.value.pickerTask.id} at zone ${getZoneName(worker.value.zone_id)}`;
+    } else {
+      return `Waiting for work at ${getZoneName(worker.value.zone_id)} zone`;
+    }
+  }
+  return "No worker data available";
+});
 
 const getRandomProfileImageUrl = (workerId: number) => {
   const gender = workerId % 2 === 0 ? 'men' : 'women';
@@ -208,12 +229,54 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.staff-page {
+.left-content {
+  width: 50%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 10px;
+  justify-content: space-between;
+  border-right: #E0E0E0 1px solid;
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.calendar-container {
+  min-height: 60%;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;;
+  border-top: #E0E0E0 1px solid;
+  margin-right: 2rem;
+}
+
+.staff-page {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   position: relative;
+  width: 100%;
+  max-height: 40%;
+  margin-bottom: 40px;
+}
+
+.graph-container {
+  min-width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .option-bar {
@@ -248,14 +311,6 @@ onMounted(() => {
   font-size: 1rem;
 }
 
-.profile-picture {
-  margin-top: 1.5rem;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  margin-right: 2rem;
-  object-fit: cover;
-}
 
 .worker-details {
   display: flex;
@@ -269,14 +324,47 @@ onMounted(() => {
 }
 
 .worker-info {
+  display: flex;
+  align-items: center;
   font-size: 1rem;
   color: #555;
-  margin-bottom: 0.25rem;
 }
 
-.license-management {
-  margin-top: 1rem;
+.availability-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
 }
+
+.available {
+  background-color: green;
+}
+
+.unavailable {
+  background-color: red;
+}
+
+::v-deep(.multiselect__tag) {
+  background-color: #E77474 !important;
+  color: white;
+  border-radius: 5px;
+}
+
+::v-deep(.multiselect__tags) {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+::v-deep(.multiselect) {
+  max-width: 500px;
+  width: 100%;
+}
+
+::v-deep(.multiselect__content) {
+  max-width: 300px;
+}
+
 
 .license-management select {
   margin-right: 1rem;
@@ -290,14 +378,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   background-color: #f6f6f6;
   margin-right: 0.5rem;
 }
 
 .worker-image {
-  width: 120px;
+  width: 80px;
 }
 </style>
