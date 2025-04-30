@@ -86,7 +86,7 @@ public class ZoneSimulator2 {
         for (ActiveTask activeTask : activeTasks) {
           String result = simulateTask(activeTask,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
-               lastTime,zoneSimResult);
+               zoneSimResult);
           if (!result.isEmpty()) {
             zoneSimResult.setErrorMessage(result);
             return zoneSimResult;
@@ -99,7 +99,7 @@ public class ZoneSimulator2 {
         for (PickerTask pickerTask : pickerTasks) {
           String result = simulatePickerTask(pickerTask,
               availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
-              randomForest, startTime,zoneSimResult);
+              randomForest,zoneSimResult);
           if (!result.isEmpty()) {
             zoneSimResult.setErrorMessage(result);
             return zoneSimResult;
@@ -120,14 +120,14 @@ public class ZoneSimulator2 {
   private String simulatePickerTask(PickerTask pickerTask,
                                     WorkerSemaphore2 availableZoneWorkersSemaphore,
                                     ExecutorService zoneExecutor, CountDownLatch zoneLatch,
-                                    RandomForest randomForest, LocalDateTime startTime,
-                                    ZoneSimResult zoneSimResult) {
+                                    RandomForest randomForest, ZoneSimResult zoneSimResult) {
     zoneExecutor.submit(() -> {
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
           availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask);
         }
+        LocalDateTime startTime = this.lastTime;
         // Simulate the task duration
         int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
         TimeUnit.MILLISECONDS.sleep(taskDuration);
@@ -135,6 +135,17 @@ public class ZoneSimulator2 {
         pickerTask.setStartTime(startTime);
         pickerTask.setEndTime(startTime.plusMinutes(taskDuration));
         this.lastTime = startTime.plusMinutes(taskDuration);
+
+        if (pickerTask.getZone().getId() == 12L) {
+          System.out.println("Task: " + pickerTask.getId() + "in zone: " + pickerTask.getZoneId());
+          System.out.println("Task Duration: " + taskDuration);
+
+          System.out.println("Start Time: " + pickerTask.getStartTime());
+          System.out.println("End Time: " + pickerTask.getEndTime());
+
+          System.out.println("New Last Time: " + this.lastTime);
+        }
+
         zoneSimResult.addTask(pickerTask.getId().toString(),
             pickerTask.getStartTime(), pickerTask.getEndTime());
         availableZoneWorkersSemaphore.release(pickerTask.getWorker());
@@ -180,7 +191,6 @@ public class ZoneSimulator2 {
                               WorkerSemaphore2 availableZoneWorkersSemaphore,
                               ExecutorService zoneExecutor,
                               CountDownLatch zoneLatch,
-                              LocalDateTime startTime,
                               ZoneSimResult zoneSimResult
   ) {
     zoneExecutor.submit(() -> {
@@ -194,7 +204,7 @@ public class ZoneSimulator2 {
             return;
           }
         }
-
+        LocalDateTime startTime = this.lastTime;
         int sleepTime = calculateSleepTime(activeTask);
         TimeUnit.MILLISECONDS.sleep(sleepTime);
         this.lastTime = startTime.plusMinutes(sleepTime);

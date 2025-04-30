@@ -80,5 +80,29 @@ public class ZoneSimResult {
   private record TaskTime(LocalDateTime startTime, LocalDateTime endTime) {
   }
 
+  @Override
+  public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("ZoneSimResult {")
+        .append("\n  zoneId: ").append(zoneId)
+        .append(",\n  errorMessage: '").append(errormessage).append("'")
+        .append(",\n  taskTimes: {");
+
+      taskTimes.forEach((taskId, taskTime) -> {
+          sb.append("\n    ").append(taskId).append(": {")
+            .append("startTime: ").append(taskTime.startTime())
+            .append(", endTime: ").append(taskTime.endTime())
+            .append("},");
+      });
+
+      if (!taskTimes.isEmpty()) {
+          sb.setLength(sb.length() - 1); // Remove the trailing comma
+      }
+
+      sb.append("\n  }")
+        .append("\n}");
+      return sb.toString();
+  }
+
 
 }

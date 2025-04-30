@@ -90,6 +90,9 @@ public class MonteCarlo {
     List<Future<SimulationResult>> futures = new ArrayList<>();
     List<Zone> zones = zoneService.getAllZones();
     List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday(currentTime);
+    if (currentTime == null) {
+      currentTime = LocalDateTime.now();
+    }
     if (models == null){
       models = mlModel.getAllModels();
     }
@@ -99,6 +102,7 @@ public class MonteCarlo {
     for (int i = 0; i < simCount; i++) {
       System.out.println("Running simulation " + (i + 1) + " of " + simCount);
       Map<String, RandomForest> finalModels = models;
+      LocalDateTime finalCurrentTime = currentTime;
       futures.add(simulationExecutor.submit(() -> {
         ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
         List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
@@ -119,13 +123,13 @@ public class MonteCarlo {
                         zone.getId()))
                     .toList();
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,
-                    currentTime);
+                        finalCurrentTime);
               } else {
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,
-                    finalModels.get(zone.getName().toUpperCase()), currentTime);
+                    finalModels.get(zone.getName().toUpperCase()), finalCurrentTime);
               }
               synchronized (zoneSimResults) {
                 zoneSimResults.put(zone.getId(), zoneSimResult);
