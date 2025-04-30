@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import java.time.LocalDate;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,16 @@ public class SimulationController {
   @GetMapping("/monte-carlo")
   public Map<Long,String> monteCarlo() throws Exception {
     return simulationService.runCompleteSimulation(null,null);
+  }
+
+  @GetMapping("/test/monte-carlo")
+  public List<SimulationResult> monteCarloTest() throws Exception {
+    return simulationService.getSimulationResultsOnly(null,null);
+  }
+
+  @GetMapping("/logs/{fileName}")
+  public String getLogs(@PathVariable String fileName) {
+    return simulationService.getLogs(fileName);
   }
 
   @GetMapping("/monte-carlo/zones/{id}")

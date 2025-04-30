@@ -79,7 +79,6 @@ public class Utils {
 
     private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i, LocalDateTime now) {
         for (ZoneSimResult zoneSimResult : zoneSimResultList) {
-            System.out.println(zoneSimResult.toString());
             Map<LocalDateTime, Integer> timestamps = new HashMap<>();
             LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
 

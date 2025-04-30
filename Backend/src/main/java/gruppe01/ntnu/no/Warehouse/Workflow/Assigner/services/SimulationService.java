@@ -7,6 +7,9 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.Simulati
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,7 +32,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private static final int SIM_COUNT = 1;
+    private static final int SIM_COUNT = 100;
 
     @Autowired
     private ActiveTaskService activeTaskService;
@@ -131,6 +134,15 @@ public class SimulationService {
         return newResult;
     }
 
+    public List<SimulationResult> getSimulationResultsOnly(Map<String, RandomForest> models, LocalDateTime currentTime) throws IOException, ExecutionException, InterruptedException {
+        List<SimulationResult> results = new ArrayList<>();
+        if (models == null) {
+            return monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null);
+        } else {
+            return monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime);
+        }
+    }
+
 
     /**
      * Formats the predicted completion time by adding the given minutes to the current time
@@ -144,5 +156,18 @@ public class SimulationService {
         LocalDateTime predictedCompletionTime = currentTime.plusMinutes((long) minutes);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         return predictedCompletionTime.format(formatter);
+    }
+
+    public String getLogs(String fileName) {
+        try {
+            // Define the path to the log file
+            Path logFilePath = Paths.get("logs", fileName);
+
+            // Read the file content and return it as a string
+            return Files.readString(logFilePath);
+        } catch (IOException e) {
+            // Handle the case where the file is not found or cannot be read
+            return "Error reading log file: " + e.getMessage();
+        }
     }
 }

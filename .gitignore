@@ -3,3 +3,6 @@ Backend/env.env
 .idea/dataSources.xml
 datasets
 Backend/target/
+logs/WorkerSemaphore2.log
+logs/WorkerSemaphore2.log.lck
+WorkerSemaphore2.log

@@ -3,6 +3,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +12,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  * A semaphore that controls access to a list of workers.
@@ -18,130 +23,141 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 
 public class WorkerSemaphore2 {
-  private final Set<Worker> workers;
-  private final Semaphore semaphore;
-  private final ReentrantLock lock = new ReentrantLock();
+    private static final Logger logger = Logger.getLogger(WorkerSemaphore2.class.getName());
 
-  public WorkerSemaphore2(Set<Worker> workers) {
-    this.workers = workers;
-    this.semaphore = new Semaphore(workers.size());
-
-
-
-    // Upon creation of the semaphore, release all busy workers
-    //TODO: Once world simulation is up change the localDate based on the simulated time
-    for (Worker worker : workers) {
-      if (worker.getCurrentTaskId() != null &&
-          (worker.getCurrentActiveTask().getEndTime() == null &&
-              worker.getCurrentPickerTask().getEndTime() == null) &&
-          (worker.getCurrentActiveTask().getDate().isEqual(
-              LocalDate.now())) &&
-          worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
-        workers.remove(worker);
-        semaphore.release();
-      }
+    static {
+        try {
+            // Configure the logger to write to a file
+            FileHandler fileHandler = new FileHandler("logs/WorkerSemaphore2.log", false);
+            fileHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(fileHandler);
+            logger.setUseParentHandlers(false); // Disable console logging
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-  }
 
-  /**
-   * Acquires workers without checking for licenses.
-   * Will be redundant later on, but is used for testing purposes.
-   *
-   * @param activeTask The task to acquire workers for
-   * @return An empty string if successful, an error message if not
-   * @throws InterruptedException
-   */
-  public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask)
-      throws InterruptedException {
-    lock.lock();
-    try {
-      synchronized (workers) {
-        int maxWorkers = 1;
-        int minWorkers = 1;
-        if (activeTask != null) {
-          // Check if the number of workers required is less than the number of workers available
-          maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
-          minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
-        }
+    private final Set<Worker> workers;
+    private final Semaphore semaphore;
+    private final ReentrantLock lock = new ReentrantLock();
 
-        // Current permits from the semaphore
-        int currentPermits = 0;
+    public WorkerSemaphore2(Set<Worker> workers) {
+        this.workers = workers;
+        this.semaphore = new Semaphore(workers.size());
 
-        // For each worker the task requires attempt to get a permit from the semaphore
-        for (int i = 0; i < maxWorkers; i++) {
-          // If a permit is acquired, increment the current permits
-          if (semaphore.tryAcquire(1)) {
-            currentPermits++;
-            // If the current permits is equal to the max workers, break the loop
-            if (maxWorkers == currentPermits) {
-              break;
+        logger.info("Initializing WorkerSemaphore with " + workers.size() + " workers.");
+
+        // Upon creation of the semaphore, release all busy workers
+        for (Worker worker : workers) {
+            if (worker.getCurrentTaskId() != null &&
+                    (worker.getCurrentActiveTask().getEndTime() == null &&
+                            worker.getCurrentPickerTask().getEndTime() == null) &&
+                    (worker.getCurrentActiveTask().getDate().isEqual(
+                            LocalDate.now())) &&
+                    worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
+                workers.remove(worker);
+                semaphore.release();
+                logger.warning("Worker " + worker.getId() + " removed due to being busy.");
             }
-          }
         }
-        // If the current permits is less than the min workers,
-        // release the permits and attempt later
-        if (currentPermits < minWorkers) {
-          semaphore.release(currentPermits);
-          return "";
-        }
-        // acquired the worker permits
-        List<Worker> workersToRemove = new ArrayList<>();
+    }
 
-        // Randomness element within the MC simulation
-        List<Worker> workerList = new ArrayList<>(workers);
-        Collections.shuffle(workerList);// Iterate over the workers to check if they have the required licences for the task
-        if (activeTask != null) {
-          for (Worker worker : workerList) {
-            // If the worker has the required licenses, add them to the workers to remove
-            if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
-              workersToRemove.add(worker);
-              // If the number of workers acquired is equal to the required number of workers, add them to the task
-              if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
-                activeTask.addMultilpleWorkers(workersToRemove);
-                workersToRemove.forEach(workers::remove);
+    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask)
+            throws InterruptedException {
+        lock.lock();
+        try {
+            logger.info("Attempting to acquire workers for task.  " +
+                    "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
+                    ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null"));
+            synchronized (workers) {
+                int maxWorkers = 1;
+                int minWorkers = 1;
+                if (activeTask != null) {
+                    maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
+                    minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
+                }
+
+                int currentPermits = 0;
+
+                for (int i = 0; i < maxWorkers; i++) {
+                    if (semaphore.tryAcquire(1)) {
+                        currentPermits++;
+                        if (maxWorkers == currentPermits) {
+                            break;
+                        }
+                    }
+                }
+
+                if (currentPermits < minWorkers) {
+                    semaphore.release(currentPermits);
+                    logger.warning("Not enough permits available. Required: " + minWorkers + ", Acquired: " + currentPermits + "for task " + "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
+                            ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null"));
+                    return "";
+                }
+
+                List<Worker> workersToRemove = new ArrayList<>();
+                List<Worker> workerList = new ArrayList<>(workers);
+                Collections.shuffle(workerList);
+
+                if (activeTask != null) {
+                    for (Worker worker : workerList) {
+                        if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+                            workersToRemove.add(worker);
+                            if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
+                                activeTask.addMultilpleWorkers(workersToRemove);
+                                workersToRemove.forEach(workers::remove);
+                                logger.info("Acquired workers for ActiveTask: " + activeTask.getId());
+                                return "";
+                            }
+                        }
+                        if (workersToRemove.size() > activeTask.getTask().getMinWorkers()) {
+                            activeTask.addMultilpleWorkers(workersToRemove);
+                            workersToRemove.forEach(workers::remove);
+                            semaphore.release(currentPermits - activeTask.getWorkers().size());
+                            logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId());
+                            return "";
+                        }
+                    }
+                } else {
+                    for (Worker worker : workerList) {
+                        workersToRemove.add(worker);
+                        if (pickerTask.getWorker() == null) {
+                            pickerTask.setWorker(worker);
+                            workersToRemove.forEach(workers::remove);
+                            logger.info("Acquired worker for PickerTask: " + pickerTask.getId());
+                            return "";
+                        }
+                    }
+                }
+
+                semaphore.release(currentPermits);
+                logger.warning("Failed to acquire workers for task.");
                 return "";
-              }
             }
-            if (workersToRemove.size() > activeTask.getTask().getMinWorkers()) {
-              activeTask.addMultilpleWorkers(workersToRemove);
-              workersToRemove.forEach(workers::remove);
-              semaphore.release(currentPermits - activeTask.getWorkers().size());
-              return "";
-            }
-          }
-        } else {
-          for (Worker worker : workerList) {
-            workersToRemove.add(worker);
-            // If the picker task does not have any worker
-            if (pickerTask.getWorker() == null) {
-              pickerTask.setWorker(worker);
-              workersToRemove.forEach(workers::remove);
-              return "";
-            }
-          }
+        } finally {
+            lock.unlock();
         }
-
-        // if the number of workers acquired is less than the required number of workers, relase the permits
-        semaphore.release(currentPermits);
-        return "";
-      }
-    } finally {
-      lock.unlock();
     }
-  }
 
+    public void release(Worker worker) {
+           synchronized (workers) {
+               workers.add(worker);
+               semaphore.release();
+               logger.info("Released worker: " + worker.getId());
+           }
+       }
 
-  public void releaseAll(List<Worker> allWorkers) {
-    workers.addAll(allWorkers);
-    semaphore.release(allWorkers.size());
-  }
+       public void releaseAll(List<Worker> allWorkers) {
+           synchronized (workers) {
+               workers.addAll(allWorkers);
+               semaphore.release(allWorkers.size());
+               logger.info("Released all workers: " + allWorkers.size() + " Semaphore size: " + semaphore.availablePermits());
+           }
+       }
 
-  public void release(Worker worker) {
-    workers.add(worker);
-    semaphore.release();
-  }
-
-  public int getAvailablePermits() {
-    return semaphore.availablePermits();
-  }
+    public int getAvailablePermits() {
+        int permits = semaphore.availablePermits();
+        logger.info("Available permits: " + permits);
+        return permits;
+    }
 }
