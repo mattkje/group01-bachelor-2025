@@ -48,7 +48,7 @@ public class WorldSimulation {
     private TimeTableGenerator timeTableGenerator;
 
     @Autowired
-    private SimulationService SimulationService;
+    private SimulationService simulationService;
     ;
 
     private LocalTime currentSimulationTime;
