@@ -1,7 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -27,7 +25,8 @@ public class MonteCarloData {
     @Column(name = "zone_id")
     private long zoneId;
 
-    public MonteCarloData() {}
+    public MonteCarloData() {
+    }
 
     public void setSimNo(int simNo) {
         this.simNo = simNo;
@@ -69,10 +68,12 @@ public class MonteCarloData {
         return id;
     }
 
-    public long getZone() {
+    public long getZoneId() {
         return zoneId;
     }
-    public void setZone(long zoneId) {
+
+    public void setZoneId
+            (long zoneId) {
         this.zoneId = zoneId;
     }
 }

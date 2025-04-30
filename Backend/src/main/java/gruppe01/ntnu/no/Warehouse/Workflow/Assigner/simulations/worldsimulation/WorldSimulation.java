@@ -619,4 +619,11 @@ public class WorldSimulation {
             }
         }
     }
+
+    public LocalDateTime getCurrentDateTime() {
+        if (workday == null || currentTime == null) {
+            return LocalDateTime.now();
+        }
+        return LocalDateTime.of(workday, currentTime);
+    }
 }

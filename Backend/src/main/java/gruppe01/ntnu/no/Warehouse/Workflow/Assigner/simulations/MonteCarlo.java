@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
@@ -14,6 +15,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator2;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -62,6 +64,9 @@ public class MonteCarlo {
 
   @Autowired
   private Utils utils;
+
+  @Autowired
+  private WorldSimulation worldSimulation;
 
   private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
@@ -113,13 +118,13 @@ public class MonteCarlo {
                         zone.getId()))
                     .toList();
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,
-                    LocalDateTime.now());
+                    worldSimulation.getCurrentDateTime());
               } else {
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,
-                    models.get(zone.getName().toUpperCase()), LocalDateTime.now());
+                    models.get(zone.getName().toUpperCase()), worldSimulation.getCurrentDateTime());
               }
               synchronized (zoneSimResults) {
                 zoneSimResults.put(zone.getId(), zoneSimResult);

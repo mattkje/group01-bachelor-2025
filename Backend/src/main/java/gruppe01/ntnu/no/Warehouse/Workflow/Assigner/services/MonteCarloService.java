@@ -25,9 +25,9 @@ public class MonteCarloService {
         monteCarloData.setTime(now);
         monteCarloData.setCompletedTasks(tasksCompleted);
         if (zoneId != null){
-          monteCarloData.setZone(zoneId);
+          monteCarloData.setZoneId(zoneId);
         } else {
-          monteCarloData.setZone(0L);
+          monteCarloData.setZoneId(0L);
         }
         monteCarloDataRepository.save(monteCarloData);
 

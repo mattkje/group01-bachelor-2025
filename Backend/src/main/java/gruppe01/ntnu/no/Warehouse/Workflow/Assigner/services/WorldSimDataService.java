@@ -75,6 +75,10 @@ public class WorldSimDataService {
                 worldSimValues.add(worldSimData.getCompletedTasks());
             }
         }
+
+        
+
+
         return worldSimValues;
     }
 

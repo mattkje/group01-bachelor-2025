@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +19,9 @@ public class Utils {
 
   @Autowired
   private MonteCarloService monteCarloService;
+
+  @Autowired
+  private WorldSimulation worldSimulation;
 
   public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
     return zoneSimResults.values().stream()
@@ -75,26 +80,22 @@ public class Utils {
   private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i) {
    for (ZoneSimResult zoneSimResult : zoneSimResultList) {
      Map<LocalDateTime,Integer> timestamps = new HashMap<>();
-     LocalDateTime now = LocalDateTime.now();
+     LocalDateTime now = worldSimulation.getCurrentDateTime();
      LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
 
+     int testInt = 0;
      for (LocalDateTime time = now; !time.isAfter(endOfDay); time = time.plusMinutes(10)) {
        timestamps.put(time,  zoneSimResult.getCompletedTaskCountAtTime(time));
      }
-     int highestValue = findHighestValue(timestamps);
      timestamps.entrySet().stream()
          .sorted(Map.Entry.comparingByKey())
          .forEachOrdered(entry -> {
-           if (entry.getValue() < highestValue) {
+           if (!entry.getValue().equals(Collections.max(timestamps.values()))) {
              monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
-                 entry.getValue(),zoneSimResult.getZoneId());
+                 entry.getValue(), zoneSimResult.getZoneId());
            }
          });
-
    }
-
-
-
   }
 
   private void saveGeneralSimulation(SimulationResult simulationResult, int i){

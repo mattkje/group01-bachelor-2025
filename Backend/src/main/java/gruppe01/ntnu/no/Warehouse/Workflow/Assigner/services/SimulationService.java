@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SimulationService {
 
-  private static final int SIM_COUNT = 5;
+  private static final int SIM_COUNT = 1;
 
   @Autowired
   private ActiveTaskService activeTaskService;

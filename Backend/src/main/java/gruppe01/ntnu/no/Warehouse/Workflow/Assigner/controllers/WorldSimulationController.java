@@ -6,6 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @RestController
@@ -43,5 +44,10 @@ public class WorldSimulationController {
     @GetMapping("/currentDate")
     public LocalDate getCurrentDate() {
         return worldSimulation.getCurrentDate();
+    }
+
+    @GetMapping("/CurrentDateTime")
+    public LocalDateTime getCurrentDateTime() {
+        return worldSimulation.getCurrentDateTime();
     }
 }
