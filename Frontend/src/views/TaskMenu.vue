@@ -166,7 +166,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  overflow: auto;
 }
 
 .task-tabs {
@@ -194,6 +193,7 @@ onMounted(() => {
   flex-direction: column;
   transition: max-height 0.3s ease, opacity 0.3s ease;
   overflow: auto;
+  max-height: calc(100vh - 20rem);
 }
 
 .task-item {

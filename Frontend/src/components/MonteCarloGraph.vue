@@ -16,7 +16,6 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScal
 
 const props = defineProps<{
   zoneId: number;
-  date: Date;
 }>();
 
 let currentTimeIndex = 0;
@@ -243,6 +242,22 @@ const fetchActiveTasks = async () => {
   pollingTimer = setInterval(fetchAllData, pollingInterval);
 };
 
+const fetchDateFromBackend = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data: string = await response.json();
+    date.value = data;
+  } catch (error) {
+    console.error('Failed to fetch date:', error);
+    date.value = '';
+  }
+  await fetchActiveTasks();
+};
+
+
 const fetchAllData = async () => {
   await fetchRealData();
   await fetchSimulationData();
@@ -296,7 +311,7 @@ const fetchSimulationData = async () => {
 
 
 onMounted( () => {
-   fetchActiveTasks();
+  fetchDateFromBackend();
 });
 
 onUnmounted(() => {
@@ -308,20 +323,23 @@ onUnmounted(() => {
 
 <template>
   <div class="monte-carlo-graph">
-    <p>
-      <span class="color-indicator best-case"></span> Best Case:
-    </p>
-    <p>
-      <span class="color-indicator probable-case"></span> Probable Case:
-    </p>
-    <p>
-      <span class="color-indicator worst-case"></span> Worst Case:
-    </p>
+
     <div v-if="isDataReady" class="monte-carlo-graph">
       <Line :data="chartData" :options="chartOptions"/>
     </div>
     <div v-else>
       <p>Loading data...</p>
+    </div>
+    <div class="color-indicator-container">
+      <p>
+        <span class="color-indicator best-case"></span> Best Case
+      </p>
+      <p>
+        <span class="color-indicator probable-case"></span> Probable Case
+      </p>
+      <p>
+        <span class="color-indicator worst-case"></span> Worst Case
+      </p>
     </div>
   </div>
 </template>
@@ -357,5 +375,11 @@ onUnmounted(() => {
 
 canvas {
   width: 100%;
+}
+
+.color-indicator-container {
+  display: flex;
+  justify-content: flex-start;
+  gap: 2rem;
 }
 </style>
