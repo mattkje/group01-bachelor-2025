@@ -82,23 +82,34 @@ function generateChartData() {
     });
   });
 
+  // Find the best and worst cases (The simulation with most tasks done in the shortest time for the whole day is best,
+  // and the simulation with the least tasks done in the shortest time for the whole day is) worst).
+
   let bestCaseIndex = -1;
   let worstCaseIndex = -1;
-  let bestCaseValue = Infinity;
-  let worstCaseValue = -Infinity;
+  let bestCaseValue = -Infinity;
+  let worstCaseValue = Infinity;
 
-  simulatedDatasets.value.forEach((dataset, index) => {
-    const firstCompletionIndex = dataset.data.findIndex((value) => value >= taskCount.value);
+  ListOfListsOfValues.value.forEach((list, index) => {
+    const lastValue = list[list.length - 1] || 0;
+    const listLength = list.length;
 
-    if (firstCompletionIndex !== -1) {
-      if (firstCompletionIndex < bestCaseValue) {
-        bestCaseValue = firstCompletionIndex;
-        bestCaseIndex = index;
-      }
-      if (firstCompletionIndex > worstCaseValue) {
-        worstCaseValue = firstCompletionIndex;
-        worstCaseIndex = index;
-      }
+    // Determine best case
+    if (
+        lastValue > bestCaseValue ||
+        (lastValue === bestCaseValue && listLength < ListOfListsOfValues.value[bestCaseIndex]?.length)
+    ) {
+      bestCaseValue = lastValue;
+      bestCaseIndex = index;
+    }
+
+    // Determine worst case
+    if (
+        lastValue < worstCaseValue ||
+        (lastValue === worstCaseValue && listLength > ListOfListsOfValues.value[worstCaseIndex]?.length)
+    ) {
+      worstCaseValue = lastValue;
+      worstCaseIndex = index;
     }
   });
 
@@ -111,7 +122,6 @@ function generateChartData() {
     simulatedDatasets.value[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
     simulatedDatasets.value[worstCaseIndex].borderWidth = 3;
   }
-
   const extendedLabels = Array.from({length: 144}, (_, i) => {
     const hours = Math.floor(i / 6);
     const minutes = (i % 6) * 10;
