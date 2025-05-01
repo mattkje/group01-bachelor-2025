@@ -470,7 +470,7 @@ public class WorldSimulation {
     public void changeSimulationSpeed(double speedFactor) {
         if (speedFactor > 0) {
             if (speedFactor == 1) {
-                simulationSleepInMillis = (long) 60 * 1000;
+                simulationSleepInMillis = TimeUnit.MINUTES.toMillis(60) / 1440;
             } else {
                 simulationSleepInMillis = (long) (simulationSleepInMillis / speedFactor);
             }
