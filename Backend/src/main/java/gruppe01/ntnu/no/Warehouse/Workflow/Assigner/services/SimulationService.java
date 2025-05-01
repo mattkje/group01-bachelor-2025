@@ -1,10 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.Utils;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,9 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import jdk.jshell.execution.Util;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import smile.regression.RandomForest;
 
@@ -55,7 +51,8 @@ public class SimulationService {
      * @param zoneId The ID of the zone to run the simulation on
      * @return A list of strings containing the predicted time of completion and any error messages
      */
-    public List<String> runZoneSimulation(Long zoneId) {
+    //TODO: Remake this to work with the new Zone Simulator 2
+   /* public List<String> runZoneSimulation(Long zoneId) {
 
         ZoneSimulator zoneSimulator = new ZoneSimulator();
         // Ensure the zoneID exists
@@ -92,7 +89,7 @@ public class SimulationService {
         response.add(formattedTime);
         response.addAll(errorMessages);
         return response;
-    }
+    }*/
 
     /**
      * Runs the complete MC simulation

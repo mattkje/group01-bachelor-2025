@@ -2,19 +2,26 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
+import org.springframework.stereotype.Component;
 
 /**
  * A semaphore that controls access to a list of workers.
@@ -22,11 +29,25 @@ import java.util.logging.SimpleFormatter;
  * Allows for checking for licenses and acquiring workers with the required licenses
  */
 
+@Component
 public class WorkerSemaphore2 {
     private static final Logger logger = Logger.getLogger(WorkerSemaphore2.class.getName());
 
+    @Autowired
+    private TimetableService timetableService;
+
+    private Set<Worker> workers;
+    private Semaphore semaphore;
+    private final ReentrantLock lock = new ReentrantLock();
+
     static {
         try {
+            // Ensure the logs directory exists
+            java.nio.file.Path logDir = java.nio.file.Paths.get("logs");
+            if (!java.nio.file.Files.exists(logDir)) {
+                java.nio.file.Files.createDirectories(logDir);
+            }
+
             // Configure the logger to write to a file
             FileHandler fileHandler = new FileHandler("logs/WorkerSemaphore2.log", false);
             fileHandler.setFormatter(new SimpleFormatter());
@@ -37,24 +58,18 @@ public class WorkerSemaphore2 {
         }
     }
 
-    private final Set<Worker> workers;
-    private final Semaphore semaphore;
-    private final ReentrantLock lock = new ReentrantLock();
 
-    public WorkerSemaphore2(Set<Worker> workers) {
-        this.workers = workers;
+  public void initialize(Set<Worker> workersSet, LocalDateTime startTime) {
+        this.workers = this.timetableService.getWorkersWorkingByDayAndZone(startTime, workersSet.iterator().next().getZone());
         this.semaphore = new Semaphore(workers.size());
-
         logger.info("Initializing WorkerSemaphore with " + workers.size() + " workers.");
 
-        // Upon creation of the semaphore, release all busy workers
         for (Worker worker : workers) {
             if (worker.getCurrentTaskId() != null &&
                     (worker.getCurrentActiveTask().getEndTime() == null &&
                             worker.getCurrentPickerTask().getEndTime() == null) &&
-                    (worker.getCurrentActiveTask().getDate().isEqual(
-                            LocalDate.now())) &&
-                    worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
+                    (worker.getCurrentActiveTask().getDate().isEqual(LocalDate.now())) &&
+                    worker.getCurrentPickerTask().getDate().isEqual(startTime.toLocalDate())) {
                 workers.remove(worker);
                 semaphore.release();
                 logger.warning("Worker " + worker.getId() + " removed due to being busy.");
@@ -62,7 +77,7 @@ public class WorkerSemaphore2 {
         }
     }
 
-    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask)
+    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime)
             throws InterruptedException {
         lock.lock();
         try {
@@ -101,7 +116,7 @@ public class WorkerSemaphore2 {
 
                 if (activeTask != null) {
                     for (Worker worker : workerList) {
-                        if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+                        if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()) && timetableService.workerIsWorking(startTime.get(), worker.getId())) {
                             workersToRemove.add(worker);
                             if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
                                 activeTask.addMultilpleWorkers(workersToRemove);
@@ -120,12 +135,14 @@ public class WorkerSemaphore2 {
                     }
                 } else {
                     for (Worker worker : workerList) {
-                        workersToRemove.add(worker);
-                        if (pickerTask.getWorker() == null) {
-                            pickerTask.setWorker(worker);
-                            workersToRemove.forEach(workers::remove);
-                            logger.info("Acquired worker for PickerTask: " + pickerTask.getId());
-                            return "";
+                        if (timetableService.workerIsWorking(startTime.get(), worker.getId())) {
+                            workersToRemove.add(worker);
+                            if (pickerTask.getWorker() == null) {
+                                pickerTask.setWorker(worker);
+                                workersToRemove.forEach(workers::remove);
+                                logger.info("Acquired worker for PickerTask: " + pickerTask.getId());
+                                return "";
+                            }
                         }
                     }
                 }

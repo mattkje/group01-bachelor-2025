@@ -61,10 +61,11 @@ public class SimulationController {
     return simulationService.getLogs(fileName);
   }
 
-  @GetMapping("/monte-carlo/zones/{id}")
+  //TODO: Reenable this when the function is working
+/*  @GetMapping("/monte-carlo/zones/{id}")
   public List<String> monteCarloZone(@PathVariable Long id) throws InterruptedException {
     return simulationService.runZoneSimulation(id);
-  }
+  }*/
 
   @GetMapping("/generate-timetable/{date}")
   public void generateTimeTable(@PathVariable String date) {

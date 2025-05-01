@@ -4,6 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,21 +23,20 @@ public class WorkerSemaphore {
   private final Semaphore semaphore;
   private final ReentrantLock lock = new ReentrantLock();
 
-  public WorkerSemaphore(Set<Worker> workers) {
+  public WorkerSemaphore(Set<Worker> workers, LocalDateTime startTime) {
     this.workers = workers;
     this.semaphore = new Semaphore(workers.size());
 
 
 
     // Upon creation of the semaphore, release all busy workers
-    //TODO: Once world simulation is up change the localDate based on the simulated time
     for (Worker worker : workers) {
       if (worker.getCurrentTaskId() != null &&
           (worker.getCurrentActiveTask().getEndTime() == null &&
               worker.getCurrentPickerTask().getEndTime() == null) &&
           (worker.getCurrentActiveTask().getDate().isEqual(
               LocalDate.now())) &&
-          worker.getCurrentPickerTask().getDate().isEqual(LocalDate.now())) {
+          worker.getCurrentPickerTask().getDate().isEqual(startTime.toLocalDate())) {
         workers.remove(worker);
         semaphore.release();
       }

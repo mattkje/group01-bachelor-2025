@@ -5,6 +5,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore2;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import smile.regression.RandomForest;
@@ -34,14 +36,17 @@ public class ZoneSimulator2 {
 
   static Random random = new Random();
 
-  LocalDateTime lastTime = LocalDateTime.now();
+  private final AtomicReference<LocalDateTime> lastTime = new AtomicReference<>(LocalDateTime.now());
 
   private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
+
 
   public ZoneSimResult runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
                                          Set<PickerTask> pickerTasks,
                                          RandomForest randomForest,
                                          LocalDateTime startTime) {
+
+    TimetableService timetableService = new TimetableService();
     ZoneSimResult zoneSimResult = new ZoneSimResult();
     zoneSimResult.setZoneId(zone.getId());
     try {
@@ -70,9 +75,10 @@ public class ZoneSimulator2 {
 
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
-      WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(zoneWorkers);
+      WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2();
+      availableZoneWorkersSemaphore.initialize(zoneWorkers,startTime);
 
-      this.lastTime = startTime;
+      this.lastTime.set(startTime);
 
       new CountDownLatch(1);
       CountDownLatch zoneLatch;
@@ -125,16 +131,16 @@ public class ZoneSimulator2 {
       try {
         // Acquire the workers for the task
         while (pickerTask.getWorker() == null) {
-          availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask);
+          availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask,lastTime);
         }
-        LocalDateTime startTime = this.lastTime;
+        LocalDateTime startTime = this.lastTime.get();
         // Simulate the task duration
         int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
         TimeUnit.MILLISECONDS.sleep(taskDuration);
 
         pickerTask.setStartTime(startTime);
         pickerTask.setEndTime(startTime.plusMinutes(taskDuration));
-        this.lastTime = startTime.plusMinutes(taskDuration);
+        this.lastTime.set(startTime.plusMinutes(taskDuration));
 
         if (pickerTask.getZone().getId() == 12L) {
           System.out.println("Task: " + pickerTask.getId() + "in zone: " + pickerTask.getZoneId());
@@ -198,16 +204,16 @@ public class ZoneSimulator2 {
         // Acquire the workers for the task
         while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
           String acquireWorkerError =
-              availableZoneWorkersSemaphore.acquireMultiple(activeTask, null);
+              availableZoneWorkersSemaphore.acquireMultiple(activeTask, null,lastTime);
           if (!acquireWorkerError.isEmpty()) {
             zoneSimResult.setErrorMessage(acquireWorkerError);
             return;
           }
         }
-        LocalDateTime startTime = this.lastTime;
+        LocalDateTime startTime = this.lastTime.get();
         int sleepTime = calculateSleepTime(activeTask);
         TimeUnit.MILLISECONDS.sleep(sleepTime);
-        this.lastTime = startTime.plusMinutes(sleepTime);
+        this.lastTime.set(startTime.plusMinutes(sleepTime));
 
 
         availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
