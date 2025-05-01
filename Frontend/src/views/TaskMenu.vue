@@ -108,17 +108,24 @@ onMounted(() => {
               </button>
             </div>
           </div>
-          <div class="task-item" @click="openCreateActiveTask">
-            <div class="add-task-button">
-              +
+          <div class="task-item">
+            <div
+              class="add-task-button"
+              :class="{ rotated: showCreateActiveTask }"
+              @click="showCreateActiveTask = !showCreateActiveTask"
+            >
+              <img src="@/assets/icons/plus.svg" class="plus-icon" alt="Add Task">
             </div>
+            <transition name="expand">
+              <div v-if="showCreateActiveTask" class="expanded-task-form">
+                <CreateActiveTask
+                  :zoneId="zone?.id"
+                  @close="showCreateActiveTask = false"
+                  @activeTaskAdded="handleActiveTaskAdded"
+                />
+              </div>
+            </transition>
           </div>
-          <CreateActiveTask
-              v-if="showCreateActiveTask"
-              :zoneId="zone?.id"
-              @close="closeCreateActiveTask"
-              @activeTaskAdded="handleActiveTaskAdded"
-          />
         </div>
       </div>
       <div class="active-task-list">
@@ -230,6 +237,12 @@ onMounted(() => {
   color: #181818;
 }
 
+.plus-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
 .add-task-button {
   margin: 0;
   background: none;
@@ -240,6 +253,15 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   user-select: none;
+  transition: transform 0.3s ease;
+}
+
+.add-task-button.rotated {
+  transform: translateX(calc(-50% + 2rem));
+}
+
+.add-task-button.rotated img {
+  transform: rotate(45deg);
 }
 
 .add-task-button:hover {
@@ -272,5 +294,19 @@ onMounted(() => {
 .task-item.unfinished {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.expand-enter-active, .expand-leave-active {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.expand-enter-from, .expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to, .expand-leave-from {
+  max-height: 500px; /* Adjust based on the content's height */
+  opacity: 1;
 }
 </style>

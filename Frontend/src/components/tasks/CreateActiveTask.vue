@@ -120,7 +120,6 @@
               <input v-model="duedate" type="datetime-local" />
             </label>
             <div class="modal-actions">
-              <button @click="$emit('close')">Cancel</button>
               <button @click="addActiveTask" :disabled="!selectedTaskId">Add Task</button>
               <button @click="showCreateTaskModal = true">Create New Task</button>
             </div>
@@ -135,26 +134,11 @@
       </template>
 
       <style scoped>
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-
       .modal-content {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        background: white;
         padding: 1.5rem;
-        border-radius: 8px;
         width: 400px;
       }
 

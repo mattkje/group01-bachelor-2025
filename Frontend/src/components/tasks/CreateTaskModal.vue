@@ -136,6 +136,19 @@ onMounted(() => {
   gap: 1rem;
 }
 
+::v-deep(.multiselect__content) {
+  background-color: #E77474;
+}
+
+::v-deep(.multiselect__option) {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+::v-deep(.multiselect__tag) {
+  background-color: #E77474;
+}
+
 label {
   display: flex;
   flex-direction: row;

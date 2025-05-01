@@ -34,6 +34,7 @@ for (let i = 1; i <= numPoints; i++) {
 const activeTasks = ref<number>(0);
 const taskCount = ref(0);
 const dataValues = ref<number[]>([0]);
+const ListOfListsOfValues = ref<number[][]>([]);
 const simulatedDatasets = ref<any[]>([]);
 const isDataReady = ref(false);
 
@@ -56,22 +57,21 @@ function generateChartData() {
 
 
   // This is a placeholder for the simulation data \/
-  const ListOfListsOfValues = [];
-  const case1 = [lastValue, ...Array.from({ length: 25 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  const case2 = [lastValue, ...Array.from({ length: 50 }, (_, i) => Math.min(lastValue + Math.floor(i / 10), 13, taskCount.value))];
-  const case3 = [lastValue, ...Array.from({ length: 95 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  const case4 = [lastValue, ...Array.from({ length: 32 }, (_, i) => Math.min(lastValue + Math.floor(i / 15), 13, taskCount.value))];
-  const case5 = [lastValue, ...Array.from({ length: 68 }, (_, i) => Math.min(lastValue + Math.floor(i / 11), 13,taskCount.value))];
-  ListOfListsOfValues.push(case1);
-  ListOfListsOfValues.push(case2);
-  ListOfListsOfValues.push(case3);
-  ListOfListsOfValues.push(case4);
-  ListOfListsOfValues.push(case5);
+  // const case1 = [lastValue, ...Array.from({ length: 25 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
+  // const case2 = [lastValue, ...Array.from({ length: 50 }, (_, i) => Math.min(lastValue + Math.floor(i / 10), 13, taskCount.value))];
+ // const case3 = [lastValue, ...Array.from({ length: 95 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
+  //const case4 = [lastValue, ...Array.from({ length: 32 }, (_, i) => Math.min(lastValue + Math.floor(i / 15), 13, taskCount.value))];
+  //const case5 = [lastValue, ...Array.from({ length: 68 }, (_, i) => Math.min(lastValue + Math.floor(i / 11), 13,taskCount.value))];
+  //ListOfListsOfValues.value.push(case1);
+ // ListOfListsOfValues.value.push(case2);
+ // ListOfListsOfValues.value.push(case3);
+ // ListOfListsOfValues.value.push(case4);
+//  ListOfListsOfValues.value.push(case5);
   // Down to here /\
 
   const baseColor = 'rgba(150, 150, 150, 0.3)';
 
-  ListOfListsOfValues.forEach((list, index) => {
+  ListOfListsOfValues.value.forEach((list, index) => {
     simulatedDatasets.value.push({
       label: `Case ${index + 1}`,
       data: [...Array(dataValues.value.length - 1).fill(null), ...list],
@@ -296,9 +296,13 @@ const fetchSimulationData = async () => {
       throw new Error('Network response was not ok');
     }
     const data: number[][] = await response.json();
-    if (data && data.length > 0) {
+    if (data && JSON.stringify(data) !== JSON.stringify(ListOfListsOfValues.value)) {
+      ListOfListsOfValues.value = data || [];
+      isDataReady.value = ListOfListsOfValues.value.length > 1;
 
+      generateChartData();
     }
+
   } catch (error) {
     console.error('Failed to fetch simulation data:', error);
   }
