@@ -166,6 +166,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  overflow: auto;
 }
 
 .task-tabs {

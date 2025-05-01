@@ -180,12 +180,6 @@ onMounted(() => {
     <button class="toolbar-item" @click="runAllMonteCarloSimulations">
       <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
     </button>
-    <button v-if="false" class="toolbar-item">
-      <img src="/src/assets/icons/bell.svg" alt="Assign"/>
-    </button>
-    <button v-if="true" class="toolbar-item">
-      <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
-    </button>
     <div class="vertical-separator"/>
     <div class="controls">
       <button v-if="!isPlaying" @click="startClock">
