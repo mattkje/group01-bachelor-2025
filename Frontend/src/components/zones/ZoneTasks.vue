@@ -167,7 +167,7 @@ const updateTasks = () => {
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 10px;
-  max-height: calc(100vh - 625px);
+  max-height: calc(100vh - 570px);
   overflow-y: auto;
   flex: 1;
 }

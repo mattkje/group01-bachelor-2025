@@ -5,9 +5,12 @@ import {useRoute} from "vue-router";
 
 import ZoneTasks from "@/components/zones/ZoneTasks.vue";
 import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
+import ZoneCalendar from "@/components/zones/ZoneCalendar.vue";
 
 
 let currentZone = ref<Zone | null>(null);
+let parsedDate = ref<Date>(new Date());
+let activeTab = ref< 'tasks' | 'calendar'>('tasks');
 const route = useRoute();
 
 const fetchZone = async () => {
@@ -23,8 +26,27 @@ const fetchZone = async () => {
   }
 };
 
+const parseLocalDate = (dateString: string): Date => {
+  return new Date(`${dateString}T00:00:00`);
+};
+
+const fetchDateFromBackend = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data: string = await response.json();
+    parsedDate.value = parseLocalDate(data);
+  } catch (error) {
+    console.error('Failed to fetch date:', error);
+    parsedDate.value = new Date(); // Fallback to current date
+  }
+};
+
 onMounted(() => {
   fetchZone();
+  fetchDateFromBackend();
 });
 </script>
 
@@ -33,11 +55,11 @@ onMounted(() => {
   <div class="container" v-if="currentZone">
     <div class="zone-info">
       <div class="zone-menu">
-        <h1>Management Dashboard</h1>
-        <h2>Zone: {{ currentZone.name }}</h2>
-        <p>Number of Workers: {{ currentZone.workers.length }}</p>
-        <p>Tasks: {{ currentZone.tasks.length }}</p>
+        <h1>{{ currentZone.name }} Zone</h1>
+        <div style="display: flex; justify-content: space-between">
+        <p>{{ currentZone.workers.length }} Workers | {{ currentZone.tasks.length }} Tasks</p>
         <button @click="$emit('runSimulation', currentZone.id)">Run Simulation</button>
+        </div>
       </div>
       <div class="workers-container">
         <h3>Workers</h3>
@@ -49,10 +71,19 @@ onMounted(() => {
       </div>
     </div>
     <div class="vertical-separator"/>
-    <MonteCarloGraph :zone-id="currentZone.id" />
+    <MonteCarloGraph :zone-id="currentZone.id" :date="parsedDate"/>
   </div>
   <hr>
-  <ZoneTasks v-if="currentZone" class="zone-tasks" :zone="currentZone" :tasks="currentZone.tasks" />
+    <div class="tabs">
+      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Tasks</button>
+      <button :class="{ active: activeTab === 'calendar' }" @click="activeTab = 'calendar'">Calendar</button>
+    </div>
+    <div v-if="activeTab === 'tasks'">
+      <ZoneTasks v-if="currentZone" :zone="currentZone" :tasks="currentZone.tasks" />
+    </div>
+    <div v-if="activeTab === 'calendar'">
+      <ZoneCalendar v-if="currentZone" :zone="currentZone" :date="parsedDate"/>
+    </div>
   </div>
 </template>
 
@@ -68,6 +99,30 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  position: relative;
+  top: -34px;
+}
+
+.tabs button {
+  padding: 10px 15px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.tabs button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: ease 0.2s;
+}
+
+.tabs button.active {
+  background-color: #E77474;
+  color: white;
+  border-color: #E77474;
 }
 
 .zone-menu {
@@ -106,7 +161,7 @@ onMounted(() => {
 }
 
 .workers {
-  background-color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.05);
   padding: 20px;
   border-radius: 8px;
   display: grid;
@@ -114,11 +169,12 @@ onMounted(() => {
   gap: 10px;
   height: 150px;
   overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Inner border effect */
 }
 
 .worker {
   padding: 10px;
-  background-color: #f1f1f1;
+  background-color: #ffffff;
   height: 45px;
   border-radius: 4px;
   text-align: center;
@@ -153,7 +209,7 @@ hr {
   align-self: stretch; /* Ensure it stretches to match sibling height */
 }
 
-.zone-tasks {
-  margin-top: 1.5rem;
+.workers-container {
+  margin-bottom: 50px;
 }
 </style>

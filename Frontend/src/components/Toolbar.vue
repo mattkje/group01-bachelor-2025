@@ -71,13 +71,13 @@ const updateSimulatedTime = () => {
 let intervalId: number | null = null;
 
 let speedIndex = 0;
-const speeds = [1/60, 2/60, 5/60, 10/60];
+const speeds = [1, 2, 5, 10];
 
 const startClock = async () => {
   isPlaying.value = true;
   try {
     await axios.post('http://localhost:8080/api/simulation/start', null, {
-      params: {simulationTime: 5}
+      params: {simulationTime: 60}
     });
   } catch (error) {
     console.error('Error starting simulation:', error);

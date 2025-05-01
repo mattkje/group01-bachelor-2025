@@ -16,6 +16,7 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScal
 
 const props = defineProps<{
   zoneId: number;
+  date: Date;
 }>();
 
 let currentTimeIndex = 0;
@@ -226,21 +227,6 @@ function generateChartData() {
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
 }
 
-const fetchDateFromBackend = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: string = await response.json();
-    date.value = data;
-  } catch (error) {
-    console.error('Failed to fetch date:', error);
-    date.value = '';
-  }
-  await fetchActiveTasks();
-};
-
 const fetchActiveTasks = async () => {
   try {
     const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/${date.value}`);
@@ -310,7 +296,7 @@ const fetchSimulationData = async () => {
 
 
 onMounted( () => {
-   fetchDateFromBackend();
+   fetchActiveTasks();
 });
 
 onUnmounted(() => {

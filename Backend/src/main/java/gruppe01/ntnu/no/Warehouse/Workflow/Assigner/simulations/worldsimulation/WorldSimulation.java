@@ -469,7 +469,11 @@ public class WorldSimulation {
 
     public void changeSimulationSpeed(double speedFactor) {
         if (speedFactor > 0) {
-            simulationSleepInMillis = (long) (1000 / speedFactor);
+            if (speedFactor == 1) {
+                simulationSleepInMillis = (long) 60 * 1000;
+            } else {
+                simulationSleepInMillis = (long) (simulationSleepInMillis / speedFactor);
+            }
         }
     }
 
