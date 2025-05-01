@@ -2,6 +2,8 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
+import java.sql.Time;
+import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,11 @@ public class TimetableController {
         return timetableService.getAllTimetablesByZone(zoneId);
     }
 
+    @GetMapping("{day}/zone/{zoneId}")
+    public List<Timetable> getTimetablesByDayAndZone(@PathVariable LocalDateTime day, @PathVariable Long zoneId) {
+        return timetableService.getTimetablesByDayAndZone(day, zoneId);
+    }
+
     @PutMapping("/{id}/set-start-time")
     public Timetable setStartTime(@PathVariable Long id) {
         return timetableService.setStartTime(id);
@@ -38,4 +45,5 @@ public class TimetableController {
     public Timetable updateTimetable(@PathVariable Long id, @RequestBody Timetable timetable) {
         return timetableService.updateTimetable(id, timetable);
     }
+
 }
