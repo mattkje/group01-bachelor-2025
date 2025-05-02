@@ -9,7 +9,6 @@ import ZoneCalendar from "@/components/zones/ZoneCalendar.vue";
 
 
 let currentZone = ref<Zone | null>(null);
-let parsedDate = ref<Date>(new Date());
 let activeTab = ref< 'tasks' | 'calendar'>('tasks');
 const route = useRoute();
 
@@ -30,23 +29,8 @@ const parseLocalDate = (dateString: string): Date => {
   return new Date(`${dateString}T00:00:00`);
 };
 
-const fetchDateFromBackend = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: string = await response.json();
-    parsedDate.value = parseLocalDate(data);
-  } catch (error) {
-    console.error('Failed to fetch date:', error);
-    parsedDate.value = new Date(); // Fallback to current date
-  }
-};
-
 onMounted(() => {
   fetchZone();
-  fetchDateFromBackend();
 });
 </script>
 
@@ -82,7 +66,7 @@ onMounted(() => {
       <ZoneTasks v-if="currentZone" :zone="currentZone" :tasks="currentZone.tasks" />
     </div>
     <div v-if="activeTab === 'calendar'">
-      <ZoneCalendar v-if="currentZone" :zone="currentZone" :date="parsedDate"/>
+      <ZoneCalendar v-if="currentZone" :zone="currentZone"/>
     </div>
   </div>
 </template>

@@ -54,6 +54,7 @@
   height: 100%;
   padding: 2rem;
   border-radius: 10px;
+  overflow: auto;
 }
 
 .logo {

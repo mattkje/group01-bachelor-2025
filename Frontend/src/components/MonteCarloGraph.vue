@@ -16,7 +16,6 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScal
 
 const props = defineProps<{
   zoneId: number;
-  date: Date;
 }>();
 
 let currentTimeIndex = 0;
@@ -83,23 +82,34 @@ function generateChartData() {
     });
   });
 
+  // Find the best and worst cases (The simulation with most tasks done in the shortest time for the whole day is best,
+  // and the simulation with the least tasks done in the shortest time for the whole day is) worst).
+
   let bestCaseIndex = -1;
   let worstCaseIndex = -1;
-  let bestCaseValue = Infinity;
-  let worstCaseValue = -Infinity;
+  let bestCaseValue = -Infinity;
+  let worstCaseValue = Infinity;
 
-  simulatedDatasets.value.forEach((dataset, index) => {
-    const firstCompletionIndex = dataset.data.findIndex((value) => value >= taskCount.value);
+  ListOfListsOfValues.value.forEach((list, index) => {
+    const lastValue = list[list.length - 1] || 0;
+    const listLength = list.length;
 
-    if (firstCompletionIndex !== -1) {
-      if (firstCompletionIndex < bestCaseValue) {
-        bestCaseValue = firstCompletionIndex;
-        bestCaseIndex = index;
-      }
-      if (firstCompletionIndex > worstCaseValue) {
-        worstCaseValue = firstCompletionIndex;
-        worstCaseIndex = index;
-      }
+    // Determine best case
+    if (
+        lastValue > bestCaseValue ||
+        (lastValue === bestCaseValue && listLength < ListOfListsOfValues.value[bestCaseIndex]?.length)
+    ) {
+      bestCaseValue = lastValue;
+      bestCaseIndex = index;
+    }
+
+    // Determine worst case
+    if (
+        lastValue < worstCaseValue ||
+        (lastValue === worstCaseValue && listLength > ListOfListsOfValues.value[worstCaseIndex]?.length)
+    ) {
+      worstCaseValue = lastValue;
+      worstCaseIndex = index;
     }
   });
 
@@ -112,7 +122,6 @@ function generateChartData() {
     simulatedDatasets.value[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
     simulatedDatasets.value[worstCaseIndex].borderWidth = 3;
   }
-
   const extendedLabels = Array.from({length: 144}, (_, i) => {
     const hours = Math.floor(i / 6);
     const minutes = (i % 6) * 10;
@@ -243,6 +252,22 @@ const fetchActiveTasks = async () => {
   pollingTimer = setInterval(fetchAllData, pollingInterval);
 };
 
+const fetchDateFromBackend = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data: string = await response.json();
+    date.value = data;
+  } catch (error) {
+    console.error('Failed to fetch date:', error);
+    date.value = '';
+  }
+  await fetchActiveTasks();
+};
+
+
 const fetchAllData = async () => {
   await fetchRealData();
   await fetchSimulationData();
@@ -296,7 +321,7 @@ const fetchSimulationData = async () => {
 
 
 onMounted( () => {
-   fetchActiveTasks();
+  fetchDateFromBackend();
 });
 
 onUnmounted(() => {
@@ -308,20 +333,23 @@ onUnmounted(() => {
 
 <template>
   <div class="monte-carlo-graph">
-    <p>
-      <span class="color-indicator best-case"></span> Best Case:
-    </p>
-    <p>
-      <span class="color-indicator probable-case"></span> Probable Case:
-    </p>
-    <p>
-      <span class="color-indicator worst-case"></span> Worst Case:
-    </p>
+
     <div v-if="isDataReady" class="monte-carlo-graph">
       <Line :data="chartData" :options="chartOptions"/>
     </div>
     <div v-else>
       <p>Loading data...</p>
+    </div>
+    <div class="color-indicator-container">
+      <p>
+        <span class="color-indicator best-case"></span> Best Case
+      </p>
+      <p>
+        <span class="color-indicator probable-case"></span> Probable Case
+      </p>
+      <p>
+        <span class="color-indicator worst-case"></span> Worst Case
+      </p>
     </div>
   </div>
 </template>
@@ -357,5 +385,11 @@ onUnmounted(() => {
 
 canvas {
   width: 100%;
+}
+
+.color-indicator-container {
+  display: flex;
+  justify-content: flex-start;
+  gap: 2rem;
 }
 </style>
