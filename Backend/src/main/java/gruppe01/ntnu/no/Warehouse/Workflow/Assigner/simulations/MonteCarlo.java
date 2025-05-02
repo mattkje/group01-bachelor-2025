@@ -6,12 +6,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator2;
@@ -80,7 +75,7 @@ public class MonteCarlo {
    * @throws ExecutionException   - if the simulation fails
    */
   @Transactional
-  public List<SimulationResult> monteCarlo(int simCount, Map<String, RandomForest> models, LocalDateTime currentTime)
+  public List<SimulationResult> monteCarlo(int simCount, Map<String, RandomForest> models, LocalDateTime currentTime, TimetableService timetableService)
       throws InterruptedException, ExecutionException, IOException {
     System.out.println("Starting simulations");
     ZoneSimulator2 zoneSimulator = new ZoneSimulator2();
@@ -123,13 +118,13 @@ public class MonteCarlo {
                         zone.getId()))
                     .toList();
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, zoneTasks, null, null,
-                        finalCurrentTime);
+                        finalCurrentTime, timetableService);
               } else {
                 Set<PickerTask> zoneTasks = pickerTasksCopy.stream()
                     .filter(pickerTask -> Objects.equals(pickerTask.getZoneId(), zone.getId()))
                     .collect(Collectors.toSet());
                 zoneSimResult = zoneSimulator.runZoneSimulation(zone, null, zoneTasks,
-                    finalModels.get(zone.getName().toUpperCase()), finalCurrentTime);
+                    finalModels.get(zone.getName().toUpperCase()), finalCurrentTime, timetableService);
               }
               synchronized (zoneSimResults) {
                 zoneSimResults.put(zone.getId(), zoneSimResult);

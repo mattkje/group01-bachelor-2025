@@ -9,6 +9,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore2;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -44,9 +45,9 @@ public class ZoneSimulator2 {
   public ZoneSimResult runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
                                          Set<PickerTask> pickerTasks,
                                          RandomForest randomForest,
-                                         LocalDateTime startTime) {
+                                         LocalDateTime startTime,
+                                         TimetableService timetableService) {
 
-    TimetableService timetableService = new TimetableService();
     ZoneSimResult zoneSimResult = new ZoneSimResult();
     zoneSimResult.setZoneId(zone.getId());
     try {
@@ -58,13 +59,6 @@ public class ZoneSimulator2 {
       // Get the workers in the zone as a set
       Set<Worker> originalZoneWorkers = zone.getWorkers();
 
-      // If there are no workers, return an error message
-      if (originalZoneWorkers.isEmpty()) {
-        zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
-            " No workers");
-        return zoneSimResult;
-      }
-
       // Create a deep copy of the workers for this simulation
       Set<Worker> zoneWorkers = new HashSet<>();
       for (Worker worker : originalZoneWorkers) {
@@ -72,13 +66,18 @@ public class ZoneSimulator2 {
           zoneWorkers.add(new Worker(worker));
         }
       }
+      if (zoneWorkers.isEmpty()) {
+        zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
+                " No workers");
+        return zoneSimResult;
+      }
+
+      this.lastTime.set(timetableService.getFirstStartTimeByZoneAndDay(zone.getId(), startTime));
 
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
-      // Latch for the tasks in the zone ensuroing that all tasks are completed before the simulation ends
-      WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2();
-      availableZoneWorkersSemaphore.initialize(zoneWorkers,startTime);
-
-      this.lastTime.set(startTime);
+      // Latch for the tasks in the zone ensuring that all tasks are completed before the simulation ends
+      WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(timetableService);
+      availableZoneWorkersSemaphore.initialize(zoneWorkers,this.lastTime.get());
 
       new CountDownLatch(1);
       CountDownLatch zoneLatch;

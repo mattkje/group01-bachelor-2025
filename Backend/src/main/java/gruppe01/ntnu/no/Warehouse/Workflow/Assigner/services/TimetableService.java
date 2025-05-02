@@ -128,6 +128,12 @@ public class TimetableService {
     return timetablesByDayAndZone;
   }
 
+  /**
+   * Gets all workers working on a specific day and zone.
+   * @param day Converted to LocalDate inside the method
+   * @param zoneId The zone id to get workers from
+   * @return A set of workers working on the specified day and zone
+   */
   public Set<Worker> getWorkersWorkingByDayAndZone(LocalDateTime day, Long zoneId) {
     List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
     Set<Worker> workers = new HashSet<>();
@@ -142,5 +148,27 @@ public class TimetableService {
   public boolean workerIsWorking(LocalDateTime time, Long workerId) {
     List<Timetable> timetables = timetableRepository.findByWorkerAndDateTime(workerId, time);
     return !timetables.isEmpty();
+  }
+
+  public boolean workerHasFinishedShift(Long workerId, LocalDateTime time) {
+    List<Timetable> timetables = timetableRepository.findByWorkerAndDateTime(workerId, time);
+    if (timetables.isEmpty()) {
+      return false;
+    }
+    for (Timetable timetable : timetables) {
+      if (timetable.getEndTime() != null && timetable.getEndTime().isBefore(time)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public LocalDateTime getFirstStartTimeByZoneAndDay(Long zoneId, LocalDateTime day) {
+      List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
+      return timetables.stream()
+          .filter(timetable -> timetable.getWorker().getZone().equals(zoneId))
+          .map(Timetable::getStartTime)
+          .min(LocalDateTime::compareTo)
+          .orElse(null);
   }
 }

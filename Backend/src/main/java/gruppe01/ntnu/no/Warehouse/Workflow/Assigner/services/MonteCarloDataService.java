@@ -31,6 +31,9 @@ public class MonteCarloDataService {
        Map<Integer, List<Integer>> groupedBySimCount = new HashMap<>();
 
        List<Integer> worldSimValues = worldSimDataService.getWorldSimValues(zoneId);
+       if (worldSimValues == null || worldSimValues.isEmpty()) {
+           return new ArrayList<>();
+       }
        int lastvalue = worldSimValues.getLast();
 
        for (MonteCarloData monteCarloData : monteCarloDataRepository.findAll()) {

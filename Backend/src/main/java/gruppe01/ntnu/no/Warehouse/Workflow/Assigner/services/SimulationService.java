@@ -32,7 +32,6 @@ public class SimulationService {
 
     @Autowired
     private ActiveTaskService activeTaskService;
-
     @Autowired
     private ZoneService zoneService;
     @Autowired
@@ -41,6 +40,8 @@ public class SimulationService {
     private PickerTaskService pickerTaskService;
     @Autowired
     private Utils utils;
+    @Autowired
+    private TimetableService timetableService;
 
 //TODO: Fix this to work with a picker zone
 
@@ -101,10 +102,10 @@ public class SimulationService {
             throws ExecutionException, InterruptedException, IOException {
         List<SimulationResult> results = new ArrayList<>();
         if (models == null) {
-            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null);
+            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null, timetableService);
             currentTime = LocalDateTime.now();
         } else {
-            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime);
+            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime, timetableService);
         }
         HashMap<Long, String> newResult = new HashMap<>();
 
@@ -134,9 +135,9 @@ public class SimulationService {
     public List<SimulationResult> getSimulationResultsOnly(Map<String, RandomForest> models, LocalDateTime currentTime) throws IOException, ExecutionException, InterruptedException {
         List<SimulationResult> results = new ArrayList<>();
         if (models == null) {
-            return monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null);
+            return monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null, timetableService);
         } else {
-            return monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime);
+            return monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime, timetableService);
         }
     }
 

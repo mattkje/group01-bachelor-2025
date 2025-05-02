@@ -2,25 +2,21 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,10 +32,11 @@ public class WorkerSemaphore2 {
     @Autowired
     private TimetableService timetableService;
 
+    // Set of workers that are available
     private Set<Worker> workers;
-    private Semaphore semaphore;
     private final ReentrantLock lock = new ReentrantLock();
 
+    // Static block to configure the logger
     static {
         try {
             // Ensure the logs directory exists
@@ -58,58 +55,57 @@ public class WorkerSemaphore2 {
         }
     }
 
-
-  public void initialize(Set<Worker> workersSet, LocalDateTime startTime) {
-        this.workers = this.timetableService.getWorkersWorkingByDayAndZone(startTime, workersSet.iterator().next().getZone());
-        this.semaphore = new Semaphore(workers.size());
-        logger.info("Initializing WorkerSemaphore with " + workers.size() + " workers.");
-
-        for (Worker worker : workers) {
-            if (worker.getCurrentTaskId() != null &&
-                    (worker.getCurrentActiveTask().getEndTime() == null &&
-                            worker.getCurrentPickerTask().getEndTime() == null) &&
-                    (worker.getCurrentActiveTask().getDate().isEqual(LocalDate.now())) &&
-                    worker.getCurrentPickerTask().getDate().isEqual(startTime.toLocalDate())) {
-                workers.remove(worker);
-                semaphore.release();
-                logger.warning("Worker " + worker.getId() + " removed due to being busy.");
-            }
-        }
+    /**
+     * WorkerSemaphore constructor keeping accounts of the workers
+     * @param timetableService service for retrieving workers timetables
+     */
+    public WorkerSemaphore2(TimetableService timetableService) {
+        this.timetableService = timetableService;
     }
+
+    /**
+     * Initialize the WorkerSemaphore with a set of workers and a start time.
+     * @param workersSet set of workers to be initialized (Zone workers)
+     * @param startTime Current Time of the simulation / real-time-
+     */
+  public void initialize(Set<Worker> workersSet, LocalDateTime startTime) {
+      // Get workers that are working that day
+      this.workers = this.timetableService.getWorkersWorkingByDayAndZone(startTime, workersSet.iterator().next().getZone());
+      logger.info("Initializing WorkerSemaphore with " + workers.size() + " workers.");
+
+        // Remove workers that are busy at the start time
+      List<Worker> workersToRemove = new ArrayList<>();
+      // Iterate over the workers and check if they are busy
+      for (Worker worker : workers) {
+            // Check if the worker is busy with an active task or picker task
+          if (worker.getCurrentPickerTask() != null) {
+              // if the worker is busy with a picker task that has started that day and has no end time
+              if (worker.getCurrentPickerTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentPickerTask().getEndTime() == null) {
+                  workersToRemove.add(worker);
+                  logger.warning("Worker " + worker.getId() + " removed due to being busy.");
+              }
+          } else if (worker.getCurrentActiveTask() != null) {
+                // if the worker is busy with an active task that has started that day and has no end time
+              if (worker.getCurrentActiveTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentActiveTask().getEndTime() == null) {
+                  workersToRemove.add(worker);
+                  logger.warning("Worker " + worker.getId() + " removed due to being busy.");
+              }
+          }
+      }
+
+      // Remove workers after iteration
+      workersToRemove.forEach(workers::remove);
+      logger.info("Current worker pool: " + workers.size() + " workers.");
+  }
 
     public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime)
             throws InterruptedException {
-        lock.lock();
+      lock.lock();
         try {
             logger.info("Attempting to acquire workers for task.  " +
                     "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                     ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null"));
             synchronized (workers) {
-                int maxWorkers = 1;
-                int minWorkers = 1;
-                if (activeTask != null) {
-                    maxWorkers = activeTask.getTask().getMaxWorkers() - activeTask.getWorkers().size();
-                    minWorkers = activeTask.getTask().getMinWorkers() - activeTask.getWorkers().size();
-                }
-
-                int currentPermits = 0;
-
-                for (int i = 0; i < maxWorkers; i++) {
-                    if (semaphore.tryAcquire(1)) {
-                        currentPermits++;
-                        if (maxWorkers == currentPermits) {
-                            break;
-                        }
-                    }
-                }
-
-                if (currentPermits < minWorkers) {
-                    semaphore.release(currentPermits);
-                    logger.warning("Not enough permits available. Required: " + minWorkers + ", Acquired: " + currentPermits + "for task " + "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
-                            ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null"));
-                    return "";
-                }
-
                 List<Worker> workersToRemove = new ArrayList<>();
                 List<Worker> workerList = new ArrayList<>(workers);
                 Collections.shuffle(workerList);
@@ -128,7 +124,6 @@ public class WorkerSemaphore2 {
                         if (workersToRemove.size() > activeTask.getTask().getMinWorkers()) {
                             activeTask.addMultilpleWorkers(workersToRemove);
                             workersToRemove.forEach(workers::remove);
-                            semaphore.release(currentPermits - activeTask.getWorkers().size());
                             logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId());
                             return "";
                         }
@@ -143,12 +138,15 @@ public class WorkerSemaphore2 {
                                 logger.info("Acquired worker for PickerTask: " + pickerTask.getId());
                                 return "";
                             }
+                        } else {
+                            if (timetableService.workerHasFinishedShift(worker.getId(), startTime.get())) {
+                                workers.remove(worker);
+                            }
                         }
                     }
                 }
 
-                semaphore.release(currentPermits);
-                logger.warning("Failed to acquire workers for task.");
+                logger.warning("Failed to acquire workers for task. Workers at work right now: " + workers.size());
                 return "";
             }
         } finally {
@@ -159,7 +157,6 @@ public class WorkerSemaphore2 {
     public void release(Worker worker) {
            synchronized (workers) {
                workers.add(worker);
-               semaphore.release();
                logger.info("Released worker: " + worker.getId());
            }
        }
@@ -167,14 +164,13 @@ public class WorkerSemaphore2 {
        public void releaseAll(List<Worker> allWorkers) {
            synchronized (workers) {
                workers.addAll(allWorkers);
-               semaphore.release(allWorkers.size());
-               logger.info("Released all workers: " + allWorkers.size() + " Semaphore size: " + semaphore.availablePermits());
+               logger.info("Released all workers: " + allWorkers.size() + " Worker size: " + workers.size());
            }
        }
 
-    public int getAvailablePermits() {
-        int permits = semaphore.availablePermits();
-        logger.info("Available permits: " + permits);
-        return permits;
+    public int getAvailableWorkers() {
+        int availableWorkers = workers.size();
+        logger.info("Available workers: " + availableWorkers);
+        return availableWorkers;
     }
 }
