@@ -4,6 +4,12 @@ import { useRoute } from 'vue-router';
 import { Zone, Task, ActiveTask } from '@/assets/types';
 import axios from 'axios';
 import CreateActiveTask from "@/components/tasks/CreateActiveTask.vue";
+import {
+  fetchAllActiveTasksForZone,
+  fetchAllTasksForZone,
+  fetchSimulationDate, fetchZone
+} from "@/composables/DataFetcher";
+import { deleteActiveTask } from "@/composables/DataUpdater";
 
 const showCreateActiveTask = ref(false);
 
@@ -23,62 +29,20 @@ const tasks = ref<Task[] | null>(null);
 const activeTasks = ref<ActiveTask[] | null>(null);
 const currentDate = ref(new Date());
 
-const fetchCurrentDateFromBackend = async () => {
-  try {
-    const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
-    currentDate.value = new Date(response.data);
-  } catch (error) {
-    console.error('Error fetching current date:', error);
-    throw error;
-  }
-};
-
-const fetchTasks = async () => {
-  try {
-    const response = await axios.get(`http://localhost:8080/api/zones/${route.params.id}/tasks`);
-    tasks.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch tasks:', error);
-  }
-};
-
-const fetchActiveTasks = async () => {
-  try {
-    const response = await axios.get(`http://localhost:8080/api/zones/${route.params.id}/active-tasks`);
-    activeTasks.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch tasks:', error);
-  }
-};
-
-const fetchThisZone = async () => {
-  try {
-    const response = await axios.get(`http://localhost:8080/api/zones/${route.params.id}`);
-    zone.value = response.data;
-  } catch (error) {
-    console.error('Failed to fetch zone:', error);
-  }
-};
-
-const deleteActiveTask = async (activeTaskId: number) => {
-  try {
-    await axios.delete(`http://localhost:8080/api/active-tasks/${activeTaskId}`);
-    fetchActiveTasks();
-  } catch (error) {
-    console.error('Failed to delete active task:', error);
-  }
+const loadAllData = async () => {
+  currentDate.value = await fetchSimulationDate();
+  tasks.value = await fetchAllTasksForZone(parseInt(route.params.id[0], 10));
+  activeTasks.value = await fetchAllActiveTasksForZone(parseInt(route.params.id[0], 10));
+  zone.value = await fetchZone(parseInt(route.params.id[0], 10));
 };
 
 const handleActiveTaskAdded = () => {
-  fetchActiveTasks();
+  loadAllData();
   closeCreateActiveTask();
 };
 
 onMounted(() => {
-  fetchThisZone();
-  fetchTasks();
-  fetchActiveTasks();
-  fetchCurrentDateFromBackend()
+  loadAllData()
 });
 </script>
 

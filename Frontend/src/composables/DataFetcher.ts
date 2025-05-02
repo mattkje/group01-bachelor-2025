@@ -1,0 +1,81 @@
+import {ActiveTask, License, PickerTask, Task, Worker, Zone} from "@/assets/types";
+import { fetchData } from "@/composables/HttpMethods";
+
+export const fetchAllMonteCarloGraphData = async (zoneId: number) => {
+    const data = await fetchData<any>(`http://localhost:8080/api/data/${zoneId}/graph-data`);
+    return {
+        realData: data.realData || [0],
+        simulationData: data.simulationData || [],
+        activeTasks: data.activeTasks || 0,
+        currentDate: data.currentDate || "",
+    };
+};
+
+export const fetchZone = async (zoneId: number) => {
+    return fetchData<Zone>(`http://localhost:8080/api/zones/${zoneId}`);
+};
+
+export const fetchAllZones = async (): Promise<Zone[]> => {
+    return fetchData<Zone[]>('http://localhost:8080/api/zones');
+};
+
+export const fetchWorker = async (workerId: string) => {
+    return fetchData<Worker>(`http://localhost:8080/api/workers/${workerId}`);
+}
+
+export const fetchAllWorkers = async () => {
+    return fetchData<Worker[]>('http://localhost:8080/api/workers');
+}
+
+export const fetchLicenses = async () => {
+    return fetchData<License[]>('http://localhost:8080/api/licenses');
+}
+
+export const fetchAllTasks = async () => {
+    return fetchData<Task[]>('http://localhost:8080/api/tasks');
+}
+
+export const fetchAllTasksForZone = async (zoneId: number) => {
+    return fetchData<Task[]>(`http://localhost:8080/api/zones/${zoneId}/tasks`);
+}
+
+export const fetchAllPickerTasks = async () => {
+    return fetchData<PickerTask[]>('http://localhost:8080/api/picker-tasks');
+}
+
+export const fetchPickerTasksForZone = async (zoneId: number) => {
+    return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks`);
+}
+
+export const fetchAllPickerTasksForZoneNow = async (zoneId: number) => {
+    return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks-now`);
+}
+
+export const fetchActiveTasks = async () => {
+  return fetchData<ActiveTask[]>('http://localhost:8080/api/active-tasks');
+}
+
+export const fetchAllActiveTasksForZone = async (zoneId: number) => {
+    return fetchData<ActiveTask[]>(`http://localhost:8080/api/zones/${zoneId}/active-tasks`);
+}
+
+export const fetchAllActiveTasksForZoneNow = async (zoneId: number) => {
+    return fetchData<ActiveTask[]>(`http://localhost:8080/api/zones/${zoneId}/active-tasks-now`);
+}
+
+export const fetchSimulationStatus = async (): Promise<number>  => {
+    return fetchData<number>('http://localhost:8080/api/simulation/getStatus');
+}
+
+export const fetchSimulationDate = async () => {
+    return fetchData<string>('http://localhost:8080/api/simulation/currentDate');
+}
+
+export const fetchSimulationTime = async () => {
+    return fetchData<string>('http://localhost:8080/api/simulation/currentTime');
+}
+
+export const fetchSchedulesFromBackend = async (date: string, zoneId: number) => {
+    return fetchData<any>(`http://localhost:8080/api/timetables/one-week/${date}/${zoneId}`);
+}
+

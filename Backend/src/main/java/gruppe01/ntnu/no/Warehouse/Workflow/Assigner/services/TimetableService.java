@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -129,6 +128,20 @@ public class TimetableService {
         }
         return timetablesByDayAndZone;
     }
+
+  public List<Timetable> getTimetablesForOneWeek(LocalDate date, Long zoneId) {
+    List<Timetable> timetables = timetableRepository.findAll();
+    List<Timetable> timetablesForOneWeek = new ArrayList<>();
+    for (Timetable timetable : timetables) {
+      if (((timetable.getStartTime().toLocalDate().isAfter(date) &&
+              timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
+              (timetable.getStartTime().toLocalDate().equals(date))) &&
+              timetable.getWorker().getZone().equals(zoneId)) {
+        timetablesForOneWeek.add(timetable);
+      }
+    }
+    return timetablesForOneWeek;
+  }
 
     /**
      * Gets all workers working on a specific day and zone.

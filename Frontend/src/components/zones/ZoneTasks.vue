@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue';
+import {ref, onMounted} from 'vue';
 import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
 import {ActiveTask, Zone, PickerTask, Task} from "@/assets/types";
 import PickerTaskComponent from "@/components/tasks/PickerTaskComponent.vue";
+import {
+  fetchAllActiveTasksForZoneNow,
+  fetchAllPickerTasksForZoneNow,
+  fetchAllTasks,
+  fetchAllZones
+} from "@/composables/DataFetcher";
 
 
 const props = defineProps<{
@@ -14,119 +20,45 @@ const activeTasks = ref<ActiveTask[]>([]);
 const pickerTasks = ref<PickerTask[]>([]);
 const zones = ref<Zone[]>([]);
 
-const currentPage = ref(1);
-const tasksPerPage = 9;
-const showModal = ref(false);
-
 const fetchTasks = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/tasks');
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    tasks.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch tasks:', error);
-  }
+  tasks.value = await fetchAllTasks();
 };
 
-const fetchActiveTasks = async (id: number) => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${id}/active-tasks-now`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    activeTasks.value = await response.json();
-    activeTasks.value.sort((a, b) => a.id - b.id);
-  } catch (error) {
-    console.error('Failed to fetch active tasks:', error);
-  }
+const fetchActiveTasks = async () => {
+  activeTasks.value = await fetchAllActiveTasksForZoneNow(parseInt(props.zone.id.toString()));
+  activeTasks.value.sort((a, b) => a.id - b.id);
 };
 
-const fetchPickerTasks = async (id: number) => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${id}/picker-tasks-now`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    pickerTasks.value = await response.json();
-    pickerTasks.value.sort((a, b) => a.id - b.id);
-  } catch (error) {
-    console.error('Failed to fetch picker tasks:', error);
-  }
+const loadPickerTasks = async () => {
+  pickerTasks.value = await fetchAllPickerTasksForZoneNow(parseInt(props.zone.id.toString()));
+  pickerTasks.value.sort((a, b) => a.id - b.id);
 };
 
-const fetchZones = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/zones');
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    zones.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch zones:', error);
-  }
+const loadAll = async () => {
+  zones.value = await fetchAllZones();
 };
 
 onMounted(() => {
   fetchTasks();
   if (props.zone.isPickerZone) {
-    fetchPickerTasks(props.zone.id);
+    loadPickerTasks();
   } else {
-    fetchActiveTasks(props.zone.id);
+    fetchActiveTasks();
   }
-  fetchZones();
+  loadAll();
 
   console.log(activeTasks);
 });
 
-const filteredTasks = computed(() => {
-  if (props.zone.isPickerZone) {
-    return pickerTasks.value.filter(task => task.zoneId === props.zone.id);
-  } else {
-    return activeTasks.value.filter(task => task.task.zoneId === props.zone.id);
-  }
-});
-
-const getWorkersForTask = (taskId: number) => {
-  const activeTask = activeTasks.value.find(task => task.id === taskId);
-  if (activeTask) {
-    const uniqueWorkers = new Set(activeTask.workers.map(worker => worker.id));
-    return Array.from(uniqueWorkers).map(id => activeTask.workers.find(worker => worker.id === id));
-  }
-  return [];
-};
-
-const paginatedTasks = computed(() => {
-  const start = (currentPage.value - 1) * tasksPerPage;
-  const end = start + tasksPerPage;
-  return filteredTasks.value.slice(start, end);
-});
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredTasks.value.length / tasksPerPage);
-});
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
 
 const updateTasks = () => {
   fetchTasks();
   if (props.zone.isPickerZone) {
-    fetchPickerTasks(props.zone.id);
+    loadPickerTasks();
   } else {
-    fetchActiveTasks(props.zone.id);
+    fetchActiveTasks();
   }
-  fetchZones();
+  loadAll();
 };
 </script>
 

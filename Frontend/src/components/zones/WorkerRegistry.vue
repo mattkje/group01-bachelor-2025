@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
+import {computed, ref} from 'vue';
 import WorkerClass from '@/components/zones/RegistryWorker.vue';
 import {Worker} from '@/assets/types';
+import {updateWorkerZone} from "@/composables/SimulationCommands";
 
 
 const props = defineProps<{
@@ -49,23 +50,8 @@ const onDragStart = (event: DragEvent, worker: Worker) => {
 
 const onDrop = async (event: DragEvent) => {
   const worker = JSON.parse(event.dataTransfer?.getData('worker') || '{}');
-
-  try {
-    const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/${props.zoneId}`, {
-      method: 'PUT',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update worker zone');
-    }
-
-    console.log('Worker zone updated successfully');
-
-    emit('refreshWorkers');
-  } catch (error) {
-    console.error('Error updating worker zone:', error);
-  }
-
+  await updateWorkerZone(worker.id, props.zoneId);
+  emit('refreshWorkers');
   isDraggingOver.value = false;
 };
 

@@ -2,8 +2,10 @@
 import {computed, ref, onMounted, onUnmounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import {ActiveTask, License, PickerTask, Task, Worker, Zone} from '@/assets/types';
+import {ActiveTask, License, PickerTask, Worker, Zone} from '@/assets/types';
 import axios from "axios";
+import {fetchPickerTasksForZone, fetchAllTasksForZone, fetchZone, fetchSimulationDate} from "@/composables/DataFetcher";
+import {runMonteCarloSimulationForZone, updateWorkerZone} from "@/composables/SimulationCommands";
 
 const props = defineProps<{
   title: string;
@@ -29,8 +31,8 @@ const isPickerZone = ref(false);
 const currentDate = ref<string>('');
 const loading = ref(true);
 
-const fetchCurrentDateFromBackend = async () => {
-  const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
+const loadCurrentDate = async () => {
+  const response = await fetchSimulationDate()
   return response.data;
 };
 
@@ -45,11 +47,7 @@ const remainingPickerTasks = computed(() =>
 );
 const getThisZone = async (): Promise<Zone | null> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch zone');
-    }
-    const zone: Zone = await response.json();
+    const zone: Zone = await fetchZone(props.zoneId)
     return zone;
   } catch (error) {
     console.error('Error fetching zone:', error);
@@ -60,14 +58,7 @@ const getThisZone = async (): Promise<Zone | null> => {
 const runMonteCarloSimulation = async () => {
   isSpinning.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/monte-carlo/zones/${props.zoneId}`, {
-      method: 'GET',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to run simulation');
-    }
-    const result = await response.json()
+    const result = await runMonteCarloSimulationForZone(props.zoneId)
     console.log(result);
     if (result.length < 3) {
       completionTime = result[0];
@@ -86,10 +77,9 @@ const runMonteCarloSimulation = async () => {
   }
 };
 
-const fetchTasksForZone = async () => {
+const loadTasksForZone = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/tasks`);
-    tasks.value = await response.json();
+    tasks.value = await fetchAllTasksForZone(props.zoneId);
   } catch (error) {
     console.error('Failed to fetch tasks for zone:', error);
   }
@@ -100,7 +90,6 @@ const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
     return true;
   }
   return tasks.value.some((task: ActiveTask) => {
-    // Ensure task.task is defined before accessing requiredLicense
     if (!task.task || !task.task.requiredLicense) {
       return false;
     }
@@ -110,24 +99,23 @@ const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
   });
 };
 
-const fetchPickerTasksForZone = async () => {
+const loadPickerTasksForZone = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/picker-tasks`);
-    pickerTasks.value = await response.json();
+    pickerTasks.value = await fetchPickerTasksForZone(props.zoneId)
   } catch (error) {
     console.error('Failed to fetch picker tasks for zone:', error);
   }
 };
 
 onMounted(async () => {
-  currentDate.value = await fetchCurrentDateFromBackend();
+  currentDate.value = await loadCurrentDate();
   const zone = await getThisZone();
   if (zone?.isPickerZone) {
     isPickerZone.value = true;
-    await fetchPickerTasksForZone();
+    await loadPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
   } else {
-    await fetchTasksForZone();
+    await loadTasksForZone();
     hasTasks.value = tasks.value.length > 0;
   }
   loading.value = false; // Set loading to false after data is fetched
@@ -139,22 +127,8 @@ const onDragStart = (event: DragEvent, worker: Worker) => {
 
 const onDrop = async (event: DragEvent) => {
   const worker = JSON.parse(event.dataTransfer?.getData('worker') || '{}');
-
-  try {
-    const response = await fetch(`http://localhost:8080/api/workers/${worker.id}/zone/${props.zoneId}`, {
-      method: 'PUT',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update worker zone');
-    }
-
-    console.log('Worker zone updated successfully');
-
-    emit('refreshWorkers');
-  } catch (error) {
-    console.error('Error updating worker zone:', error);
-  }
+  await updateWorkerZone(worker.id, props.zoneId);
+  emit('refreshWorkers');
 
   isDraggingOver.value = false;
 };

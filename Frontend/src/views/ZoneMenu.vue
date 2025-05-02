@@ -6,31 +6,23 @@ import {useRoute} from "vue-router";
 import ZoneTasks from "@/components/zones/ZoneTasks.vue";
 import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import ZoneCalendar from "@/components/zones/ZoneCalendar.vue";
+import {fetchZone} from "@/composables/DataFetcher";
 
 
 let currentZone = ref<Zone | null>(null);
 let activeTab = ref< 'tasks' | 'calendar'>('tasks');
 const route = useRoute();
 
-const fetchZone = async () => {
+const loadZone = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/zones/${route.params.id}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: Zone = await response.json();
-    currentZone.value = data;
+    currentZone.value = await fetchZone(Number(route.params.id));
   } catch (error) {
-    console.error('Failed to fetch zone:', error);
+    console.error("Error loading zone:", error);
   }
 };
 
-const parseLocalDate = (dateString: string): Date => {
-  return new Date(`${dateString}T00:00:00`);
-};
-
 onMounted(() => {
-  fetchZone();
+  loadZone();
 });
 </script>
 

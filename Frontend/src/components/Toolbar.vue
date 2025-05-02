@@ -1,96 +1,65 @@
 <script setup lang="ts">
-import {onMounted, ref, inject, computed, defineEmits} from "vue";
-import axios from 'axios';
-
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-});
+import {onMounted, ref, computed} from "vue";
+import {
+  fetchSimulationDate,
+  fetchSimulationStatus,
+  fetchSimulationTime
+} from "@/composables/DataFetcher";
+import {
+  fastForwardSimulationClock,
+  runAllMonteCarloSimulations,
+  startSimulationClock,
+  stopSimulationClock
+} from "@/composables/SimulationCommands";
 
 const isSpinning = ref(false);
 let completionTime = ref(null);
 let isPlaying = ref(false);
-const activeTab = inject('activeTab', ref('Overview'));
 const isPaused = ref(false);
-const state = ref(0); // 0: stopped, 1: running, 2: paused
 
 const fetchPausedState = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/simulation/getStatus');
-    isPaused.value = response.data;
-    if (!state.value || state.value === 0) {
-      isPlaying.value = false;
-      isPaused.value = false
-    }
-    if (state.value === 1) {
-      isPlaying.value = true;
-      isPaused.value = false
-    }
-    if (state.value === 2) {
-      isPlaying.value = true;
-      isPaused.value = true
-    }
-    else {
-      if (!state.value || state.value === 0) {
-        isPlaying.value = false;
-        isPaused.value = false
-      }
-      else {
-        console.error('Invalid state value:', state.value);
-      }
+    const state: number = await fetchSimulationStatus();
+    isPlaying.value = false;
+    isPaused.value = false;
+
+    switch (state) {
+      case 0:
+        break;
+      case 1:
+        isPlaying.value = true;
+        break;
+      case 2:
+        isPlaying.value = true;
+        isPaused.value = true;
+        break;
+      default:
+        console.error('Invalid state value:', state);
     }
   } catch (error) {
     console.error('Error fetching paused state:', error);
   }
 };
 
-const simulatedTime = ref(new Date());
-const fetchCurrentTimeFromBackend = async () => {
-  const response = await axios.get('http://localhost:8080/api/simulation/currentTime');
-  return response.data;
-};
-
-const fetchCurrentDateFromBackend = async () => {
-  const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
-  return response.data;
-};
-
 const currentTime = ref('');
 const currentDate = ref('');
-
-const updateCurrentTime = async () => {
-  currentTime.value = await fetchCurrentTimeFromBackend();
-  currentDate.value = await fetchCurrentDateFromBackend();
-};
-const updateSimulatedTime = () => {
-  simulatedTime.value = new Date(simulatedTime.value.getTime() + 60000); // Advance by 1 minute
-};
-
 let intervalId: number | null = null;
-
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
 
+const updateCurrentTime = async () => {
+  currentTime.value = await fetchSimulationTime();
+  currentDate.value = await fetchSimulationDate();
+};
+
 const startClock = async () => {
   isPlaying.value = true;
-  try {
-    await axios.post('http://localhost:8080/api/simulation/start', null, {
-      params: {simulationTime: 60}
-    });
-  } catch (error) {
-    console.error('Error starting simulation:', error);
-  }
+  await startSimulationClock(60);
 };
 
 const stopClock = async () => {
   isPaused.value = !isPaused.value;
-  try {
-    await axios.post('http://localhost:8080/api/simulation/pause');
-  } catch (error) {
-    console.error('Error pausing simulation:', error);
-  }
+  await stopSimulationClock();
 };
 
 const fastForwardClock = async () => {
@@ -98,30 +67,20 @@ const fastForwardClock = async () => {
     clearInterval(intervalId);
   }
   speedIndex = (speedIndex + 1) % speeds.length;
-  try {
-    await axios.post('http://localhost:8080/api/simulation/fastForward', null, {
-      params: {speedMultiplier: speeds[speedIndex]}
-    });
-  } catch (error) {
-    console.error('Error fast forwarding simulation:', error);
-  }
+  await fastForwardSimulationClock(speeds[speedIndex])
 };
 
-const runAllMonteCarloSimulations = async () => {
+const runSimulations = async () => {
   isSpinning.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/monte-carlo`, {
-      method: 'GET',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to run simulation');
+    const result = await runAllMonteCarloSimulations();
+    if (!result) {
+      throw new Error('Simulation result is null or undefined');
     }
-    const result = await response.json();
 
-    let latestTimes = {};
+    let latestTimes: Record<string, string> = {};
     for (const zoneId in result) {
-      const times = result[zoneId].filter(time => !time.includes('ERROR'));
+      const times = result[zoneId]?.filter((time: string) => !time.includes('ERROR')) || [];
       if (times.length > 0) {
         const currentTime = times[0];
         if (!latestTimes[zoneId]) {
@@ -136,15 +95,15 @@ const runAllMonteCarloSimulations = async () => {
         }
       }
     }
-
-    console.log(latestTimes);
-  } catch (error) {
-    console.error('Error running simulation:', error);
-  } finally {
     await new Promise(resolve => setTimeout(resolve, 1000));
+  } catch (error) {
+    console.error('Error running simulations:', error);
+  } finally {
     isSpinning.value = false;
   }
-};const isFinished = computed(() => {
+};
+
+const isFinished = computed(() => {
   if (completionTime.value === null) {
     return false;
   }
@@ -158,7 +117,6 @@ const dateText = computed(() => {
   if (!currentDate.value) {
     return '00/00/0000';
   }
-  console.log(currentDate.value);
   return new Date(currentDate.value).toLocaleDateString();
 });
 
@@ -177,7 +135,7 @@ onMounted(() => {
         <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
       </div>
     </div>
-    <button class="toolbar-item" @click="runAllMonteCarloSimulations">
+    <button class="toolbar-item" @click="runSimulations">
       <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
     </button>
     <div class="vertical-separator"/>
@@ -197,12 +155,12 @@ onMounted(() => {
       </button>
     </div>
     <div class="vertical-separator"/>
-    <button class="date-clock">
+    <div class="date-clock">
       <p>Date</p>
       <div class="clock-time">
         <span>{{ dateText }}</span>
       </div>
-    </button>
+    </div>
     <div class="vertical-separator"/>
     <div class="clock">
       <p>Time</p>
@@ -310,11 +268,6 @@ onMounted(() => {
   width: 6rem;
   align-content: center;
   align-self: center;
-}
-
-.date-clock:hover {
-  background-color: #f0f0f0;
-  border-radius: 10px;
 }
 
 .clock-time {

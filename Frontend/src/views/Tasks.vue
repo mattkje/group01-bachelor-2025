@@ -1,3 +1,46 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import TaskZone from '@/components/tasks/TaskZone.vue';
+import {Task, ActiveTask, Zone, PickerTask} from '@/assets/types';
+import {fetchActiveTasks, fetchAllPickerTasks, fetchAllTasks, fetchAllZones} from "@/composables/DataFetcher";
+
+const tasks = ref<Task[]>([]);
+const activeTasks = ref<ActiveTask[]>([]);
+const pickerTasks = ref<PickerTask[]>([]);
+const zones = ref<Zone[]>([]);
+const zonesWithPickerTasks = ref<Zone[]>([]);
+const zonesWithoutPickerTasks = ref<Zone[]>([]);
+
+const filterZonesByPickerTasks = () => {
+  zonesWithPickerTasks.value = zones.value.filter(zone => zone.isPickerZone);
+  zonesWithoutPickerTasks.value = zones.value.filter(zone => !zone.isPickerZone);
+};
+
+const loadAllData = async () => {
+  tasks.value = await fetchAllTasks();
+  activeTasks.value = await fetchActiveTasks();
+  zones.value = await fetchAllZones();
+  pickerTasks.value = await fetchAllPickerTasks();
+  filterZonesByPickerTasks();
+}
+
+onMounted(() => {
+  loadAllData();
+});
+
+const getTasksForZone = (zoneId: number) => {
+  return activeTasks.value.filter(task => task.task.zoneId === zoneId);
+};
+
+const getPickerTasksForZone = (zoneId: number) => {
+  return pickerTasks.value.filter(task => task.zoneId === zoneId);
+};
+
+const handleAddTask = (zoneId: number) => {
+  console.log(`Add task to zone ${zoneId}`);
+
+};
+</script>
 <template>
   <div class="content">
     <div class="overview">
@@ -29,89 +72,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import TaskZone from '@/components/tasks/TaskZone.vue';
-import {Task, ActiveTask, Zone, PickerTask} from '@/assets/types';
-import ZoneClass from "@/components/zones/Zone.vue";
-import axios from "axios";
-
-const tasks = ref<Task[]>([]);
-const activeTasks = ref<ActiveTask[]>([]);
-const pickerTasks = ref<PickerTask[]>([]);
-const zones = ref<Zone[]>([]);
-const zonesWithPickerTasks = ref<Zone[]>([]);
-const zonesWithoutPickerTasks = ref<Zone[]>([]);
-
-const fetchTasks = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/tasks');
-    if (!response.ok) throw new Error('Network response was not ok');
-    tasks.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch tasks:', error);
-  }
-};
-
-const fetchActiveTasks = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/active-tasks');
-    if (!response.ok) throw new Error('Network response was not ok');
-    activeTasks.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch active tasks:', error);
-  }
-};
-
-const fetchPickerTasks = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/picker-tasks');
-    if (!response.ok) throw new Error('Network response was not ok');
-    pickerTasks.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch picker tasks:', error);
-  }
-};
-
-const fetchZones = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/zones');
-    zones.value = await response.json();
-    filterZonesByPickerTasks();
-  } catch (error) {
-    console.error('Failed to fetch zones:', error);
-  }
-};
-
-const filterZonesByPickerTasks = () => {
-  zonesWithPickerTasks.value = zones.value.filter(zone => zone.isPickerZone);
-  zonesWithoutPickerTasks.value = zones.value.filter(zone => !zone.isPickerZone);
-};
-
-
-
-onMounted(() => {
-  fetchTasks();
-  fetchActiveTasks();
-  fetchPickerTasks();
-  fetchZones();
-});
-
-const getTasksForZone = (zoneId: number) => {
-  return activeTasks.value.filter(task => task.task.zoneId === zoneId);
-};
-
-const getPickerTasksForZone = (zoneId: number) => {
-  return pickerTasks.value.filter(task => task.zoneId === zoneId);
-};
-
-const handleAddTask = (zoneId: number) => {
-  console.log(`Add task to zone ${zoneId}`);
-  // Implement logic to add a task to the specified zone
-};
-</script>
-
 <style scoped>
 .content {
   display: flex;

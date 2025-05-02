@@ -1,6 +1,7 @@
 <script setup lang="ts">
           import { ref, computed, onMounted } from 'vue';
           import { Zone, Worker } from "@/assets/types";
+          import {fetchAllWorkers, fetchAllZones} from "@/composables/DataFetcher";
 
           const workers = ref<Worker[]>([]);
           const zones = ref<Zone[]>([]);
@@ -8,22 +9,9 @@
           const selectedZones = ref<number[]>([]);
           const showAvailableOnly = ref(false);
 
-          const fetchWorkers = async () => {
-            try {
-              const response = await fetch('http://localhost:8080/api/workers');
-              workers.value = await response.json();
-            } catch (error) {
-              console.error('Failed to fetch workers:', error);
-            }
-          };
-
-          const fetchZones = async () => {
-            try {
-              const response = await fetch('http://localhost:8080/api/zones');
-              zones.value = await response.json();
-            } catch (error) {
-              console.error('Failed to fetch zones:', error);
-            }
+          const loadAllData = async () => {
+            zones.value = await fetchAllZones()
+            workers.value = await fetchAllWorkers()
           };
 
           const getZoneName = (zoneId: number) => {
@@ -40,30 +28,8 @@
             });
           });
 
-          const getEfficiencyColor = (efficiency: number) => {
-            if (efficiency < 0.95) {
-              return '#ff5d5d';
-            } else if (efficiency < 1.05 && efficiency >= 0.95) {
-              return '#f6aa3b';
-            } else {
-              return '#79cc5e';
-            }
-          };
-
-          const getRandomProfileImageUrl = (workerId: number) => {
-            const gender = workerId % 2 === 0 ? 'men' : 'women';
-            const id = workerId % 100;
-            return `https://randomuser.me/api/portraits/${gender}/${id}.jpg`;
-          };
-
-          const editWorker = (worker: Worker) => {
-            // Implement the logic to edit the worker's information
-            console.log('Edit worker:', worker);
-          };
-
           onMounted(() => {
-            fetchWorkers();
-            fetchZones();
+            loadAllData();
           });
           </script>
 
@@ -92,11 +58,9 @@
                 <div v-for="worker in filteredWorkers" :key="worker.id" class="staff-card">
                   <div class="card-header">
                     <div class="left-items">
-                      <p :style="{ backgroundColor: getEfficiencyColor(worker.efficiency) }" class="efficiency-score">{{ worker.efficiency }}</p>
-
                       <h3>{{ worker.name }}</h3>
                     </div>
-                    <router-link :to="`/worker?id=${worker.id}`" class="edit-link">
+                    <router-link :to="`/workers/${worker.id}`" class="edit-link">
                       <img src="@/assets/icons/edit.svg" alt="Edit" width="20" height="20"/>
                     </router-link>
                   </div>

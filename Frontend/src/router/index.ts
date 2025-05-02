@@ -18,7 +18,7 @@ const routes = [
   { path: '/tasks', component: Tasks },
   { path: '/settings', component: Settings},
   { path: '/info', component: Info},
-  { path: '/worker', component: WorkerProfile},
+  { path: '/workers/:id', component: WorkerProfile},
   { path: '/controlpanel', component: ControlPanel},
   { path: '/zones/:id', component: ZoneMenu },
   { path: '/zones/:id/tasks', component: TaskMenu },

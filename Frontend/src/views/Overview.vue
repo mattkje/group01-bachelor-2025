@@ -3,21 +3,17 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
+import {fetchAllZones} from "@/composables/DataFetcher";
 
 let selectedZoneId = ref<number>(1);
 let zones = ref<Zone[]>([]);
 
-const fetchZones = async () => {
-  try {
-    const response = await fetch("http://localhost:8080/api/zones");
-    zones.value = await response.json();
-  } catch (error) {
-    console.error("Failed to fetch zones:", error);
-  }
+const loadAllData = async () => {
+  zones.value = await fetchAllZones()
 };
 
 onMounted(() => {
-  fetchZones();
+  loadAllData();
 });
 </script>
 

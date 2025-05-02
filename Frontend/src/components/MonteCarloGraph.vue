@@ -11,6 +11,7 @@ import {
   LinearScale,
 } from "chart.js";
 import {onMounted, onUnmounted, ref, watch} from "vue";
+import {fetchAllMonteCarloGraphData} from "@/composables/DataFetcher";
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 
@@ -53,21 +54,6 @@ function generateChartData() {
   currentTimeIndex = dataValues.value.length - 1;
   taskCount.value = activeTasks.value;
   simulatedDatasets.value = [];
-  let lastValue = dataValues.value[dataValues.value.length - 1] || 0;
-
-
-  // This is a placeholder for the simulation data \/
-  // const case1 = [lastValue, ...Array.from({ length: 25 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  // const case2 = [lastValue, ...Array.from({ length: 50 }, (_, i) => Math.min(lastValue + Math.floor(i / 10), 13, taskCount.value))];
- // const case3 = [lastValue, ...Array.from({ length: 95 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  //const case4 = [lastValue, ...Array.from({ length: 32 }, (_, i) => Math.min(lastValue + Math.floor(i / 15), 13, taskCount.value))];
-  //const case5 = [lastValue, ...Array.from({ length: 68 }, (_, i) => Math.min(lastValue + Math.floor(i / 11), 13,taskCount.value))];
-  //ListOfListsOfValues.value.push(case1);
- // ListOfListsOfValues.value.push(case2);
- // ListOfListsOfValues.value.push(case3);
- // ListOfListsOfValues.value.push(case4);
-//  ListOfListsOfValues.value.push(case5);
-  // Down to here /\
 
   const baseColor = 'rgba(150, 150, 150, 0.3)';
 
@@ -78,12 +64,10 @@ function generateChartData() {
       borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
+      borderWidth: 1.5,
       fill: false,
     });
   });
-
-  // Find the best and worst cases (The simulation with most tasks done in the shortest time for the whole day is best,
-  // and the simulation with the least tasks done in the shortest time for the whole day is) worst).
 
   let bestCaseIndex = -1;
   let worstCaseIndex = -1;
@@ -113,14 +97,53 @@ function generateChartData() {
     }
   });
 
+  const lastDataValue = dataValues.value[dataValues.value.length - 1] || 0;
+
+  let bestCaseValueList = [];
   if (bestCaseIndex !== -1) {
-    simulatedDatasets.value[bestCaseIndex].borderColor = 'rgb(126,196,177)';
-    simulatedDatasets.value[bestCaseIndex].borderWidth = 3;
+    const increment = (bestCaseValue - lastDataValue) / ListOfListsOfValues.value[bestCaseIndex].length;
+    let cumulativeValue = lastDataValue;
+    bestCaseValueList = ListOfListsOfValues.value[bestCaseIndex].map(() => {
+      cumulativeValue += increment;
+      return cumulativeValue;
+    });
   }
 
+  let worstCaseValueList = [];
   if (worstCaseIndex !== -1) {
-    simulatedDatasets.value[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
-    simulatedDatasets.value[worstCaseIndex].borderWidth = 3;
+    const increment = (worstCaseValue - lastDataValue) / ListOfListsOfValues.value[worstCaseIndex].length;
+    let cumulativeValue = lastDataValue;
+    worstCaseValueList = ListOfListsOfValues.value[worstCaseIndex].map(() => {
+      cumulativeValue += increment;
+      return cumulativeValue;
+    });
+  }
+
+
+  // Add a new line for the best case
+  if (bestCaseIndex !== -1) {
+    simulatedDatasets.value.push({
+      label: 'Best Case Line',
+      data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...bestCaseValueList],
+      borderColor: 'rgb(126,196,177)',
+      borderWidth: 2,
+      tension: 0,
+      pointRadius: 0,
+      fill: false,
+    });
+  }
+
+  // Add a new line for the worst case
+  if (worstCaseIndex !== -1) {
+    simulatedDatasets.value.push({
+      label: 'Worst Case Line',
+      data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...worstCaseValueList],
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 2,
+      tension: 0,
+      pointRadius: 0,
+      fill: false,
+    });
   }
   const extendedLabels = Array.from({length: 144}, (_, i) => {
     const hours = Math.floor(i / 6);
@@ -236,98 +259,44 @@ function generateChartData() {
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
 }
 
-const fetchActiveTasks = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/${date.value}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number = await response.json();
-    activeTasks.value = data;
-  } catch (error) {
-    console.error('Failed to fetch active tasks:', error);
-  }
-  await fetchRealData();
-  await fetchSimulationData();
-  pollingTimer = setInterval(fetchAllData, pollingInterval);
-};
-
-const fetchDateFromBackend = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: string = await response.json();
-    date.value = data;
-  } catch (error) {
-    console.error('Failed to fetch date:', error);
-    date.value = '';
-  }
-  await fetchActiveTasks();
-};
-
-
-const fetchAllData = async () => {
-  await fetchRealData();
-  await fetchSimulationData();
-};
-
 const pollingInterval = 5000;
+
+const fetchData = async () => {
+  try {
+    const data = await fetchAllMonteCarloGraphData(props.zoneId);
+    dataValues.value = data.realData;
+    ListOfListsOfValues.value = data.simulationData;
+    activeTasks.value = data.activeTasks;
+    date.value = data.currentDate;
+
+    isDataReady.value = dataValues.value.length > 1 && ListOfListsOfValues.value.length > 1;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-const fetchRealData = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/data/${props.zoneId}/values`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number[] = await response.json();
-
-    if (data && JSON.stringify(data) !== JSON.stringify(dataValues.value)) {
-      dataValues.value = data || [0];
-      isDataReady.value = dataValues.value.length > 1;
-
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      currentTimeIndex = currentHour * 6 + Math.floor(currentMinute / 10);
-
-      generateChartData();
-    }
-  } catch (error) {
-    console.error('Failed to fetch real data:', error);
-  }
-};
-
-const fetchSimulationData = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/data/${props.zoneId}/mcvalues`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number[][] = await response.json();
-    if (data && JSON.stringify(data) !== JSON.stringify(ListOfListsOfValues.value)) {
-      ListOfListsOfValues.value = data || [];
-      isDataReady.value = ListOfListsOfValues.value.length > 1;
-
-      generateChartData();
-    }
-
-  } catch (error) {
-    console.error('Failed to fetch simulation data:', error);
-  }
-};
-
-
-onMounted( () => {
-  fetchDateFromBackend();
-});
-
-onUnmounted(() => {
+function startPolling(interval: number) {
   if (pollingTimer) {
     clearInterval(pollingTimer);
   }
+  pollingTimer = setInterval(fetchData, interval);
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+}
+
+onMounted(() => {
+  startPolling(pollingInterval);
+});
+
+onUnmounted(() => {
+  stopPolling();
 });
 </script>
 
