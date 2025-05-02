@@ -11,6 +11,7 @@ import {
   LinearScale,
 } from "chart.js";
 import {onMounted, onUnmounted, ref, watch} from "vue";
+import {fetchAllMonteCarloGraphData} from "@/composables/DataFetcher";
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 
@@ -53,8 +54,6 @@ function generateChartData() {
   currentTimeIndex = dataValues.value.length - 1;
   taskCount.value = activeTasks.value;
   simulatedDatasets.value = [];
-  let lastValue = dataValues.value[dataValues.value.length - 1] || 0;
-
 
   const baseColor = 'rgba(150, 150, 150, 0.3)';
 
@@ -69,9 +68,6 @@ function generateChartData() {
       fill: false,
     });
   });
-
-  // Find the best and worst cases (The simulation with most tasks done in the shortest time for the whole day is best,
-  // and the simulation with the least tasks done in the shortest time for the whole day is) worst).
 
   let bestCaseIndex = -1;
   let worstCaseIndex = -1;
@@ -263,98 +259,44 @@ function generateChartData() {
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
 }
 
-const fetchActiveTasks = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${props.zoneId}/${date.value}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number = await response.json();
-    activeTasks.value = data;
-  } catch (error) {
-    console.error('Failed to fetch active tasks:', error);
-  }
-  await fetchRealData();
-  await fetchSimulationData();
-  pollingTimer = setInterval(fetchAllData, pollingInterval);
-};
-
-const fetchDateFromBackend = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: string = await response.json();
-    date.value = data;
-  } catch (error) {
-    console.error('Failed to fetch date:', error);
-    date.value = '';
-  }
-  await fetchActiveTasks();
-};
-
-
-const fetchAllData = async () => {
-  await fetchRealData();
-  await fetchSimulationData();
-};
-
 const pollingInterval = 5000;
+
+const fetchData = async () => {
+  try {
+    const data = await fetchAllMonteCarloGraphData(props.zoneId);
+    dataValues.value = data.realData;
+    ListOfListsOfValues.value = data.simulationData;
+    activeTasks.value = data.activeTasks;
+    date.value = data.currentDate;
+
+    isDataReady.value = dataValues.value.length > 1 && ListOfListsOfValues.value.length > 1;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-const fetchRealData = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/data/${props.zoneId}/values`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number[] = await response.json();
-
-    if (data && JSON.stringify(data) !== JSON.stringify(dataValues.value)) {
-      dataValues.value = data || [0];
-      isDataReady.value = dataValues.value.length > 1;
-
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      currentTimeIndex = currentHour * 6 + Math.floor(currentMinute / 10);
-
-      generateChartData();
-    }
-  } catch (error) {
-    console.error('Failed to fetch real data:', error);
-  }
-};
-
-const fetchSimulationData = async () => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/data/${props.zoneId}/mcvalues`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data: number[][] = await response.json();
-    if (data && JSON.stringify(data) !== JSON.stringify(ListOfListsOfValues.value)) {
-      ListOfListsOfValues.value = data || [];
-      isDataReady.value = ListOfListsOfValues.value.length > 1;
-
-      generateChartData();
-    }
-
-  } catch (error) {
-    console.error('Failed to fetch simulation data:', error);
-  }
-};
-
-
-onMounted(() => {
-  fetchDateFromBackend();
-});
-
-onUnmounted(() => {
+function startPolling(interval: number) {
   if (pollingTimer) {
     clearInterval(pollingTimer);
   }
+  pollingTimer = setInterval(fetchData, interval);
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+}
+
+onMounted(() => {
+  startPolling(pollingInterval);
+});
+
+onUnmounted(() => {
+  stopPolling();
 });
 </script>
 

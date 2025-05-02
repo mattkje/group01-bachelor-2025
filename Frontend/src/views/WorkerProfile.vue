@@ -1,3 +1,67 @@
+<script setup lang="ts">
+import {ref, onMounted, Ref} from "vue";
+import {useRoute} from "vue-router";
+import {computed} from "vue";
+import Multiselect from "vue-multiselect";
+import {License, Worker, Zone} from "@/assets/types";
+import {fetchWorker, fetchAllZones, fetchLicenses} from "@/composables/DataFetcher";
+import {deleteWorker, updateWorkerAvailability} from "@/composables/DataUpdater";
+
+const route = useRoute();
+const worker = ref<Worker | null>(null);
+const zones = ref<Zone[]>([]);
+const availableLicenses = ref<License[]>([]);
+const showDeleteConfirmation = ref(false);
+
+const loadWorker = async () => {
+  try {
+    worker.value = await fetchWorker(route.params.id[0]);
+  } catch (error) {
+    console.error("Failed to fetch worker:", error);
+  }
+};
+
+const loadZones = async () => {
+  try {
+    zones.value = await fetchAllZones()
+  } catch (error) {
+    console.error('Failed to fetch zones:', error);
+  }
+};
+
+const workerStatus = computed(() => {
+  return "No worker data available";
+});
+
+const loadLicenses = async () => {
+  try {
+    availableLicenses.value = await fetchLicenses();
+  } catch (error) {
+    console.error('Error fetching licenses:', error);
+  }
+};
+
+const addLicensesToWorker = async (workerId: number, licenses: License[]): Promise<void> => {
+  await addLicensesToWorker(workerId, licenses);
+};
+
+const changeWorkerAvailability = async (worker: Ref<Worker>, isAvailable: Ref<boolean>) => {
+  await updateWorkerAvailability(worker.value, isAvailable.value)
+};
+
+const confirmDelete = async () => {
+  if (worker.value) {
+    await deleteWorker(worker.value);
+    showDeleteConfirmation.value = false;
+  }
+};
+
+onMounted(() => {
+  loadWorker();
+  loadZones();
+  loadLicenses();
+});
+</script>
 <template>
   <div v-if="worker" class="page-content">
     <div class="left-content">
@@ -34,7 +98,7 @@
     </div>
     <div class="graph-container">
       Graph goes here
-      </div>
+    </div>
   </div>
   <div v-else>
     <p>This worker does not exist</p>
@@ -47,187 +111,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import {ref, onMounted} from "vue";
-import {useRoute} from "vue-router";
-import Toolbar from "../components/Toolbar.vue";
-import BarChart from "../components/BarChart.vue";
-import {ActiveTask, PickerTask} from "@/assets/types";
-
-interface Zone {
-  id: number;
-  name: string;
-}
-
-interface License {
-  id: number;
-  name: string;
-}
-
-interface Worker {
-  id: number;
-  name: string;
-  zone_id: number;
-  effectiveness: number;
-  licenses: License[];
-  availability: boolean;
-  profilePicture?: string;
-  activeTask?: ActiveTask;
-  pickerTask?: PickerTask;
-  zone?: Zone;
-}
-
-const route = useRoute();
-const worker = ref<Worker | null>(null);
-const zones = ref<Zone[]>([]);
-const availableLicenses = ref<License[]>([]);
-const selectedLicenseId = ref<number | null>(null);
-const selectedLicenses = ref<number[]>([]);
-const isAvailable = ref(false);
-const zoneTitles = ref<string[]>([]);
-const zoneData = ref<number[]>([]);
-const showDeleteConfirmation = ref(false);
-
-const fetchWorker = async () => {
-  const workerId = route.query.id; // Extract ID from ?id=1
-  if (!workerId) {
-    console.error("Worker ID not provided in URL.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:8080/api/workers/${workerId}`);
-    if (!response.ok) throw new Error("Failed to fetch worker");
-    worker.value = await response.json();
-  } catch (error) {
-    console.error("Failed to fetch worker:", error);
-  }
-};
-
-const fetchWorkerHistory = () => {
-  zoneTitles.value = ["Zone 1", "Zone 2", "Zone 3", "Zone 4", "Zone 5"];
-  zoneData.value = [10, 0, 0, 40, 50];
-};
-
-const fetchZones = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/zones');
-    zones.value = await response.json();
-  } catch (error) {
-    console.error('Failed to fetch zones:', error);
-  }
-};
-
-import { computed } from "vue";
-import Multiselect from "vue-multiselect";
-
-const workerStatus = computed(() => {
-  if (worker.value) {
-    if (worker.value.activeTask) {
-      return `${worker.value.activeTask.task.name} at (${getZoneName(worker.value.zone_id)}) zone`;
-    } else if (worker.value.pickerTask) {
-      return `Picking task number ${worker.value.pickerTask.id} at zone ${getZoneName(worker.value.zone_id)}`;
-    } else {
-      return `Waiting for work at ${getZoneName(worker.value.zone_id)} zone`;
-    }
-  }
-  return "No worker data available";
-});
-
-const getRandomProfileImageUrl = (workerId: number) => {
-  const gender = workerId % 2 === 0 ? 'men' : 'women';
-  const id = workerId % 100;
-  return `https://randomuser.me/api/portraits/${gender}/${id}.jpg`;
-};
-
-
-const fetchLicenses = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/licenses');
-    if (!response.ok) throw new Error('Failed to fetch licenses');
-    availableLicenses.value = await response.json();
-  } catch (error) {
-    console.error('Error fetching licenses:', error);
-  }
-};
-
-const addLicense = async () => {
-  if (selectedLicenseId.value !== null && worker.value) {
-    const licenseToAdd = availableLicenses.value.find(license => license.id === selectedLicenseId.value);
-    if (licenseToAdd && !worker.value.licenses.some(license => license.id === licenseToAdd.id)) {
-      worker.value.licenses.push(licenseToAdd);
-      await addLicensesToWorker(worker.value.id, [licenseToAdd]);
-    }
-  }
-};
-
-const removeSelectedLicenses = async () => {
-  if (worker.value) {
-    const licensesToRemove = worker.value.licenses.filter(license => selectedLicenses.value.includes(license.id));
-    worker.value.licenses = worker.value.licenses.filter(license => !selectedLicenses.value.includes(license.id));
-    await removeLicensesFromWorker(worker.value.id, licensesToRemove);
-    selectedLicenses.value = [];
-  }
-};
-
-const addLicensesToWorker = async (workerId: number, licenses: License[]): Promise<void> => {
-  try {
-    for (const license of licenses) {
-      const response = await fetch(`http://localhost:8080/api/workers/${workerId}/license/${license.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error(`Failed to add license ${license.id} to worker`);
-    }
-  } catch (error) {
-    console.error('Error adding licenses to worker:', error);
-  }
-};
-
-const changeWorkerAvailability = async () => {
-  if (worker.value) {
-    worker.value.availability = !worker.value.availability;
-    isAvailable.value = worker.value.availability;
-    await fetch(`http://localhost:8080/api/workers/${worker.value.id}/availability`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({availability: worker.value.availability}),
-    });
-  }
-};
-
-const confirmDelete = async () => {
-  if (worker.value) {
-    await fetch(`http://localhost:8080/api/workers/${worker.value.id}`, {
-      method: 'DELETE',
-    });
-    showDeleteConfirmation.value = false;
-  }
-};
-
-const removeLicensesFromWorker = async (workerId: number, licenses: License[]): Promise<void> => {
-  // using addLicensesToWorker and adding a license to the worker that already exists, will delete the license from the worker
-  await addLicensesToWorker(workerId, licenses);
-};
-
-const getZoneName = (zoneId: number) => {
-  const zone = zones.value.find(zone => zone.id === zoneId);
-  return zone ? zone.name : 'Unassigned';
-};
-
-onMounted(() => {
-  fetchWorker();
-  fetchZones();
-  fetchLicenses();
-  fetchWorkerHistory();
-});
-</script>
-
 <style scoped>
 .left-content {
   width: 50%;

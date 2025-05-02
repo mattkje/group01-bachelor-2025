@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from "vue";
 import {Zone, Worker} from "@/assets/types";
+import {fetchSimulationDate} from "@/composables/DataFetcher";
 
 const props = defineProps<{
   zone: Zone;
@@ -15,11 +16,7 @@ const todayIsoDate = ref<string | null>(null);
 
 const fetchDateFromBackend = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/api/simulation/currentDate`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const dateString = await response.json();
+    const dateString = await fetchSimulationDate();
     date.value = new Date(dateString);
     todayIsoDate.value = date.value.toISOString().split("T")[0];
     await fetchSchedulesFromBackend();
