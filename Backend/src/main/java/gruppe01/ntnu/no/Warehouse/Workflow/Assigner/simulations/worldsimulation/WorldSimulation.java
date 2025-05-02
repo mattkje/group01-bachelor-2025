@@ -50,6 +50,9 @@ public class WorldSimulation {
     @Autowired
     private SimulationService simulationService;
 
+    @Autowired
+    private MonteCarloDataService monteCarloDataService;
+
     private LocalTime currentSimulationTime;
 
     private LocalDate workday;
@@ -125,6 +128,7 @@ public class WorldSimulation {
         randomForests = new HashMap<>();
 
         flushAllWorkerTasks();
+        monteCarloDataService.flushMCData();;
 
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
@@ -211,6 +215,7 @@ public class WorldSimulation {
         }
 
     }
+
 
     /**
      * Starts the simulation loop. Goes through all the workers and tasks and updates their status.

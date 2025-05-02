@@ -49,6 +49,10 @@ public class MonteCarloDataService {
        return new ArrayList<>(groupedBySimCount.values());
    }
 
+   public void flushMCData() {
+       monteCarloDataRepository.deleteAll();
+   }
+
 
 
 }
