@@ -45,9 +45,11 @@ public class ZoneSimulator {
                                            LocalDateTime startTime,
                                            TimetableService timetableService) {
 
+        // Initialize ZoneSimResult
         ZoneSimResult zoneSimResult = new ZoneSimResult();
         zoneSimResult.setZoneId(zone.getId());
         try {
+            // Check if the zone has any tasks
             if ((activeTasks == null || activeTasks.isEmpty()) &&
                     (pickerTasks == null || pickerTasks.isEmpty())) {
                 zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() + " No tasks");
@@ -59,41 +61,41 @@ public class ZoneSimulator {
             // Create a deep copy of the workers for this simulation
             Set<Worker> zoneWorkers = new HashSet<>();
             for (Worker worker : originalZoneWorkers) {
+                // remove unavailable workers from the set
                 if (worker.isAvailability()) {
                     zoneWorkers.add(new Worker(worker));
                 }
             }
+            // Check if the zone has any workers
             if (zoneWorkers.isEmpty()) {
                 zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
                         " No workers");
                 return zoneSimResult;
             }
 
+            // Get the first start time for the zone for a worker that is available
             LocalDateTime newTime = timetableService.getFirstStartTimeByZoneAndDay(zone.getId(), startTime);
-            System.out.println("Zone starting time " + newTime);
+            // If the newtime is start of day, it means no workers are scheduled to work that day
             if (Objects.equals(newTime, startTime.toLocalDate().atStartOfDay())) {
                 zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
                         " No workers coming to work today in zone");
                 return zoneSimResult;
             }
+            // If the new time is before the last time, set the last time to the new time
             this.lastTime.set(this.lastTime.get().isAfter(newTime) ? this.lastTime.get() : newTime);
-
-
             ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
             // Latch for the tasks in the zone ensuring that all tasks are completed before the simulation ends
             WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(timetableService);
             availableZoneWorkersSemaphore.initialize(zoneWorkers, this.lastTime.get());
-
-            new CountDownLatch(1);
+            //Countdown latch based on zone tasks
             CountDownLatch zoneLatch;
-
             // Iterate over the tasks in the zone
             if (activeTasks != null && !activeTasks.isEmpty()) {
                 zoneLatch = new CountDownLatch(activeTasks.size());
-
+                // Filter and sort the active tasks based on the number of workers and due date
                 activeTasks = filterAndSortActiveTasks(activeTasks);
-
                 for (ActiveTask activeTask : activeTasks) {
+                    // Simulate the task
                     String result = simulateTask(activeTask,
                             availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
                             zoneSimResult);
@@ -102,11 +104,10 @@ public class ZoneSimulator {
                         return zoneSimResult;
                     }
                 }
-
-
             } else {
                 zoneLatch = new CountDownLatch(pickerTasks.size());
                 for (PickerTask pickerTask : pickerTasks) {
+                    // Simulate the picker task
                     String result = simulatePickerTask(pickerTask,
                             availableZoneWorkersSemaphore, zoneExecutor, zoneLatch,
                             randomForest, zoneSimResult);
@@ -116,7 +117,7 @@ public class ZoneSimulator {
                     }
                 }
             }
-
+            // Wait for all tasks to complete
             zoneLatch.await();
             zoneExecutor.shutdown();
             zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
@@ -127,41 +128,143 @@ public class ZoneSimulator {
         return zoneSimResult;
     }
 
+    /**
+     * Simulates a picker task in the zone on its own thread
+     *
+     * @param pickerTask                    The picker task to simulate
+     * @param availableZoneWorkersSemaphore The common resource for the workers
+     * @param zoneExecutor                  The executor service for the zone
+     * @param zoneLatch                     The countdown latch for the zone (ensures all tasks are completed)
+     * @param randomForest                  The random forest model to use for task duration calculation
+     * @param zoneSimResult                 The zone simulation result object
+     * @return Any error messages that may occur
+     */
     private String simulatePickerTask(PickerTask pickerTask,
                                       WorkerSemaphore2 availableZoneWorkersSemaphore,
                                       ExecutorService zoneExecutor, CountDownLatch zoneLatch,
                                       RandomForest randomForest, ZoneSimResult zoneSimResult) {
         zoneExecutor.submit(() -> {
             try {
-                // Acquire the workers for the task
+                // Acquire the workers for the task from the semaphore
                 while (pickerTask.getWorker() == null) {
                     String result = availableZoneWorkersSemaphore.acquireMultiple(null, pickerTask, lastTime, pickerTask.getZone().getId());
+                    // if this, then task will not complete
                     if (!result.isEmpty()) {
                         zoneSimResult.setErrorMessage(result);
                         return;
                     }
                 }
+                // Set start time of task to the last time
                 LocalDateTime startTime = this.lastTime.get();
-                // Simulate the task duration
+                // Simulate the task duration using the model (divided by 60 to get minutes)
                 int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
+                // Sleep for the task duration
                 TimeUnit.MILLISECONDS.sleep(taskDuration);
-
+                // Set picker task attributes
                 pickerTask.setStartTime(startTime);
                 pickerTask.setEndTime(startTime.plusMinutes(taskDuration));
+                // Set the last time to the end time of the task
                 this.lastTime.set(startTime.plusMinutes(taskDuration));
-
+                // Add the task to the simulation result
                 zoneSimResult.addTask(pickerTask.getId().toString(),
                         pickerTask.getStartTime(), pickerTask.getEndTime());
+                // Release the workers back to the semaphore
                 availableZoneWorkersSemaphore.release(pickerTask.getWorker());
             } catch (InterruptedException | IOException e) {
                 Thread.currentThread().interrupt();
             } finally {
+                // Decrement the countdown latch for the zone
                 zoneLatch.countDown();
             }
         });
         return "";
     }
 
+    /**
+     * Simulates an active task in the zone on its own thread.
+     *
+     * @param activeTask                    The active task to simulate
+     * @param availableZoneWorkersSemaphore The common resource for the workers
+     * @param zoneExecutor                  The executor service for the zone
+     * @param zoneLatch                     The countdown latch for the zone (ensures all tasks are completed)
+     * @param zoneSimResult                 The zone simulation result object
+     * @return Any error messages that may occur
+     */
+    private String simulateTask(ActiveTask activeTask,
+                                WorkerSemaphore2 availableZoneWorkersSemaphore,
+                                ExecutorService zoneExecutor,
+                                CountDownLatch zoneLatch,
+                                ZoneSimResult zoneSimResult
+    ) {
+        zoneExecutor.submit(() -> {
+            try {
+                // Acquire the workers for the task
+                while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+                    String acquireWorkerError =
+                            availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, lastTime, activeTask.getTask().getZoneId());
+                    // if this, then task will not complete
+                    if (!acquireWorkerError.isEmpty()) {
+                        zoneSimResult.setErrorMessage(acquireWorkerError);
+                        return;
+                    }
+                }
+                // Set start time of task to the last time
+                LocalDateTime startTime = this.lastTime.get();
+                int sleepTime = calculateSleepTime(activeTask);
+                // Simulate the task duration
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
+                // Set the task attributes
+                activeTask.setStartTime(startTime);
+                activeTask.setEndTime(startTime.plusMinutes(sleepTime));
+                // Set the last time to the end time of the task
+                this.lastTime.set(startTime.plusMinutes(sleepTime));
+                // Add the task to the simulation result
+                zoneSimResult.addTask(activeTask.getId().toString(),
+                        activeTask.getStartTime(), activeTask.getEndTime());
+                // Release the workers back to the semaphore
+                availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                // Decrement the countdown latch for the zone
+                zoneLatch.countDown();
+            }
+        });
+        return "";
+    }
+
+    /**
+     * Filters and sorts the active tasks based on the number of workers and due date.
+     * Ensures that tasks with workers already on it are prioritized so that the workers are released sooner.
+     * This is done due to thread amount restrictions.
+     * Also sorts the tasks by due date ensuring tasks that are prioritized are completed first.
+     * @param activeTasks The list of active tasks to filter and sort
+     * @return The filtered and sorted list of active tasks
+     */
+    private static List<ActiveTask> filterAndSortActiveTasks(List<ActiveTask> activeTasks) {
+        return activeTasks.stream()
+                // Filter out tasks that have an endTime
+                .filter(task -> task.getEndTime() == null)
+                // Sort tasks by workers first, then by nearest dueDate
+                .sorted((task1, task2) -> {
+                    // Prioritize tasks with workers
+                    int workersComparison = Boolean.compare(
+                            task2.getWorkers().size() > 0,
+                            task1.getWorkers().size() > 0
+                    );
+                    if (workersComparison != 0) {
+                        return workersComparison;
+                    }
+                    // If both tasks have the same worker condition, sort by dueDate
+                    LocalDateTime dueDate1 = task1.getDueDate();
+                    LocalDateTime dueDate2 = task2.getDueDate();
+                    if (dueDate1 != null && dueDate2 != null) {
+                        return dueDate1.compareTo(dueDate2);
+                    }
+                    return 0;
+                })
+                .collect(Collectors.toList());
+    }
 
     /**
      * Calculates sleep time for the thread for a single task
@@ -190,78 +293,5 @@ public class ZoneSimulator {
 
         return (int) (adjustedDuration / efficiency);
     }
-
-    private String simulateTask(ActiveTask activeTask,
-                                WorkerSemaphore2 availableZoneWorkersSemaphore,
-                                ExecutorService zoneExecutor,
-                                CountDownLatch zoneLatch,
-                                ZoneSimResult zoneSimResult
-    ) {
-        zoneExecutor.submit(() -> {
-            try {
-                if (activeTask.getWorkers() != null) {
-                    System.out.println("Hurra");
-                    System.out.println("Active id" + activeTask.getId() +"Workers: " + activeTask.getWorkers() + " Min Workers: " + activeTask.getTask().getMinWorkers());
-                }
-                // Acquire the workers for the task
-                while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
-                    String acquireWorkerError =
-                            availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, lastTime, activeTask.getTask().getZoneId());
-                    if (!acquireWorkerError.isEmpty()) {
-                        zoneSimResult.setErrorMessage(acquireWorkerError);
-                        return;
-                    }
-                }
-                LocalDateTime startTime = this.lastTime.get();
-                int sleepTime = calculateSleepTime(activeTask);
-                TimeUnit.MILLISECONDS.sleep(sleepTime);
-                this.lastTime.set(startTime.plusMinutes(sleepTime));
-
-                availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
-                activeTask.setStartTime(startTime);
-                activeTask.setEndTime(startTime.plusMinutes(sleepTime));
-                zoneSimResult.addTask(activeTask.getId().toString(),
-                        activeTask.getStartTime(), activeTask.getEndTime());
-
-                System.out.println("Task: " + activeTask.getId() + "in zone: " + activeTask.getTask().getZoneId());
-
-                System.out.println("Start Time: " + activeTask.getStartTime());
-                System.out.println("End Time: " + activeTask.getEndTime());
-
-                System.out.println("New Last Time: " + this.lastTime);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } finally {
-                zoneLatch.countDown();
-            }
-        });
-        return "";
-    }
-
-  private static List<ActiveTask> filterAndSortActiveTasks(List<ActiveTask> activeTasks) {
-      return activeTasks.stream()
-              // Filter out tasks that have an endTime
-              .filter(task -> task.getEndTime() == null)
-              // Sort tasks by workers first, then by nearest dueDate
-              .sorted((task1, task2) -> {
-                  // Prioritize tasks with workers
-                  int workersComparison = Boolean.compare(
-                          task2.getWorkers().size() > 0,
-                          task1.getWorkers().size() > 0
-                  );
-                  if (workersComparison != 0) {
-                      return workersComparison;
-                  }
-                  // If both tasks have the same worker condition, sort by dueDate
-                  LocalDateTime dueDate1 = task1.getDueDate();
-                  LocalDateTime dueDate2 = task2.getDueDate();
-                  if (dueDate1 != null && dueDate2 != null) {
-                      return dueDate1.compareTo(dueDate2);
-                  }
-                  return 0;
-              })
-              .collect(Collectors.toList());
-  }
 }
 

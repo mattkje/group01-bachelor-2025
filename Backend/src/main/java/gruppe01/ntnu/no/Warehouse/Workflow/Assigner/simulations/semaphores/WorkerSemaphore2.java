@@ -124,14 +124,11 @@ public class WorkerSemaphore2 {
                     workerList.removeIf(worker -> !worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()));
                     if (workerList.isEmpty() && !workers.isEmpty()) {return "ERROR: No qualified workers for task " + activeTask.getId() + " at Zone " + zoneId + ".";}
                     for (Worker worker : workerList) {
-                        System.out.println("Worker: " + worker.getName() + " is at work? " + timetableService.workerIsWorking(startTime.get(), worker.getId()));
                         if (timetableService.workerIsWorking(startTime.get(), worker.getId())) {
                             workersToRemove.add(worker);
-                            System.out.println("Adding worker: " + worker.getName() + " to workersToRemove");
                             if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
                                 activeTask.addMultilpleWorkers(workersToRemove);
                                 workersToRemove.forEach(workers::remove);
-                                System.out.println("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                                 logger.info("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                                 return "";
                             }
@@ -141,7 +138,6 @@ public class WorkerSemaphore2 {
                         if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
                             activeTask.addMultilpleWorkers(workersToRemove);
                             workersToRemove.forEach(workers::remove);
-                            System.out.println("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                             logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                             return "";
                         }
@@ -165,11 +161,6 @@ public class WorkerSemaphore2 {
                         }
                     }
                 }
-
-                if (activeTask != null) {
-                    System.out.println("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId + " ActiveTask: " + activeTask.getId() + " minWorkers: " + activeTask.getTask().getMinWorkers());
-                }
-                System.out.println("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId);
                 logger.warning("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId);
                 return "";
             }
