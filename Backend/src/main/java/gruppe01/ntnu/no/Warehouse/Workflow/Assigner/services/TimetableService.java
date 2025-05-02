@@ -128,6 +128,20 @@ public class TimetableService {
     return timetablesByDayAndZone;
   }
 
+  public List<Timetable> getTimetablesForOneWeek(LocalDate date, Long zoneId) {
+    List<Timetable> timetables = timetableRepository.findAll();
+    List<Timetable> timetablesForOneWeek = new ArrayList<>();
+    for (Timetable timetable : timetables) {
+      if (((timetable.getStartTime().toLocalDate().isAfter(date) &&
+          timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
+              (timetable.getStartTime().toLocalDate().equals(date))) &&
+          timetable.getWorker().getZone().equals(zoneId)) {
+        timetablesForOneWeek.add(timetable);
+      }
+    }
+    return timetablesForOneWeek;
+  }
+
   public Set<Worker> getWorkersWorkingByDayAndZone(LocalDateTime day, Long zoneId) {
     List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
     Set<Worker> workers = new HashSet<>();

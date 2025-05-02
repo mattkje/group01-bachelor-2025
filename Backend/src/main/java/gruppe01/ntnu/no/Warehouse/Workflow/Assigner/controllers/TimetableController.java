@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import java.sql.Time;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,11 @@ public class TimetableController {
     @GetMapping("{day}/zone/{zoneId}")
     public List<Timetable> getTimetablesByDayAndZone(@PathVariable LocalDateTime day, @PathVariable Long zoneId) {
         return timetableService.getTimetablesByDayAndZone(day, zoneId);
+    }
+
+    @GetMapping("/one-week/{date}/{zoneId}")
+    public List<Timetable> getTimetablesForOneWeek(@PathVariable LocalDate date, @PathVariable Long zoneId) {
+        return timetableService.getTimetablesForOneWeek(date, zoneId);
     }
 
     @PutMapping("/{id}/set-start-time")
