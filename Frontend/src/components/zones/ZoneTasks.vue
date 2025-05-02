@@ -46,8 +46,6 @@ onMounted(() => {
     fetchActiveTasks();
   }
   loadAll();
-
-  console.log(activeTasks);
 });
 
 

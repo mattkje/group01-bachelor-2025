@@ -47,7 +47,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="vertical-separator"/>
-    <MonteCarloGraph :zone-id="currentZone.id" :date="parsedDate"/>
+    <MonteCarloGraph :zone-id="currentZone.id"/>
   </div>
   <hr>
     <div class="tabs">

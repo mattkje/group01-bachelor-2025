@@ -15,8 +15,9 @@ const showDeleteConfirmation = ref(false);
 
 const loadWorker = async () => {
   try {
-    worker.value = await fetchWorker(route.params.id[0]);
+    worker.value = await fetchWorker(parseInt(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id));
   } catch (error) {
+    console.error("Failed to fetch worker:", error);
     console.error("Failed to fetch worker:", error);
   }
 };

@@ -66,7 +66,6 @@ const moveUnavailableWorkers = () => {
 const updateWorkerZone = async () => {
   try {
     moveUnavailableWorkers();
-    console.log('Worker zones updated successfully');
     await loadZones();
   } catch (error) {
     console.error('Error updating worker zones:', error);

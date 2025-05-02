@@ -23,7 +23,7 @@ export const fetchAllPickerZones = async (): Promise<Zone[]> => {
     return fetchData<Zone[]>('http://localhost:8080/api/zones/picker-zones');
 }
 
-export const fetchWorker = async (workerId: string) => {
+export const fetchWorker = async (workerId: number) => {
     return fetchData<Worker>(`http://localhost:8080/api/workers/${workerId}`);
 }
 
