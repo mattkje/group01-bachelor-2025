@@ -4,6 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -80,62 +81,81 @@ public class WorkerSemaphore2 {
             // Check if the worker is busy with an active task or picker task
           if (worker.getCurrentPickerTask() != null) {
               // if the worker is busy with a picker task that has started that day and has no end time
-              if (worker.getCurrentPickerTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentPickerTask().getEndTime() == null) {
+              if ((worker.getCurrentPickerTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentPickerTask().getEndTime() == null) || !worker.isAvailability()) {
                   workersToRemove.add(worker);
-                  logger.warning("Worker " + worker.getId() + " removed due to being busy.");
+                  logger.warning("Worker " + worker.getId() + " removed due to being busy. at Zone: " + worker.getZone());
               }
           } else if (worker.getCurrentActiveTask() != null) {
                 // if the worker is busy with an active task that has started that day and has no end time
-              if (worker.getCurrentActiveTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentActiveTask().getEndTime() == null) {
+              if ((worker.getCurrentActiveTask().getStartTime().toLocalDate().equals(startTime.toLocalDate()) && worker.getCurrentActiveTask().getEndTime() == null) || !worker.isAvailability()) {
                   workersToRemove.add(worker);
-                  logger.warning("Worker " + worker.getId() + " removed due to being busy.");
+                  logger.warning("Worker " + worker.getId() + " removed due to being busy. at Zone: " + worker.getZone());
               }
           }
       }
 
       // Remove workers after iteration
       workersToRemove.forEach(workers::remove);
-      logger.info("Current worker pool: " + workers.size() + " workers.");
+      logger.info("Current worker pool: " + workers.size() + " workers. at Zone: " + workers.iterator().next().getZone());
   }
 
-    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime)
+    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)
             throws InterruptedException {
+      // Acquire the lock to ensure thread safety
       lock.lock();
         try {
             logger.info("Attempting to acquire workers for task.  " +
                     "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
-                    ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null"));
+                    ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
+
+            if (timetableService.isEveryoneFinishedWorking(zoneId, startTime.get())) {
+                logger.warning("All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
+                        ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
+                return "All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
+                       ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId;
+            }
             synchronized (workers) {
+                // Check if the workers are available
                 List<Worker> workersToRemove = new ArrayList<>();
                 List<Worker> workerList = new ArrayList<>(workers);
                 Collections.shuffle(workerList);
 
                 if (activeTask != null) {
+                    workerList.removeIf(worker -> !worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()));
+                    if (workerList.isEmpty() && !workers.isEmpty()) {return "ERROR: No qualified workers for task " + activeTask.getId() + " at Zone " + zoneId + ".";}
                     for (Worker worker : workerList) {
-                        if (worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()) && timetableService.workerIsWorking(startTime.get(), worker.getId())) {
+                        System.out.println("Worker: " + worker.getName() + " is at work? " + timetableService.workerIsWorking(startTime.get(), worker.getId()));
+                        if (timetableService.workerIsWorking(startTime.get(), worker.getId())) {
                             workersToRemove.add(worker);
+                            System.out.println("Adding worker: " + worker.getName() + " to workersToRemove");
                             if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
                                 activeTask.addMultilpleWorkers(workersToRemove);
                                 workersToRemove.forEach(workers::remove);
-                                logger.info("Acquired workers for ActiveTask: " + activeTask.getId());
+                                System.out.println("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
+                                logger.info("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                                 return "";
                             }
                         }
-                        if (workersToRemove.size() > activeTask.getTask().getMinWorkers()) {
+                        logger.info ("Starting time: " + startTime.get() + " Worker: " + worker.getName() + " Worker ID: " + worker.getId());
+                        logger.info("Worker " + worker.getName() + "is busy? " + timetableService.workerIsWorking(startTime.get(), worker.getId()));
+                        if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
                             activeTask.addMultilpleWorkers(workersToRemove);
                             workersToRemove.forEach(workers::remove);
-                            logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId());
+                            System.out.println("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
+                            logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                             return "";
                         }
+
                     }
                 } else {
                     for (Worker worker : workerList) {
                         if (timetableService.workerIsWorking(startTime.get(), worker.getId())) {
                             workersToRemove.add(worker);
+                            assert pickerTask != null;
                             if (pickerTask.getWorker() == null) {
                                 pickerTask.setWorker(worker);
                                 workersToRemove.forEach(workers::remove);
-                                logger.info("Acquired worker for PickerTask: " + pickerTask.getId());
+                                logger.info("Acquired worker for PickerTask: " + pickerTask.getId() + "at Zone: " + zoneId);
                                 return "";
                             }
                         } else {
@@ -146,7 +166,11 @@ public class WorkerSemaphore2 {
                     }
                 }
 
-                logger.warning("Failed to acquire workers for task. Workers at work right now: " + workers.size());
+                if (activeTask != null) {
+                    System.out.println("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId + " ActiveTask: " + activeTask.getId() + " minWorkers: " + activeTask.getTask().getMinWorkers());
+                }
+                System.out.println("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId);
+                logger.warning("Failed to acquire workers for task. Workers at work right now: " + workerList.size() + " at zone: " + zoneId);
                 return "";
             }
         } finally {
@@ -157,20 +181,20 @@ public class WorkerSemaphore2 {
     public void release(Worker worker) {
            synchronized (workers) {
                workers.add(worker);
-               logger.info("Released worker: " + worker.getId());
+               logger.info("Released worker: " + worker.getId() + " at Zone: " + worker.getZone());
            }
        }
 
        public void releaseAll(List<Worker> allWorkers) {
            synchronized (workers) {
                workers.addAll(allWorkers);
-               logger.info("Released all workers: " + allWorkers.size() + " Worker size: " + workers.size());
+               logger.info("Released all workers: " + allWorkers.size() + " Worker size: " + workers.size() + " at Zone: " + allWorkers.get(0).getZone());
            }
        }
 
     public int getAvailableWorkers() {
         int availableWorkers = workers.size();
-        logger.info("Available workers: " + availableWorkers);
+        logger.info("Available workers: " + availableWorkers + " at Zone: " + workers.iterator().next().getZone());
         return availableWorkers;
     }
 }

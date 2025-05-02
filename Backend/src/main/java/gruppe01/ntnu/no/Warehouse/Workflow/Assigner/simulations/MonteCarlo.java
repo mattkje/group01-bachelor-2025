@@ -1,16 +1,13 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator2;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -78,7 +74,7 @@ public class MonteCarlo {
   public List<SimulationResult> monteCarlo(int simCount, Map<String, RandomForest> models, LocalDateTime currentTime, TimetableService timetableService)
       throws InterruptedException, ExecutionException, IOException {
     System.out.println("Starting simulations");
-    ZoneSimulator2 zoneSimulator = new ZoneSimulator2();
+    ZoneSimulator zoneSimulator = new ZoneSimulator();
     List<String> errorMessages = new ArrayList<>();
     ExecutorService simulationExecutor =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());

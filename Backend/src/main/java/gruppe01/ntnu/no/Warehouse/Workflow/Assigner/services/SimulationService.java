@@ -1,5 +1,9 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.Utils;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
@@ -8,14 +12,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smile.regression.RandomForest;
@@ -28,7 +32,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private static final int SIM_COUNT = 5;
+    private static final int SIM_COUNT = 1;
 
     @Autowired
     private ActiveTaskService activeTaskService;
@@ -43,6 +47,9 @@ public class SimulationService {
     @Autowired
     private TimetableService timetableService;
 
+    private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
+
+
 //TODO: Fix this to work with a picker zone
 
     /**
@@ -53,44 +60,44 @@ public class SimulationService {
      * @return A list of strings containing the predicted time of completion and any error messages
      */
     //TODO: Remake this to work with the new Zone Simulator 2
-   /* public List<String> runZoneSimulation(Long zoneId) {
-
-        ZoneSimulator zoneSimulator = new ZoneSimulator();
+    public List<ZoneSimResult> runZoneSimulation(Long zoneId, LocalDateTime day) throws IOException {
+        Zone zone = zoneService.getZoneById(zoneId);
         // Ensure the zoneID exists
-        if (zoneId == null || zoneService.getZoneById(zoneId) == null) {
+        if (zone == null) {
             throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
         }
+        ZoneSimulator zoneSimulator = new ZoneSimulator();
+        // Create a list of zoneSimResult
+        List<ZoneSimResult> zoneSimResults = new ArrayList<>();
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        Set<PickerTask> pickerTasks = new HashSet<>();
+        RandomForest models = null;
 
-        // Create a list of strings to store the response
-        List<String> response = new ArrayList<>();
-        List<String> errorMessages = new ArrayList<>();
+        if (zone.getIsPickerZone()){
+            pickerTasks = zoneService.getPickerTasksByZoneId(zoneId);
+            models = mlModel.getModel(zone.getName(),false);
+        } else {
+            activeTasks = zoneService.getActiveTasksByZoneId(zoneId).stream().toList();
 
-        // Create an atomic double to store the predicted time
-        double totalPredictedTime = 0.0;
-
-        for (int i = 0; i < SIM_COUNT; i++) {
-            AtomicDouble predictedTime = new AtomicDouble(0.0);
-            String result = zoneSimulator.runZoneSimulation(zoneService.getZoneById(zoneId),
-                    activeTaskService.getRemainingTasksForTodayByZone(zoneId),
-                    pickerTaskService.getPickerTasksForToday(), null, predictedTime, i);
-            if (!result.isEmpty() && i == 0) {
-                errorMessages.add(result);
-            }
-            totalPredictedTime += predictedTime.get();
         }
 
-        double predictedTime = totalPredictedTime / SIM_COUNT;
+        if (day == null) {
+            day = LocalDateTime.now();
+        }
 
-        // Get the current time
-        LocalDateTime currentTime = LocalDateTime.now();
-
-        // Format the predicted completion time
-        String formattedTime = formatPredictedCompletionTime(currentTime, predictedTime);
-
-        response.add(formattedTime);
-        response.addAll(errorMessages);
-        return response;
-    }*/
+        for (int i = 0; i < SIM_COUNT; i++) {
+            ZoneSimResult zoneSimResult = zoneSimulator.runZoneSimulation(
+                    zone,
+                    activeTasks,
+                    pickerTasks,
+                    models,
+                    day,
+                    timetableService
+            );
+            zoneSimResults.add(zoneSimResult);
+        }
+        return zoneSimResults;
+    }
 
     /**
      * Runs the complete MC simulation

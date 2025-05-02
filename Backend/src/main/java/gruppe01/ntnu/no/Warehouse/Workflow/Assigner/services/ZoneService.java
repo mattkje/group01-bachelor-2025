@@ -190,4 +190,11 @@ public class ZoneService {
 
     return tasks;
   }
+
+  public Integer getMinTimeForActiveTasksByZoneIdNow(Long zoneId) {
+      return getActiveTasksByZoneId(zoneId).stream()
+          .filter(activeTask -> activeTask.getEndTime() == null) // Only unfinished tasks
+          .mapToInt(activeTask -> activeTask.getTask().getMinTime()) // Get the min time for each task
+          .sum(); // Sum up the min times
+  }
 }

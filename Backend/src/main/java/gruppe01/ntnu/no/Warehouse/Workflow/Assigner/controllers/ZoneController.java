@@ -71,6 +71,11 @@ public class ZoneController {
         return zoneService.getNumberOfTasksForTodayByZone(zoneId, date);
     }
 
+    @GetMapping("/{zoneId}/active-tasks-now-min-time")
+    public Integer getMinTimeForActiveTasksByZoneIdNow(@PathVariable Long zoneId) {
+        return zoneService.getMinTimeForActiveTasksByZoneIdNow(zoneId);
+    }
+
     @PostMapping
     public Zone addZone(@RequestBody Zone zone) {
         return zoneService.addZone(zone);
