@@ -56,19 +56,6 @@ function generateChartData() {
   let lastValue = dataValues.value[dataValues.value.length - 1] || 0;
 
 
-  // This is a placeholder for the simulation data \/
-  // const case1 = [lastValue, ...Array.from({ length: 25 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  // const case2 = [lastValue, ...Array.from({ length: 50 }, (_, i) => Math.min(lastValue + Math.floor(i / 10), 13, taskCount.value))];
- // const case3 = [lastValue, ...Array.from({ length: 95 }, (_, i) => Math.min(lastValue + Math.floor(i / 12), 13, taskCount.value))];
-  //const case4 = [lastValue, ...Array.from({ length: 32 }, (_, i) => Math.min(lastValue + Math.floor(i / 15), 13, taskCount.value))];
-  //const case5 = [lastValue, ...Array.from({ length: 68 }, (_, i) => Math.min(lastValue + Math.floor(i / 11), 13,taskCount.value))];
-  //ListOfListsOfValues.value.push(case1);
- // ListOfListsOfValues.value.push(case2);
- // ListOfListsOfValues.value.push(case3);
- // ListOfListsOfValues.value.push(case4);
-//  ListOfListsOfValues.value.push(case5);
-  // Down to here /\
-
   const baseColor = 'rgba(150, 150, 150, 0.3)';
 
   ListOfListsOfValues.value.forEach((list, index) => {
@@ -78,6 +65,7 @@ function generateChartData() {
       borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
+      borderWidth: 1.5,
       fill: false,
     });
   });
@@ -113,14 +101,53 @@ function generateChartData() {
     }
   });
 
+  const lastDataValue = dataValues.value[dataValues.value.length - 1] || 0;
+
+  let bestCaseValueList = [];
   if (bestCaseIndex !== -1) {
-    simulatedDatasets.value[bestCaseIndex].borderColor = 'rgb(126,196,177)';
-    simulatedDatasets.value[bestCaseIndex].borderWidth = 3;
+    const increment = (bestCaseValue - lastDataValue) / ListOfListsOfValues.value[bestCaseIndex].length;
+    let cumulativeValue = lastDataValue;
+    bestCaseValueList = ListOfListsOfValues.value[bestCaseIndex].map(() => {
+      cumulativeValue += increment;
+      return cumulativeValue;
+    });
   }
 
+  let worstCaseValueList = [];
   if (worstCaseIndex !== -1) {
-    simulatedDatasets.value[worstCaseIndex].borderColor = 'rgba(255, 99, 132, 1)';
-    simulatedDatasets.value[worstCaseIndex].borderWidth = 3;
+    const increment = (worstCaseValue - lastDataValue) / ListOfListsOfValues.value[worstCaseIndex].length;
+    let cumulativeValue = lastDataValue;
+    worstCaseValueList = ListOfListsOfValues.value[worstCaseIndex].map(() => {
+      cumulativeValue += increment;
+      return cumulativeValue;
+    });
+  }
+
+
+  // Add a new line for the best case
+  if (bestCaseIndex !== -1) {
+    simulatedDatasets.value.push({
+      label: 'Best Case Line',
+      data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...bestCaseValueList],
+      borderColor: 'rgb(126,196,177)',
+      borderWidth: 2,
+      tension: 0,
+      pointRadius: 0,
+      fill: false,
+    });
+  }
+
+  // Add a new line for the worst case
+  if (worstCaseIndex !== -1) {
+    simulatedDatasets.value.push({
+      label: 'Worst Case Line',
+      data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...worstCaseValueList],
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 2,
+      tension: 0,
+      pointRadius: 0,
+      fill: false,
+    });
   }
   const extendedLabels = Array.from({length: 144}, (_, i) => {
     const hours = Math.floor(i / 6);
@@ -320,7 +347,7 @@ const fetchSimulationData = async () => {
 };
 
 
-onMounted( () => {
+onMounted(() => {
   fetchDateFromBackend();
 });
 
