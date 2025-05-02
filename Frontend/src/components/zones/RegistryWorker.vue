@@ -9,24 +9,13 @@ const props = defineProps<{
   zoneId: number;
 }>();
 
-const getRandomProfileImageUrl = (workerId: number, isToon: boolean) => {
-  if (isToon) {
-    return `https://joesch.moe/api/v1/${workerId}`;
-  } else {
-    const gender = workerId % 2 === 0 ? 'men' : 'women';
-    const id = workerId % 100;
-    return `https://randomuser.me/api/portraits/thumb/${gender}/${id}.jpg`;
-  }
-};
-
 </script>
 
 <template>
   <div class="worker-compact rdy-worker-box">
     <div class="worker-profile">
       <div class="worker-image-container">
-        <img v-if="false" class="worker-image" :src="getRandomProfileImageUrl(workerId, false)" />
-        <img v-else class="worker-image" src="@/assets/icons/profile.svg" />
+        <img class="worker-image" src="@/assets/icons/profile.svg" />
       </div>
       <div class="worker-name">{{ name }}</div>
     </div>

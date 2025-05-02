@@ -1,5 +1,5 @@
-import {License, Worker} from "@/assets/types";
-import { deleteData , putData } from "@/composables/HttpMethods";
+import {License, Task, Worker} from "@/assets/types";
+import { deleteData , putData, postData } from "@/composables/HttpMethods";
 
 export const addLicensesToWorker = async (workerId: number, licenses: License[]): Promise<void> => {
   try {
@@ -28,8 +28,38 @@ export const deleteWorker = async (worker: Worker) => {
   }
 };
 
+export const deletePickerTask = async (pickerTaskId: number) => {
+    if (pickerTaskId) {
+      await deleteData(`http://localhost:8080/api/active-tasks/${pickerTaskId}`);
+    }
+};
+
+export const updatePickerTask = async (pickerTaskId: number, zoneId: number) => {
+    if (pickerTaskId) {
+      await putData(`http://localhost:8080/api/picker-tasks/${pickerTaskId}/zone/${zoneId}`);
+    }
+}
+
 export const deleteActiveTask = async (activeTaskId: number) => {
     if (activeTaskId) {
       await deleteData(`http://localhost:8080/api/active-tasks/${activeTaskId}`);
     }
 };
+
+export const updateActiveTask = async (activeTaskId: number) => {
+    if (activeTaskId) {
+      await putData(`http://localhost:8080/api/active-tasks/${activeTaskId}`);
+    }
+}
+
+export const createTask = async (zoneId: number, newTask: Task) => {
+  if (zoneId) {
+    await postData(`http://localhost:8080/api/tasks/${zoneId}`, newTask);
+  }
+};
+
+export const createActiveTask = async (taskId: number, newActiveTask: any) => {
+  if (taskId) {
+    await postData(`http://localhost:8080/api/active-tasks/${taskId}`, newActiveTask);
+  }
+}

@@ -19,16 +19,31 @@ export const fetchAllZones = async (): Promise<Zone[]> => {
     return fetchData<Zone[]>('http://localhost:8080/api/zones');
 };
 
+export const fetchAllPickerZones = async (): Promise<Zone[]> => {
+    return fetchData<Zone[]>('http://localhost:8080/api/zones/picker-zones');
+}
+
 export const fetchWorker = async (workerId: string) => {
     return fetchData<Worker>(`http://localhost:8080/api/workers/${workerId}`);
 }
 
+export const fetchWorkersForTask = async (taskId: number) => {
+    return fetchData<Worker[]>(`http://localhost:8080/api/active-tasks/${taskId}/workers`);
+}
+
+export const fetchWorkersForZone = async (zoneId: number) => {
+    return fetchData<Worker[]>(`http://localhost:8080/api/zones/${zoneId}/workers`);
+}
 export const fetchAllWorkers = async () => {
     return fetchData<Worker[]>('http://localhost:8080/api/workers');
 }
 
 export const fetchLicenses = async () => {
     return fetchData<License[]>('http://localhost:8080/api/licenses');
+}
+
+export const fetchTask = async (taskId: number) => {
+    return fetchData<Task>(`http://localhost:8080/api/tasks/${taskId}`);
 }
 
 export const fetchAllTasks = async () => {
@@ -51,7 +66,7 @@ export const fetchAllPickerTasksForZoneNow = async (zoneId: number) => {
     return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks-now`);
 }
 
-export const fetchActiveTasks = async () => {
+export const fetchAllActiveTasks = async () => {
   return fetchData<ActiveTask[]>('http://localhost:8080/api/active-tasks');
 }
 
@@ -77,5 +92,9 @@ export const fetchSimulationTime = async () => {
 
 export const fetchSchedulesFromBackend = async (date: string, zoneId: number) => {
     return fetchData<any>(`http://localhost:8080/api/timetables/one-week/${date}/${zoneId}`);
+}
+
+export const fetchTimeTables = async () => {
+    return fetchData<any>(`http://localhost:8080/api/timetables`);
 }
 

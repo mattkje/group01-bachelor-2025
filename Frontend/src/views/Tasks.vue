@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import TaskZone from '@/components/tasks/TaskZone.vue';
 import {Task, ActiveTask, Zone, PickerTask} from '@/assets/types';
-import {fetchActiveTasks, fetchAllPickerTasks, fetchAllTasks, fetchAllZones} from "@/composables/DataFetcher";
+import {fetchAllActiveTasks, fetchAllPickerTasks, fetchAllTasks, fetchAllZones} from "@/composables/DataFetcher";
 
 const tasks = ref<Task[]>([]);
 const activeTasks = ref<ActiveTask[]>([]);
@@ -18,7 +18,7 @@ const filterZonesByPickerTasks = () => {
 
 const loadAllData = async () => {
   tasks.value = await fetchAllTasks();
-  activeTasks.value = await fetchActiveTasks();
+  activeTasks.value = await fetchAllActiveTasks();
   zones.value = await fetchAllZones();
   pickerTasks.value = await fetchAllPickerTasks();
   filterZonesByPickerTasks();
