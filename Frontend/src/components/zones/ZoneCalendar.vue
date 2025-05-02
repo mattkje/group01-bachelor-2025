@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from "vue";
-import {Zone, Worker} from "@/assets/types";
+import {Zone} from "@/assets/types";
+import CalendarModal from "@/components/zones/CalendarModal.vue";
 import {fetchSchedulesFromBackend, fetchSimulationDate} from "@/composables/DataFetcher";
 
 const props = defineProps<{
@@ -13,6 +14,10 @@ const dateTitle = ref<string | null>(null);
 const schedules = ref<any[]>([]);
 const groupedSchedules = ref<Record<number, any[]>>({});
 const todayIsoDate = ref<string | null>(null);
+const selectedSchedule = ref<any | null>(null);
+const selectedWorker = ref<any | null>(null);
+const selectedDate = ref<any | null>(null);
+const isModalVisible = ref(false);
 
 const fetchDateFromBackend = async () => {
   try {
@@ -33,7 +38,7 @@ const loadSchedulesFromBackend = async () => {
   try {
     schedules.value = await fetchSchedulesFromBackend(date.value?.toISOString().split("T")[0], props.zone.id);
     groupSchedulesByWorker();
-    console.log(groupedSchedules);
+    isModalVisible.value = false;
   } catch (error) {
     console.error('Failed to fetch schedules:', error);
     schedules.value = [];
@@ -117,6 +122,26 @@ const sortedGroupedSchedules = computed(() => {
       });
 });
 
+const openModal = (schedule: any | null, worker: any, dateObj: any) => {
+  selectedSchedule.value = schedule;
+  selectedWorker.value = worker;
+  selectedDate.value = dateObj;
+  isModalVisible.value = true;
+};
+
+
+const closeModal = () => {
+  isModalVisible.value = false;
+}
+
+const isTodayColumn = (isoDate: string): boolean => {
+  return isoDate === todayIsoDate.value;
+};
+
+const sortedWorkers = computed(() => {
+  return [...props.zone.workers].sort((a, b) => a.name.localeCompare(b.name));
+});
+
 watch(date, getDateTitle);
 watch(date, generateDates);
 
@@ -140,29 +165,45 @@ onMounted(() => {
     <thead>
     <tr>
       <th></th>
-      <th v-for="(dateObj, index) in dates" :key="index">{{ dateObj.formattedDate }}</th>
+      <th v-for="(dateObj, index) in dates" :key="index" :class="{ 'today-column': isTodayColumn(dateObj.isoDate) }">{{ dateObj.formattedDate }}</th>
     </tr>
     </thead>
     <tbody>
-    <tr v-for="worker in props.zone.workers" :key="worker.id">
+    <tr v-for="worker in sortedWorkers" :key="worker.id">
       <td>{{ worker.name }}</td>
       <td v-for="(dateObj, index) in dates" :key="index">
-        <div :class="['schedule-box', getCellClass(groupedSchedules[worker.id] || [], dateObj.isoDate)]">
+        <div
+            @click="openModal(
+            (groupedSchedules[worker.id] || []).find(s => s.startTime.split('T')[0] === dateObj.isoDate) || null,
+            worker, dateObj
+            )"
+            :class="['schedule-box', getCellClass(groupedSchedules[worker.id] || [], dateObj.isoDate)]">
           <div
               v-for="schedule in (groupedSchedules[worker.id] || [])"
               :key="schedule.id"
+              class="schedule-text-box"
           >
-        <span v-if="schedule.startTime.split('T')[0] === dateObj.isoDate">
-          {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-          <br>
-          {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-        </span>
+    <span
+        v-if="schedule.startTime.split('T')[0] === dateObj.isoDate"
+    >
+      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+      <br>
+      {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+    </span>
           </div>
         </div>
       </td>
     </tr>
     </tbody>
   </table>
+  <CalendarModal
+      v-if="isModalVisible"
+      @click="closeModal"
+      :date="selectedDate"
+      :selected-schedule="selectedSchedule"
+      :worker="selectedWorker"
+      @schedule-updated="loadSchedulesFromBackend">
+  </CalendarModal>
 </div>
 </template>
 
@@ -195,10 +236,14 @@ td {
 thead th:first-child,
 tbody td:first-child {
   border-left: none;
+  width: auto;
+  font-size: 24px;
+  font-weight: 700;
 }
 
-th:nth-child(2) {
-  color: #E77474;
+thead th:not(:first-child),
+tbody td:not(:first-child) {
+  width: 135px;
 }
 
 thead th {
@@ -222,6 +267,7 @@ thead th {
   justify-content: center;
   background-color: transparent;
   font-size: 24px;
+  user-select: none;
 }
 
 .schedule-box span {
@@ -243,6 +289,23 @@ thead th {
   color: #ffffff;
 }
 
+.schedule-box:hover {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.schedule-box.has-schedule-today:hover {
+  background-color: #C65A5A;
+}
+
+.schedule-box.empty:hover {
+  background-color: #f1f1f1;
+}
+
+.schedule-box.has-schedule:hover {
+  background-color: #FF9B9B;
+}
+
 .top-calendar-navbar {
   display: flex;
   justify-content: space-between;
@@ -261,6 +324,10 @@ thead th {
   border: none;
   cursor: pointer;
   font-size: 1.5rem;
+  color: #E77474;
+}
+
+.today-column {
   color: #E77474;
 }
 </style>

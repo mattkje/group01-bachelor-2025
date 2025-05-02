@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,125 +20,131 @@ import java.util.List;
 @Service
 public class TimetableService {
 
-    @Autowired
-    private TimetableRepository timetableRepository;
+  @Autowired
+  private TimetableRepository timetableRepository;
 
-    public List<Timetable> getAllTimetables() {
-        return timetableRepository.findAll();
+  @Autowired
+  private WorkerRepository workerRepository;
+
+  public List<Timetable> getAllTimetables() {
+    return timetableRepository.findAll();
+  }
+
+  public Timetable addTimetable(Timetable timetable, long workerId) {
+    Worker worker = workerRepository.findById(workerId).orElse(null);
+    if (worker != null) {
+      timetable.setWorker(worker);
+      return timetableRepository.save(timetable);
     }
+    return null;
+  }
 
-    public Timetable addTimetable(Timetable timetable) {
-        return timetableRepository.save(timetable);
+
+  public List<Timetable> getTodaysTimetables() {
+    List<Timetable> todaysTimetables = new ArrayList<>();
+    for (Timetable timetable : timetableRepository.findAll()) {
+      if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+        todaysTimetables.add(timetable);
+      }
     }
+    return todaysTimetables;
+  }
 
-
-    public List<Timetable> getTodaysTimetables() {
-        List<Timetable> todaysTimetables = new ArrayList<>();
-        for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
-                todaysTimetables.add(timetable);
-            }
-        }
-        return todaysTimetables;
+  public List<Timetable> getTodaysTimetablesByZone(Long zoneId) {
+    List<Timetable> todaysTimetables = new ArrayList<>();
+    for (Timetable timetable : timetableRepository.findAll()) {
+      if (timetable.getWorker().getZone().equals(zoneId) &&
+          timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+        todaysTimetables.add(timetable);
+      }
     }
+    return todaysTimetables;
+  }
 
-    public List<Timetable> getTodaysTimetablesByZone(Long zoneId) {
-        List<Timetable> todaysTimetables = new ArrayList<>();
-        for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getWorker().getZone().equals(zoneId) &&
-                    timetable.getStartTime().toLocalDate().equals(LocalDate.now()) &&
-                    timetable.getWorker().isAvailability()) {
-                todaysTimetables.add(timetable);
-            }
-        }
-        return todaysTimetables;
+  public List<Timetable> getAllTimetablesByZone(Long zoneId) {
+    List<Timetable> allTimetablesByZone = new ArrayList<>();
+    for (Timetable timetable : timetableRepository.findAll()) {
+      if (timetable.getWorker().getZone().equals(zoneId)) {
+        allTimetablesByZone.add(timetable);
+      }
     }
+    return allTimetablesByZone;
+  }
 
-    public List<Timetable> getAllTimetablesByZone(Long zoneId) {
-        List<Timetable> allTimetablesByZone = new ArrayList<>();
-        for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getWorker().getZone().equals(zoneId)) {
-                allTimetablesByZone.add(timetable);
-            }
-        }
-        return allTimetablesByZone;
+  public List<Timetable> getTimetablesByDate(LocalDate date) {
+    List<Timetable> timetables = timetableRepository.findAll();
+    List<Timetable> timetablesByDate = new ArrayList<>();
+    for (Timetable timetable : timetables) {
+      if (timetable.getStartTime().toLocalDate().equals(date)) {
+        timetablesByDate.add(timetable);
+      }
     }
+    return timetablesByDate;
+  }
 
-    public List<Timetable> getTimetablesByDate(LocalDate date) {
-        List<Timetable> timetables = timetableRepository.findAll();
-        List<Timetable> timetablesByDate = new ArrayList<>();
-        for (Timetable timetable : timetables) {
-            if (timetable.getStartTime().toLocalDate().equals(date)) {
-                timetablesByDate.add(timetable);
-            }
-        }
-        return timetablesByDate;
+  public List<Timetable> getAllTimetablesThisMonth(LocalDate date) {
+    List<Timetable> timetables = timetableRepository.findAll();
+    List<Timetable> timetablesThisMonth = new ArrayList<>();
+    for (Timetable timetable : timetables) {
+      if (timetable.getStartTime().getMonthValue() == date.getMonthValue() &&
+          timetable.getStartTime().getYear() == date.getYear()) {
+        timetablesThisMonth.add(timetable);
+      }
     }
+    return timetablesThisMonth;
+  }
 
-    public List<Timetable> getAllTimetablesThisMonth(LocalDate date) {
-        List<Timetable> timetables = timetableRepository.findAll();
-        List<Timetable> timetablesThisMonth = new ArrayList<>();
-        for (Timetable timetable : timetables) {
-            if (timetable.getStartTime().getMonthValue() == date.getMonthValue() &&
-                    timetable.getStartTime().getYear() == date.getYear()) {
-                timetablesThisMonth.add(timetable);
-            }
-        }
-        return timetablesThisMonth;
+  public Timetable setStartTime(Long id) {
+    Timetable timetable = timetableRepository.findById(id).orElse(null);
+    if (timetable != null) {
+      timetable.setStartTime(LocalDateTime.now());
+      return timetableRepository.save(timetable);
     }
+    return null;
+  }
 
-    public Timetable setStartTime(Long id) {
-        Timetable timetable = timetableRepository.findById(id).orElse(null);
-        if (timetable != null) {
-            timetable.setStartTime(LocalDateTime.now());
-            return timetableRepository.save(timetable);
-        }
-        return null;
+  public Timetable updateTimetable(Long id, Timetable timetable) {
+    Timetable existingTimetable = timetableRepository.findById(id).orElse(null);
+    if (existingTimetable != null) {
+      existingTimetable.setStartTime(timetable.getStartTime());
+      existingTimetable.setEndTime(timetable.getEndTime());
+      return timetableRepository.save(existingTimetable);
     }
+    return null;
+  }
 
-    public Timetable updateTimetable(Long id, Timetable timetable) {
-        Timetable existingTimetable = timetableRepository.findById(id).orElse(null);
-        if (existingTimetable != null) {
-            existingTimetable.setStartTime(timetable.getStartTime());
-            existingTimetable.setEndTime(timetable.getEndTime());
-            existingTimetable.setWorker(timetable.getWorker());
-            return timetableRepository.save(existingTimetable);
-        }
-        return null;
-    }
+  public void deleteAllTimetables() {
+    timetableRepository.deleteAll();
+  }
 
-    public void deleteAllTimetables() {
-        timetableRepository.deleteAll();
+  public void deleteAllTimetablesForToday() {
+    for (Timetable timetable : timetableRepository.findAll()) {
+      if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+        timetableRepository.delete(timetable);
+      }
     }
+  }
 
-    public void deleteAllTimetablesForToday() {
-        for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
-                timetableRepository.delete(timetable);
-            }
-        }
+  public List<Timetable> getTimetablesByDayAndZone(LocalDateTime day, Long zoneId) {
+    List<Timetable> timetables = timetableRepository.findAll();
+    List<Timetable> timetablesByDayAndZone = new ArrayList<>();
+    for (Timetable timetable : timetables) {
+      if (timetable.getStartTime().toLocalDate().equals(day.toLocalDate()) &&
+          timetable.getWorker().getZone().equals(zoneId)) {
+        timetablesByDayAndZone.add(timetable);
+      }
     }
-
-    public List<Timetable> getTimetablesByDayAndZone(LocalDateTime day, Long zoneId) {
-        List<Timetable> timetables = timetableRepository.findAll();
-        List<Timetable> timetablesByDayAndZone = new ArrayList<>();
-        for (Timetable timetable : timetables) {
-            if (timetable.getStartTime().toLocalDate().equals(day.toLocalDate()) &&
-                    timetable.getWorker().getZone().equals(zoneId)) {
-                timetablesByDayAndZone.add(timetable);
-            }
-        }
-        return timetablesByDayAndZone;
-    }
+    return timetablesByDayAndZone;
+  }
 
   public List<Timetable> getTimetablesForOneWeek(LocalDate date, Long zoneId) {
     List<Timetable> timetables = timetableRepository.findAll();
     List<Timetable> timetablesForOneWeek = new ArrayList<>();
     for (Timetable timetable : timetables) {
       if (((timetable.getStartTime().toLocalDate().isAfter(date) &&
-              timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
+          timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
               (timetable.getStartTime().toLocalDate().equals(date))) &&
-              timetable.getWorker().getZone().equals(zoneId)) {
+          timetable.getWorker().getZone().equals(zoneId)) {
         timetablesForOneWeek.add(timetable);
       }
     }
@@ -205,4 +213,8 @@ public class TimetableService {
         System.out.println("returns true");
         return true;
     }
+
+  public void deleteTimetable(Long id) {
+    timetableRepository.deleteById(id);
+  }
 }

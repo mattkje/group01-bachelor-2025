@@ -22,6 +22,24 @@ export const updateWorkerAvailability = async (worker: Worker, isAvailable: bool
   }
 };
 
+export const updateWorkerSchedule = async (schedule: any) => {
+  if (schedule.id) {
+    await putData(`http://localhost:8080/api/timetables/${schedule.id}`, schedule);
+  }
+};
+
+export const createWorkerSchedule = async (workerId: number, schedule: any) => {
+  if (schedule && workerId) {
+    await postData(`http://localhost:8080/api/timetables/${workerId}`, schedule);
+  }
+};
+
+export const deleteWorkerSchedule = async (scheduleId: number) => {
+  if (scheduleId) {
+    await deleteData(`http://localhost:8080/api/timetables/${scheduleId}`);
+  }
+}
+
 export const deleteWorker = async (worker: Worker) => {
   if (worker) {
     await deleteData(`http://localhost:8080/api/workers/${worker.id}`);
