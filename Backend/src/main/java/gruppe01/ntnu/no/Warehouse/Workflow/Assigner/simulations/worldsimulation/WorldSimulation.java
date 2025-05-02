@@ -427,7 +427,23 @@ public class WorldSimulation {
     }
 
     public LocalDate getCurrentDate() {
-        return this.workday;
+        LocalDate currentDate = LocalDate.now();
+
+        if (workday != null) {
+            return workday;
+        } else {
+            boolean tasks = false;
+            while (!tasks) {
+                // Check if there are any active tasks for the current date
+                if (activeTaskService.getActiveTaskByDate(currentDate).isEmpty()) {
+                    currentDate = currentDate.minusDays(1);
+                    tasks = true;
+                }
+                // If no active tasks, move to the next day
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+        return currentDate;
     }
 
     public LocalDateTime getEndTime(ActiveTask task) {
