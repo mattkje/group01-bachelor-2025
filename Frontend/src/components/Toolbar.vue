@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import {onMounted, ref, inject, computed, defineEmits} from "vue";
-import axios from 'axios';
+import {onMounted, ref, computed} from "vue";
 import {
-  fetchAllZones,
   fetchSimulationDate,
   fetchSimulationStatus,
   fetchSimulationTime
@@ -12,14 +10,7 @@ import {
   runAllMonteCarloSimulations,
   startSimulationClock,
   stopSimulationClock
-} from "@/composables/Commands";
-
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-});
+} from "@/composables/SimulationCommands";
 
 const isSpinning = ref(false);
 let completionTime = ref(null);
@@ -63,7 +54,7 @@ const updateCurrentTime = async () => {
 
 const startClock = async () => {
   isPlaying.value = true;
-  await startSimulationClock(speeds[0]);
+  await startSimulationClock(60);
 };
 
 const stopClock = async () => {
@@ -164,12 +155,12 @@ onMounted(() => {
       </button>
     </div>
     <div class="vertical-separator"/>
-    <button class="date-clock">
+    <div class="date-clock">
       <p>Date</p>
       <div class="clock-time">
         <span>{{ dateText }}</span>
       </div>
-    </button>
+    </div>
     <div class="vertical-separator"/>
     <div class="clock">
       <p>Time</p>
@@ -277,11 +268,6 @@ onMounted(() => {
   width: 6rem;
   align-content: center;
   align-self: center;
-}
-
-.date-clock:hover {
-  background-color: #f0f0f0;
-  border-radius: 10px;
 }
 
 .clock-time {

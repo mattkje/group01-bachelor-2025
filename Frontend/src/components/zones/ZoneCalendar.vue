@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from "vue";
 import {Zone, Worker} from "@/assets/types";
-import {fetchSimulationDate} from "@/composables/DataFetcher";
+import {fetchSchedulesFromBackend, fetchSimulationDate} from "@/composables/DataFetcher";
 
 const props = defineProps<{
   zone: Zone;
@@ -19,7 +19,7 @@ const fetchDateFromBackend = async () => {
     const dateString = await fetchSimulationDate();
     date.value = new Date(dateString);
     todayIsoDate.value = date.value.toISOString().split("T")[0];
-    await fetchSchedulesFromBackend();
+    await loadSchedulesFromBackend();
   } catch (error) {
     console.error('Failed to fetch date:', error);
     const fallback = new Date();
@@ -28,14 +28,10 @@ const fetchDateFromBackend = async () => {
   }
 };
 
-const fetchSchedulesFromBackend = async () => {
+const loadSchedulesFromBackend = async () => {
+
   try {
-    const response = await
-        fetch(`http://localhost:8080/api/timetables/one-week/${date.value?.toISOString().split("T")[0]}/${props.zone.id}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    schedules.value = await response.json();
+    schedules.value = await fetchSchedulesFromBackend(date.value?.toISOString().split("T")[0], props.zone.id);
     groupSchedulesByWorker();
     console.log(groupedSchedules);
   } catch (error) {
@@ -103,7 +99,7 @@ const navigateWeek = (direction: number) => {
     date.value.setDate(date.value.getDate() + direction * 7);
     generateDates();
     getDateTitle();
-    fetchSchedulesFromBackend();
+    loadSchedulesFromBackend();
   }
 };
 
