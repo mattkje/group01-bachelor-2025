@@ -106,6 +106,7 @@ public class ZoneSimulator {
                 }
             } else {
                 zoneLatch = new CountDownLatch(pickerTasks.size());
+                pickerTasks = filteAndSortPickerTasks(pickerTasks);
                 for (PickerTask pickerTask : pickerTasks) {
                     // Simulate the picker task
                     String result = simulatePickerTask(pickerTask,
@@ -126,6 +127,18 @@ public class ZoneSimulator {
             Thread.currentThread().interrupt();
         }
         return zoneSimResult;
+    }
+
+    private Set<PickerTask> filteAndSortPickerTasks(Set<PickerTask> pickerTasks) {
+        return pickerTasks.stream()
+                // Filter out tasks that have an endTime
+                .filter(task -> task.getEndTime() == null)
+                // Sort tasks by whether they have workers
+                .sorted((task1, task2) -> Boolean.compare(
+                        task2.getWorker() != null,
+                        task1.getWorker() != null
+                ))
+                .collect(Collectors.toSet());
     }
 
     /**
