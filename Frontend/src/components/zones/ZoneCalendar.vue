@@ -266,7 +266,7 @@ thead th {
   align-items: center;
   justify-content: center;
   background-color: transparent;
-  font-size: 24px;
+  font-size: 20px;
   user-select: none;
 }
 
