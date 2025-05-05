@@ -253,6 +253,8 @@ hr {
 }
 
 .monte-carlo-graph {
-  min-height: 50vh;
+  min-height: calc(50vh - 100px);
+  height: 50%;
+  max-height: 100%;
 }
 </style>

@@ -224,7 +224,7 @@ table {
 
 th, td {
   border: 1px solid #E0E0E0;
-  padding: 8px;
+  padding: 0.15rem;
   text-align: center;
   color: #565656;
 }
@@ -258,7 +258,7 @@ thead th {
 .schedule-box {
   color: #fff;
   border: 1px dashed #CCC;
-  border-radius: 1rem;
+  border-radius: 0.8rem;
   height: 100%;
   padding: 4px;
   display: flex;
