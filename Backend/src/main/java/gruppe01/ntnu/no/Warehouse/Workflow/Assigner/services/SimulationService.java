@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
@@ -32,7 +33,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private static final int SIM_COUNT = 10;
+    private final AtomicInteger simCount = new AtomicInteger(10); // Default value
 
     @Autowired
     private ActiveTaskService activeTaskService;
@@ -85,7 +86,7 @@ public class SimulationService {
             day = LocalDateTime.now();
         }
 
-        for (int i = 0; i < SIM_COUNT; i++) {
+        for (int i = 0; i < getSimCount(); i++) {
             ZoneSimResult zoneSimResult = zoneSimulator.runZoneSimulation(
                     zone,
                     activeTasks,
@@ -109,10 +110,10 @@ public class SimulationService {
             throws ExecutionException, InterruptedException, IOException {
         List<SimulationResult> results = new ArrayList<>();
         if (models == null) {
-            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null, timetableService);
+            results = monteCarloWithRealData.monteCarlo(getSimCount(), null, null, timetableService);
             currentTime = LocalDateTime.now();
         } else {
-            results = monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime, timetableService);
+            results = monteCarloWithRealData.monteCarlo(getSimCount(), models,currentTime, timetableService);
         }
         HashMap<Long, String> newResult = new HashMap<>();
 
@@ -142,9 +143,9 @@ public class SimulationService {
     public List<SimulationResult> getSimulationResultsOnly(Map<String, RandomForest> models, LocalDateTime currentTime) throws IOException, ExecutionException, InterruptedException {
         List<SimulationResult> results = new ArrayList<>();
         if (models == null) {
-            return monteCarloWithRealData.monteCarlo(SIM_COUNT, null, null, timetableService);
+            return monteCarloWithRealData.monteCarlo(getSimCount(), null, null, timetableService);
         } else {
-            return monteCarloWithRealData.monteCarlo(SIM_COUNT, models,currentTime, timetableService);
+            return monteCarloWithRealData.monteCarlo(getSimCount(), models,currentTime, timetableService);
         }
     }
 
@@ -174,5 +175,13 @@ public class SimulationService {
             // Handle the case where the file is not found or cannot be read
             return "Error reading log file: " + e.getMessage();
         }
+    }
+
+    public int getSimCount() {
+        return simCount.get();
+    }
+
+    public void setSimCount(int newSimCount) {
+        simCount.set(newSimCount);
     }
 }

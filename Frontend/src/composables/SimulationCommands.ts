@@ -1,12 +1,17 @@
 import { fetchData, postData } from "@/composables/HttpMethods";
 
-export const startSimulationClock = async (simulationTime: number) => {
-    await postData(`http://localhost:8080/api/simulation/start?simulationTime=${simulationTime}`);
+export const startSimulationClock = async (simulationTime: number, simCount: number) => {
+    await postData(`http://localhost:8080/api/simulation/start?simulationTime=${simulationTime}&simCount=${simCount}`);
+};
+
+export const pauseSimulationClock = async () => {
+    await postData(`http://localhost:8080/api/simulation/pause`);
 };
 
 export const stopSimulationClock = async () => {
-    await postData(`http://localhost:8080/api/simulation/pause`);
+    await postData(`http://localhost:8080/api/simulation/stop`);
 };
+
 
 export const fastForwardSimulationClock = async (speed: number) => {
     await postData(`http://localhost:8080/api/simulation/fastForward?speedMultiplier=${speed}`);

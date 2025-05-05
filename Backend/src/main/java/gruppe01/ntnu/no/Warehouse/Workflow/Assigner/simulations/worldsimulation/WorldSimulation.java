@@ -488,6 +488,15 @@ public class WorldSimulation {
         }
     }
 
+    public void stopSimulation() throws InterruptedException, IOException, ExecutionException {
+        isPlaying = false;
+        isPaused = false;
+        currentTime = LocalTime.MIDNIGHT;
+        endTime = LocalTime.MIDNIGHT;
+        flushGraphs();
+        flushAllWorkerTasks();
+    }
+
     public void changeSimulationSpeed(double speedFactor) {
         if (speedFactor > 0) {
             if (speedFactor == 1) {
@@ -682,5 +691,17 @@ public class WorldSimulation {
             worker.setCurrentPickerTask(null);
             workerService.updateWorker(worker.getId(), worker);
         }
+    }
+
+    public void flushGraphs() {
+        activeTasksInProgress.clear();
+        pickerTasksInProgress.clear();
+        activeTaskEndTimes.clear();
+        pickerTaskEndTimes.clear();
+        availableWorkers.clear();
+        busyWorkers.clear();
+        workersDelayedBreak.clear();
+        workersOnBreak.clear();
+        workersWaitingForTask.clear();
     }
 }

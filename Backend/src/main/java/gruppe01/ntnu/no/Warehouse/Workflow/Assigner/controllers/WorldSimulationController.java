@@ -17,14 +17,19 @@ public class WorldSimulationController {
     @Autowired
     private WorldSimulation worldSimulation;
 
-    @PostMapping("/start")
-    public void startSimulation(@RequestParam int simulationTime) throws Exception {
-        worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
-    }
-
+   @PostMapping("/start")
+   public void startSimulation(@RequestParam int simulationTime, @RequestParam int simCount) throws Exception {
+       worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
+       // Add logic to handle simCount if needed
+   }
     @PostMapping("/pause")
     public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
         worldSimulation.pauseSimulation();
+    }
+
+    @PostMapping("/stop")
+    public void stopSimulation() throws InterruptedException, IOException, ExecutionException {
+        worldSimulation.stopSimulation();
     }
 
     @GetMapping("/getStatus")
