@@ -186,8 +186,7 @@ onMounted(() => {
     <span
         v-if="schedule.startTime.split('T')[0] === dateObj.isoDate"
     >
-      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-      <br>
+      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }} -
       {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
     </span>
           </div>
@@ -212,8 +211,9 @@ onMounted(() => {
   width: 90%;
   height: 100%;
   margin: 0 3.5rem;
-  max-height: calc(100vh - 570px);
   overflow-y: auto;
+  overflow-x: auto;
+  max-height: 30vh;
   flex: 1;
 }
 
@@ -230,7 +230,7 @@ th, td {
 }
 
 td {
-  height: 80px;
+  height: 40px;
 }
 
 thead th:first-child,
@@ -243,7 +243,7 @@ tbody td:first-child {
 
 thead th:not(:first-child),
 tbody td:not(:first-child) {
-  width: 135px;
+  width: 11.5%;
 }
 
 thead th {
@@ -258,21 +258,20 @@ thead th {
 .schedule-box {
   color: #fff;
   border: 1px dashed #CCC;
-  border-radius: 20px;
-  height: 90px;
-  min-height: 60px;
+  border-radius: 1rem;
+  height: 100%;
   padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: transparent;
-  font-size: 20px;
+  font-size: 0.8rem;
   user-select: none;
 }
 
 .schedule-box span {
   line-height: 1.2;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .schedule-box.has-schedule {
@@ -329,5 +328,17 @@ thead th {
 
 .today-column {
   color: #E77474;
+}
+
+@media (max-width: 1600px) {
+  .schedule-box {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 800px) {
+  .schedule-box {
+    font-size: 12px;
+  }
 }
 </style>
