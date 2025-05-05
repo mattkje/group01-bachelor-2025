@@ -2,6 +2,7 @@
 import {onBeforeUnmount, onMounted, ref} from "vue";
 import { PickerTask, ActiveTask } from "@/assets/types";
 import EditActiveTaskModal from "@/components/tasks/EditActiveTaskModal.vue";
+import {deleteActiveTask, deletePickerTask, updateActiveTask, updatePickerTask} from "@/composables/DataUpdater";
 
 const props = defineProps<{
   pickerTask?: PickerTask;
@@ -46,66 +47,22 @@ const closeDropdown = (event: MouseEvent) => {
 
 const deleteTask = async () => {
   if (props.activeTask) {
-    try {
-      const response = await fetch(`http://localhost:8080/api/active-tasks/${props.activeTask.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      emit("taskDeleted");
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
+    await deleteActiveTask(props.activeTask.id);
+    emit("taskDeleted");
   } else if (props.pickerTask) {
-    try {
-      const response = await fetch(`http://localhost:8080/api/picker-tasks/${props.pickerTask.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      emit("taskDeleted");
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
+    await deletePickerTask(props.pickerTask.id);
+    emit("taskDeleted");
   }
 };
 
 const updateTask = async (updatedTask: PickerTask | ActiveTask) => {
   console.log(updatedTask);
   if (props.activeTask) {
-    try {
-      const response = await fetch(`http://localhost:8080/api/active-tasks/${props.activeTask.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTask)
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      emit("taskUpdated");
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
-  } else if (props.pickerTask) {
-    try {
-      const response = await fetch(`http://localhost:8080/api/picker-tasks/${props.pickerTask.id}/zone/${updatedTask.zoneId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTask)
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      emit("taskUpdated");
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
+    await updateActiveTask(updatedTask.id);
+    emit("taskUpdated");
+  } else if (props.pickerTask && 'zoneId' in updatedTask) {
+    await updatePickerTask(props.pickerTask.id, updatedTask.zoneId);
+    emit("taskUpdated");
   }
 };
 

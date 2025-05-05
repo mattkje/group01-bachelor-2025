@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import {onMounted, ref, computed} from 'vue';
-import {License, ActiveTask, Worker, TimeTable, Task} from '@/assets/types';
+import {onMounted, ref} from 'vue';
+import {License, ActiveTask, TimeTable, Task} from '@/assets/types';
 import TaskClass from "@/components/tasks/Task.vue";
-import axios from "axios";
+import {
+  fetchAllActiveTasks, fetchAllPickerZones,
+  fetchAllTasksForZone, fetchSimulationDate,
+  fetchSimulationTime,
+  fetchTimeTables
+} from "@/composables/DataFetcher";
 
 const props = defineProps<{
   name: string;
@@ -18,31 +23,16 @@ const qualifiedForAnyTask = ref(false);
 const overtime = ref(false);
 
 
-const getTaskByWorker = async (workerId: number) => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/active-tasks`);
-    const tasks = await response.json();
-    const workerTask = tasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
-    qualified.value = isWorkerQualified(workerTask);
-    return workerTask;
-  } catch (error) {
-    console.error('Failed to fetch worker task:', error);
-  }
+const getActiveTaskByWorker = async (workerId: number) => {
+  const activeTasks = await fetchAllActiveTasks();
+  const workerTask = activeTasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
+  qualified.value = isWorkerQualified(workerTask);
+  return workerTask;
 };
 
-const fetchTasksForZone = async (zoneId: number): Promise<Task[]> => {
-  try {
-    const response = await fetch(`http://localhost:8080/api/zones/${zoneId}/tasks`);
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to fetch tasks for zone:', error);
-    return [];
-  }
-};
-
-const doesWorkerFulfillAnyTaskLicense = async (zoneId: number, workerId: number): Promise<boolean> => {
+const doesWorkerFulfillAnyTaskLicense = async (zoneId: number): Promise<boolean> => {
   if (await isZonePickerZone(zoneId)) return true;
-  const tasks = await fetchTasksForZone(zoneId);
+  const tasks = await fetchAllTasksForZone(zoneId);
   return tasks.some((task: Task) =>
       task.requiredLicense.some((license: License) =>
           props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
@@ -66,21 +56,13 @@ const overtimeOccurance = (task: any) => {
 
 const timeTables = ref<TimeTable[]>([]);
 
-const fetchTimeTables = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/timetables');
-    timeTables.value = await response.json();
-  } catch (error) {
-    console.error('Error fetching time tables:', error);
-  }
-};
 
 const startPolling = () => {
   fetchTimeTables();
   setInterval(async () => {
-    await fetchTimeTables();
-    activeTask.value = await getTaskByWorker(props.workerId);
-    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, props.workerId);
+    timeTables.value = await fetchTimeTables();
+    activeTask.value = await getActiveTaskByWorker(props.workerId);
+    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
     overtime.value = overtimeOccurance(activeTask.value);
   }, 5000);
 };
@@ -89,11 +71,11 @@ const referenceTime = ref<Date | null>(null);
 
 const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   try {
-    const timeResponse = await axios.get('http://localhost:8080/api/simulation/currentTime');
-    const dateResponse = await axios.get('http://localhost:8080/api/simulation/currentDate');
+    const timeResponse = await fetchSimulationTime();
+    const dateResponse = await fetchSimulationDate();
 
-    const [hours, minutes, seconds] = timeResponse.data.split(':').map(Number);
-    const [year, month, day] = dateResponse.data.split('-').map(Number);
+    const [hours, minutes, seconds] = timeResponse.split(':').map(Number);
+    const [year, month, day] = dateResponse.split('-').map(Number);
 
     referenceTime.value = new Date(year, month - 1, day, hours, minutes, seconds);
   } catch (error) {
@@ -126,19 +108,13 @@ onMounted(() => {
   startPolling();
 });
 const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
-  try {
-    const response = await fetch('http://localhost:8080/api/zones/picker-zones');
-    const pickerZones = await response.json();
-    return pickerZones.some((zone: any) => zone.id === zoneId);
-  } catch (error) {
-    console.error('Error fetching picker zones:', error);
-    return false;
-  }
+  const pickerZones = await fetchAllPickerZones();
+  return pickerZones.some((zone: any) => zone.id === zoneId);
 };
 
 onMounted(async () => {
-  activeTask.value = await getTaskByWorker(props.workerId);
-  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId, props.workerId);
+  activeTask.value = await getActiveTaskByWorker(props.workerId);
+  qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
   overtime.value = overtimeOccurance(activeTask.value);
 });
 </script>

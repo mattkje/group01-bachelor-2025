@@ -3,7 +3,7 @@ import {ref, onMounted} from 'vue';
 import ZoneClass from "../components/zones/Zone.vue";
 import WorkerRegistry from "../components/zones/WorkerRegistry.vue";
 import {Zone, Worker, ActiveTask} from "@/assets/types";
-import {fetchAllWorkers, fetchAllZones, fetchActiveTasks} from "@/composables/DataFetcher";
+import {fetchAllWorkers, fetchAllZones, fetchAllActiveTasks} from "@/composables/DataFetcher";
 
 const zones = ref<Zone[]>([]);
 const workers = ref<Worker[]>([]);
@@ -36,7 +36,7 @@ const loadWorkers = async () => {
 
 const loadActiveTasks = async () => {
   try {
-    activeTasks.value = await fetchActiveTasks();
+    activeTasks.value = await fetchAllActiveTasks();
   } catch (error) {
     console.error('Failed to fetch active tasks:', error);
   }
@@ -66,7 +66,6 @@ const moveUnavailableWorkers = () => {
 const updateWorkerZone = async () => {
   try {
     moveUnavailableWorkers();
-    console.log('Worker zones updated successfully');
     await loadZones();
   } catch (error) {
     console.error('Error updating worker zones:', error);

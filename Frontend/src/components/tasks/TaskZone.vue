@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {ActiveTask, PickerTask} from '@/assets/types';
-import axios from "axios";
+import {fetchSimulationDate} from "@/composables/DataFetcher";
 
 const props = defineProps<{
   zoneId: number;
@@ -17,14 +17,14 @@ const onAddTask = () => {
 };
 
 const collapsed = ref(false);
-const currentDate = ref(new Date());
+const currentDate = ref('');
 const activeTasks = ref<ActiveTask[]>(props.tasks ? [...props.tasks] : []);
 const pickerTasks = ref<PickerTask[]>(props.pickerTasks ? [...props.pickerTasks] : []);
 
 const fetchCurrentDateFromBackend = async () => {
-  const response = await axios.get('http://localhost:8080/api/simulation/currentDate');
-  return response.data;
+  return await fetchSimulationDate();
 };
+
 
 const activeTasksToday = computed(() =>
     activeTasks.value.filter(task => task.date.toString() === currentDate.value.toString())

@@ -2,7 +2,6 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,4 +51,13 @@ public class TimetableController {
         return timetableService.updateTimetable(id, timetable);
     }
 
+    @PostMapping("/{workerId}")
+    public Timetable addTimetable(@RequestBody Timetable timetable, @PathVariable Long workerId) {
+        return timetableService.addTimetable(timetable, workerId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteTimetable(@PathVariable Long id) {
+        timetableService.deleteTimetable(id);
+    }
 }

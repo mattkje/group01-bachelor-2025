@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {defineProps, onBeforeUnmount, onMounted, ref} from 'vue';
 import { PickerTask } from '@/assets/types';
 import TaskDropdown from "@/components/tasks/TaskDropdown.vue";
 

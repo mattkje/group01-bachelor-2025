@@ -2,6 +2,9 @@
 import {onMounted, reactive, ref} from "vue";
 import Multiselect from "vue-multiselect";
 import "vue-multiselect/dist/vue-multiselect.min.css";
+import {fetchLicenses} from "@/composables/DataFetcher";
+import {createTask} from "@/composables/DataUpdater";
+import {License, Task} from "@/assets/types";
 
 
 const emit = defineEmits(["taskCreated"]);
@@ -10,7 +13,9 @@ const props = defineProps<{
   zoneId: number | null;
 }>();
 
-const newTask = reactive({
+const newTask = reactive<Task>({
+  id: null,
+  zoneId: null,
   name: "",
   description: "",
   maxTime: 0,
@@ -20,41 +25,19 @@ const newTask = reactive({
   requiredLicense: [],
 });
 
-const createTask = () => {
-  //post mapping to backend localhost/api/tasks/${props.zoneId}
-  fetch(`http://localhost:8080/api/tasks/${props.zoneId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(newTask),
-  })
-    .then((response) => {
-      if (response.ok) {
-        emit("taskCreated", newTask);
-      } else {
-        console.error("Failed to create task");
-      }
-    })
-    .catch((error) => {
-      console.error("Error creating task:", error);
-    });
-};
-
-const availableLicenses = ref<string[]>([]);
-
-const fetchAllLicenses = async () => {
+const handleCreateTask = async () => {
   try {
-    const response = await fetch("http://localhost:8080/api/licenses");
-    if (!response.ok) throw new Error("Network response was not ok");
-    availableLicenses.value = await response.json();
+    await createTask(props.zoneId!, newTask);
+    emit("taskCreated", newTask);
   } catch (error) {
-    console.error("Failed to fetch licenses:", error);
+    console.error("Failed to create task:", error);
   }
 };
 
-onMounted(() => {
-  fetchAllLicenses();
+const availableLicenses = ref<License[]>([]);
+
+onMounted(async () => {
+  availableLicenses.value = await fetchLicenses();
 });
 </script>
 
@@ -100,7 +83,7 @@ onMounted(() => {
       </label>
       <div class="modal-actions">
         <button @click="$emit('close')">Cancel</button>
-        <button @click="createTask">Create</button>
+        <button @click="handleCreateTask">Create</button>
       </div>
     </div>
   </div>
