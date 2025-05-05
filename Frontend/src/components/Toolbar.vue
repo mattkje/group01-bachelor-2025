@@ -63,6 +63,7 @@ const updateCurrentTime = async () => {
 const startClock = async () => {
   isPlaying.value = true;
   await startSimulationClock(60, simCount.value);
+  setInterval(updateCurrentTime, 1000);
 };
 
 const stopClock = async () => {
@@ -71,6 +72,7 @@ const stopClock = async () => {
 };
 
 const abortSimulation = async () => {
+  await stopSimulationClock();
   if (intervalId) {
     clearInterval(intervalId);
     intervalId = null;
@@ -82,7 +84,8 @@ const abortSimulation = async () => {
   currentDate.value = '00/00/0000';
   simCount.value = 10;
   speedIndex = 0;
-  await stopSimulationClock();
+  await updateCurrentTime();
+
 };
 
 const fastForwardClock = async () => {
