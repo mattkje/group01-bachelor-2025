@@ -23,9 +23,9 @@ const qualifiedForAnyTask = ref(false);
 const overtime = ref(false);
 
 
-const getTaskByWorker = async (workerId: number) => {
-  const tasks = await fetchAllActiveTasks();
-  const workerTask = tasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
+const getActiveTaskByWorker = async (workerId: number) => {
+  const activeTasks = await fetchAllActiveTasks();
+  const workerTask = activeTasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
   qualified.value = isWorkerQualified(workerTask);
   return workerTask;
 };
@@ -60,8 +60,8 @@ const timeTables = ref<TimeTable[]>([]);
 const startPolling = () => {
   fetchTimeTables();
   setInterval(async () => {
-    await fetchTimeTables();
-    activeTask.value = await getTaskByWorker(props.workerId);
+    timeTables.value = await fetchTimeTables();
+    activeTask.value = await getActiveTaskByWorker(props.workerId);
     qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
     overtime.value = overtimeOccurance(activeTask.value);
   }, 5000);
@@ -113,7 +113,7 @@ const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
 };
 
 onMounted(async () => {
-  activeTask.value = await getTaskByWorker(props.workerId);
+  activeTask.value = await getActiveTaskByWorker(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
   overtime.value = overtimeOccurance(activeTask.value);
 });
