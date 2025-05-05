@@ -25,13 +25,18 @@ const fetchPausedState = async () => {
 
     switch (state) {
       case 0:
+        isPlaying.value = false;
         break;
       case 1:
+        await updateCurrentTime();
         isPlaying.value = true;
+        setInterval(updateCurrentTime, 1000);
         break;
       case 2:
+        await updateCurrentTime();
         isPlaying.value = true;
         isPaused.value = true;
+        setInterval(updateCurrentTime, 1000);
         break;
       default:
         console.error('Invalid state value:', state);
@@ -41,8 +46,8 @@ const fetchPausedState = async () => {
   }
 };
 
-const currentTime = ref('');
-const currentDate = ref('');
+const currentTime = ref('00:00');
+const currentDate = ref('00/00/0000');
 let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
@@ -122,8 +127,6 @@ const dateText = computed(() => {
 
 onMounted(() => {
   fetchPausedState();
-  updateCurrentTime();
-  setInterval(updateCurrentTime, 1000);
 });
 </script>
 

@@ -32,7 +32,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private static final int SIM_COUNT = 1;
+    private static final int SIM_COUNT = 10;
 
     @Autowired
     private ActiveTaskService activeTaskService;
