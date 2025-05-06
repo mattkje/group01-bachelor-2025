@@ -125,7 +125,7 @@ public class WorldSimulation {
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
 
-        if (workday.getDayOfWeek() == DayOfWeek.SUNDAY) {
+        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
             zoneService.updateMachineLearningModel();
         }
 
