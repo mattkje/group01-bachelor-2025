@@ -3,8 +3,10 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -94,5 +96,10 @@ public class ZoneController {
     @DeleteMapping("/{id}")
     public Zone deleteZone(@PathVariable Long id) {
         return zoneService.deleteZone(id);
+    }
+
+    @PutMapping("/update-machine-learning-model")
+    public void updateMachineLearningModel() throws IOException {
+        zoneService.updateMachineLearningModel();
     }
 }
