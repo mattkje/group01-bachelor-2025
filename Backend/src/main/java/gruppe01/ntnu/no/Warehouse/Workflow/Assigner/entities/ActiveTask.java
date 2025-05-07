@@ -1,8 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -17,6 +15,7 @@ import java.util.List;
  * have multiple workers assigned to it.
  */
 @Entity
+@Table(name = "active_task")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ActiveTask {
 
@@ -36,7 +35,7 @@ public class ActiveTask {
     @Column(name = "eta")
     private LocalDate eta;
 
-    @Column(name="date")
+    @Column(name = "date")
     private LocalDate date;
 
     // Recurrence type: 0 = no recurrence, 1 = monthly, 2 = weekly,
@@ -68,6 +67,7 @@ public class ActiveTask {
         this.date = activeTask.getDate();
         this.task = activeTask.getTask();
         this.workers = new ArrayList<>(activeTask.getWorkers());
+        this.recurrenceType = activeTask.getRecurrenceType();
     }
 
     public void setId(Long id) {

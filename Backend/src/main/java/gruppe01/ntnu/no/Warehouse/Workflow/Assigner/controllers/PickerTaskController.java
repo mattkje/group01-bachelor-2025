@@ -2,7 +2,6 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,8 +10,16 @@ import java.util.List;
 @RequestMapping("/api/picker-tasks")
 public class PickerTaskController {
 
-    @Autowired
-    private PickerTaskService pickerTaskService;
+    private final PickerTaskService pickerTaskService;
+
+    /**
+     * Constructor for PickerTaskController.
+     *
+     * @param pickerTaskService The service to handle picker task operations.
+     */
+    public PickerTaskController(PickerTaskService pickerTaskService) {
+        this.pickerTaskService = pickerTaskService;
+    }
 
     @GetMapping
     public List<PickerTask> getAllPickerTasks() {

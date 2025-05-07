@@ -5,7 +5,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerato
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -19,33 +18,56 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * SimulationController handles HTTP requests related to simulation operations.
+ * It provides endpoints to generate active tasks, run Monte Carlo simulations,
+ * and manage simulation settings.
+ */
 @RestController
 @RequestMapping("/api")
 public class SimulationController {
 
-    @Autowired
-    private ActiveTaskGenerator activeTaskGeneratorService;
+    private final ActiveTaskGenerator activeTaskGeneratorService;
 
-    @Autowired
-    private MonteCarlo monteCarloWithRealData;
-    @Autowired
-    private TimeTableGenerator timeTableGenerator;
-    @Autowired
-    private WorldSimulation worldSimulation;
-    @Autowired
-    private SimulationService simulationService;
-    @Autowired
-    private PickerTaskGenerator pickerTaskGenerator;
+    private final TimeTableGenerator timeTableGenerator;
 
-    //  Generate active tasks for any given day
-    // Format for day: YYYY-MM-DD
-    // Format for numDays: x amount of days going forward, min 1
+    private final WorldSimulation worldSimulation;
+
+    private final SimulationService simulationService;
+
+    private final PickerTaskGenerator pickerTaskGenerator;
+
+    /**
+     * Constructor for SimulationController.
+     *
+     * @param activeTaskGeneratorService The service to handle active task generation.
+     * @param timeTableGenerator         The service to generate timetables.
+     * @param worldSimulation            The service to run world simulations.
+     * @param simulationService          The service to handle simulation operations.
+     * @param pickerTaskGenerator        The service to generate picker tasks.
+     */
+    public SimulationController(ActiveTaskGenerator activeTaskGeneratorService,
+                                TimeTableGenerator timeTableGenerator,
+                                WorldSimulation worldSimulation,
+                                SimulationService simulationService,
+                                PickerTaskGenerator pickerTaskGenerator) {
+        this.activeTaskGeneratorService = activeTaskGeneratorService;
+        this.timeTableGenerator = timeTableGenerator;
+        this.worldSimulation = worldSimulation;
+        this.simulationService = simulationService;
+        this.pickerTaskGenerator = pickerTaskGenerator;
+    }
+
+    /**
+     * Endpoint to generate active tasks for a given date and number of days.
+     *
+     * @param date    The start date for generating active tasks.
+     * @param numDays The number of days to generate active tasks for.
+     */
     @GetMapping("/generate-active-tasks/{date}/{numDays}")
-    public void generateActiveTasks(@PathVariable String date, @PathVariable int numDays)
-            throws Exception {
+    public void generateActiveTasks(@PathVariable String date, @PathVariable int numDays) {
         LocalDate startDate = LocalDate.parse(date);
         activeTaskGeneratorService.generateActiveTasks(startDate, numDays);
     }
@@ -66,20 +88,20 @@ public class SimulationController {
     }
 
     @GetMapping("/monte-carlo/zones/{id}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws InterruptedException, IOException {
-        return simulationService.runZoneSimulation(id,null);
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws IOException {
+        return simulationService.runZoneSimulation(id, null);
     }
 
-@GetMapping("/monte-carlo/zones/{id}/day/{day}")
-public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws InterruptedException, IOException {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    LocalDate date = LocalDate.parse(day, formatter);
-    LocalDateTime dateTime = date.atStartOfDay();
-    return simulationService.runZoneSimulation(id, dateTime);
-}
+    @GetMapping("/monte-carlo/zones/{id}/day/{day}")
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws IOException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date = LocalDate.parse(day, formatter);
+        LocalDateTime dateTime = date.atStartOfDay();
+        return simulationService.runZoneSimulation(id, dateTime);
+    }
 
 
-        @GetMapping("/generate-timetable/{date}")
+    @GetMapping("/generate-timetable/{date}")
     public void generateTimeTable(@PathVariable String date) {
         LocalDate startDate = LocalDate.parse(date);
         timeTableGenerator.generateTimeTable(startDate);

@@ -4,6 +4,10 @@ import jakarta.persistence.Embeddable;
 
 import java.time.LocalTime;
 
+/**
+ * Represents a time range for a worker's working hours.
+ * This class is used to define the start and end times of a worker's shift.
+ */
 @Embeddable
 public class WorkerTimeRange {
     private LocalTime startTime;

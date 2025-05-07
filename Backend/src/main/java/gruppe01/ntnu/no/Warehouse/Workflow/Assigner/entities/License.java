@@ -11,6 +11,7 @@ import java.util.Set;
  * A license is a requirement for a worker to perform a task.
  */
 @Entity
+@Table(name = "license")
 public class License {
 
     @Id

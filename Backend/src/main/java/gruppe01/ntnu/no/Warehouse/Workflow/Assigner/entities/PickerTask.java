@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
  */
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
+@Table(name = "picker_task")
 public class PickerTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,12 +50,12 @@ public class PickerTask {
     private LocalDateTime endTime;
 
     @ManyToOne
-    @JoinColumn(name = "zoneId")
+    @JoinColumn(name = "zone_Id")
     @JsonIgnore
     private Zone zone;
 
     @OneToOne
-    @JoinColumn(name = "workerId")
+    @JoinColumn(name = "worker_Id")
     private Worker worker;
 
     @Column(name = "date")
@@ -74,7 +75,7 @@ public class PickerTask {
         this.zone = zone;
     }
 
-  public PickerTask(PickerTask pickerTask) {
+    public PickerTask(PickerTask pickerTask) {
         this.id = pickerTask.getId();
         this.distance = pickerTask.getDistance();
         this.packAmount = pickerTask.getPackAmount();
@@ -86,9 +87,11 @@ public class PickerTask {
         this.zone = new Zone(pickerTask.getZone());
         this.worker = pickerTask.getWorker();
         this.date = pickerTask.getDate();
-  }
+        this.startTime = pickerTask.getStartTime();
+        this.endTime = pickerTask.getEndTime();
+    }
 
-  public Worker getWorker() {
+    public Worker getWorker() {
         return worker;
     }
 
@@ -142,7 +145,7 @@ public class PickerTask {
 
     @JsonProperty("zoneId")
     public Long getZoneId() {
-        return zone.getId();
+        return zone != null ? zone.getId() : null;
     }
 
     public void setId(Long id) {

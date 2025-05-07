@@ -6,7 +6,12 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a WorldSimData entity in the system.
+ * This class is used to store simulation data for a specific zone.
+ */
 @Entity
+@Table(name = "world_sim_data")
 public class WorldSimData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +34,8 @@ public class WorldSimData {
     @JsonIgnore
     private Zone zone;
 
-    public WorldSimData() {}
+    public WorldSimData() {
+    }
 
     public LocalDateTime getTime() {
         return time;
@@ -76,7 +82,7 @@ public class WorldSimData {
     }
 
     @JsonProperty
-    public long getZoneId() {
+    public Long getZoneId() {
         return zone != null ? zone.getId() : null;
     }
 

@@ -2,7 +2,6 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -13,8 +12,11 @@ import java.util.Set;
 @RequestMapping("/api/zones")
 public class ZoneController {
 
-    @Autowired
-    private ZoneService zoneService;
+    private final ZoneService zoneService;
+
+    public ZoneController(ZoneService zoneService) {
+        this.zoneService = zoneService;
+    }
 
     @GetMapping
     public List<Zone> getAllZones() {

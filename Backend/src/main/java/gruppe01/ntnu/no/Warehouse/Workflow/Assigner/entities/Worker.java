@@ -17,6 +17,7 @@ import java.util.*;
  * a set of licenses that determine what tasks they can perform.
  */
 @Entity
+@Table(name = "worker")
 public class Worker {
 
     @Id
@@ -56,7 +57,6 @@ public class Worker {
     @CollectionTable(name = "worker_schedule", joinColumns = @JoinColumn(name = "worker_id"))
     @MapKeyColumn(name = "day_of_week")
     @MapKeyEnumerated(EnumType.STRING)
-    @Column(name = "work_schedule")
     @JsonIgnore
     private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
@@ -66,9 +66,9 @@ public class Worker {
             joinColumns = @JoinColumn(name = "worker_id"),
             inverseJoinColumns = @JoinColumn(name = "license_id")
     )
-    private Set<License> licenses;
+    private Set<License> licenses = new HashSet<>();
 
-    public Worker(){
+    public Worker() {
 
     }
 
@@ -80,6 +80,11 @@ public class Worker {
         this.efficiency = worker.efficiency;
         this.licenses = new HashSet<>(worker.licenses);
         this.availability = worker.availability;
+        this.currentActiveTask = worker.currentActiveTask;
+        this.currentPickerTask = worker.currentPickerTask;
+        this.breakStartTime = worker.breakStartTime;
+        this.dead = worker.dead;
+        this.workSchedule = new HashMap<>(worker.workSchedule);
     }
 
     public Worker(String name, Long zone, String workTitle, double efficiency, ArrayList<License> licenses, boolean availability) {

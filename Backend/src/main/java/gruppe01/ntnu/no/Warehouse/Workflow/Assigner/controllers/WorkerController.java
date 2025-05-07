@@ -2,7 +2,6 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,12 +9,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * WorkerController handles HTTP requests related to workers.
+ * It provides endpoints to create, read, update, and delete workers.
+ */
 @RestController
 @RequestMapping("/api/workers")
 public class WorkerController {
 
-    @Autowired
-    private WorkerService workerService;
+    private final WorkerService workerService;
+
+    /**
+     * Constructor for WorkerController.
+     *
+     * @param workerService The service to handle worker operations.
+     */
+    public WorkerController(WorkerService workerService) {
+        this.workerService = workerService;
+    }
 
     @GetMapping
     public List<Worker> getAllWorkers() {
