@@ -10,7 +10,7 @@ import {fetchZone} from "@/composables/DataFetcher";
 
 
 let currentZone = ref<Zone | null>(null);
-let activeTab = ref<'tasks' | 'calendar'>('tasks');
+let activeTab = ref<'tasks' | 'calendar'>('calendar');
 const route = useRoute();
 const isSpinning = ref(false);
 
@@ -72,32 +72,37 @@ onMounted(() => {
         </div>
       </div>
       <div class="vertical-separator"/>
-      <MonteCarloGraph class="monte-carlo-graph" :zone-id="currentZone.id"/>
+      <div class="monte-carlo-graph">
+        <MonteCarloGraph :zone-id="currentZone.id"/>
+      </div>
     </div>
     <hr>
     <div class="tabs">
-      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Tasks</button>
       <button :class="{ active: activeTab === 'calendar' }" @click="activeTab = 'calendar'">Calendar</button>
+      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Tasks</button>
     </div>
-    <div v-if="activeTab === 'tasks'">
-      <ZoneTasks v-if="currentZone" :zone="currentZone" :tasks="currentZone.tasks"/>
-    </div>
-    <div v-if="activeTab === 'calendar'">
-      <ZoneCalendar v-if="currentZone" :zone="currentZone"/>
+    <div v-if="currentZone" class="bottom-container">
+      <ZoneTasks  :zone="currentZone" :tasks="currentZone.tasks" v-if="activeTab === 'tasks'" />
+      <ZoneCalendar v-if="activeTab === 'calendar'" :zone="currentZone"/>
     </div>
   </div>
 </template>
 
 <style scoped>
 .container-container {
-  height: 100vh;
+  height: 100%;
 }
 
 .container {
+  max-height: 60%;
   width: 100%;
   display: flex;
   flex-direction: row;
 
+}
+
+.bottom-container {
+  min-height: 30%;
 }
 
 .tabs {
@@ -143,7 +148,8 @@ onMounted(() => {
 
 
 .zone-info {
-  width: 100%;
+  min-width: 400px;
+  width: 20%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -153,7 +159,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, minmax(150px, 1fr));
   gap: 10px;
-  overflow-y: auto;
+  margin-bottom: 30px;
 }
 
 .worker {
@@ -253,8 +259,9 @@ hr {
 }
 
 .monte-carlo-graph {
-  min-height: calc(50vh - 100px);
-  height: 50%;
+  width: 100%;
+  padding: 20px;
+  min-height: 100%;
   max-height: 100%;
 }
 </style>

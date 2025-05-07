@@ -209,11 +209,11 @@ onMounted(() => {
 <style scoped>
 .calendar-container {
   width: 90%;
+  max-width: 1200px;
   height: 100%;
   margin: 0 3.5rem;
   overflow-y: auto;
   overflow-x: auto;
-  max-height: 30vh;
   flex: 1;
 }
 
