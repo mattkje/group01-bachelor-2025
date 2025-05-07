@@ -36,7 +36,7 @@ public class TimetableController {
 
     @GetMapping("/today/zone/{zoneId}")
     public List<Timetable> getTodaysTimetable(@PathVariable Long zoneId) {
-        return timetableService.getTodaysTimetablesByZone(zoneId);
+        return timetableService.getTodayTimetablesByZone(zoneId);
     }
 
     @GetMapping("zone/{zoneId}")

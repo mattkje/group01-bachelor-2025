@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import smile.regression.RandomForest;
 
@@ -33,34 +31,42 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private final AtomicInteger simCount = new AtomicInteger(10); // Default value
+    private final AtomicInteger simCount = new AtomicInteger(10);
 
-    @Autowired
-    private ActiveTaskService activeTaskService;
-    @Autowired
-    private ZoneService zoneService;
-    @Autowired
-    private MonteCarlo monteCarloWithRealData;
-    @Autowired
-    private PickerTaskService pickerTaskService;
-    @Autowired
-    private Utils utils;
-    @Autowired
-    private TimetableService timetableService;
+    private final ZoneService zoneService;
+
+    private final MonteCarlo monteCarloWithRealData;
+
+    private final Utils utils;
+
+    private final TimetableService timetableService;
 
     private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
-
-//TODO: Fix this to work with a picker zone
+    /**
+     * Constructor for SimulationService.
+     *
+     * @param zoneService            the service for Zone entity
+     * @param monteCarloWithRealData the Monte Carlo simulation service
+     * @param utils                  utility class for simulations
+     * @param timetableService       the service for Timetable entity
+     */
+    public SimulationService(ZoneService zoneService, MonteCarlo monteCarloWithRealData, Utils utils, TimetableService timetableService) {
+        this.zoneService = zoneService;
+        this.monteCarloWithRealData = monteCarloWithRealData;
+        this.utils = utils;
+        this.timetableService = timetableService;
+    }
 
     /**
+     * TODO: Fix this to work with a picker zone
+     * TODO: Remake this to work with the new Zone Simulator 2
      * Runs a simulation on a zone
      * Returns a list of strings containing the predicted time of completion and any error messages
      *
      * @param zoneId The ID of the zone to run the simulation on
      * @return A list of strings containing the predicted time of completion and any error messages
      */
-    //TODO: Remake this to work with the new Zone Simulator 2
     public List<ZoneSimResult> runZoneSimulation(Long zoneId, LocalDateTime day) throws IOException {
         Zone zone = zoneService.getZoneById(zoneId);
         // Ensure the zoneID exists
@@ -74,9 +80,9 @@ public class SimulationService {
         Set<PickerTask> pickerTasks = new HashSet<>();
         RandomForest models = null;
 
-        if (zone.getIsPickerZone()){
+        if (zone.getIsPickerZone()) {
             pickerTasks = zoneService.getPickerTasksByZoneId(zoneId);
-            models = mlModel.getModel(zone.getName(),false);
+            models = mlModel.getModel(zone.getName(), false);
         } else {
             activeTasks = zoneService.getActiveTasksByZoneId(zoneId).stream().toList();
 
@@ -105,15 +111,19 @@ public class SimulationService {
      * The first element of the response contains the time in which the simulation is predicted to be completed
      * The rest of the elements contain any error messages
      * Call it by using the following: /api/monte-carlo
+     *
+     * @param models      The models to use for the simulation
+     * @param currentTime The current time
+     * @return A map containing the predicted completion time and any error messages
      */
     public Map<Long, String> runCompleteSimulation(Map<String, RandomForest> models, LocalDateTime currentTime)
             throws ExecutionException, InterruptedException, IOException {
-        List<SimulationResult> results = new ArrayList<>();
+        List<SimulationResult> results;
         if (models == null) {
             results = monteCarloWithRealData.monteCarlo(getSimCount(), null, null, timetableService);
             currentTime = LocalDateTime.now();
         } else {
-            results = monteCarloWithRealData.monteCarlo(getSimCount(), models,currentTime, timetableService);
+            results = monteCarloWithRealData.monteCarlo(getSimCount(), models, currentTime, timetableService);
         }
         HashMap<Long, String> newResult = new HashMap<>();
 
@@ -123,16 +133,15 @@ public class SimulationService {
             Map<Long, Double> averageZoneDurations = utils.getSimResultAverages(results);
 
             // Format the predicted completion time for each zone
-            List<SimulationResult> finalResults = results;
             LocalDateTime finalCurrentTime = currentTime;
             averageZoneDurations.forEach((zoneId, averageDuration) -> {
                 if (averageDuration > 0) {
                     newResult.put(zoneId, formatPredictedCompletionTime(finalCurrentTime, averageDuration));
                 } else {
-                    newResult.put(zoneId, finalResults.getFirst().getErrorMessage(zoneId));
+                    newResult.put(zoneId, results.getFirst().getErrorMessage(zoneId));
                 }
             });
-            utils.saveSimulationResults(results,currentTime);
+            utils.saveSimulationResults(results, currentTime);
         } else {
             newResult.put(-1L, "No simulation results available.");
         }
@@ -140,12 +149,19 @@ public class SimulationService {
         return newResult;
     }
 
+    /**
+     * Runs the simulation and returns only the results
+     * Used for testing purposes
+     *
+     * @param models      The models to use for the simulation
+     * @param currentTime The current time
+     * @return A list of simulation results
+     */
     public List<SimulationResult> getSimulationResultsOnly(Map<String, RandomForest> models, LocalDateTime currentTime) throws IOException, ExecutionException, InterruptedException {
-        List<SimulationResult> results = new ArrayList<>();
         if (models == null) {
             return monteCarloWithRealData.monteCarlo(getSimCount(), null, null, timetableService);
         } else {
-            return monteCarloWithRealData.monteCarlo(getSimCount(), models,currentTime, timetableService);
+            return monteCarloWithRealData.monteCarlo(getSimCount(), models, currentTime, timetableService);
         }
     }
 
@@ -164,6 +180,12 @@ public class SimulationService {
         return predictedCompletionTime.format(formatter);
     }
 
+    /**
+     * Gets the logs from a specified file.
+     *
+     * @param fileName The name of the log file to retrieve
+     * @return The content of the log file as a string
+     */
     public String getLogs(String fileName) {
         try {
             // Define the path to the log file
@@ -177,10 +199,20 @@ public class SimulationService {
         }
     }
 
+    /**
+     * Gets the current simulation count.
+     *
+     * @return The current simulation count
+     */
     public int getSimCount() {
         return simCount.get();
     }
 
+    /**
+     * Sets the simulation count to a new value.
+     *
+     * @param newSimCount The new simulation count
+     */
     public void setSimCount(int newSimCount) {
         simCount.set(newSimCount);
     }

@@ -41,11 +41,11 @@ public class TimeTableControllerTest {
     @Test
     void testGetTodaysTimetable() throws Exception {
         long zoneId = 1L;
-        when(timetableService.getTodaysTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
+        when(timetableService.getTodayTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
 
         mockMvc.perform(get("/api/timetables/today/zone/{zoneId}", zoneId))
                 .andExpect(status().isOk());
-        verify(timetableService, times(1)).getTodaysTimetablesByZone(zoneId);
+        verify(timetableService, times(1)).getTodayTimetablesByZone(zoneId);
     }
 
     @Test

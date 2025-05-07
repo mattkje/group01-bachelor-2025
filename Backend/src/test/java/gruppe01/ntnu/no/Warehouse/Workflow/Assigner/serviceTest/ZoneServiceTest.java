@@ -133,7 +133,7 @@ class ZoneServiceTest {
         when(activeTaskRepository.findAll()).thenReturn(List.of(activeTask));
 
         // Call the method
-        Set<ActiveTask> result = zoneService.getTodaysUnfinishedTasksByZoneId(1L);
+        Set<ActiveTask> result = zoneService.getTodayUnfinishedTasksByZoneId(1L);
 
         // Assert the result
         assertEquals(1, result.size());

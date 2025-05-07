@@ -6,7 +6,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,24 +13,56 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service class for managing active tasks.
+ */
 @Service
 public class ActiveTaskService {
 
-    @Autowired
-    private ActiveTaskRepository activeTaskRepository;
-    @Autowired
-    private WorkerRepository workerRepository;
-    @Autowired
-    private TaskRepository taskRepository;
+    private final ActiveTaskRepository activeTaskRepository;
 
+    private final WorkerRepository workerRepository;
+
+    private final TaskRepository taskRepository;
+
+    /**
+     * Constructor for ActiveTaskService.
+     *
+     * @param activeTaskRepository The repository for active tasks.
+     * @param workerRepository     The repository for workers.
+     * @param taskRepository       The repository for tasks.
+     */
+    public ActiveTaskService(ActiveTaskRepository activeTaskRepository, WorkerRepository workerRepository, TaskRepository taskRepository) {
+        this.activeTaskRepository = activeTaskRepository;
+        this.workerRepository = workerRepository;
+        this.taskRepository = taskRepository;
+    }
+
+    /**
+     * Retrieves all active tasks from the repository.
+     *
+     * @return A list of all active tasks.
+     */
     public List<ActiveTask> getAllActiveTasks() {
         return activeTaskRepository.findAllWithTasksAndWorkersAndLicenses();
     }
 
+    /**
+     * Retrieves an active task by its ID.
+     *
+     * @param id The ID of the active task to retrieve.
+     * @return The active task with the specified ID, or null if not found.
+     */
     public ActiveTask getActiveTaskById(Long id) {
         return activeTaskRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Retrieves all active tasks for today.
+     *
+     * @param currentTime The current time to check against. If null, uses the current system time.
+     * @return A list of active tasks for today.
+     */
     public List<ActiveTask> getActiveTasksForToday(LocalDateTime currentTime) {
         if (currentTime == null) {
             currentTime = LocalDateTime.now();
@@ -45,7 +76,12 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
-    public List<ActiveTask>getRemainingTasksForToday(){
+    /**
+     * Retrieves all active tasks for today by zone ID.
+     *
+     * @return A list of active tasks for today in the specified zone.
+     */
+    public List<ActiveTask> getRemainingTasksForToday() {
         LocalDate currentDate = LocalDate.now();
         List<ActiveTask> activeTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -56,7 +92,13 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
-    public List<ActiveTask> getRemainingTasksForTodayByZone(Long zoneId){
+    /**
+     * Retrieves all active tasks for today by zone ID.
+     *
+     * @param zoneId The ID of the zone to filter tasks by.
+     * @return A list of active tasks for today in the specified zone.
+     */
+    public List<ActiveTask> getRemainingTasksForTodayByZone(Long zoneId) {
         LocalDate currentDate = LocalDate.now();
         List<ActiveTask> activeTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -67,6 +109,12 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
+    /**
+     * Retrieves all active tasks for a specific date.
+     *
+     * @param date The date to filter tasks by.
+     * @return A list of active tasks for the specified date.
+     */
     public List<ActiveTask> getActiveTaskByDate(LocalDate date) {
         List<ActiveTask> activeTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -77,6 +125,11 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
+    /**
+     * Retrieves all active tasks that have been completed.
+     *
+     * @return A list of completed active tasks.
+     */
     public List<ActiveTask> getCompletedActiveTasks() {
         List<ActiveTask> completedActiveTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -87,6 +140,11 @@ public class ActiveTaskService {
         return completedActiveTasks;
     }
 
+    /**
+     * Retrieves all active tasks that have not been started.
+     *
+     * @return A list of active tasks that have not been started.
+     */
     public List<ActiveTask> getNotStartedActiveTasks() {
         List<ActiveTask> incompleteActiveTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -97,6 +155,11 @@ public class ActiveTaskService {
         return incompleteActiveTasks;
     }
 
+    /**
+     * Retrieves all active tasks that are currently in progress.
+     *
+     * @return A list of active tasks that are currently in progress.
+     */
     public List<ActiveTask> getActiveTasksInProgress() {
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -107,6 +170,13 @@ public class ActiveTaskService {
         return activeTasksInProgress;
     }
 
+    /**
+     * Retrieves the number of active tasks completed for today in a specific zone.
+     *
+     * @param date   The date to filter tasks by.
+     * @param zoneId The ID of the zone to filter tasks by.
+     * @return The number of active tasks completed for today in the specified zone.
+     */
     public int getActiveTasksDoneForTodayInZone(LocalDate date, long zoneId) {
         int count = 0;
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -117,9 +187,16 @@ public class ActiveTaskService {
         return count;
     }
 
+    /**
+     * Creates a new active task.
+     *
+     * @param taskId     The ID of the task to associate with the active task.
+     * @param activeTask The active task to create.
+     * @return The created active task.
+     */
     public ActiveTask createActiveTask(Long taskId, ActiveTask activeTask) {
         if (activeTask != null) {
-            if (activeTask.getTask() == null){
+            if (activeTask.getTask() == null && taskRepository.findById(taskId).isPresent()) {
                 Task task = taskRepository.findById(taskId).get();
                 activeTask.setTask(task);
                 createRepeatingActiveTaskUntilNextMonth(activeTask);
@@ -129,7 +206,15 @@ public class ActiveTaskService {
         return null;
     }
 
+    /**
+     * Updates an existing active task.
+     *
+     * @param id         The ID of the active task to update.
+     * @param activeTask The updated active task data.
+     * @return The updated active task.
+     */
     public ActiveTask updateActiveTask(Long id, ActiveTask activeTask) {
+        if (!activeTaskRepository.findById(id).isPresent()) return null;
         ActiveTask updatedActiveTask = activeTaskRepository.findById(id).get();
         updatedActiveTask.setTask(activeTask.getTask());
         updatedActiveTask.setWorkers(activeTask.getWorkers());
@@ -148,6 +233,13 @@ public class ActiveTaskService {
         return activeTaskRepository.save(updatedActiveTask);
     }
 
+    /**
+     * Assigns a worker to an active task.
+     *
+     * @param id       The ID of the active task.
+     * @param workerId The ID of the worker to assign.
+     * @return The updated active task with the assigned worker.
+     */
     public ActiveTask assignWorkerToTask(Long id, Long workerId) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
         if (activeTask != null) {
@@ -164,6 +256,13 @@ public class ActiveTaskService {
         return null;
     }
 
+    /**
+     * Removes a worker from an active task.
+     *
+     * @param id       The ID of the active task.
+     * @param workerId The ID of the worker to remove.
+     * @return The updated active task without the removed worker.
+     */
     public ActiveTask removeWorkerFromTask(Long id, Long workerId) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
         if (activeTask != null) {
@@ -177,6 +276,12 @@ public class ActiveTaskService {
         return null;
     }
 
+    /**
+     * Removes all workers from an active task.
+     *
+     * @param id The ID of the active task.
+     * @return The updated active task without any workers.
+     */
     public ActiveTask removeWorkersFromTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
         if (activeTask != null) {
@@ -186,6 +291,12 @@ public class ActiveTaskService {
         return null;
     }
 
+    /**
+     * Deletes an active task by its ID.
+     *
+     * @param id The ID of the active task to delete.
+     * @return The deleted active task.
+     */
     public ActiveTask deleteActiveTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
         if (activeTask != null) {
@@ -201,10 +312,16 @@ public class ActiveTaskService {
         return activeTask;
     }
 
+    /**
+     * Deletes all active tasks.
+     */
     public void deleteAllActiveTasks() {
         activeTaskRepository.deleteAll();
     }
 
+    /**
+     * Deletes all active tasks for today.
+     */
     public void deleteAllActiveTasksForToday() {
         LocalDate currentDate = LocalDate.now();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
@@ -214,6 +331,12 @@ public class ActiveTaskService {
         }
     }
 
+    /**
+     * Retrieves all workers assigned to a specific task.
+     *
+     * @param taskId The ID of the task to retrieve workers for.
+     * @return A list of workers assigned to the specified task.
+     */
     public List<Worker> getWorkersAssignedToTask(Long taskId) {
         ActiveTask activeTask = activeTaskRepository.findById(taskId).orElse(null);
         if (activeTask != null) {
@@ -246,7 +369,7 @@ public class ActiveTaskService {
      *
      * @param activeTask The active task to base the new tasks on.
      * @param increment  The amount to increment the date by.
-     * @param unit      The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     * @param unit       The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
      */
     private void createNewTasks(ActiveTask activeTask, int increment, String unit) {
         LocalDate tempDate = incrementDate(activeTask.getDate(), increment, unit);
@@ -272,9 +395,9 @@ public class ActiveTaskService {
     /**
      * Increments the given date by the specified amount and unit.
      *
-     * @param date    The date to increment.
+     * @param date      The date to increment.
      * @param increment The amount to increment.
-     * @param unit    The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     * @param unit      The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
      * @return The incremented date.
      */
     private LocalDate incrementDate(LocalDate date, int increment, String unit) {
@@ -286,6 +409,11 @@ public class ActiveTaskService {
         };
     }
 
+    /**
+     * Creates new active tasks until the start of the next month based on the given active task's date and recurrence type.
+     *
+     * @param activeTask The active task to base the new tasks on.
+     */
     public void createRepeatingActiveTaskUntilNextMonth(ActiveTask activeTask) {
         LocalDate startOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
 
@@ -300,6 +428,14 @@ public class ActiveTaskService {
         }
     }
 
+    /**
+     * Creates new tasks until the start of the next month based on the given active task's date and recurrence type.
+     *
+     * @param activeTask       The active task to base the new tasks on.
+     * @param increment        The amount to increment the date by.
+     * @param unit             The unit of time to increment (e.g., "MONTHS", "WEEKS", "DAYS").
+     * @param startOfNextMonth The start date of the next month.
+     */
     private void createNewTasksUntilNextMonth(ActiveTask activeTask, int increment, String unit, LocalDate startOfNextMonth) {
         LocalDate tempDate = incrementDate(activeTask.getDate(), increment, unit);
         activeTask.setRecurrenceType(0);
@@ -317,6 +453,12 @@ public class ActiveTaskService {
         }
     }
 
+    /**
+     * Retrieves all workers assigned to an active task.
+     *
+     * @param id The ID of the active task to retrieve workers for.
+     * @return A list of workers assigned to the specified active task.
+     */
     public List<Worker> getWorkersAssignedToActiveTask(Long id) {
         ActiveTask activeTask = activeTaskRepository.findById(id).orElse(null);
         if (activeTask != null) {

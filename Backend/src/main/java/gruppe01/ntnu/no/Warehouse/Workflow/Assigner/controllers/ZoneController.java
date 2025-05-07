@@ -61,12 +61,12 @@ public class ZoneController {
 
     @GetMapping("/{id}/active-tasks-now")
     public Set<ActiveTask> getActiveTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodaysUnfinishedTasksByZoneId(id);
+        return zoneService.getTodayUnfinishedTasksByZoneId(id);
     }
 
     @GetMapping("/{id}/picker-tasks-now")
     public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodaysUnfinishedPickerTasksByZoneId(id);
+        return zoneService.getTodayUnfinishedPickerTasksByZoneId(id);
     }
 
     @GetMapping("/{zoneId}/{date}")
