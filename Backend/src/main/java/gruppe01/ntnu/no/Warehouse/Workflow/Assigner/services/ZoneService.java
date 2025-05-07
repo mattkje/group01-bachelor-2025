@@ -3,9 +3,11 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,8 @@ public class ZoneService {
   private ActiveTaskRepository activeTaskRepository;
   @Autowired
   private PickerTaskRepository pickerTaskRepository;
+  @Autowired
+  private MachineLearningModelPicking machineLearningModelPicking;
 
   public List<Zone> getAllZones() {
     return zoneRepository.findAllWithTasksAndWorkersAndLicenses();
@@ -102,7 +106,7 @@ public class ZoneService {
   }
 
   public Zone addZone(Zone zone) {
-    if (zone != null && (zone.getPickerTask().isEmpty() || zone.getTasks().isEmpty())) {
+    if (zone != null && (zone.getPickerTask() == null || zone.getTasks() == null)) {
       return zoneRepository.save(zone);
     }
     return null;
@@ -196,5 +200,16 @@ public class ZoneService {
           .filter(activeTask -> activeTask.getEndTime() == null) // Only unfinished tasks
           .mapToInt(activeTask -> activeTask.getTask().getMinTime()) // Get the min time for each task
           .sum(); // Sum up the min times
+  }
+
+  public void updateMachineLearningModel() throws IOException {
+    for (Zone zone : zoneRepository.findAll()) {
+      if (zone.getIsPickerZone()) {
+        List<PickerTask> pickerTasks = zone.getPickerTask().stream()
+                .filter(pickerTask -> pickerTask.getTime() > 0)
+                .collect(Collectors.toList());
+        machineLearningModelPicking.updateMachineLearningModel(pickerTasks, zone.getName());
+      }
+    }
   }
 }

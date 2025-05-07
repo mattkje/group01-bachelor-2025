@@ -3,8 +3,11 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -15,9 +18,7 @@ import smile.data.measure.NominalScale;
 import smile.data.vector.DoubleVector;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 import smile.regression.RandomForest;
 
 /**
@@ -229,20 +230,35 @@ public class MachineLearningModelPicking {
    * @return The loaded RandomForest model, or null if no model was found.
    */
   public RandomForest loadModel(String department, String filePath) {
-    for (String key : randomForests.keySet()) {
-      if (key.equalsIgnoreCase(department)) {
-        return randomForests.get(key);
-      }
+    if (randomForests.containsKey(department.toUpperCase())) {
+      return randomForests.get(department.toUpperCase());
     }
+
+    copyDefaultModelIfMissing(department.toUpperCase(), filePath);
+
     try {
       RandomForest model = ModelLoader.loadModel(filePath);
       if (model != null) {
-        randomForests.put(department, model);
+        randomForests.put(department.toUpperCase(), model);
       }
       return model;
     } catch (IOException | ClassNotFoundException e) {
-      System.out.println("No existing model found. A new model will be trained.");
+      System.out.println("Failed to load model for department: " + department);
       return null;
+    }
+  }
+
+
+  private void copyDefaultModelIfMissing(String department, String filePath) {
+    Path modelPath = Path.of(filePath);
+    if (!Files.exists(modelPath)) {
+      System.out.println("No model found for " + department + ". Copying default DRY model.");
+      try {
+        Path defaultModel = Path.of("pickroute_DRY.ser");
+        Files.copy(defaultModel, modelPath, StandardCopyOption.REPLACE_EXISTING);
+      } catch (IOException e) {
+        System.err.println("Error copying default model for " + department + ": " + e.getMessage());
+      }
     }
   }
 
@@ -449,5 +465,37 @@ public class MachineLearningModelPicking {
       models.put(department, model);
     }
     return models;
+  }
+
+  public void updateMachineLearningModel(List<PickerTask> pickerTasks, String department) throws IOException {
+    if (!pickerTasks.isEmpty()) {
+      List<double[]> rows = new ArrayList<>();
+
+      for (PickerTask pickerTask : pickerTasks) {
+        rows.add(new double[]{
+                pickerTask.getDistance(),
+                pickerTask.getPackAmount(),
+                pickerTask.getLinesAmount(),
+                pickerTask.getWeight(),
+                pickerTask.getVolume(),
+                pickerTask.getAvgHeight(),
+                (double) pickerTask.getWorker().getId(),
+                pickerTask.getTime()
+        });
+      }
+
+      double[][] data = rows.toArray(new double[0][]);
+
+      String[] columnNames = {
+              "distance_m", "dpack_equivalent_amount", "lines",
+              "weight_g", "volume_ml", "avg_height", "picker", "time_s"
+      };
+
+      DataFrame dataFrame = DataFrame.of(data, columnNames);
+
+      RandomForest model = RandomForest.fit(Formula.lhs("time_s"), dataFrame);
+
+      saveModel(model, "pickroute_" + department.toUpperCase() + ".ser");
+    }
   }
 }

@@ -6,17 +6,12 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.MonteCarlo;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import smile.regression.RandomForest;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -128,7 +123,11 @@ public class WorldSimulation {
         randomForests = new HashMap<>();
 
         flushAllWorkerTasks();
-        monteCarloDataService.flushMCData();;
+        monteCarloDataService.flushMCData();
+
+        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
+            zoneService.updateMachineLearningModel();
+        }
 
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
