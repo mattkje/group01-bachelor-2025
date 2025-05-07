@@ -141,7 +141,11 @@ public class SimulationService {
                 if (averageZoneDuration != null) {
                     combinedResult.addAll(formatPredictedCompletionTime(averageZoneDuration));
                 }
-                combinedResult.addAll(Objects.requireNonNull(finalResults.getFirst().getErrorMessage(zoneId)));
+                // Ensure error messages are retrieved correctly
+                List<String> errorMessages = finalResults.getFirst().getErrorMessage(zoneId);
+                if (errorMessages != null) {
+                    combinedResult.addAll(errorMessages);
+                }
                 newResult.put(zoneId, combinedResult);
             });
             utils.saveSimulationResults(results, currentTime);
