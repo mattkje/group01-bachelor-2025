@@ -1,4 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation;
+
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerator;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
@@ -6,7 +7,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import smile.regression.RandomForest;
 
@@ -29,24 +29,6 @@ import java.util.stream.Stream;
  */
 @Component
 public class WorldSimulation {
-
-    @Autowired
-    private TimetableService timetableService;
-
-    @Autowired
-    private ActiveTaskService activeTaskService;
-
-    @Autowired
-    private ActiveTaskGenerator activeTaskGenerator;
-
-    @Autowired
-    private TimeTableGenerator timeTableGenerator;
-
-    @Autowired
-    private SimulationService simulationService;
-
-    @Autowired
-    private MonteCarloDataService monteCarloDataService;
 
     private LocalTime currentSimulationTime;
 
@@ -94,28 +76,75 @@ public class WorldSimulation {
 
     private Optional<LocalDateTime> firstWorkerTime;
 
-    @Autowired
-    private WorkerService workerService;
+    private final TimetableService timetableService;
 
-    @Autowired
-    private PickerTaskGenerator pickerTaskGenerator;
+    private final ActiveTaskService activeTaskService;
 
-    @Autowired
-    private PickerTaskService pickerTaskService;
+    private final ActiveTaskGenerator activeTaskGenerator;
 
-    @Autowired
-    private ZoneService zoneService;
+    private final TimeTableGenerator timeTableGenerator;
 
-    @Autowired
-    private WorldSimDataService worldSimDataService;
+    private final SimulationService simulationService;
+
+    private final MonteCarloDataService monteCarloDataService;
+
+    private final WorkerService workerService;
+
+    private final PickerTaskGenerator pickerTaskGenerator;
+
+    private final PickerTaskService pickerTaskService;
+
+    private final ZoneService zoneService;
+
+    private final WorldSimDataService worldSimDataService;
+
+    /**
+     * Constructor for WorldSimulation.
+     *
+     * @param activeTaskService     the service for ActiveTask entity
+     * @param activeTaskGenerator   the generator for ActiveTask entity
+     * @param timeTableGenerator    the generator for Timetable entity
+     * @param simulationService     the service for Simulation entity
+     * @param monteCarloDataService the service for MonteCarloData entity
+     * @param workerService         the service for Worker entity
+     * @param pickerTaskGenerator   the generator for PickerTask entity
+     * @param pickerTaskService     the service for PickerTask entity
+     * @param zoneService           the service for Zone entity
+     * @param worldSimDataService   the service for WorldSimData entity
+     */
+    public WorldSimulation(
+            TimetableService timetableService,
+            ActiveTaskService activeTaskService,
+            ActiveTaskGenerator activeTaskGenerator,
+            TimeTableGenerator timeTableGenerator,
+            SimulationService simulationService,
+            MonteCarloDataService monteCarloDataService,
+            WorkerService workerService,
+            PickerTaskGenerator pickerTaskGenerator,
+            PickerTaskService pickerTaskService,
+            ZoneService zoneService,
+            WorldSimDataService worldSimDataService) {
+        this.timetableService = timetableService;
+        this.activeTaskService = activeTaskService;
+        this.activeTaskGenerator = activeTaskGenerator;
+        this.timeTableGenerator = timeTableGenerator;
+        this.simulationService = simulationService;
+        this.monteCarloDataService = monteCarloDataService;
+        this.workerService = workerService;
+        this.pickerTaskGenerator = pickerTaskGenerator;
+        this.pickerTaskService = pickerTaskService;
+        this.zoneService = zoneService;
+        this.worldSimDataService = worldSimDataService;
+    }
 
     /**
      * Runs the world simulation for a given simulation time and start date.
+     *
      * @param simulationTime The simulation time in minutes. If 0, the simulation has no delay.
-     * @param startDate The start date for the simulation.
-     * @throws Exception If an error occurs during the simulation.
+     * @param startDate      The start date for the simulation.
+     * @throws IOException, InterruptedException, ExecutionException
      */
-    public void runWorldSimulation(int simulationTime, LocalDate startDate) throws Exception {
+    public void runWorldSimulation(int simulationTime, LocalDate startDate) throws IOException, InterruptedException, ExecutionException {
         isPlaying = true;
         workday = startDate;
         boolean activeTasksExistForWorkday = false;
@@ -223,7 +252,7 @@ public class WorldSimulation {
      * This code is run for each minute of the simulation.
      *
      * @throws InterruptedException if the simulation thread is interrupted during execution.
-     * @throws IOException if an error occurs while estimating the time using the machine learning model.
+     * @throws IOException          if an error occurs while estimating the time using the machine learning model.
      */
     private void startSimulating() throws InterruptedException, IOException, ExecutionException {
         //Runs while the current time is not equal to the end time and the simulation is not paused, which is 00:00.
@@ -415,9 +444,9 @@ public class WorldSimulation {
                 System.out.println("Current time: " + currentTime);
                 worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);
                 // Hinder the simulation from running if there are no workers present
-                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))){
+                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
                     LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
-                    simulationService.runCompleteSimulation(randomForests,daytime);
+                    simulationService.runCompleteSimulation(randomForests, daytime);
                 }
             }
             currentSimulationTime = currentTime;
@@ -458,7 +487,7 @@ public class WorldSimulation {
 
         double interpolationFactor = 0.0;
         if (maxWorkers > minWorkers) {
-            interpolationFactor = Math.min(1.0, Math.max(0.0, (double)(assignedWorkers - minWorkers) / (maxWorkers - minWorkers)));
+            interpolationFactor = Math.min(1.0, Math.max(0.0, (double) (assignedWorkers - minWorkers) / (maxWorkers - minWorkers)));
         }
 
         double taskDuration = task1.getMaxTime() - interpolationFactor * (task1.getMaxTime() - task1.getMinTime());
@@ -509,13 +538,11 @@ public class WorldSimulation {
     public int getPauseStatus() {
         if (isPaused) {
             return 2;
-        }
-        else if (!isPaused && isPlaying) {
+        } else if (!isPaused && isPlaying) {
             return 1;
-        }
-        else if (!isPlaying && !isPaused) {
+        } else if (!isPlaying && !isPaused) {
             return 0;
-        } else  {
+        } else {
             return -1;
         }
     }
@@ -556,12 +583,15 @@ public class WorldSimulation {
         LocalDate finalWorkday = workday;
 
         activeTasksWithDueDates = activeTasksToday.stream()
-                .filter(activeTask -> (activeTask.getDate().equals(finalWorkday) &&
-                        activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
+                .filter(activeTask -> (
+                        activeTask.getDate().equals(finalWorkday) &&
+                                activeTask.getDueDate() != null &&
+                                activeTask.getDueDate().toLocalTime() != LocalTime.of(0, 0)))
                 .collect(Collectors.toList());
 
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
+                        activeTask.getDueDate() != null &&
                         activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
                 //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
                 .collect(Collectors.toList());
@@ -612,7 +642,7 @@ public class WorldSimulation {
     /**
      * Logs the worker's status and adds them to the list of available workers.
      *
-     * @param worker The worker to log and add.
+     * @param worker  The worker to log and add.
      * @param message The message to log.
      */
     private void logAndAddWorker(Worker worker, String message) {
@@ -623,7 +653,7 @@ public class WorldSimulation {
     /**
      * Logs the worker's status and removes them from the list of available workers.
      *
-     * @param worker The worker to log and remove.
+     * @param worker  The worker to log and remove.
      * @param message The message to log.
      */
     private void logAndRemoveWorker(Worker worker, String message) {
@@ -636,7 +666,7 @@ public class WorldSimulation {
      * Processes workers on break by applying the given action to each worker in the iterator.
      *
      * @param iterator The iterator for the workers on break.
-     * @param action The action to apply to each worker.
+     * @param action   The action to apply to each worker.
      */
     private void processWorkersOnBreak(Iterator<Worker> iterator, Consumer<Worker> action) {
         while (iterator.hasNext()) {

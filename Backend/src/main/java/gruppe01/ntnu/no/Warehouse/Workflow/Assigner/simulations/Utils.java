@@ -16,11 +16,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 
+/**
+ * Utility class for simulation-related operations.
+ * Contains methods for processing simulation results and saving data.
+ */
 @Component
 public class Utils {
 
-    @Autowired
-    private MonteCarloService monteCarloService;
+    private final MonteCarloService monteCarloService;
+
+    /**
+     * Constructor for Utils.
+     *
+     * @param monteCarloService the Monte Carlo simulation service
+     */
+    public Utils(@Autowired MonteCarloService monteCarloService) {
+        this.monteCarloService = monteCarloService;
+    }
 
     public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
         return zoneSimResults.values().stream()

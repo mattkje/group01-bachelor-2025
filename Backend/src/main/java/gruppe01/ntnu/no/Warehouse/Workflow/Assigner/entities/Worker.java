@@ -57,6 +57,7 @@ public class Worker {
     @CollectionTable(name = "worker_schedule", joinColumns = @JoinColumn(name = "worker_id"))
     @MapKeyColumn(name = "day_of_week")
     @MapKeyEnumerated(EnumType.STRING)
+    @Column(name = "work_schedule")
     @JsonIgnore
     private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
@@ -78,13 +79,13 @@ public class Worker {
         this.zone = worker.zone;
         this.workTitle = worker.workTitle;
         this.efficiency = worker.efficiency;
-        this.licenses = new HashSet<>(worker.licenses);
+        this.licenses = worker.licenses;
         this.availability = worker.availability;
         this.currentActiveTask = worker.currentActiveTask;
         this.currentPickerTask = worker.currentPickerTask;
         this.breakStartTime = worker.breakStartTime;
         this.dead = worker.dead;
-        this.workSchedule = new HashMap<>(worker.workSchedule);
+        this.workSchedule = worker.workSchedule;
     }
 
     public Worker(String name, Long zone, String workTitle, double efficiency, ArrayList<License> licenses, boolean availability) {

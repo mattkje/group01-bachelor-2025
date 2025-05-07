@@ -311,17 +311,17 @@ public class TimetableService {
      */
     public boolean isEveryoneFinishedWorking(Long zoneId, LocalDateTime time) {
         List<Timetable> timetables = timetableRepository.findByStartDate(time.toLocalDate());
-        System.out.println("Time: " + time + "zoneId: " + zoneId);
+        //System.out.println("Time: " + time + "zoneId: " + zoneId);
         for (Timetable timetable : timetables) {
             if (timetable.getWorker().getZone().equals(zoneId)) {
-                System.out.println("Worker: " + timetable.getWorker().getId() + " End time: " + timetable.getEndTime());
+                //System.out.println("Worker: " + timetable.getWorker().getId() + " End time: " + timetable.getEndTime());
             }
             if (timetable.getWorker().getZone().equals(zoneId) && timetable.getEndTime().isAfter(time) && timetable.getWorker().isAvailability()) {
-                System.out.println("Returns false");
+                //System.out.println("Returns false");
                 return false;
             }
         }
-        System.out.println("returns true");
+        //System.out.println("returns true");
         return true;
     }
 
