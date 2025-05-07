@@ -252,4 +252,18 @@ public class WorkerService {
         }
         timetableRepository.saveAll(timetables);
     }
+
+    public List<Worker> addAllLicensesToWorkers() {
+        List<Worker> workers = workerRepository.findAll();
+        for (Worker worker : workers) {
+            List<License> licenses = licenseRepository.findAll();
+            for (License license : licenses) {
+                if (!worker.getLicenses().contains(license)) {
+                    worker.getLicenses().add(license);
+                }
+            }
+            workerRepository.save(worker);
+        }
+        return workers;
+    }
 }

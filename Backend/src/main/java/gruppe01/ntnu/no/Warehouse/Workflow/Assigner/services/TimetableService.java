@@ -1,7 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TimetableRepository;
 
 import java.time.LocalDateTime;
@@ -311,26 +310,32 @@ public class TimetableService {
      */
     public boolean isEveryoneFinishedWorking(Long zoneId, LocalDateTime time) {
         List<Timetable> timetables = timetableRepository.findByStartDate(time.toLocalDate());
-        //System.out.println("Time: " + time + "zoneId: " + zoneId);
         for (Timetable timetable : timetables) {
-            if (timetable.getWorker().getZone().equals(zoneId)) {
-                //System.out.println("Worker: " + timetable.getWorker().getId() + " End time: " + timetable.getEndTime());
-            }
             if (timetable.getWorker().getZone().equals(zoneId) && timetable.getEndTime().isAfter(time) && timetable.getWorker().isAvailability()) {
-                //System.out.println("Returns false");
                 return false;
             }
         }
-        //System.out.println("returns true");
         return true;
     }
 
-    /**
-     * Deletes a Timetable entity by ID.
-     *
-     * @param id the ID of the Timetable entity to delete
-     */
     public void deleteTimetable(Long id) {
         timetableRepository.deleteById(id);
     }
+
+
+   public boolean isAnyoneQualifiedWorkingToday(Long zoneId, LocalDateTime localDateTime, ActiveTask activeTask) {
+       int qualificationCount = 0;
+       List<Timetable> timetables = timetableRepository.findByStartDate(localDateTime.toLocalDate());
+       if (activeTask != null) {
+           for (Timetable timetable : timetables) {
+               if (timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability()) {
+                   if (timetable.getWorker().getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+                       qualificationCount++;
+                   }
+               }
+           }
+           return qualificationCount >= activeTask.getTask().getMinWorkers();
+       }
+       return false;
+   }
 }

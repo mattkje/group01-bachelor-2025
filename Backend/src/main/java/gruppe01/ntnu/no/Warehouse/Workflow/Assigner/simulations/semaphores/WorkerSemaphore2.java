@@ -95,8 +95,6 @@ public class WorkerSemaphore2 {
 
       // Remove workers after iteration
       workersToRemove.forEach(workers::remove);
-      logger.info("Current worker pool: " + workers.size() + " workers." +
-          (workers.isEmpty() ? "" : " at Zone: " + workers.iterator().next().getZone()));
   }
 
     public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)
@@ -107,13 +105,13 @@ public class WorkerSemaphore2 {
             logger.info("Attempting to acquire workers for task.  " +
                     "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                     ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
-
             if (timetableService.isEveryoneFinishedWorking(zoneId, startTime.get())) {
                 logger.warning("All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                         ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
                 return "All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                        ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId;
             }
+
             synchronized (workers) {
                 // Check if the workers are available
                 List<Worker> workersToRemove = new ArrayList<>();
@@ -121,8 +119,12 @@ public class WorkerSemaphore2 {
                 Collections.shuffle(workerList);
 
                 if (activeTask != null) {
+                    if (!timetableService.isAnyoneQualifiedWorkingToday(zoneId,startTime.get(), activeTask)) {
+                        return "No qualified workers available at zone " + zoneId + ". Unable to complete ActiveTask: " + activeTask.getId();
+                    }
                     workerList.removeIf(worker -> !worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()));
-                    if (workerList.isEmpty() && !workers.isEmpty()) {return "ERROR: No qualified workers for task " + activeTask.getId() + " at Zone " + zoneId + ".";}
+                    // No qualified workers available currently
+                    if (workerList.isEmpty()) {return "";}
                     for (Worker worker : workerList) {
                         if (timetableService.workerIsWorking(startTime.get(), worker.getId())) {
                             workersToRemove.add(worker);

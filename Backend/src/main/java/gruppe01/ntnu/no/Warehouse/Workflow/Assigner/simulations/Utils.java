@@ -5,11 +5,8 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.Simulati
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.ZoneOffset;
+import java.util.*;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,19 +57,37 @@ public class Utils {
         return taskCompletionMap;
     }
 
-    public Map<Long, Double> getSimResultAverages(List<SimulationResult> simulationResults) {
-        Map<Long, Double> averages = new HashMap<>();
+    public Map<Long, LocalDateTime> getSimResultAverages(List<SimulationResult> simulationResults) {
+        Map<Long, List<LocalDateTime>> zoneEndTimes = new HashMap<>();
+
+        // Collect all LocalDateTime values for each zone
         for (SimulationResult simulationResult : simulationResults) {
             Map<Long, ZoneSimResult> zoneSimResults = simulationResult.getZoneSimResults();
             for (Map.Entry<Long, ZoneSimResult> entry : zoneSimResults.entrySet()) {
                 Long zoneId = entry.getKey();
                 ZoneSimResult zoneSimResult = entry.getValue();
-                double totalDuration = zoneSimResult.getTotalDuration() != null
-                        ? zoneSimResult.getTotalDuration().toMinutes()
-                        : 0.0;
-                averages.put(zoneId, totalDuration);
+                LocalDateTime endTime = zoneSimResult.getLastEndTime();
+                if (endTime != null) {
+                    zoneEndTimes.computeIfAbsent(zoneId, k -> new ArrayList<>()).add(endTime);
+                }
             }
         }
+
+        // Calculate the average LocalDateTime for each zone
+        Map<Long, LocalDateTime> averages = new HashMap<>();
+        for (Map.Entry<Long, List<LocalDateTime>> entry : zoneEndTimes.entrySet()) {
+            Long zoneId = entry.getKey();
+            List<LocalDateTime> endTimes = entry.getValue();
+
+            // Convert LocalDateTime to epoch seconds, calculate average, and convert back
+            long averageEpochSeconds = (long) endTimes.stream()
+                    .mapToLong(time -> time.toEpochSecond(ZoneOffset.UTC))
+                    .average()
+                    .orElse(0);
+
+            averages.put(zoneId, LocalDateTime.ofEpochSecond(averageEpochSeconds, 0, ZoneOffset.UTC));
+        }
+
         return averages;
     }
 
@@ -91,21 +106,24 @@ public class Utils {
 
     private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i, LocalDateTime now) {
         for (ZoneSimResult zoneSimResult : zoneSimResultList) {
+            if (zoneSimResult.getZone() == null) {
+                continue; // Skip if zone is null
+            }
             Map<LocalDateTime, Integer> timestamps = new HashMap<>();
             LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
 
-            int testInt = 0;
             for (LocalDateTime time = now; !time.isAfter(endOfDay); time = time.plusMinutes(10)) {
                 timestamps.put(time, zoneSimResult.getCompletedTaskCountAtTime(time));
             }
-            timestamps.entrySet().stream()
+            for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
-                    .forEachOrdered(entry -> {
-                        if (!entry.getValue().equals(Collections.max(timestamps.values()))) {
-                            monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
-                                    entry.getValue(), zoneSimResult.getZoneId());
-                        }
-                    });
+                    .toList()) {
+                monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
+                        entry.getValue(), zoneSimResult.getZone().getId());
+                if (entry.getValue().equals(Collections.max(timestamps.values()))) {
+                    break;
+                }
+            }
         }
     }
 

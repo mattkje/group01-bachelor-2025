@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -66,5 +67,18 @@ public class License {
 
     public Set<Task> getTasks() {
         return tasks;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        License license = (License) o;
+        return Objects.equals(name, license.name); // Compare relevant fields
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name); // Use the same fields as in equals
     }
 }

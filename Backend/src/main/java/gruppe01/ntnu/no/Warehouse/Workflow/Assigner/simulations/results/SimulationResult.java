@@ -22,7 +22,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
             return zoneSimResults.values().stream().toList();
         }
 
-        public String getErrorMessage(Long zoneId) {
+        public List<String> getErrorMessage(Long zoneId) {
             ZoneSimResult zoneSimResult = zoneSimResults.get(zoneId);
             if (zoneSimResult != null) {
                 return zoneSimResult.getErrorMessage();

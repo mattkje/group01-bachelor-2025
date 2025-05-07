@@ -20,11 +20,6 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 
-/**
- * SimulationController handles HTTP requests related to simulation operations.
- * It provides endpoints to generate active tasks, run Monte Carlo simulations,
- * and manage simulation settings.
- */
 @RestController
 @RequestMapping("/api")
 public class SimulationController {
@@ -73,27 +68,22 @@ public class SimulationController {
     }
 
     @GetMapping("/monte-carlo")
-    public Map<Long, String> monteCarlo() throws Exception {
+    public Map<Long, List<String>> monteCarlo() throws Exception {
         return simulationService.runCompleteSimulation(null, null);
     }
 
-    @GetMapping("/test/monte-carlo")
-    public List<SimulationResult> monteCarloTest() throws Exception {
-        return simulationService.getSimulationResultsOnly(null, null);
-    }
-
-    @GetMapping("/logs/{fileName}")
-    public String getLogs(@PathVariable String fileName) {
-        return simulationService.getLogs(fileName);
+    @GetMapping("/monte-carlo-start-of-day")
+    public Map<Long, List<String>> monteCarloStartOfDay() throws Exception {
+        return simulationService.runCompleteSimulation(null, LocalDate.now().atStartOfDay());
     }
 
     @GetMapping("/monte-carlo/zones/{id}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws IOException {
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws InterruptedException, IOException {
         return simulationService.runZoneSimulation(id, null);
     }
 
     @GetMapping("/monte-carlo/zones/{id}/day/{day}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws IOException {
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws InterruptedException, IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date = LocalDate.parse(day, formatter);
         LocalDateTime dateTime = date.atStartOfDay();
@@ -123,15 +113,5 @@ public class SimulationController {
     @GetMapping("/simulate-one-year")
     public void simulateOneYear() throws Exception {
         worldSimulation.simulateOneYear();
-    }
-
-    @PostMapping("/set-sim-count")
-    public void setSimCount(@RequestParam int simCount) {
-        simulationService.setSimCount(simCount);
-    }
-
-    @GetMapping("/get-sim-count")
-    public int getSimCount() {
-        return simulationService.getSimCount();
     }
 }

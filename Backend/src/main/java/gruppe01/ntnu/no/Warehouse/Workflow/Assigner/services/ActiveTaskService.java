@@ -76,12 +76,20 @@ public class ActiveTaskService {
         return activeTasks;
     }
 
-    /**
-     * Retrieves all active tasks for today by zone ID.
-     *
-     * @return A list of active tasks for today in the specified zone.
-     */
-    public List<ActiveTask> getRemainingTasksForToday() {
+    public List<ActiveTask> getActiveTasksForTodayByZone(Long zoneId, LocalDateTime currentTime) {
+        if (currentTime == null) {
+            currentTime = LocalDateTime.now();
+        }
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentTime.toLocalDate()) && activeTask.getEndTime() == null && activeTask.getTask().getZoneId().equals(zoneId)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
+    public List<ActiveTask>getRemainingTasksForToday(){
         LocalDate currentDate = LocalDate.now();
         List<ActiveTask> activeTasks = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {

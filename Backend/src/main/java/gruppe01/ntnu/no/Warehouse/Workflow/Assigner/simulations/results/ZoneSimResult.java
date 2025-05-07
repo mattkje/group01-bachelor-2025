@@ -1,108 +1,88 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class ZoneSimResult {
 
-  // Map to store tasks and their start and end times
-  private Long zoneId;
-  private final Map<String, TaskTime> taskTimes = new HashMap<>();
-  private String errormessage = "";
+  private Zone zone;
+  private  List<ActiveTask> activeTasks;
+  private  List<PickerTask> pickerTasks;
+  private List<String> errorMessages = new ArrayList<>();
 
-  public void setZoneId(Long zoneId) {
-    this.zoneId = zoneId;
+    public ZoneSimResult() {
+        this.activeTasks = new ArrayList<>();
+        this.pickerTasks = new ArrayList<>();
+    }
+
+    public void setZone(Zone zone) {
+    this.zone = zone;
   }
 
   public void setErrorMessage(String errorMessage) {
-    this.errormessage = errorMessage;
+    this.errorMessages.add(errorMessage);
   }
 
-  // Method to add a task with its start and end times
-  public void addTask(String taskId, LocalDateTime startTime, LocalDateTime endTime) {
-    taskTimes.put(taskId, new TaskTime(startTime, endTime));
+  public void addTask(ActiveTask task, PickerTask pickerTask) {
+      if (task == null && pickerTask == null) {
+          throw new IllegalArgumentException("Both task and pickerTask cannot be null");
+      }
+      if (task == null) {
+          this.pickerTasks.add(pickerTask);
+
+      } else {
+          this.activeTasks.add(task);
+      }
   }
 
-  public String getErrorMessage() {
-    return errormessage;
-  }
-
-  // Method to get the duration of a specific task
-  public Duration getTaskDuration(String taskId) {
-    TaskTime taskTime = taskTimes.get(taskId);
-    if (taskTime != null && taskTime.startTime() != null && taskTime.endTime() != null) {
-      return Duration.between(taskTime.startTime(), taskTime.endTime());
-    }
-    return Duration.ZERO;
+  public List<String> getErrorMessage() {
+    return errorMessages;
   }
 
   public LocalDateTime getLastEndTime() {
-    return taskTimes.values().stream()
-        .map(TaskTime::endTime)
-        .filter(Objects::nonNull)
-        .max(LocalDateTime::compareTo)
-        .orElse(null);
-  }
-
-  // Method to get the total duration of all tasks
-  public Duration getTotalDuration() {
-    return taskTimes.values().stream()
-        .filter(taskTime -> taskTime.startTime() != null && taskTime.endTime() != null)
-        .map(taskTime -> Duration.between(taskTime.startTime(), taskTime.endTime()))
-        .reduce(Duration.ZERO, Duration::plus);
-  }
-
-  public LocalDateTime getStartTime(String taskId) {
-    TaskTime taskTime = taskTimes.get(taskId);
-    return taskTime != null ? taskTime.startTime() : null;
-  }
-
-  public LocalDateTime getEndTime(String taskId) {
-    TaskTime taskTime = taskTimes.get(taskId);
-    return taskTime != null ? taskTime.endTime() : null;
+    if (zone != null && zone.getIsPickerZone()) {
+      return pickerTasks.stream()
+          .map(PickerTask::getEndTime)
+          .filter(Objects::nonNull)
+          .max(LocalDateTime::compareTo)
+          .orElse(null);
+    } else {
+      return activeTasks.stream()
+          .map(ActiveTask::getEndTime)
+          .filter(Objects::nonNull)
+          .max(LocalDateTime::compareTo)
+          .orElse(null);
+    }
   }
 
   public int getCompletedTaskCountAtTime(LocalDateTime time) {
-    return (int) taskTimes.values().stream()
-        .filter(taskTime -> taskTime.startTime() != null && taskTime.endTime() != null)
-        .filter(taskTime -> !taskTime.startTime().isAfter(time) && !taskTime.endTime().isAfter(time))
-        .count();
+    if (zone != null && zone.getIsPickerZone()) {
+      return (int) pickerTasks.stream()
+          .filter(task -> task.getEndTime() != null && !task.getEndTime().isAfter(time))
+          .count();
+    } else {
+      return (int) activeTasks.stream()
+          .filter(task -> task.getEndTime() != null && !task.getEndTime().isAfter(time))
+          .count();
+    }
   }
 
-  public Long getZoneId() {
-    return zoneId;
+  public Zone getZone() {
+    return zone;
   }
 
-  // Inner class to represent the start and end times of a task
-  private record TaskTime(LocalDateTime startTime, LocalDateTime endTime) {
-  }
+    public List<ActiveTask> getActiveTasks() {
+        return activeTasks;
+    }
 
-  @Override
-  public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("ZoneSimResult {")
-        .append("\n  zoneId: ").append(zoneId)
-        .append(",\n  errorMessage: '").append(errormessage).append("'")
-        .append(",\n  taskTimes: {");
-
-      taskTimes.forEach((taskId, taskTime) -> {
-          sb.append("\n    ").append(taskId).append(": {")
-            .append("startTime: ").append(taskTime.startTime())
-            .append(", endTime: ").append(taskTime.endTime())
-            .append("},");
-      });
-
-      if (!taskTimes.isEmpty()) {
-          sb.setLength(sb.length() - 1); // Remove the trailing comma
-      }
-
-      sb.append("\n  }")
-        .append("\n}");
-      return sb.toString();
-  }
-
-
+    public List<PickerTask> getPickerTasks() {
+        return pickerTasks;
+    }
 }

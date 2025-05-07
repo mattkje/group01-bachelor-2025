@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -89,7 +90,7 @@ public class SimulationService {
         }
 
         if (day == null) {
-            day = LocalDateTime.now();
+            day = LocalDate.now().atStartOfDay();
         }
 
         for (int i = 0; i < getSimCount(); i++) {
@@ -103,6 +104,7 @@ public class SimulationService {
             );
             zoneSimResults.add(zoneSimResult);
         }
+
         return zoneSimResults;
     }
 
@@ -116,34 +118,35 @@ public class SimulationService {
      * @param currentTime The current time
      * @return A map containing the predicted completion time and any error messages
      */
-    public Map<Long, String> runCompleteSimulation(Map<String, RandomForest> models, LocalDateTime currentTime)
+    public Map<Long, List<String>> runCompleteSimulation(Map<String, RandomForest> models, LocalDateTime currentTime)
             throws ExecutionException, InterruptedException, IOException {
         List<SimulationResult> results;
         if (models == null) {
-            results = monteCarloWithRealData.monteCarlo(getSimCount(), null, null, timetableService);
-            currentTime = LocalDateTime.now();
+            results = monteCarloWithRealData.monteCarlo(getSimCount(), null, currentTime, timetableService);
+            if (currentTime == null) {
+                currentTime = LocalDateTime.now();
+            }
         } else {
             results = monteCarloWithRealData.monteCarlo(getSimCount(), models, currentTime, timetableService);
         }
-        HashMap<Long, String> newResult = new HashMap<>();
+        HashMap<Long, List<String>> newResult = new HashMap<>();
 
         if (!results.isEmpty()) {
-            // Get the current time
             // Calculate the average zone durations using the current time as the reference
-            Map<Long, Double> averageZoneDurations = utils.getSimResultAverages(results);
-
+            Map<Long, LocalDateTime> averageZoneDurations = utils.getSimResultAverages(results);
             // Format the predicted completion time for each zone
-            LocalDateTime finalCurrentTime = currentTime;
-            averageZoneDurations.forEach((zoneId, averageDuration) -> {
-                if (averageDuration > 0) {
-                    newResult.put(zoneId, formatPredictedCompletionTime(finalCurrentTime, averageDuration));
-                } else {
-                    newResult.put(zoneId, results.getFirst().getErrorMessage(zoneId));
+            List<SimulationResult> finalResults = results;
+            averageZoneDurations.forEach((zoneId, averageZoneDuration) -> {
+                List<String> combinedResult = new ArrayList<>();
+                if (averageZoneDuration != null) {
+                    combinedResult.addAll(formatPredictedCompletionTime(averageZoneDuration));
                 }
+                combinedResult.addAll(Objects.requireNonNull(finalResults.getFirst().getErrorMessage(zoneId)));
+                newResult.put(zoneId, combinedResult);
             });
             utils.saveSimulationResults(results, currentTime);
         } else {
-            newResult.put(-1L, "No simulation results available.");
+            newResult.put(-1L, Collections.singletonList("No simulation results available."));
         }
 
         return newResult;
@@ -170,14 +173,16 @@ public class SimulationService {
      * Formats the predicted completion time by adding the given minutes to the current time
      * and formatting it to a string in the format HH:mm.
      *
-     * @param currentTime The current time
-     * @param minutes     The number of minutes to add to the current time
      * @return The formatted predicted completion time
      */
-    private String formatPredictedCompletionTime(LocalDateTime currentTime, double minutes) {
-        LocalDateTime predictedCompletionTime = currentTime.plusMinutes((long) minutes);
+    private List<String> formatPredictedCompletionTime(LocalDateTime time) {
+        // Format the time to a string in the format HH:mm
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        return predictedCompletionTime.format(formatter);
+        String formattedTime = time.format(formatter);
+        // Create a list to hold the formatted time and any error messages
+        List<String> result = new ArrayList<>();
+        result.add(formattedTime);
+        return result;
     }
 
     /**

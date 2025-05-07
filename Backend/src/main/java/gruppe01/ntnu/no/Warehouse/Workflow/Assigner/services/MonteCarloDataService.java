@@ -64,7 +64,10 @@ public class MonteCarloDataService {
         return new ArrayList<>(groupedBySimCount.values());
     }
 
-    public void flushMCData() {
+    public String getZoneEndTime(long zoneId) {
+       //MonteCarloData monteCarloData = monteCarloDataRepository.findLastByZoneId(zoneId).getTime();
+        return "";
+    }public void flushMCData() {
         monteCarloDataRepository.deleteAll();
     }
 

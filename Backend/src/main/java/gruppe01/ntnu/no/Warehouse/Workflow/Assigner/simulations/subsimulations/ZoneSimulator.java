@@ -47,7 +47,7 @@ public class ZoneSimulator {
 
         // Initialize ZoneSimResult
         ZoneSimResult zoneSimResult = new ZoneSimResult();
-        zoneSimResult.setZoneId(zone.getId());
+        zoneSimResult.setZone(zone);
         try {
             // Check if the zone has any tasks
             if ((activeTasks == null || activeTasks.isEmpty()) &&
@@ -66,6 +66,7 @@ public class ZoneSimulator {
                     zoneWorkers.add(new Worker(worker));
                 }
             }
+            System.out.println("Zone " + zone.getId() + " workers: " + zoneWorkers.size());
             // Check if the zone has any workers
             if (zoneWorkers.isEmpty()) {
                 zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
@@ -81,6 +82,7 @@ public class ZoneSimulator {
                         " No workers coming to work today in zone");
                 return zoneSimResult;
             }
+            this.lastTime.set(startTime);
             // If the new time is before the last time, set the last time to the new time
             this.lastTime.set(this.lastTime.get().isAfter(newTime) ? this.lastTime.get() : newTime);
             ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
@@ -106,7 +108,7 @@ public class ZoneSimulator {
                 }
             } else {
                 zoneLatch = new CountDownLatch(pickerTasks.size());
-                pickerTasks = filteAndSortPickerTasks(pickerTasks);
+                pickerTasks = filterAndSortPickerTasks(pickerTasks);
                 for (PickerTask pickerTask : pickerTasks) {
                     // Simulate the picker task
                     String result = simulatePickerTask(pickerTask,
@@ -129,7 +131,7 @@ public class ZoneSimulator {
         return zoneSimResult;
     }
 
-    private Set<PickerTask> filteAndSortPickerTasks(Set<PickerTask> pickerTasks) {
+    private Set<PickerTask> filterAndSortPickerTasks(Set<PickerTask> pickerTasks) {
         return pickerTasks.stream()
                 // Filter out tasks that have an endTime
                 .filter(task -> task.getEndTime() == null)
@@ -179,8 +181,7 @@ public class ZoneSimulator {
                 // Set the last time to the end time of the task
                 this.lastTime.set(startTime.plusMinutes(taskDuration));
                 // Add the task to the simulation result
-                zoneSimResult.addTask(pickerTask.getId().toString(),
-                        pickerTask.getStartTime(), pickerTask.getEndTime());
+                zoneSimResult.addTask(null, pickerTask);
                 // Release the workers back to the semaphore
                 availableZoneWorkersSemaphore.release(pickerTask.getWorker());
             } catch (InterruptedException | IOException e) {
@@ -217,6 +218,7 @@ public class ZoneSimulator {
                             availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, lastTime, activeTask.getTask().getZoneId());
                     // if this, then task will not complete
                     if (!acquireWorkerError.isEmpty()) {
+                        System.out.println("Error: " + acquireWorkerError);
                         zoneSimResult.setErrorMessage(acquireWorkerError);
                         return;
                     }
@@ -232,8 +234,7 @@ public class ZoneSimulator {
                 // Set the last time to the end time of the task
                 this.lastTime.set(startTime.plusMinutes(sleepTime));
                 // Add the task to the simulation result
-                zoneSimResult.addTask(activeTask.getId().toString(),
-                        activeTask.getStartTime(), activeTask.getEndTime());
+                zoneSimResult.addTask(activeTask, null);
                 // Release the workers back to the semaphore
                 availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             } catch (InterruptedException e) {
@@ -294,6 +295,10 @@ public class ZoneSimulator {
         int minDuration = activeTask.getTask().getMinTime();
         int maxWorkers = activeTask.getTask().getMaxWorkers();
         int minWorkers = activeTask.getTask().getMinWorkers();
+
+        if (maxWorkers <= minWorkers){
+            maxWorkers = minWorkers + 1;
+        }
         List<Worker> workers = activeTask.getWorkers();
 
         double totalEfficiency = workers.stream()

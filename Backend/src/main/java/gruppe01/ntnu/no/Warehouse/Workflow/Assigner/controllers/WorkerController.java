@@ -73,6 +73,11 @@ public class WorkerController {
         return workerService.addLicenseToWorker(id, licenseId);
     }
 
+    @GetMapping("/all-licenses")
+    public List<Worker> addAllLicensesToWorkers() {
+        return workerService.addAllLicensesToWorkers();
+    }
+
     @DeleteMapping("/{id}")
     public Worker deleteWorker(@PathVariable Long id) {
         return workerService.deleteWorker(id);

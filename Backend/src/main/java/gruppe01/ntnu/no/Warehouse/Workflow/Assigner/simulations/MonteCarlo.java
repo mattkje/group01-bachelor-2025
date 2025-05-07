@@ -65,8 +65,6 @@ public class MonteCarlo {
 
     private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 
-    //TODO: Save the result of the simulation to a file for quicker access between pages
-
     /**
      * Runs several Monte Carlo simulation on the warehouse.
      * Each zone is threaded and run in parallel.
@@ -93,11 +91,11 @@ public class MonteCarlo {
         List<Future<SimulationResult>> futures = new ArrayList<>();
         // Get all zones and active tasks for today
         List<Zone> zones = zoneService.getAllZones();
-        List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday(currentTime);
         // if no time is given, use the current time
         if (currentTime == null) {
             currentTime = LocalDateTime.now();
         }
+        List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday(currentTime);
         // if no models are given, get them from the database
         if (models == null) {
             models = mlModel.getAllModels();
