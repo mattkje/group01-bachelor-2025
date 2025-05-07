@@ -1,24 +1,21 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerator;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Represents a Zone entity in the system.
  * A zone is a specific area in the warehouse where tasks are assigned.
  * Zones can have multiple tasks and workers associated with them.
  * A zone is either a picking zone or a non-picking zone.
- * A zone can not have both pickerTasks and Tasks at the same time.
+ * A zone cannot have both pickerTasks and Tasks at the same time.
  */
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
+@Table(name = "zone")
 public class Zone {
 
     @Id
@@ -32,16 +29,16 @@ public class Zone {
     private int capacity;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
-    private Set<Task> tasks;
+    private Set<Task> tasks = new HashSet<>();
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
-    private Set<PickerTask> pickerTask;
+    private Set<PickerTask> pickerTask = new HashSet<>();
 
     @Column(name = "is_picker_zone")
     private boolean isPickerZone;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
-    private Set<Worker> workers;
+    private Set<Worker> workers = new HashSet<>();
 
     public Zone() {
     }
@@ -53,6 +50,7 @@ public class Zone {
         this.tasks = zone.getTasks();
         this.workers = zone.getWorkers();
         this.isPickerZone = zone.getIsPickerZone();
+        this.pickerTask = zone.getPickerTask();
     }
 
     public void setId(Long id) {

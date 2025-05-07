@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref, computed} from "vue";
+import {onMounted, ref, computed, watch} from "vue";
 import {
   fetchSimulationDate,
   fetchSimulationStatus,
@@ -9,13 +9,16 @@ import {
   fastForwardSimulationClock,
   runAllMonteCarloSimulations,
   startSimulationClock,
+  pauseSimulationClock,
   stopSimulationClock
 } from "@/composables/SimulationCommands";
+import axios from "axios";
 
 const isSpinning = ref(false);
 let completionTime = ref(null);
 let isPlaying = ref(false);
 const isPaused = ref(false);
+let simCount = ref(10);
 
 const fetchPausedState = async () => {
   try {
@@ -25,13 +28,18 @@ const fetchPausedState = async () => {
 
     switch (state) {
       case 0:
+        isPlaying.value = false;
         break;
       case 1:
+        await updateCurrentTime();
         isPlaying.value = true;
+        setInterval(updateCurrentTime, 1000);
         break;
       case 2:
+        await updateCurrentTime();
         isPlaying.value = true;
         isPaused.value = true;
+        setInterval(updateCurrentTime, 1000);
         break;
       default:
         console.error('Invalid state value:', state);
@@ -41,8 +49,8 @@ const fetchPausedState = async () => {
   }
 };
 
-const currentTime = ref('');
-const currentDate = ref('');
+const currentTime = ref('00:00');
+const currentDate = ref('00/00/0000');
 let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
@@ -54,12 +62,30 @@ const updateCurrentTime = async () => {
 
 const startClock = async () => {
   isPlaying.value = true;
-  await startSimulationClock(60);
+  await startSimulationClock(60, simCount.value);
+  setInterval(updateCurrentTime, 1000);
 };
 
 const stopClock = async () => {
   isPaused.value = !isPaused.value;
+  await pauseSimulationClock();
+};
+
+const abortSimulation = async () => {
   await stopSimulationClock();
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  isPlaying.value = false;
+  isPaused.value = false;
+  completionTime.value = null;
+  currentTime.value = '00:00';
+  currentDate.value = '00/00/0000';
+  simCount.value = 10;
+  speedIndex = 0;
+  await updateCurrentTime();
+
 };
 
 const fastForwardClock = async () => {
@@ -120,10 +146,34 @@ const dateText = computed(() => {
   return new Date(currentDate.value).toLocaleDateString();
 });
 
+async function updateSimCount() {
+  try {
+    await axios.post('http://localhost:8080/api/set-sim-count', null, {
+      params: { simCount: simCount.value },
+    });
+    console.log('SIM_COUNT updated successfully');
+  } catch (error) {
+    console.error('Error updating SIM_COUNT:', error);
+  }
+}
+
+  async function getSimCount() {
+    try {
+      const response = await axios.get('http://localhost:8080/api/get-sim-count');
+      console.log('Current SIM_COUNT:', response.data);
+    } catch (error) {
+      console.error('Error fetching SIM_COUNT:', error);
+    }
+  }
+
+watch(simCount, (newValue, oldValue) => {
+  console.log(`simCount changed from ${oldValue} to ${newValue}`);
+  updateSimCount();
+});
+
 onMounted(() => {
+  getSimCount
   fetchPausedState();
-  updateCurrentTime();
-  setInterval(updateCurrentTime, 1000);
 });
 </script>
 
@@ -135,11 +185,24 @@ onMounted(() => {
         <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
       </div>
     </div>
+    <div class="sim-count-container">
+      <label for="sim-count">Sim Count:</label>
+      <input
+          id="sim-count"
+          type="number"
+          v-model="simCount"
+          :disabled="isPlaying"
+          class="sim-count-input"
+      />
+    </div>
     <button class="toolbar-item" @click="runSimulations">
       <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
     </button>
     <div class="vertical-separator"/>
     <div class="controls">
+      <button v-if="isPlaying" @click="abortSimulation">
+        <img src="/src/assets/icons/stop.svg" alt="Stop"/>
+      </button>
       <button v-if="!isPlaying" @click="startClock">
         <img src="/src/assets/icons/play.svg" alt="Play"/>
       </button>
@@ -350,6 +413,32 @@ onMounted(() => {
   width: 30px;
   height: 30px;
   margin-bottom: 0.2rem;
+}
+
+.sim-count-container {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.sim-count-container label {
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  color: #7B7B7B;
+}
+
+.sim-count-input {
+  width: 60px;
+  padding: 0.3rem;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.sim-count-input:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
 }
 
 @keyframes blink {

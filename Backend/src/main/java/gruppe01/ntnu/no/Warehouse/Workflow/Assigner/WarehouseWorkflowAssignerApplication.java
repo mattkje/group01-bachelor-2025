@@ -4,6 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Main application class for the Warehouse Workflow Assigner.
+ * This class serves as the entry point for the Spring Boot application.
+ */
 @SpringBootApplication
 @EnableScheduling
 public class WarehouseWorkflowAssignerApplication {

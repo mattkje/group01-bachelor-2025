@@ -1,38 +1,70 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.PickerTaskRepository;
+
 import java.time.LocalDate;
 import java.util.Set;
+
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ZoneRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service class for managing PickerTask entities.
+ */
 @Service
 public class PickerTaskService {
 
-    @Autowired
-    private PickerTaskRepository pickerTaskRepository;
-    @Autowired
-    private WorkerRepository workerRepository;
-    @Autowired
-    private ZoneRepository zoneRepository;
+    private final PickerTaskRepository pickerTaskRepository;
 
+    private final WorkerRepository workerRepository;
+
+    private final ZoneRepository zoneRepository;
+
+    /**
+     * Constructor for PickerTaskService.
+     *
+     * @param pickerTaskRepository the repository for PickerTask
+     * @param workerRepository     the repository for Worker
+     * @param zoneRepository       the repository for Zone
+     */
+    public PickerTaskService(PickerTaskRepository pickerTaskRepository, WorkerRepository workerRepository, ZoneRepository zoneRepository) {
+        this.pickerTaskRepository = pickerTaskRepository;
+        this.workerRepository = workerRepository;
+        this.zoneRepository = zoneRepository;
+    }
+
+    /**
+     * Retrieves all PickerTask entities.
+     *
+     * @return a list of all PickerTask entities
+     */
     public List<PickerTask> getAllPickerTasks() {
         return pickerTaskRepository.findAll();
     }
 
+    /**
+     * Retrieves a PickerTask entity by its ID.
+     *
+     * @param id the ID of the PickerTask
+     * @return the PickerTask entity, or null if not found
+     */
     public PickerTask getPickerTaskById(Long id) {
         return pickerTaskRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Retrieves all PickerTask entities for a specific zone ID.
+     *
+     * @param id the ID of the zone
+     * @return a list of PickerTask entities for the specified zone
+     */
     public List<PickerTask> getPickerTaskByZoneId(Long id) {
         List<PickerTask> pickerTasks = new ArrayList<>();
         for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
@@ -43,6 +75,11 @@ public class PickerTaskService {
         return pickerTasks;
     }
 
+    /**
+     * Retrieves all PickerTask entities for today.
+     *
+     * @return a set of PickerTask entities for today
+     */
     public Set<PickerTask> getPickerTasksForToday() {
         List<PickerTask> pickerTasks = new ArrayList<>();
         for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
@@ -53,6 +90,12 @@ public class PickerTaskService {
         return Set.copyOf(pickerTasks);
     }
 
+    /**
+     * Retrieves all PickerTask entities for a specific date.
+     *
+     * @param date the date to filter by
+     * @return an int of PickerTask entities for the specified date
+     */
     public int getPickerTasksDoneForTodayInZone(LocalDate date, long zoneId) {
         int count = 0;
         for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
@@ -63,6 +106,12 @@ public class PickerTaskService {
         return count;
     }
 
+    /**
+     * Retrieves all PickerTask entities for a specific date.
+     *
+     * @param date the date to filter by
+     * @return an int of PickerTask entities for the specified date
+     */
     public int getItemsPickedByZone(LocalDate date, long zoneId) {
         int count = 0;
         for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
@@ -73,6 +122,11 @@ public class PickerTaskService {
         return count;
     }
 
+    /**
+     * Saves a PickerTask entity.
+     *
+     * @param pickerTask the PickerTask entity to save
+     */
     public PickerTask savePickerTask(PickerTask pickerTask) {
         if (pickerTask != null) {
             return pickerTaskRepository.save(pickerTask);
@@ -80,6 +134,13 @@ public class PickerTaskService {
         return null;
     }
 
+    /**
+     * Assigns a worker to a PickerTask.
+     *
+     * @param pickerTaskId the ID of the PickerTask
+     * @param workerId     the ID of the Worker
+     * @return the updated PickerTask entity
+     */
     public PickerTask assignWorkerToPickerTask(Long pickerTaskId, Long workerId) {
         PickerTask pickerTask = getPickerTaskById(pickerTaskId);
         Worker worker = workerRepository.findById(workerId).orElse(null);
@@ -92,6 +153,13 @@ public class PickerTaskService {
         return null;
     }
 
+    /**
+     * Removes a worker from a PickerTask.
+     *
+     * @param pickerTaskId the ID of the PickerTask
+     * @param workerId     the ID of the Worker
+     * @return the updated PickerTask entity
+     */
     public PickerTask removeWorkerFromPickerTask(Long pickerTaskId, Long workerId) {
         PickerTask pickerTask = getPickerTaskById(pickerTaskId);
         Worker worker = workerRepository.findById(workerId).orElse(null);
@@ -104,6 +172,14 @@ public class PickerTaskService {
         return null;
     }
 
+    /**
+     * Updates a PickerTask entity.
+     *
+     * @param pickerTaskId the ID of the PickerTask to update
+     * @param zoneId       the ID of the Zone
+     * @param pickerTask   the updated PickerTask entity
+     * @return the updated PickerTask entity
+     */
     public PickerTask updatePickerTask(Long pickerTaskId, Long zoneId, PickerTask pickerTask) {
         return pickerTaskRepository.findById(pickerTaskId).map(existingTask -> {
             // Update fields
@@ -133,6 +209,11 @@ public class PickerTaskService {
         }).orElseThrow(() -> new IllegalArgumentException("PickerTask not found with id: " + pickerTaskId));
     }
 
+    /**
+     * Deletes a PickerTask entity.
+     *
+     * @param id the ID of the PickerTask to delete
+     */
     public void deletePickerTask(Long id) {
         PickerTask pickerTask = pickerTaskRepository.findById(id).orElse(null);
         if (pickerTask != null) {

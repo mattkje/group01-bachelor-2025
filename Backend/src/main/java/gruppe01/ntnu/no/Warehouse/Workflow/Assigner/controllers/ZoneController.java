@@ -2,9 +2,9 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -13,8 +13,11 @@ import java.util.Set;
 @RequestMapping("/api/zones")
 public class ZoneController {
 
-    @Autowired
-    private ZoneService zoneService;
+    private final ZoneService zoneService;
+
+    public ZoneController(ZoneService zoneService) {
+        this.zoneService = zoneService;
+    }
 
     @GetMapping
     public List<Zone> getAllZones() {
@@ -58,12 +61,12 @@ public class ZoneController {
 
     @GetMapping("/{id}/active-tasks-now")
     public Set<ActiveTask> getActiveTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodaysUnfinishedTasksByZoneId(id);
+        return zoneService.getTodayUnfinishedTasksByZoneId(id);
     }
 
     @GetMapping("/{id}/picker-tasks-now")
     public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodaysUnfinishedPickerTasksByZoneId(id);
+        return zoneService.getTodayUnfinishedPickerTasksByZoneId(id);
     }
 
     @GetMapping("/{zoneId}/{date}")
@@ -94,5 +97,10 @@ public class ZoneController {
     @DeleteMapping("/{id}")
     public Zone deleteZone(@PathVariable Long id) {
         return zoneService.deleteZone(id);
+    }
+
+    @PutMapping("/update-machine-learning-model")
+    public void updateMachineLearningModel() throws IOException {
+        zoneService.updateMachineLearningModel();
     }
 }

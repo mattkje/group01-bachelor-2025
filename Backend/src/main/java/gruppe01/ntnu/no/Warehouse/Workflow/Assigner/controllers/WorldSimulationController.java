@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 
@@ -10,21 +9,39 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * WorldSimulationController handles HTTP requests related to world simulation operations.
+ * It provides endpoints to start, pause, stop, and manage the simulation.
+ */
 @RestController
 @RequestMapping("/api/simulation")
 public class WorldSimulationController {
 
-    @Autowired
-    private WorldSimulation worldSimulation;
+    private final WorldSimulation worldSimulation;
+
+    /**
+     * Constructor for WorldSimulationController.
+     *
+     * @param worldSimulation The service to run world simulations.
+     */
+    public WorldSimulationController(WorldSimulation worldSimulation) {
+        this.worldSimulation = worldSimulation;
+    }
 
     @PostMapping("/start")
-    public void startSimulation(@RequestParam int simulationTime) throws Exception {
+    public void startSimulation(@RequestParam int simulationTime, @RequestParam int simCount) throws Exception {
         worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
+        //TODO: Add simulation count to the simulation
     }
 
     @PostMapping("/pause")
     public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
         worldSimulation.pauseSimulation();
+    }
+
+    @PostMapping("/stop")
+    public void stopSimulation() throws InterruptedException, IOException, ExecutionException {
+        worldSimulation.stopSimulation();
     }
 
     @GetMapping("/getStatus")

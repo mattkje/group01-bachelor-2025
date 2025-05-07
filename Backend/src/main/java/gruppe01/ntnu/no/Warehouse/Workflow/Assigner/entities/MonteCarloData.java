@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "monte_carlo_data")
 public class MonteCarloData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +27,14 @@ public class MonteCarloData {
     private long zoneId;
 
     public MonteCarloData() {
+    }
+
+    public MonteCarloData(int simNo, LocalDateTime time, int completedTasks, int itemsPicked, long zoneId) {
+        this.simNo = simNo;
+        this.time = time;
+        this.completedTasks = completedTasks;
+        this.itemsPicked = itemsPicked;
+        this.zoneId = zoneId;
     }
 
     public void setSimNo(int simNo) {

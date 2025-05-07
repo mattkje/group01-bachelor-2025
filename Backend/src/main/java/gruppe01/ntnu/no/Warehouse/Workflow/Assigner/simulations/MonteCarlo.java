@@ -32,33 +32,36 @@ import java.util.concurrent.TimeUnit;
 
 import smile.regression.RandomForest;
 
+/**
+ * Monte Carlo Simulation of a warehouse time to complete all tasks within a day.
+ * Handles a workday with both picker and non-picker zones
+ * Simulates the current worker layout from the time it is run, not the start of the day.
+ */
 @Service
 public class MonteCarlo {
+
+    private final ZoneService zoneService;
+
+    private final ActiveTaskService activeTaskService;
+
+    private final PickerTaskService pickerTaskService;
+
+    private final Utils utils;
+
     /**
-     * Monte Carlo Simulation of a warehouse time to complete all tasks within a day.
-     * Handles a workday with both picker and non-picker zones
-     * Simulates the current worker layout from the time it is run, not the start of the day.
+     * Constructor for MonteCarlo.
+     *
+     * @param zoneService         the service for Zone entity
+     * @param activeTaskService   the service for ActiveTask entity
+     * @param pickerTaskService   the service for PickerTask entity
+     * @param utils               utility class for simulations
      */
-    @Autowired
-    private WorkerService workerService;
-
-    @Autowired
-    private ZoneService zoneService;
-
-    @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private ActiveTaskService activeTaskService;
-
-    @Autowired
-    private LicenseService licenseService;
-
-    @Autowired
-    private PickerTaskService pickerTaskService;
-
-    @Autowired
-    private Utils utils;
+    public MonteCarlo(@Autowired ZoneService zoneService, @Autowired ActiveTaskService activeTaskService, @Autowired PickerTaskService pickerTaskService, @Autowired Utils utils) {
+        this.zoneService = zoneService;
+        this.activeTaskService = activeTaskService;
+        this.pickerTaskService = pickerTaskService;
+        this.utils = utils;
+    }
 
     private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
 

@@ -13,6 +13,7 @@ import java.util.Set;
  * required for its execution.
  */
 @Entity
+@Table(name = "task")
 public class Task {
 
     @Id

@@ -1,101 +1,101 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import smile.regression.RandomForest;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
 /**
- * This class generates dummy PickerTask data for testing purposes.
+ * This class generates fake PickerTask data for testing purposes.
  * It creates a specified number of PickerTasks for a given zone and date range.
  */
 @Component
 public class PickerTaskGenerator {
 
-    @Autowired
-    private PickerTaskService pickerTaskService;
+    private final PickerTaskService pickerTaskService;
+    private final ZoneService zoneService;
 
-    @Autowired
-    private ZoneService zoneService;
+    /**
+     * Constructor for PickerTaskGenerator.
+     *
+     * @param pickerTaskService The service to handle PickerTask operations.
+     * @param zoneService       The service to handle Zone operations.
+     */
+    public PickerTaskGenerator(PickerTaskService pickerTaskService, ZoneService zoneService) {
+        this.pickerTaskService = pickerTaskService;
+        this.zoneService = zoneService;
+    }
 
+    /**
+     * Generates PickerTasks for the given date range and zones.
+     *
+     * @param startDate                   The start date for generating tasks.
+     * @param numDays                     The number of days to generate tasks for.
+     * @param numTasksPerDay              The number of tasks to generate per day.
+     * @param machineLearningModelPicking The machine learning model for picking data.
+     * @throws IOException If an error occurs while fetching machine learning data.
+     */
     public void generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay,
                                     MachineLearningModelPicking machineLearningModelPicking) throws IOException {
 
-        Map<List<Double>, List<List<Double>>> mcValues;
-        List<List<Double>> valueList;
-        List<Map<List<Double>, List<List<Double>>>> mcValuesList = new ArrayList<>();
-
-        mcValuesList.add(machineLearningModelPicking.getMcValues("dry"));
-        mcValuesList.add(machineLearningModelPicking.getMcValues("freeze"));
-        mcValuesList.add(machineLearningModelPicking.getMcValues("fruit"));
+        List<Map<List<Double>, List<List<Double>>>> mcValuesList = List.of(
+                machineLearningModelPicking.getMcValues("dry"),
+                machineLearningModelPicking.getMcValues("freeze"),
+                machineLearningModelPicking.getMcValues("fruit")
+        );
 
         Random random = new Random();
 
-        //Creates a list of PickerTasks for the given zone and date range
         for (Zone zone : zoneService.getAllPickerZones()) {
-
-            if (zone.getName().equalsIgnoreCase("freeze")) {
-                mcValues = mcValuesList.get(1);
-            } else if (zone.getName().equalsIgnoreCase("fruit")) {
-                mcValues = mcValuesList.get(2);
-            } else {
-                mcValues = mcValuesList.getFirst();
-            }
-
-            valueList = mcValues.values().iterator().next();
-
-            double sDistance = valueList.get(0).get(0);
-            double bDistance = valueList.get(0).get(1);
-            double sPackAmount = valueList.get(1).get(0);
-            double bPackAmount = valueList.get(1).get(1);
-            double sLinesAmount = valueList.get(2).get(0);
-            double bLinesAmount = valueList.get(2).get(1);
-            double sWeight = valueList.get(3).get(0);
-            double bWeight = valueList.get(3).get(1);
-            double sVolume = valueList.get(4).get(0);
-            double bVolume = valueList.get(4).get(1);
-            double sAvgHeight = valueList.get(5).get(0);
-            double bAvgHeight = valueList.get(5).get(1);
+            Map<List<Double>, List<List<Double>>> mcValues = getMcValuesForZone(zone, mcValuesList);
+            List<List<Double>> valueList = mcValues.values().iterator().next();
 
             for (int i = 0; i < numDays; i++) {
                 LocalDate currentDate = startDate.plusDays(i);
                 for (int j = 0; j < numTasksPerDay; j++) {
-                    PickerTask pickerTask = new PickerTask();
-                    pickerTask.setZone(zone);
-                    pickerTask.setDate(currentDate);
-                    int rand = new Random().nextInt(101);
-
-                    // Generate random values for the PickerTask attributes with +- 5% variation.
-                    // The values are generated based on the given zone's average values.
-                    double distance = roundToTwoDecimals((sDistance + (rand / 100.0) * (bDistance - sDistance)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    int packAmount = (int) ((sPackAmount + (rand / 100.0) * (bPackAmount - sPackAmount)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    int linesAmount = (int) ((sLinesAmount + (rand / 100.0) * (bLinesAmount - sLinesAmount)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    int weight = (int) ((sWeight + (rand / 100.0) * (bWeight - sWeight)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    int volume = (int) ((sVolume + (rand / 100.0) * (bVolume - sVolume)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-                    double avgHeight = roundToTwoDecimals((sAvgHeight + (rand / 100.0) * (bAvgHeight - sAvgHeight)) * (1 + (random.nextDouble() * 0.1 - 0.05)));
-
-                    pickerTask.setDistance(distance);
-                    pickerTask.setPackAmount(packAmount);
-                    pickerTask.setLinesAmount(linesAmount);
-                    pickerTask.setWeight(weight);
-                    pickerTask.setVolume(volume);
-                    pickerTask.setAvgHeight(avgHeight);
-
+                    PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random);
                     pickerTaskService.savePickerTask(pickerTask);
                 }
             }
         }
-
     }
+
+    private Map<List<Double>, List<List<Double>>> getMcValuesForZone(Zone zone, List<Map<List<Double>, List<List<Double>>>> mcValuesList) {
+        return switch (zone.getName().toLowerCase()) {
+            case "freeze" -> mcValuesList.get(1);
+            case "fruit" -> mcValuesList.get(2);
+            default -> mcValuesList.get(0);
+        };
+    }
+
+    private PickerTask createPickerTask(Zone zone, LocalDate date, List<List<Double>> valueList, Random random) {
+        PickerTask pickerTask = new PickerTask();
+        pickerTask.setZone(zone);
+        pickerTask.setDate(date);
+
+        pickerTask.setDistance(generateRandomValue(valueList.get(0), random));
+        pickerTask.setPackAmount((int) generateRandomValue(valueList.get(1), random));
+        pickerTask.setLinesAmount((int) generateRandomValue(valueList.get(2), random));
+        pickerTask.setWeight((int) generateRandomValue(valueList.get(3), random));
+        pickerTask.setVolume((int) generateRandomValue(valueList.get(4), random));
+        pickerTask.setAvgHeight(generateRandomValue(valueList.get(5), random));
+
+        return pickerTask;
+    }
+
+    private double generateRandomValue(List<Double> range, Random random) {
+        double min = range.get(0);
+        double max = range.get(1);
+        double variation = 1 + (random.nextDouble() * 0.1 - 0.05); // ±5% variation
+        return roundToTwoDecimals((min + random.nextDouble() * (max - min)) * variation);
+    }
+
     private double roundToTwoDecimals(double value) {
         return Math.round(value * 100.0) / 100.0;
     }

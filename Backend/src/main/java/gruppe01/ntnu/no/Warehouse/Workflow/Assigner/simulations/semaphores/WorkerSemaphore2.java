@@ -30,8 +30,7 @@ import org.springframework.stereotype.Component;
 public class WorkerSemaphore2 {
     private static final Logger logger = Logger.getLogger(WorkerSemaphore2.class.getName());
 
-    @Autowired
-    private TimetableService timetableService;
+    private final TimetableService timetableService;
 
     // Set of workers that are available
     private Set<Worker> workers;
@@ -96,7 +95,8 @@ public class WorkerSemaphore2 {
 
       // Remove workers after iteration
       workersToRemove.forEach(workers::remove);
-      logger.info("Current worker pool: " + workers.size() + " workers. at Zone: " + workers.iterator().next().getZone());
+      logger.info("Current worker pool: " + workers.size() + " workers." +
+          (workers.isEmpty() ? "" : " at Zone: " + workers.iterator().next().getZone()));
   }
 
     public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)

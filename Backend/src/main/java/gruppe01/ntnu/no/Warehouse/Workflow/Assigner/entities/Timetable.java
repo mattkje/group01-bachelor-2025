@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
  * A timetable is used to schedule the working hours of a worker.
  */
 @Entity
+@Table(name = "timetable")
 public class Timetable {
     @GeneratedValue
     @Id
@@ -33,9 +34,10 @@ public class Timetable {
     @JsonIgnore
     private Worker worker;
 
-    public Timetable() {}
+    public Timetable() {
+    }
 
-    public Timetable( LocalDateTime startTime, LocalDateTime endTime,  Worker worker) {
+    public Timetable(LocalDateTime startTime, LocalDateTime endTime, Worker worker) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.worker = worker;

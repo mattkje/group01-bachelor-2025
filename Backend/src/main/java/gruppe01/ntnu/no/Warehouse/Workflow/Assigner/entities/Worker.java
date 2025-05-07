@@ -17,6 +17,7 @@ import java.util.*;
  * a set of licenses that determine what tasks they can perform.
  */
 @Entity
+@Table(name = "worker")
 public class Worker {
 
     @Id
@@ -66,9 +67,9 @@ public class Worker {
             joinColumns = @JoinColumn(name = "worker_id"),
             inverseJoinColumns = @JoinColumn(name = "license_id")
     )
-    private Set<License> licenses;
+    private Set<License> licenses = new HashSet<>();
 
-    public Worker(){
+    public Worker() {
 
     }
 
@@ -78,8 +79,13 @@ public class Worker {
         this.zone = worker.zone;
         this.workTitle = worker.workTitle;
         this.efficiency = worker.efficiency;
-        this.licenses = new HashSet<>(worker.licenses);
+        this.licenses = worker.licenses;
         this.availability = worker.availability;
+        this.currentActiveTask = worker.currentActiveTask;
+        this.currentPickerTask = worker.currentPickerTask;
+        this.breakStartTime = worker.breakStartTime;
+        this.dead = worker.dead;
+        this.workSchedule = worker.workSchedule;
     }
 
     public Worker(String name, Long zone, String workTitle, double efficiency, ArrayList<License> licenses, boolean availability) {

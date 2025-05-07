@@ -2,17 +2,28 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Task;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * TaskController handles HTTP requests related to tasks.
+ * It provides endpoints to create, read, update, and delete tasks.
+ */
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    @Autowired
-    private TaskService taskService;
+    private final TaskService taskService;
+
+    /**
+     * Constructor for TaskController.
+     *
+     * @param taskService The service to handle task operations.
+     */
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
 
     @GetMapping
     public List<Task> getAllTasks() {

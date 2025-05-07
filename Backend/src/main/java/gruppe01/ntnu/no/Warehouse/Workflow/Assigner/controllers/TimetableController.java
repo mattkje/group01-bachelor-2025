@@ -2,19 +2,32 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Timetable;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * TimetableController handles HTTP requests related to timetables.
+ * It provides endpoints to create, read, update, and delete timetables.
+ */
 @RestController
 @RequestMapping("/api/timetables")
 public class TimetableController {
 
-    @Autowired
-    private TimetableService timetableService;
+    private final TimetableService timetableService;
+
+    /**
+     * Constructor for TimetableController.
+     *
+     * @param timetableService The service to handle timetable operations.
+     */
+    public TimetableController(TimetableService timetableService) {
+        this.timetableService = timetableService;
+    }
 
     @GetMapping
     public List<Timetable> getTimetables() {
@@ -23,7 +36,7 @@ public class TimetableController {
 
     @GetMapping("/today/zone/{zoneId}")
     public List<Timetable> getTodaysTimetable(@PathVariable Long zoneId) {
-        return timetableService.getTodaysTimetablesByZone(zoneId);
+        return timetableService.getTodayTimetablesByZone(zoneId);
     }
 
     @GetMapping("zone/{zoneId}")

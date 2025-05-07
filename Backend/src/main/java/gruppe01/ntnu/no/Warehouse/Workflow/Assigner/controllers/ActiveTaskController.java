@@ -3,19 +3,30 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * ActiveTaskController handles HTTP requests related to active tasks.
+ * It provides endpoints to create, read, update, and delete active tasks.
+ */
 @RestController
 @RequestMapping("/api/active-tasks")
 public class ActiveTaskController {
 
-    @Autowired
-    private ActiveTaskService activeTaskService;
+    private final ActiveTaskService activeTaskService;
+
+    /**
+     * Constructor for ActiveTaskController.
+     *
+     * @param activeTaskService The service to handle active task operations.
+     */
+    public ActiveTaskController(ActiveTaskService activeTaskService) {
+        this.activeTaskService = activeTaskService;
+    }
 
     @GetMapping
     public List<ActiveTask> getAllActiveTasks() {
