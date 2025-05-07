@@ -74,11 +74,11 @@ public class License {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         License license = (License) o;
-        return Objects.equals(name, license.name); // Compare relevant fields
+        return id != null && id.equals(license.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name); // Use the same fields as in equals
+        return id != null ? id.hashCode() : 0;
     }
 }

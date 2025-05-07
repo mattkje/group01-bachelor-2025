@@ -32,8 +32,6 @@ import smile.regression.RandomForest;
 
 public class ZoneSimulator {
 
-    static Random random = new Random();
-
     private final AtomicReference<LocalDateTime> lastTime = new AtomicReference<>(LocalDateTime.now());
 
     private static final MachineLearningModelPicking mlModel = new MachineLearningModelPicking();
@@ -66,7 +64,6 @@ public class ZoneSimulator {
                     zoneWorkers.add(new Worker(worker));
                 }
             }
-            System.out.println("Zone " + zone.getId() + " workers: " + zoneWorkers.size());
             // Check if the zone has any workers
             if (zoneWorkers.isEmpty()) {
                 zoneSimResult.setErrorMessage("ERROR: Zone " + zone.getId() +
@@ -218,7 +215,6 @@ public class ZoneSimulator {
                             availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, lastTime, activeTask.getTask().getZoneId());
                     // if this, then task will not complete
                     if (!acquireWorkerError.isEmpty()) {
-                        System.out.println("Error: " + acquireWorkerError);
                         zoneSimResult.setErrorMessage(acquireWorkerError);
                         return;
                     }

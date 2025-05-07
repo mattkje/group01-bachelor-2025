@@ -67,9 +67,10 @@ public class Utils {
                 Long zoneId = entry.getKey();
                 ZoneSimResult zoneSimResult = entry.getValue();
                 LocalDateTime endTime = zoneSimResult.getLastEndTime();
-                if (endTime != null) {
-                    zoneEndTimes.computeIfAbsent(zoneId, k -> new ArrayList<>()).add(endTime);
+                if (endTime == null) {
+                    endTime = LocalDateTime.MIN;
                 }
+                zoneEndTimes.computeIfAbsent(zoneId, k -> new ArrayList<>()).add(endTime);
             }
         }
 
