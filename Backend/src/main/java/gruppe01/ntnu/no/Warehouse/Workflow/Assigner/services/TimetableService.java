@@ -45,6 +45,16 @@ public class TimetableService {
     }
 
     /**
+     * Retrieves a Timetable entity by its ID.
+     *
+     * @param id the ID of the Timetable entity
+     * @return a Timetable entity if found, null otherwise
+     */
+    public Timetable getTimetableById(Long id) {
+        return timetableRepository.findById(id).orElse(null);
+    }
+
+    /**
      * Adds a new Timetable entity.
      *
      * @param timetable the Timetable entity to add
@@ -318,8 +328,9 @@ public class TimetableService {
         return true;
     }
 
-    public void deleteTimetable(Long id) {
+    public Timetable deleteTimetable(Long id) {
         timetableRepository.deleteById(id);
+        return timetableRepository.findById(id).orElse(null);
     }
 
 

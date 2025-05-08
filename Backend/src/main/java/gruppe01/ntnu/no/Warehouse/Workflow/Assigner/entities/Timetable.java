@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -12,26 +13,33 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "timetable")
+@Schema(description = "Represents a timetable entity in the system.")
 public class Timetable {
     @GeneratedValue
     @Id
+    @Schema(description = "Unique identifier for the timetable.")
     private Long id;
 
     @Column(name = "start_time")
+    @Schema(description = "The start time of the timetable.")
     private LocalDateTime startTime;
 
     @Column(name = "end_time")
+    @Schema(description = "The end time of the timetable.")
     private LocalDateTime endTime;
 
     @Column(name = "real_start_time")
+    @Schema(description = "The actual start time of the timetable.")
     private LocalDateTime realStartTime;
 
     @Column(name = "real_end_time")
+    @Schema(description = "The actual end time of the timetable.")
     private LocalDateTime realEndTime;
 
     @ManyToOne
     @JoinColumn(name = "worker_id", nullable = false)
     @JsonIgnore
+    @Schema(description = "The worker associated with this timetable.")
     private Worker worker;
 
     public Timetable() {

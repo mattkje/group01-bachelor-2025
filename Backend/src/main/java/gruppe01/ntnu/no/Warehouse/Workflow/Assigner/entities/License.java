@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.Objects;
@@ -13,21 +14,26 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "license")
+@Schema(description = "Represents a License entity in the system.")
 public class License {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the license.")
     private Long id;
 
     @Column(name = "name")
+    @Schema(description = "The name of the license.")
     private String name;
 
     @ManyToMany(mappedBy = "licenses", fetch = FetchType.LAZY)
     @JsonIgnore
+    @Schema(description = "The workers who have this license.")
     private Set<Worker> workers;
 
     @ManyToMany(mappedBy = "requiredLicense", fetch = FetchType.LAZY)
     @JsonIgnore
+    @Schema(description = "The tasks that require this license.")
     private Set<Task> tasks;
 
     public License() {

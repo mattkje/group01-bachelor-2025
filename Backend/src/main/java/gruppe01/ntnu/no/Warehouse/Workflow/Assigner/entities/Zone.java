@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -16,28 +17,36 @@ import java.util.Set;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "zone")
+@Schema(description = "Represents a Zone entity in the system.")
 public class Zone {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the zone.")
     private Long id;
 
     @Column(name = "name")
+    @Schema(description = "The name of the zone.")
     private String name;
 
     @Column(name = "capacity")
+    @Schema(description = "The capacity of the zone.")
     private int capacity;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
+    @Schema(description = "The tasks associated with this zone.")
     private Set<Task> tasks = new HashSet<>();
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
+    @Schema(description = "The picker tasks associated with this zone.")
     private Set<PickerTask> pickerTask = new HashSet<>();
 
     @Column(name = "is_picker_zone")
+    @Schema(description = "Indicates whether this zone is a picking zone.")
     private boolean isPickerZone;
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
+    @Schema(description = "The workers associated with this zone.")
     private Set<Worker> workers = new HashSet<>();
 
     public Zone() {

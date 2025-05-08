@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -12,26 +13,33 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "world_sim_data")
+@Schema(description = "Represents a WorldSimData entity in the system.")
 public class WorldSimData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the WorldSimData.")
     private Long id;
 
     @Column(name = "time")
+    @Schema(description = "The time when the simulation data was recorded.")
     private LocalDateTime time;
 
     @Column(name = "completed_tasks")
+    @Schema(description = "The number of tasks completed during the simulation.")
     private int completedTasks;
 
     @Column(name = "items_picked")
+    @Schema(description = "The number of items picked during the simulation.")
     private int itemsPicked;
 
     @Column(name = "real_data")
+    @Schema(description = "Indicates whether the data is real or simulated.")
     private boolean realData;
 
     @OneToOne
     @JoinColumn(name = "zone_id")
     @JsonIgnore
+    @Schema(description = "The zone associated with this simulation data.")
     private Zone zone;
 
     public WorldSimData() {

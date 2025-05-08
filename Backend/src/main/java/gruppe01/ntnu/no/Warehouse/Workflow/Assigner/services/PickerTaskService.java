@@ -209,12 +209,21 @@ public class PickerTaskService {
         }).orElseThrow(() -> new IllegalArgumentException("PickerTask not found with id: " + pickerTaskId));
     }
 
+    public PickerTask createPickerTask(long zoneId, PickerTask pickerTask) {
+        Zone zone = zoneRepository.findById(zoneId).orElse(null);
+        if (zone == null) {
+            throw new IllegalArgumentException("Zone not found with id: " + zoneId);
+        } else {
+            return pickerTaskRepository.save(pickerTask);
+        }
+    }
+
     /**
      * Deletes a PickerTask entity.
      *
      * @param id the ID of the PickerTask to delete
      */
-    public void deletePickerTask(Long id) {
+    public PickerTask deletePickerTask(Long id) {
         PickerTask pickerTask = pickerTaskRepository.findById(id).orElse(null);
         if (pickerTask != null) {
             if (pickerTask.getWorker() != null) {
@@ -222,6 +231,8 @@ public class PickerTaskService {
                 workerRepository.save(pickerTask.getWorker());
             }
             pickerTaskRepository.delete(pickerTask);
+            return pickerTask;
         }
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.List;
  * or have finished. An ActiveTask is connected to a specific Task and can
  * have multiple workers assigned to it.
  */
+@Schema(description = "Represents an active task in the warehouse workflow system.")
 @Entity
 @Table(name = "active_task")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -21,30 +23,38 @@ public class ActiveTask {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the active task.")
     private Long id;
 
     @Column(name = "due_date")
+    @Schema(description = "The due date for the active task.")
     private LocalDateTime dueDate;
 
     @Column(name = "start_time")
+    @Schema(description = "The start time of the active task.")
     private LocalDateTime startTime;
 
     @Column(name = "end_time")
+    @Schema(description = "The end time of the active task.")
     private LocalDateTime endTime;
 
     @Column(name = "eta")
+    @Schema(description = "The estimated time of arrival for the active task.")
     private LocalDate eta;
 
     @Column(name = "date")
+    @Schema(description = "The date when the active task was created.")
     private LocalDate date;
 
     // Recurrence type: 0 = no recurrence, 1 = monthly, 2 = weekly,
     // 3 = every other day, 4 = daily
     @Column(name = "recurrence_type")
+    @Schema(description = "The recurrence type of the active task. 1 = monthly, 2 = weekly, 3 = every other day, 4 = daily.")
     private int recurrenceType;
 
     @ManyToOne
     @JoinColumn(name = "task_id")
+    @Schema(description = "The task associated with this active task.")
     private Task task;
 
     @OneToMany
@@ -53,6 +63,7 @@ public class ActiveTask {
             joinColumns = @JoinColumn(name = "active_task_id"),
             inverseJoinColumns = @JoinColumn(name = "worker_id")
     )
+    @Schema(description = "The list of workers assigned to this active task.")
     private List<Worker> workers;
 
     public ActiveTask() {

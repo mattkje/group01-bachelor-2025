@@ -2,6 +2,13 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -11,6 +18,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/zones")
+@Tag(name = "ZoneController", description = "Controller for managing zones")
 public class ZoneController {
 
     private final ZoneService zoneService;
@@ -19,86 +27,324 @@ public class ZoneController {
         this.zoneService = zoneService;
     }
 
+    @Operation(
+            summary = "Get all zones",
+            description = "Retrieve a list of all zones in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of zones"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping
-    public List<Zone> getAllZones() {
-        return zoneService.getAllZones();
+    public ResponseEntity<List<Zone>> getAllZones() {
+        return ResponseEntity.ok(zoneService.getAllZones());
     }
 
+    @Operation(
+            summary = "Get all task zones",
+            description = "Retrieve a list of all task zones in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of task zones"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/task-zones")
-    public List<Zone> getAllTaskZones() {
-        return zoneService.getAllTaskZones();
+    public ResponseEntity<List<Zone>> getAllTaskZones() {
+        return ResponseEntity.ok(zoneService.getAllTaskZones());
     }
 
+    @Operation(
+            summary = "Get all picker zones",
+            description = "Retrieve a list of all picker zones in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of picker zones"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/picker-zones")
-    public List<Zone> getAllPickerZones() {
-        return zoneService.getAllPickerZones();
+    public ResponseEntity<List<Zone>> getAllPickerZones() {
+        return ResponseEntity.ok(zoneService.getAllPickerZones());
     }
 
+    @Operation(
+            summary = "Get zone by ID",
+            description = "Retrieve a zone by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved zone"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}")
-    public Zone getZoneById(@PathVariable Long id) {
-        return zoneService.getZoneById(id);
+    public ResponseEntity<Zone> getZoneById(
+            @Parameter(description = "ID of the zone to retrieve", required = true)
+            @PathVariable Long id) {
+        Zone zone = zoneService.getZoneById(id);
+        if (zone != null) {
+            return ResponseEntity.ok(zone);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
+    @Operation(
+            summary = "Get all workers by zone ID",
+            description = "Retrieve a list of all workers assigned to a specific zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of workers"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/workers")
-    public Set<Worker> getWorkersByZoneId(@PathVariable Long id) {
-        return zoneService.getWorkersByZoneId(id);
+    public ResponseEntity<Set<Worker>> getWorkersByZoneId(
+            @Parameter(description = "ID of the zone to retrieve workers from", required = true)
+            @PathVariable Long id) {
+        Set<Worker> workers = zoneService.getWorkersByZoneId(id);
+        if (workers == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(workers);
+        }
+
     }
 
+    @Operation(
+            summary = "Get all tasks by zone ID",
+            description = "Retrieve a list of all tasks assigned to a specific zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of tasks"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/tasks")
-    public Set<Task> getTasksByZoneId(@PathVariable Long id) {
-        return zoneService.getTasksByZoneId(id);
+    public ResponseEntity<Set<Task>> getTasksByZoneId(
+            @Parameter(description = "ID of the zone to retrieve tasks from", required = true)
+            @PathVariable Long id) {
+        Set<Task> tasks = zoneService.getTasksByZoneId(id);
+        if (tasks == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(tasks);
+        }
     }
 
+    @Operation(
+            summary = "Get all active tasks by zone ID",
+            description = "Retrieve a list of all active tasks assigned to a specific zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of active tasks"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/active-tasks")
-    public Set<ActiveTask> getActiveTasksByZoneId(@PathVariable Long id) {
-        return zoneService.getActiveTasksByZoneId(id);
+    public ResponseEntity<Set<ActiveTask>> getActiveTasksByZoneId(
+            @Parameter(description = "ID of the zone to retrieve active tasks from", required = true)
+            @PathVariable Long id) {
+        Set<ActiveTask> activeTasks = zoneService.getActiveTasksByZoneId(id);
+        if (activeTasks == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(activeTasks);
+        }
     }
 
+    @Operation(
+            summary = "Get all picker tasks by zone ID",
+            description = "Retrieve a list of all picker tasks assigned to a specific zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of picker tasks"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/picker-tasks")
-    public Set<PickerTask> getPickerTasksByZoneId(@PathVariable Long id) {
-        return zoneService.getPickerTasksByZoneId(id);
+    public ResponseEntity<Set<PickerTask>> getPickerTasksByZoneId(
+            @Parameter(description = "ID of the zone to retrieve picker tasks from", required = true)
+            @PathVariable Long id) {
+        Set<PickerTask> pickerTasks = zoneService.getPickerTasksByZoneId(id);
+        if (pickerTasks == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(pickerTasks);
+        }
     }
 
+    @Operation(
+            summary = "Get all active tasks for today by zone ID",
+            description = "Retrieve a list of all active tasks assigned to a specific zone for today."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of active tasks for today"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/active-tasks-now")
-    public Set<ActiveTask> getActiveTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodayUnfinishedTasksByZoneId(id);
+    public ResponseEntity<Set<ActiveTask>> getActiveTasksByZoneIdNow(
+            @Parameter(description = "ID of the zone to retrieve active tasks from", required = true)
+            @PathVariable Long id) {
+        Set<ActiveTask> activeTasks = zoneService.getTodayUnfinishedTasksByZoneId(id);
+        if (activeTasks == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(activeTasks);
+        }
     }
 
+    @Operation(
+            summary = "Get all picker tasks for today by zone ID",
+            description = "Retrieve a list of all picker tasks assigned to a specific zone for today."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of picker tasks for today"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/picker-tasks-now")
-    public Set<PickerTask> getPickerTasksByZoneIdNow(@PathVariable Long id) {
-        return zoneService.getTodayUnfinishedPickerTasksByZoneId(id);
+    public ResponseEntity<Set<PickerTask>> getPickerTasksByZoneIdNow(
+            @Parameter(description = "ID of the zone to retrieve picker tasks from", required = true)
+            @PathVariable Long id) {
+        Set<PickerTask> pickerTasks = zoneService.getTodayUnfinishedPickerTasksByZoneId(id);
+        if (pickerTasks == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(pickerTasks);
+        }
     }
 
+    @Operation(
+            summary = "Get number of tasks by zone ID by a specific date",
+            description = "Retrieve the number of tasks assigned to a specific zone by the given date."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved number of tasks"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{zoneId}/{date}")
-    public Integer getNumberOfTasksForTodayByZone(@PathVariable Long zoneId, @PathVariable LocalDate date) {
-        return zoneService.getNumberOfTasksForTodayByZone(zoneId, date);
+    public ResponseEntity<Integer> getNumberOfTasksByDateByZone(
+            @Parameter(description = "ID of the zone to retrieve tasks from", required = true)
+            @PathVariable Long zoneId,
+            @Parameter(description = "Date to filter tasks by", required = true)
+            @PathVariable LocalDate date) {
+        if (zoneService.getZoneById(zoneId) != null) {
+            return ResponseEntity.ok(zoneService.getNumberOfTasksForTodayByZone(zoneId, date));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
+    @Operation(
+            summary = "Get the minimum amount of time for active tasks by zone ID",
+            description = "Retrieve the number of active tasks assigned to a specific zone for today."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved number of active tasks"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{zoneId}/active-tasks-now-min-time")
-    public Integer getMinTimeForActiveTasksByZoneIdNow(@PathVariable Long zoneId) {
-        return zoneService.getMinTimeForActiveTasksByZoneIdNow(zoneId);
+    public ResponseEntity<Integer> getMinTimeForActiveTasksByZoneIdNow(
+            @Parameter(description = "ID of the zone to retrieve total min time of all active tasks from", required = true)
+            @PathVariable Long zoneId) {
+        if (zoneService.getZoneById(zoneId) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } else {
+            return ResponseEntity.ok(zoneService.getMinTimeForActiveTasksByZoneIdNow(zoneId));
+        }
     }
 
+    @Operation(
+            summary = "Add a new zone",
+            description = "Add a new zone to the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successfully added new zone"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping
-    public Zone addZone(@RequestBody Zone zone) {
-        return zoneService.addZone(zone);
+    public ResponseEntity<Zone> addZone(
+            @Parameter(description = "Zone object to be added", required = true)
+            @RequestBody Zone zone) {
+        if (zone == null || zone.getName() == null || zone.getName().isEmpty() || zone.getCapacity() <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        return new ResponseEntity<>(zoneService.addZone(zone), HttpStatus.CREATED);
     }
 
+    @Operation(
+            summary = "Update an existing zone",
+            description = "Update an existing zone in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated zone"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{id}")
-    public Zone updateZone(@PathVariable Long id, @RequestBody Zone zone) {
-        return zoneService.updateZone(id, zone);
+    public ResponseEntity<Zone> updateZone(
+            @Parameter(description = "ID of the zone to update", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Zone object with updated data", required = true)
+            @RequestBody Zone zone) {
+        if (zone == null || zone.getName() == null || zone.getName().isEmpty() || zone.getCapacity() <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (zoneService.getZoneById(id) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return new ResponseEntity<>(zoneService.updateZone(id, zone), HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Update the picker zone status",
+            description = "Update the picker zone status of a specific zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated picker zone status"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/is-picker-zone/{id}")
-    public Zone updatePickerZone(@PathVariable Long id) {
-        return zoneService.changeIsPickerZone(id);
+    public ResponseEntity<Zone> updatePickerZone(
+            @Parameter(description = "ID of the zone to update", required = true)
+            @PathVariable Long id) {
+        if (zoneService.getZoneById(id) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(zoneService.changeIsPickerZone(id));
     }
 
+    @Operation(
+            summary = "Delete a zone",
+            description = "Delete a zone from the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted zone"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @DeleteMapping("/{id}")
-    public Zone deleteZone(@PathVariable Long id) {
-        return zoneService.deleteZone(id);
+    public ResponseEntity<Zone> deleteZone(
+            @Parameter(description = "ID of the zone to delete", required = true)
+            @PathVariable Long id) {
+        if (zoneService.getZoneById(id) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(zoneService.deleteZone(id));
     }
 
+    @Operation(
+            summary = "Update the machine learning model",
+            description = "Update the machine learning model for all zones."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated machine learning model"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/update-machine-learning-model")
     public void updateMachineLearningModel() throws IOException {
         zoneService.updateMachineLearningModel();

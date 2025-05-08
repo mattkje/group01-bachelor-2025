@@ -1,8 +1,19 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TaskService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,92 +26,291 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/active-tasks")
+@Tag(name = "ActiveTaskController", description = "Controller for managing active tasks")
 public class ActiveTaskController {
 
     private final ActiveTaskService activeTaskService;
+    private final ZoneService zoneService;
+    private final TaskService taskService;
+    private final WorkerService workerService;
 
     /**
      * Constructor for ActiveTaskController.
      *
      * @param activeTaskService The service to handle active task operations.
      */
-    public ActiveTaskController(ActiveTaskService activeTaskService) {
+    public ActiveTaskController(ActiveTaskService activeTaskService, ZoneService zoneService, TaskService taskService, WorkerService workerService) {
         this.activeTaskService = activeTaskService;
+        this.zoneService = zoneService;
+        this.taskService = taskService;
+        this.workerService = workerService;
     }
 
+    @Operation(
+            summary = "Get all active tasks",
+            description = "Retrieve a list of all active tasks in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved active tasks"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping
-    public List<ActiveTask> getAllActiveTasks() {
-        return activeTaskService.getAllActiveTasks();
+    public ResponseEntity<List<ActiveTask>> getAllActiveTasks() {
+        return ResponseEntity.ok(activeTaskService.getAllActiveTasks());
     }
 
+    @Operation(
+            summary = "Get active task by ID",
+            description = "Retrieve an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved active task"),
+            @ApiResponse(responseCode = "404", description = "Active task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}")
-    public ActiveTask getActiveTaskById(@PathVariable Long id) {
-        return activeTaskService.getActiveTaskById(id);
+    public ResponseEntity<ActiveTask> getActiveTaskById(
+            @Parameter(description = "ID of the active task to retrieve")
+            @PathVariable Long id) {
+        if (activeTaskService.getActiveTaskById(id) == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.getActiveTaskById(id));
+        }
     }
 
+    @Operation(
+            summary = "Get active tasks for today",
+            description = "Retrieve a list of active tasks for today."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved active tasks for today"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/today")
-    public List<ActiveTask> getActiveTasksForToday() {
-        return activeTaskService.getActiveTasksForToday(LocalDateTime.now());
+    public ResponseEntity<List<ActiveTask>> getActiveTasksForToday() {
+        return ResponseEntity.ok(activeTaskService.getActiveTasksForToday(LocalDateTime.now()));
     }
 
+    @Operation(
+            summary = "Get active tasks for today by zone",
+            description = "Retrieve a list of active tasks for today by zone ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved active tasks for today by zone"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/today/{zoneId}")
-    public List<ActiveTask> getActiveTasksForTodayByZone(@PathVariable Long zoneId) {
-        return activeTaskService.getActiveTasksForTodayByZone(zoneId, LocalDateTime.now());
+    public ResponseEntity<List<ActiveTask>> getActiveTasksForTodayByZone(
+            @Parameter(description = "ID of the zone to retrieve active tasks for today")
+            @PathVariable Long zoneId) {
+        if (zoneService.getZoneById(zoneId) == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.getActiveTasksForTodayByZone(zoneId, LocalDateTime.now()));
+        }
     }
 
+    @Operation(
+            summary = "Get all completed active tasks",
+            description = "Retrieve a list of all completed active tasks."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved completed active tasks"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/completed")
-    public List<ActiveTask> getCompletedActiveTasks() {
-        return activeTaskService.getCompletedActiveTasks();
+    public ResponseEntity<List<ActiveTask>> getCompletedActiveTasks() {
+        return ResponseEntity.ok(activeTaskService.getCompletedActiveTasks());
     }
 
+    @Operation(
+            summary = "Get all not started active tasks",
+            description = "Retrieve a list of all not started active tasks."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved not started active tasks"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/not-started")
-    public List<ActiveTask> getNotStartedActiveTasks() {
-        return activeTaskService.getNotStartedActiveTasks();
+    public ResponseEntity<List<ActiveTask>> getNotStartedActiveTasks() {
+        return ResponseEntity.ok(activeTaskService.getNotStartedActiveTasks());
     }
 
+    @Operation(
+            summary = "Get all active tasks in progress",
+            description = "Retrieve a list of all active tasks that are currently in progress."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved active tasks in progress"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/in-progress")
-    public List<ActiveTask> getActiveTasksInProgress() {
-        return activeTaskService.getActiveTasksInProgress();
+    public ResponseEntity<List<ActiveTask>> getActiveTasksInProgress() {
+        return ResponseEntity.ok(activeTaskService.getActiveTasksInProgress());
     }
 
+    @Operation(
+            summary = "Get workers assigned to active task",
+            description = "Retrieve a list of workers assigned to an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved workers assigned to active task"),
+            @ApiResponse(responseCode = "404", description = "Active task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/{id}/workers")
-    public List<Worker> getWorkersAssignedToActiveTask(@PathVariable Long id) {
-        return activeTaskService.getWorkersAssignedToActiveTask(id);
+    public ResponseEntity<List<Worker>> getWorkersAssignedToActiveTask(
+            @Parameter(description = "ID of the active task to retrieve workers for")
+            @PathVariable Long id) {
+        if (activeTaskService.getActiveTaskById(id) == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.getWorkersAssignedToActiveTask(id));
+        }
     }
 
+    @Operation(
+            summary = "Create a new active task",
+            description = "Create a new active task for a specific task ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successfully created active task"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "Task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/{taskId}")
-    public ActiveTask createActiveTask(@PathVariable Long taskId, @RequestBody ActiveTask activeTask) {
-        return activeTaskService.createActiveTask(taskId, activeTask);
+    public ResponseEntity<ActiveTask> createActiveTask(
+            @Parameter(description = "ID of the task to create an active task for")
+            @PathVariable Long taskId,
+            @Parameter(description = "ActiveTask object to create")
+            @RequestBody ActiveTask activeTask) {
+        if (taskService.getTaskById(taskId) == null) {
+            return ResponseEntity.notFound().build();
+        } else if (activeTask.getDate() == null) {
+            return ResponseEntity.badRequest().build();
+        } else {
+            return new ResponseEntity<>(activeTaskService.createActiveTask(taskId, activeTask), HttpStatus.CREATED);
+        }
     }
 
+    @Operation(
+            summary = "Update an active task",
+            description = "Update an existing active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated active task"),
+            @ApiResponse(responseCode = "404", description = "Active task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{id}")
-    public ActiveTask updateActiveTask(@PathVariable Long id, @RequestBody ActiveTask activeTask) {
-        return activeTaskService.updateActiveTask(id, activeTask);
+    public ResponseEntity<ActiveTask> updateActiveTask(
+            @Parameter(description = "ID of the active task to update")
+            @PathVariable Long id,
+            @Parameter(description = "ActiveTask object to update")
+            @RequestBody ActiveTask activeTask) {
+        if (activeTaskService.getActiveTaskById(id) == null) {
+            return ResponseEntity.notFound().build();
+        } else if (activeTask.getDate() == null) {
+            return ResponseEntity.badRequest().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.updateActiveTask(id, activeTask));
+        }
     }
 
+    @Operation(
+            summary = "Assign a worker to an active task",
+            description = "Assign a worker to an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully assigned worker to active task"),
+            @ApiResponse(responseCode = "404", description = "Active task or worker not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{id}/worker/{workerId}")
-    public ActiveTask assignWorkerToTask(@PathVariable Long id, @PathVariable Long workerId) {
-        return activeTaskService.assignWorkerToTask(id, workerId);
+    public ResponseEntity<ActiveTask> assignWorkerToTask(
+            @Parameter(description = "ID of the active task to assign a worker to")
+            @PathVariable Long id,
+            @Parameter(description = "ID of the worker to assign to the active task")
+            @PathVariable Long workerId) {
+        if (activeTaskService.getActiveTaskById(id) == null || workerService.getWorkerById(workerId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.assignWorkerToTask(id, workerId));
+        }
     }
 
+    @Operation(
+            summary = "Remove a worker from an active task",
+            description = "Remove a worker from an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully removed worker from active task"),
+            @ApiResponse(responseCode = "404", description = "Active task or worker not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{id}/worker/{workerId}/remove")
-    public ActiveTask removeWorkerFromTask(@PathVariable Long id, @PathVariable Long workerId) {
-        return activeTaskService.removeWorkerFromTask(id, workerId);
+    public ResponseEntity<ActiveTask> removeWorkerFromTask(
+            @Parameter(description = "ID of the active task to remove a worker from")
+            @PathVariable Long id,
+            @Parameter(description = "ID of the worker to remove from the active task")
+            @PathVariable Long workerId) {
+        if (activeTaskService.getActiveTaskById(id) == null || workerService.getWorkerById(workerId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.removeWorkerFromTask(id, workerId));
+        }
     }
 
+    @Operation(
+            summary = "Remove all workers from an active task",
+            description = "Remove all workers from an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully removed all workers from active task"),
+            @ApiResponse(responseCode = "404", description = "Active task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{id}/workers/remove")
-    public ActiveTask removeWorkersFromTask(@PathVariable Long id) {
-        return activeTaskService.removeWorkersFromTask(id);
+    public ResponseEntity<ActiveTask> removeWorkersFromTask(
+            @Parameter(description = "ID of the active task to remove all workers from")
+            @PathVariable Long id) {
+        if (activeTaskService.getActiveTaskById(id) == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.removeWorkersFromTask(id));
+        }
     }
 
+    @Operation(
+            summary = "Delete an active task",
+            description = "Delete an active task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted active task"),
+            @ApiResponse(responseCode = "404", description = "Active task not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @DeleteMapping("/{id}")
-    public ActiveTask deleteActiveTask(@PathVariable Long id) {
-        return activeTaskService.deleteActiveTask(id);
+    public ResponseEntity<ActiveTask> deleteActiveTask(
+            @Parameter(description = "ID of the active task to delete")
+            @PathVariable Long id) {
+        if (activeTaskService.getActiveTaskById(id) == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(activeTaskService.deleteActiveTask(id));
+        }
     }
 
     /**
      * Scheduled task to create repeating active tasks at the beginning of each month.
      */
+    @Operation(
+            summary = "Scheduled task to create repeating active tasks",
+            description = "Creates repeating active tasks at the beginning of each month."
+    )
     @Scheduled(cron = "0 0 0 1 * ?")
     public void scheduleCreateRepeatingActiveTasks() {
         activeTaskService.CreateRepeatingActiveTasks();

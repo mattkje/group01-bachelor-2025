@@ -481,17 +481,19 @@ public class WorldSimulation {
 
     public LocalDateTime getEndTime(ActiveTask task) {
         Task task1 = task.getTask();
-        int assignedWorkers = activeTaskService.getWorkersAssignedToTask(task.getId()).size();
+        int assignedWorkersSize = activeTaskService.getWorkersAssignedToTask(task.getId()).size();
         int minWorkers = task1.getMinWorkers();
         int maxWorkers = task1.getMaxWorkers();
 
         double interpolationFactor = 0.0;
         if (maxWorkers > minWorkers) {
-            interpolationFactor = Math.min(1.0, Math.max(0.0, (double) (assignedWorkers - minWorkers) / (maxWorkers - minWorkers)));
+            // Calculate the interpolation factor based on the number of assigned workers
+            interpolationFactor = Math.min(1.0, Math.max(0.0, (double) (assignedWorkersSize - minWorkers) / (maxWorkers - minWorkers)));
         }
 
         double taskDuration = task1.getMaxTime() - interpolationFactor * (task1.getMaxTime() - task1.getMinTime());
 
+        // Calculate the average efficiency of the workers assigned to the task
         double averageEfficiency = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
                 .mapToDouble(Worker::getEfficiency)
                 .average().orElse(1.0);
@@ -499,14 +501,17 @@ public class WorldSimulation {
         double actualDuration = taskDuration / averageEfficiency;
 
         // Add random offset between -5 and +5 minutes
-        int randomOffset = ThreadLocalRandom.current().nextInt(-5, 6); // Inclusive of -5 and +5
+        int randomOffset = ThreadLocalRandom.current().nextInt(-5, 6);
 
         return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
     }
 
     public LocalDateTime getPickerEndTime(PickerTask task) throws IOException {
         long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(randomForests.get(task.getZone().getName().toUpperCase()), task);
-        return task.getStartTime().plusSeconds((int) estimatedTime);
+
+        int randomOffset = ThreadLocalRandom.current().nextInt(-5, 6) * 60;
+
+        return task.getStartTime().plusSeconds((int) estimatedTime + randomOffset);
     }
 
     public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {

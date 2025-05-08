@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.Set;
@@ -14,32 +15,41 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "task")
+@Schema(description = "Represents a Task in the warehouse system.")
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the task.")
     private Long id;
 
     @Column(name = "name")
+    @Schema(description = "The name of the task.")
     private String name;
 
     @Column(name = "description")
+    @Schema(description = "A description of the task.")
     private String description;
 
     @Column(name = "max_duration")
+    @Schema(description = "The maximum duration of the task in minutes.")
     private int maxDuration;
 
     @Column(name = "min_duration")
+    @Schema(description = "The minimum duration of the task in minutes.")
     private int minDuration;
 
     @Column(name = "min_workers")
+    @Schema(description = "The minimum number of workers required for the task.")
     private int minWorkers;
 
     @Column(name = "max_workers")
+    @Schema(description = "The maximum number of workers that can be assigned to the task.")
     private int maxWorkers;
 
     @ManyToOne
     @JoinColumn(name = "zone_id")
+    @Schema(description = "The zone where the task is to be performed.")
     private Zone zone;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -48,6 +58,7 @@ public class Task {
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "license_id")
     )
+    @Schema(description = "The licenses required to perform the task.")
     private Set<License> requiredLicense;
 
     public Task() {

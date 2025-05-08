@@ -9,7 +9,6 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import java.io.IOException;
 import java.time.LocalDate;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 
@@ -18,10 +17,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "SimulationController", description = "Controller for managing simulations")
 public class SimulationController {
 
     private final ActiveTaskGenerator activeTaskGeneratorService;
@@ -61,70 +67,152 @@ public class SimulationController {
      * @param date    The start date for generating active tasks.
      * @param numDays The number of days to generate active tasks for.
      */
+    @Operation(
+            summary = "Generate active tasks",
+            description = "Generates active tasks for a given date and number of days."
+    )
     @GetMapping("/generate-active-tasks/{date}/{numDays}")
-    public void generateActiveTasks(@PathVariable String date, @PathVariable int numDays) {
+    public void generateActiveTasks(
+            @Parameter(description = "Start date for generating active tasks")
+            @PathVariable String date,
+            @Parameter(description = "Number of days to generate active tasks for")
+            @PathVariable int numDays) {
         LocalDate startDate = LocalDate.parse(date);
         activeTaskGeneratorService.generateActiveTasks(startDate, numDays);
     }
 
+    @Operation(
+            summary = "Run Monte Carlo simulation",
+            description = "Runs a Monte Carlo simulation for the specified date and time."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully ran Monte Carlo simulation"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/monte-carlo")
-    public Map<Long, List<String>> monteCarlo() throws Exception {
-        return simulationService.runCompleteSimulation(null, null);
+    public ResponseEntity<Map<Long, List<String>>> monteCarlo() throws Exception {
+        return ResponseEntity.ok(simulationService.runCompleteSimulation(null, null));
     }
 
+    @Operation(
+            summary = "Run Monte Carlo simulation at start of day",
+            description = "Runs a Monte Carlo simulation for the start of the current day."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully ran Monte Carlo simulation at start of day"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/monte-carlo-start-of-day")
-    public Map<Long, List<String>> monteCarloStartOfDay() throws Exception {
-        return simulationService.runCompleteSimulation(null, LocalDate.now().atStartOfDay());
+    public ResponseEntity<Map<Long, List<String>>> monteCarloStartOfDay() throws Exception {
+        return ResponseEntity.ok(simulationService.runCompleteSimulation(null, LocalDate.now().atStartOfDay()));
     }
 
+    @Operation(
+            summary = "Run Monte Carlo simulation for a specific zone",
+            description = "Runs a Monte Carlo simulation for the specified zone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully ran Monte Carlo simulation for zone"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/monte-carlo/zones/{id}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws IOException {
-        return simulationService.runZoneSimulation(id, null);
+    public ResponseEntity<List<ZoneSimResult>> monteCarloZone(
+            @Parameter(description = "ID of the zone to run simulation for")
+            @PathVariable Long id) throws IOException {
+        return ResponseEntity.ok(simulationService.runZoneSimulation(id, null));
     }
 
+    @Operation(
+            summary = "Run Monte Carlo simulation for a specific zone on a specific day",
+            description = "Runs a Monte Carlo simulation for the specified zone on the specified day."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully ran Monte Carlo simulation for zone on day"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/monte-carlo/zones/{id}/day/{day}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws IOException {
+    public ResponseEntity<List<ZoneSimResult>> monteCarloZone(
+            @Parameter(description = "ID of the zone to run simulation for")
+            @PathVariable Long id,
+            @Parameter(description = "Date in format yyyy-MM-dd")
+            @PathVariable String day) throws IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date = LocalDate.parse(day, formatter);
         LocalDateTime dateTime = date.atStartOfDay();
-        return simulationService.runZoneSimulation(id, dateTime);
+        return ResponseEntity.ok(simulationService.runZoneSimulation(id, dateTime));
     }
 
-
+    @Operation(
+            summary = "Generate timetable",
+            description = "Generates a timetable for a given date."
+    )
     @GetMapping("/generate-timetable/{date}")
-    public void generateTimeTable(@PathVariable String date) {
+    public void generateTimeTable(
+            @Parameter(description = "Start date for generating timetable")
+            @PathVariable String date) {
         LocalDate startDate = LocalDate.parse(date);
         timeTableGenerator.generateTimeTable(startDate);
     }
 
+    @Operation(
+            summary = "Generate picker tasks",
+            description = "Generates picker tasks for a given date and number of days."
+    )
     @GetMapping("/generate-picker-tasks/{date}/{numDays}/{numOfTasksPerDay}")
-    public void generatePickerTasks(@PathVariable String date, @PathVariable int numDays,
-                                    @PathVariable int numOfTasksPerDay) throws Exception {
+    public void generatePickerTasks(
+            @Parameter(description = "Start date for generating picker tasks")
+            @PathVariable String date,
+            @Parameter(description = "Number of days to generate picker tasks for")
+            @PathVariable int numDays,
+            @Parameter(description = "Number of tasks per day")
+            @PathVariable int numOfTasksPerDay) throws Exception {
         LocalDate startDate = LocalDate.parse(date);
         MachineLearningModelPicking machineLearningModelPicking = new MachineLearningModelPicking();
         pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay, machineLearningModelPicking);
     }
 
+    @Operation(
+            summary = "Run world simulation",
+            description = "Runs the world simulation today with a simulation time of 2 minutes."
+    )
     @GetMapping("/run-world-simulation")
     public void runWorldSimulation() throws Exception {
         worldSimulation.runWorldSimulation(2, LocalDate.now());
     }
 
+    @Operation(
+            summary = "Pause world simulation",
+            description = "Pauses the world simulation."
+    )
     @GetMapping("/simulate-one-year")
     public void simulateOneYear() throws Exception {
         worldSimulation.simulateOneYear();
     }
 
+    @Operation(
+            summary = "Set simulation count",
+            description = "Sets the number of simulations to run."
+    )
     @PostMapping("/setSimCount")
-    public void setSimCount(@RequestParam int simCount) {
+    public void setSimCount(
+            @Parameter(description = "Number of simulations to run")
+            @RequestParam int simCount) {
         if (simCount <= 0) {
             simCount = 1;
         }
         simulationService.setSimCount(simCount);
     }
 
+    @Operation(
+            summary = "Get simulation count",
+            description = "Retrieves the current number of simulations to run."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved simulation count"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @GetMapping("/getSimCount")
-    public int getSimCount() {
-        return simulationService.getSimCount();
+    public ResponseEntity<Integer> getSimCount() {
+        return ResponseEntity.ok(simulationService.getSimCount());
     }
 }

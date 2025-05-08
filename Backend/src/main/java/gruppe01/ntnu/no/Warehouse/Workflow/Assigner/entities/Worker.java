@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.DayOfWeek;
@@ -18,39 +19,50 @@ import java.util.*;
  */
 @Entity
 @Table(name = "worker")
+@Schema(description = "Represents a Worker entity in the warehouse system.")
 public class Worker {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the worker.")
     private Long id;
 
     @Column(name = "name")
+    @Schema(description = "The name of the worker.")
     private String name;
 
     @Column(name = "zone_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Schema(description = "The zone where the worker is assigned.")
     private Long zone;
 
     @Column(name = "work_title")
+    @Schema(description = "The work title of the worker.")
     private String workTitle;
 
     @Column(name = "efficiency")
+    @Schema(description = "The efficiency of the worker.")
     private double efficiency;
 
     @Column(name = "availability")
+    @Schema(description = "The availability status of the worker.")
     private boolean availability;
 
     @ManyToOne
     @JsonIgnore
+    @JoinColumn(name = "current_task_id")
     private ActiveTask currentActiveTask;
 
     @OneToOne
     @JsonIgnore
+    @JoinColumn(name = "current_picker_task_id")
     private PickerTask currentPickerTask;
 
     @Column(name = "break_start_time")
+    @Schema(description = "The start time of the worker's break.")
     private LocalTime breakStartTime;
 
     @Column(name = "dead")
+    @Schema(description = "Indicates if the worker is dead.")
     private boolean dead;
 
     @ElementCollection
@@ -59,6 +71,7 @@ public class Worker {
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "work_schedule")
     @JsonIgnore
+    @Schema(description = "The work schedule of the worker.")
     private Map<DayOfWeek, WorkerTimeRange> workSchedule = new HashMap<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -67,6 +80,7 @@ public class Worker {
             joinColumns = @JoinColumn(name = "worker_id"),
             inverseJoinColumns = @JoinColumn(name = "license_id")
     )
+    @Schema(description = "The licenses held by the worker.")
     private Set<License> licenses = new HashSet<>();
 
     public Worker() {

@@ -3,6 +3,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -17,48 +18,62 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "picker_task")
+@Schema(description = "Represents a PickerTask entity in the warehouse system.")
 public class PickerTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier for the PickerTask.")
     private Long id;
 
     @Column(name = "distance")
+    @Schema(description = "The distance to be covered for this task.")
     private double distance;
 
     @Column(name = "pack_amount")
+    @Schema(description = "The number of packs to be picked.")
     private int packAmount;
 
     @Column(name = "lines_amount")
+    @Schema(description = "The number of lines to be picked.")
     private int linesAmount;
 
     @Column(name = "weight_g")
+    @Schema(description = "The weight of the items to be picked in grams.")
     private int weight;
 
     @Column(name = "volume_ml")
+    @Schema(description = "The volume of the items to be picked in milliliters.")
     private int volume;
 
     @Column(name = "avg_height_m")
+    @Schema(description = "The average height of the items to be picked in meters.")
     private double avgHeight;
 
     @Column(name = "time_s")
+    @Schema(description = "The time required to complete the task in seconds.")
     private double time;
 
     @Column(name = "start_time")
+    @Schema(description = "The start time of the task.")
     private LocalDateTime startTime;
 
     @Column(name = "end_time")
+    @Schema(description = "The end time of the task.")
     private LocalDateTime endTime;
 
     @ManyToOne
     @JoinColumn(name = "zone_Id")
     @JsonIgnore
+    @Schema(description = "The zone where the task is to be performed.")
     private Zone zone;
 
     @OneToOne
     @JoinColumn(name = "worker_Id")
+    @Schema(description = "The worker assigned to this task.")
     private Worker worker;
 
     @Column(name = "date")
+    @Schema(description = "The date when the task is to be performed.")
     private LocalDate date;
 
     public PickerTask() {
