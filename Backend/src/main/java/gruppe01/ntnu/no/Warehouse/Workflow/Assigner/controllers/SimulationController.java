@@ -78,12 +78,12 @@ public class SimulationController {
     }
 
     @GetMapping("/monte-carlo/zones/{id}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws InterruptedException, IOException {
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id) throws IOException {
         return simulationService.runZoneSimulation(id, null);
     }
 
     @GetMapping("/monte-carlo/zones/{id}/day/{day}")
-    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws InterruptedException, IOException {
+    public List<ZoneSimResult> monteCarloZone(@PathVariable Long id, @PathVariable String day) throws IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date = LocalDate.parse(day, formatter);
         LocalDateTime dateTime = date.atStartOfDay();
@@ -113,5 +113,18 @@ public class SimulationController {
     @GetMapping("/simulate-one-year")
     public void simulateOneYear() throws Exception {
         worldSimulation.simulateOneYear();
+    }
+
+    @PostMapping("/setSimCount")
+    public void setSimCount(@RequestParam int simCount) {
+        if (simCount <= 0) {
+            simCount = 1;
+        }
+        simulationService.setSimCount(simCount);
+    }
+
+    @GetMapping("/getSimCount")
+    public int getSimCount() {
+        return simulationService.getSimCount();
     }
 }

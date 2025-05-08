@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 import org.springframework.web.bind.annotation.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 
@@ -18,20 +19,25 @@ import java.util.concurrent.ExecutionException;
 public class WorldSimulationController {
 
     private final WorldSimulation worldSimulation;
+    private final SimulationService simulationService;
 
     /**
      * Constructor for WorldSimulationController.
      *
      * @param worldSimulation The service to run world simulations.
      */
-    public WorldSimulationController(WorldSimulation worldSimulation) {
+    public WorldSimulationController(WorldSimulation worldSimulation, SimulationService simulationService) {
         this.worldSimulation = worldSimulation;
+        this.simulationService = simulationService;
     }
 
     @PostMapping("/start")
     public void startSimulation(@RequestParam int simulationTime, @RequestParam int simCount) throws Exception {
+        if (simCount != 0) {
+            simulationService.setSimCount(simCount);
+        }
+
         worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
-        //TODO: Add simulation count to the simulation
     }
 
     @PostMapping("/pause")

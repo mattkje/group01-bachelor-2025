@@ -148,7 +148,7 @@ const dateText = computed(() => {
 
 async function updateSimCount() {
   try {
-    await axios.post('http://localhost:8080/api/set-sim-count', null, {
+    await axios.post('http://localhost:8080/api/setSimCount', null, {
       params: { simCount: simCount.value },
     });
     console.log('SIM_COUNT updated successfully');
@@ -159,20 +159,24 @@ async function updateSimCount() {
 
   async function getSimCount() {
     try {
-      const response = await axios.get('http://localhost:8080/api/get-sim-count');
-      console.log('Current SIM_COUNT:', response.data);
+      const response = await axios.get('http://localhost:8080/api/getSimCount');
+      simCount.value = response.data;
     } catch (error) {
       console.error('Error fetching SIM_COUNT:', error);
     }
   }
 
 watch(simCount, (newValue, oldValue) => {
+  if (!newValue) {
+    console.log(`Ignored simCount update: ${newValue}`);
+    return;
+  }
   console.log(`simCount changed from ${oldValue} to ${newValue}`);
   updateSimCount();
 });
 
 onMounted(() => {
-  getSimCount
+  getSimCount();
   fetchPausedState();
 });
 </script>
