@@ -741,4 +741,10 @@ public class WorldSimulation {
         workersOnBreak.clear();
         workersWaitingForTask.clear();
     }
+
+    public void resetSimulationDate() {
+        workday = LocalDate.now();
+        activeTaskService.deleteAllActiveTasks();
+        pickerTaskService.deleteAllPickerTasks();
+    }
 }

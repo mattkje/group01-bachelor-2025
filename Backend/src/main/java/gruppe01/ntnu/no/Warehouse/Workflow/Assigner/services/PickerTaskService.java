@@ -235,4 +235,8 @@ public class PickerTaskService {
         }
         return null;
     }
+
+    public void deleteAllPickerTasks() {
+        pickerTaskRepository.deleteAll(pickerTaskRepository.findAll());
+    }
 }

@@ -215,4 +215,9 @@ public class SimulationController {
     public ResponseEntity<Integer> getSimCount() {
         return ResponseEntity.ok(simulationService.getSimCount());
     }
+
+    @GetMapping("/resetSim")
+    public void resetSim() {
+        worldSimulation.resetSimulationDate();
+    }
 }
