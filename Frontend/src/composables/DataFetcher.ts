@@ -98,3 +98,8 @@ export const fetchTimeTables = async () => {
     return fetchData<any>(`http://localhost:8080/api/timetables`);
 }
 
+
+export const fetchSimulationCount = async () => {
+    return fetchData<number>('http://localhost:8080/api/getSimCount');
+}
+

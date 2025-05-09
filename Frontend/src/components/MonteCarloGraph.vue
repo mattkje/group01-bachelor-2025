@@ -19,7 +19,7 @@ const props = defineProps<{
   zoneId: number;
 }>();
 
-let currentTimeIndex = 0;
+let currentTimeIndex = ref<number>(0);
 const numPoints = 10000;
 const insideCircle = ref(0);
 const estimates = ref<number[]>([]);
@@ -47,11 +47,55 @@ watch(dataValues, (newValue) => {
   }
 });
 
-const chartData = ref();
+const extendedLabels = Array.from({length: 144}, (_, i) => {
+  const hours = Math.floor(i / 6);
+  const minutes = (i % 6) * 10;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+});
+
+
+const chartData = ref(
+  {
+    labels: extendedLabels,
+    datasets: [
+      {
+        label: 'Tasks Done Over Time',
+        data: [],
+        borderColor: 'rgb(131,131,131)',
+        tension: 0.01,
+        pointRadius: 0,
+        fill: false,
+      },
+    ],
+  } as any
+);
 const chartOptions = ref();
+chartOptions.value = {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: false,
+    },
+    horizontalLine: {
+      taskCount: taskCount.value,
+    },
+    verticalLine: {
+      currentTimeIndex: currentTimeIndex.value,
+    },
+  },
+  scales: {
+    x: {},
+    y: {
+      beginAtZero: false,
+      min: 0,
+      max: taskCount.value + 20,
+    },
+  },
+};
 
 function generateChartData() {
-  currentTimeIndex = dataValues.value.length - 1;
+  currentTimeIndex.value = dataValues.value.length - 1;
+  console.log(currentTimeIndex.value);
   taskCount.value = activeTasks.value;
   simulatedDatasets.value = [];
 
@@ -145,28 +189,6 @@ function generateChartData() {
       fill: false,
     });
   }
-  const extendedLabels = Array.from({length: 144}, (_, i) => {
-    const hours = Math.floor(i / 6);
-    const minutes = (i % 6) * 10;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  });
-
-  const regressionData = [];
-  const startIndex = dataValues.value.length - 1;
-  const regressionSlope = 1.7;
-  const regressionIntercept = dataValues[startIndex];
-
-
-  const regressionLine = {
-    label: 'Regression Line',
-    data: [...Array(startIndex).fill(null), ...regressionData],
-    borderColor: 'rgb(126, 161, 196)',
-    tension: 0.1,
-    pointRadius: 0,
-    fill: false,
-  };
-
-  simulatedDatasets.value.push(regressionLine);
 
   chartData.value = {
     labels: extendedLabels,
@@ -230,34 +252,39 @@ function generateChartData() {
     },
   };
 
+
   const verticalLinePlugin = {
     id: 'verticalLine',
     beforeDraw(chart) {
       const {ctx, chartArea: {top, bottom, left, right}, scales: {x}} = chart;
 
-      const xPosition = x.getPixelForValue(currentTimeIndex);
+      if (currentTimeIndex.value !== undefined && currentTimeIndex.value >= 0) {
+        const xPosition = x.getPixelForValue(currentTimeIndex.value);
 
-      if (xPosition >= left && xPosition <= right) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.setLineDash([5, 5]);
-        ctx.moveTo(xPosition, top);
-        ctx.lineTo(xPosition, bottom);
-        ctx.strokeStyle = 'rgba(121,121,121,0.8)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (xPosition >= left && xPosition <= right) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([5, 5]);
+          ctx.moveTo(xPosition, top);
+          ctx.lineTo(xPosition, bottom);
+          ctx.strokeStyle = 'rgba(121,121,121,0.8)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
 
-        ctx.setLineDash([]);
-        ctx.font = '12px Arial';
-        ctx.fillStyle = 'rgba(121,121,121,0.8)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Now', xPosition, top - 1);
-        ctx.restore();
+          ctx.setLineDash([]);
+          ctx.font = '12px Arial';
+          ctx.fillStyle = 'rgba(121,121,121,0.8)';
+          ctx.textAlign = 'center';
+          ctx.fillText('Now', xPosition, top - 1);
+          ctx.restore();
+        }
       }
     },
   };
+  ChartJS.unregister(horizontalLinePlugin, verticalLinePlugin);
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
 }
+
 
 const pollingInterval = 5000;
 
@@ -277,6 +304,7 @@ const fetchData = async () => {
 
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
+
 function startPolling(interval: number) {
   if (pollingTimer) {
     clearInterval(pollingTimer);
@@ -291,7 +319,8 @@ function stopPolling() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchData();
   startPolling(pollingInterval);
 });
 
@@ -303,11 +332,8 @@ onUnmounted(() => {
 <template>
   <div class="monte-carlo-graph">
 
-    <div v-if="isDataReady" class="monte-carlo-graph">
+    <div class="monte-carlo-graph">
       <Line :data="chartData" :options="chartOptions"/>
-    </div>
-    <div v-else>
-      <p>Loading data...</p>
     </div>
     <div class="color-indicator-container">
       <p>

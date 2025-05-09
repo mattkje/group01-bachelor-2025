@@ -106,7 +106,7 @@ onMounted( () => {
             </p>
           </div>
           <div class="task-footer">
-            <p class="task-due">Due: {{ new Date(task.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+            <p class="task-due">Due: {{ new Date(task.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, computed, watch} from "vue";
 import {
+  fetchSimulationCount,
   fetchSimulationDate,
   fetchSimulationStatus,
   fetchSimulationTime
@@ -13,6 +14,9 @@ import {
   stopSimulationClock
 } from "@/composables/SimulationCommands";
 import axios from "axios";
+import { useSimulationTime } from "@/composables/useSimulationTime";
+
+const { currentTime, currentDate } = useSimulationTime();
 
 const isSpinning = ref(false);
 let completionTime = ref(null);
@@ -20,7 +24,8 @@ let isPlaying = ref(false);
 const isPaused = ref(false);
 let simCount = ref(10);
 
-const fetchPausedState = async () => {
+const fetchSimulationState = async () => {
+  simCount.value = await fetchSimulationCount();
   try {
     const state: number = await fetchSimulationStatus();
     isPlaying.value = false;
@@ -31,15 +36,11 @@ const fetchPausedState = async () => {
         isPlaying.value = false;
         break;
       case 1:
-        await updateCurrentTime();
         isPlaying.value = true;
-        setInterval(updateCurrentTime, 1000);
         break;
       case 2:
-        await updateCurrentTime();
         isPlaying.value = true;
         isPaused.value = true;
-        setInterval(updateCurrentTime, 1000);
         break;
       default:
         console.error('Invalid state value:', state);
@@ -49,29 +50,23 @@ const fetchPausedState = async () => {
   }
 };
 
-const currentTime = ref('00:00');
-const currentDate = ref('00/00/0000');
 let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
 
-const intervals = ["10 min", "30 min", "60 min"]; // List of strings
+const intervals = ["10 min", "30 min", "60 min"];
 const selectedInterval = ref(intervals[0]);
-
-const updateCurrentTime = async () => {
-  currentTime.value = await fetchSimulationTime();
-  currentDate.value = await fetchSimulationDate();
-};
 
 const startClock = async () => {
   isPlaying.value = true;
   await startSimulationClock(60, simCount.value);
-  setInterval(updateCurrentTime, 1000);
+  await fetchSimulationState();
 };
 
 const stopClock = async () => {
   isPaused.value = !isPaused.value;
   await pauseSimulationClock();
+  await fetchSimulationState();
 };
 
 const abortSimulation = async () => {
@@ -87,7 +82,7 @@ const abortSimulation = async () => {
   currentDate.value = '00/00/0000';
   simCount.value = 10;
   speedIndex = 0;
-  await updateCurrentTime();
+  await fetchSimulationState();
 
 };
 
@@ -160,15 +155,6 @@ async function updateSimCount() {
   }
 }
 
-  async function getSimCount() {
-    try {
-      const response = await axios.get('http://localhost:8080/api/getSimCount');
-      simCount.value = response.data;
-    } catch (error) {
-      console.error('Error fetching SIM_COUNT:', error);
-    }
-  }
-
 watch(simCount, (newValue, oldValue) => {
   if (!newValue) {
     console.log(`Ignored simCount update: ${newValue}`);
@@ -178,9 +164,8 @@ watch(simCount, (newValue, oldValue) => {
   updateSimCount();
 });
 
-onMounted(() => {
-  getSimCount();
-  fetchPausedState();
+onMounted(async () => {
+  await fetchSimulationState();
 });
 </script>
 
