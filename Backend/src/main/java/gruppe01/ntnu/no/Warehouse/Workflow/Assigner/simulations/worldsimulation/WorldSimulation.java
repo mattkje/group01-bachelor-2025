@@ -743,6 +743,8 @@ public class WorldSimulation {
     }
 
     public void resetSimulationDate() {
+        isPlaying = false;
+        isPaused = false;
         workday = LocalDate.now();
         currentTime = LocalTime.MIDNIGHT;
         activeTaskService.deleteAllActiveTasks();
