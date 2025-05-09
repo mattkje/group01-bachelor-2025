@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents an active task in the warehouse workflow system.
@@ -204,5 +205,22 @@ public class ActiveTask {
 
     public void setMcEndTime(LocalDateTime mcEndTime) {
         this.mcEndTime = mcEndTime;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        ActiveTask that = (ActiveTask) obj;
+        return Objects.equals(this.id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

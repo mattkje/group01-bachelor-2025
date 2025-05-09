@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Represents a PickerTask entity in the warehouse system.
@@ -237,5 +238,22 @@ public class PickerTask {
 
     public void setMcEndTime(LocalDateTime mcEndTime) {
         this.mcEndTime = mcEndTime;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        PickerTask that = (PickerTask) obj;
+        return Objects.equals(this.id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

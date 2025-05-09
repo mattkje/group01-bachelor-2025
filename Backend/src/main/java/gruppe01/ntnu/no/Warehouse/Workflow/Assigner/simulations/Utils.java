@@ -1,8 +1,9 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ErrorMessageService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 
@@ -10,12 +11,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
-
-import static com.google.common.graph.ElementOrder.sorted;
 
 /**
  * Utility class for simulation-related operations.
@@ -28,15 +25,26 @@ public class Utils {
 
     private final ErrorMessageService errorMessageService;
 
+    private final ActiveTaskService activeTaskService;
+
+    private final ZoneService zoneService;
+    private final PickerTaskService pickerTaskService;
+
+
     /**
      * Constructor for Utils.
      *
      * @param monteCarloService the Monte Carlo simulation service
      */
     public Utils(@Autowired MonteCarloService monteCarloService,
-                 @Autowired ErrorMessageService errorMessageService) {
+                 @Autowired ErrorMessageService errorMessageService,
+                 @Autowired ActiveTaskService activeTaskService,
+                 @Autowired ZoneService zoneService, PickerTaskService pickerTaskService) {
         this.monteCarloService = monteCarloService;
         this.errorMessageService = errorMessageService;
+        this.activeTaskService = activeTaskService;
+        this.zoneService = zoneService;
+        this.pickerTaskService = pickerTaskService;
     }
 
     public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
@@ -152,31 +160,76 @@ public class Utils {
         }
     }
 
-    public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
-        Map<Long, ErrorMessage> errorMessages = this.errorMessageService.generateErrorMessageMapFromZones();
-        errorMessageService.deleteAll();
-        for (SimulationResult simulationResult : simulationResults) {
-            Map<Long, ZoneSimResult> zoneSimResults = simulationResult.getZoneSimResults();
-            for (Map.Entry<Long, ZoneSimResult> entry : zoneSimResults.entrySet()) {
-                LocalDateTime lastEndTime = entry.getValue().getLastEndTime();
-                ErrorMessage errorMessage = errorMessages.get(entry.getValue().getZone().getId());
-                if (lastEndTime != null && errorMessage != null && errorMessage.getTime() != null &&
-                    lastEndTime.isBefore(errorMessage.getTime())) {
-                    errorMessage.setTime(lastEndTime);
-                    // TODO: Consider doing list to string conversion in the service
-                    errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
-                } else {
-                    assert errorMessage != null;
-                    if (errorMessage.getTime() == null && lastEndTime != null){
-                        errorMessage.setTime(lastEndTime);
-                        errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
-                    } else {
-                        errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
-                    }
-                }
-            }
-        }
-        errorMessages.values().stream().toList().forEach(errorMessageService::saveErrorMessage);
-    }
+ public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
+     Map<Long, ErrorMessage> errorMessages = errorMessageService.generateErrorMessageMapFromZones();
+     errorMessageService.deleteAll();
+     Map<Long, ZoneSimResult> bestCases = new HashMap<>();
+
+     for (SimulationResult simulationResult : simulationResults) {
+         simulationResult.getZoneSimResults().forEach((zoneId, zoneSimResult) -> {
+             processZoneSimResult(zoneSimResult, errorMessages, bestCases);
+         });
+     }
+
+     this.saveBestCases(bestCases);
+
+     errorMessages.values().forEach(errorMessageService::saveErrorMessage);
+ }
+
+   private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, ErrorMessage> errorMessages, Map<Long, ZoneSimResult> bestCases) {
+       LocalDateTime lastEndTime = zoneSimResult.getLastEndTime();
+       ErrorMessage errorMessage = errorMessages.get(zoneSimResult.getZone().getId());
+
+       if (errorMessage != null) {
+           updateErrorMessage(errorMessage, lastEndTime, zoneSimResult);
+           // System.out.println("Putting key: " + zoneSimResult.getZone().getId() + ", value: " + zoneSimResult);
+           bestCases.put(zoneSimResult.getZone().getId(), zoneSimResult);
+       }
+   }
+
+   private void updateErrorMessage(ErrorMessage errorMessage, LocalDateTime lastEndTime, ZoneSimResult zoneSimResult) {
+       if (lastEndTime != null && (errorMessage.getTime() == null || lastEndTime.isBefore(errorMessage.getTime()))) {
+           errorMessage.setTime(lastEndTime);
+       }
+       errorMessage.setMessage(zoneSimResult.getErrorMessage().toString());
+   }
+
+   private void saveBestCases(Map<Long, ZoneSimResult> bestCases) {
+       bestCases.values().forEach(zoneSimResult -> {
+           if (zoneSimResult.getZone() != null) {
+               if (zoneSimResult.getZone().getIsPickerZone()) {
+                   savePickerTasks(zoneSimResult);
+               } else {
+                   saveActiveTasks(zoneSimResult);
+               }
+           }
+       });
+   }
+
+   private void savePickerTasks(ZoneSimResult zoneSimResult) {
+       Set<PickerTask> pickerTasks = zoneService.getTodayUnfinishedPickerTasksByZoneId(zoneSimResult.getZone().getId());
+       zoneSimResult.getPickerTasks().forEach(zonePickerTask -> {
+           pickerTasks.stream()
+               .filter(pickerTask -> pickerTask.equals(zonePickerTask)) // Match the same PickerTask
+               .forEach(pickerTask -> {
+                   pickerTask.setMcStartTime(zonePickerTask.getStartTime()); // Set startTime
+                   pickerTask.setMcEndTime(zonePickerTask.getEndTime());     // Set endTime
+                   pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZoneId(), pickerTask); // Update the task
+               });
+       });
+   }
+
+private void saveActiveTasks(ZoneSimResult zoneSimResult) {
+    Set<ActiveTask> activeTasks = zoneService.getTodayUnfinishedTasksByZoneId(zoneSimResult.getZone().getId());
+    zoneSimResult.getActiveTasks().forEach(zoneActiveTask -> {
+        activeTasks.stream()
+            .filter(activeTask -> activeTask.equals(zoneActiveTask)) // Match the same ActiveTask
+            .forEach(activeTask -> {
+                activeTask.setMcStartTime(zoneActiveTask.getStartTime()); // Set mcStartTime
+                activeTask.setMcEndTime(zoneActiveTask.getEndTime());     // Set mcEndTime
+                activeTaskService.updateActiveTask(activeTask.getId(), activeTask); // Update the task
+            });
+    });
+}
 
 }

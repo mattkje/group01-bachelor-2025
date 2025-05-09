@@ -474,4 +474,8 @@ public class ActiveTaskService {
         }
         return new ArrayList<>();
     }
+
+    public void saveActiveTask(ActiveTask activeTask) {
+        activeTaskRepository.save(activeTask);
+    }
 }

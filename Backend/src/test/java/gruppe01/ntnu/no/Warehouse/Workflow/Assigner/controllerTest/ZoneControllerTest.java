@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.ZoneController;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;

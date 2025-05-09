@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import io.swagger.v3.oas.annotations.Operation;

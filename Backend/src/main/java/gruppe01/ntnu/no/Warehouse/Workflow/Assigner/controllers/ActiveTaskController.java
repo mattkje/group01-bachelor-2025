@@ -1,6 +1,5 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ActiveTaskService;
