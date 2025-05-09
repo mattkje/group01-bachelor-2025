@@ -83,9 +83,9 @@ const activeTab = computed(() => {
   display: flex;
   flex-direction: column;
   width: 250px;
-  background-color: #ffffff;
+  background-color: var(--background-1);
   padding: 1rem;
-  border-right: #e0e0e0 1px solid;
+  border-right: var(--border-1) 1px solid;
 }
 
 .tabs {
@@ -97,13 +97,13 @@ const activeTab = computed(() => {
   align-items: center;
   padding: 0.5rem 0;
   cursor: pointer;
-  color: #7B7B7B;
+  color: var(--text-2);
   text-decoration: none
 }
 
 .tab:hover {
   border-radius: 10px;
-  background-color: #f0f0f0;
+  background-color: var(--background-2);
 }
 
 .tab-icon {
@@ -117,7 +117,7 @@ hr {
   margin-top: 1rem;
   margin-bottom: 1rem;
   border: 0;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-1);
 }
 
 .settings-button img {
@@ -127,8 +127,8 @@ hr {
 }
 
 .active-tab, .exact-active-tab {
-  background-color: #FFF2F2;
+  background-color: var(--main-color-3);
   border-radius: 10px;
-  color: #E77474;
+  color: var(--main-color);
 }
 </style>

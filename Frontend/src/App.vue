@@ -5,7 +5,7 @@ import Toolbar from "@/components/Toolbar.vue";
 
 <template>
   <div class="app-container">
-    <Toolbar class="toolbar" title="Simulator"/>
+    <Toolbar class="toolbar"/>
     <div class="page-border">
       <Sidebar />
       <div class="main-content">
@@ -25,7 +25,6 @@ import Toolbar from "@/components/Toolbar.vue";
   width: 100%;
   padding: 1rem;
   box-sizing: border-box;
-
 }
 
 .page-border {
@@ -33,9 +32,9 @@ import Toolbar from "@/components/Toolbar.vue";
   width: 100%;
   height: 100%;
   border-radius: 1.5rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-1);
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--background-1);
 }
 
 .main-content {
@@ -46,8 +45,8 @@ import Toolbar from "@/components/Toolbar.vue";
 .toolbar {
   width: 100%;
   height: 5rem;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background-color: var(--background-1);
+  border: 1px solid var(--border-1);
   border-radius: 1.5rem;
   margin-bottom: 1rem;
   display: flex;
@@ -63,23 +62,5 @@ header {
 .logo {
   display: block;
   margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
 }
 </style>

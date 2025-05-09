@@ -24,7 +24,7 @@ onMounted(() => {
         <h2>Monte Carlo Simulation</h2>
         <div class="zone-selector">
           <label for="zone-dropdown">Select Zone:</label>
-          <select id="zone-dropdown" v-model="selectedZoneId">
+          <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneId">
             <option :value="0">All Zones</option>
             <option v-for="zone in zones" :key="zone.id" :value="zone.id">
               {{ zone.name }}
@@ -101,7 +101,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   border-radius: 2rem;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
 }
 
 .monte-carlo-graph {
@@ -110,7 +110,7 @@ onMounted(() => {
 
 .day-status {
   height: 20%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
   flex-direction: row;
   border-radius: 2rem;
   display: flex;
@@ -118,7 +118,7 @@ onMounted(() => {
   align-items: center;
   font-size: 1.2rem;
   gap: 2rem;
-  color: #7B7B7B;
+  color: var(--text-1);
 }
 
 .status-text-box {
@@ -143,14 +143,20 @@ onMounted(() => {
 .zone-selector select {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border-1);
   font-size: 1rem;
+}
+
+.zone-selector-dropdown {
+  background-color: var(--background-2);
+  color: var(--text-1);
+  border: 1px solid var(--border-1);
 }
 
 .tasks-container {
   width: 100%;
   height: 100%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
   flex-direction: row;
   border-radius: 2rem;
   display: flex;
@@ -158,7 +164,7 @@ onMounted(() => {
   align-items: center;
   font-size: 1.2rem;
   gap: 2rem;
-  color: #7B7B7B;
+  color: var(--text-1);
 }
 
 

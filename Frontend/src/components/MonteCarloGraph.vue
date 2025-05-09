@@ -367,14 +367,15 @@ onUnmounted(() => {
 }
 
 .worst-case {
-  background-color: rgba(255, 99, 132, 1); /* Red */
+  background-color: var(--main-color);
 }
 
 .monte-carlo-graph {
   width: 100%;
   height: 100%;
-  background-color: #ffffff;
+  background-color: var(--background-1); /* Adjusts for light/dark mode */
   border-radius: 8px;
+  color: var(--text-1); /* Text color adjusts for light/dark mode */
 }
 
 canvas {

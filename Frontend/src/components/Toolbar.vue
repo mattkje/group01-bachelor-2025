@@ -189,17 +189,17 @@ onMounted(async () => {
     </div>
     <div class="vertical-separator"/>
     <div class="controls">
-      <button v-if="isPlaying" :disabled="isLoadingSimulation" @click="abortSimulation">
+      <button v-if="isPlaying" :disabled="isLoadingSimulation" @click="abortSimulation" title="Stop Simulation">
         <img src="/src/assets/icons/stop.svg" alt="Stop"/>
       </button>
-      <button v-if="!isPlaying" :disabled="isLoadingSimulation" @click="startClock">
+      <button v-if="!isPlaying" :disabled="isLoadingSimulation" @click="startClock" title="Start Simulation">
         <img src="/src/assets/icons/play.svg" alt="Play"/>
       </button>
-      <button v-else :disabled="isLoadingSimulation" @click="stopClock">
+      <button v-else :disabled="isLoadingSimulation" @click="stopClock" title="Pause Simulation">
         <img v-if="isPaused" src="/src/assets/icons/play.svg" alt="Play"/>
         <img v-else src="/src/assets/icons/pause.svg" alt="Pause"/>
       </button>
-      <button class="ff-arrow" :disabled="isLoadingSimulation" @click="fastForwardClock">
+      <button class="ff-arrow" :disabled="isLoadingSimulation" @click="fastForwardClock" title="Fast Forward">
         <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward"/>
         <img v-else-if="speedIndex === 1" src="/src/assets/icons/ff2x.svg" alt="Fast Forward"/>
         <img v-else-if="speedIndex === 2" src="/src/assets/icons/ff5x.svg" alt="Fast Forward"/>
@@ -240,7 +240,7 @@ onMounted(async () => {
     <!---<div class="loading-spinner" v-else>
       <div class="spinner-when-not-loading"></div>
     </div> -->
-    <div v-else class="simulation-button" @click="runSimulations">
+    <div v-else class="simulation-button" @click="runSimulations" title="Run Simulations">
       <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
     </div>
   </div>
@@ -250,7 +250,7 @@ onMounted(async () => {
 .toolbar {
   display: flex;
   justify-content: flex-end;
-  background-color: #ffffff;
+  background-color: var(--background-1);
   align-items: center;
   padding-right: 1rem;
   height: 4rem;
@@ -272,7 +272,7 @@ onMounted(async () => {
   width: 30px; /* Ensure consistent width */
   height: 30px; /* Ensure consistent height */
   margin-right: 1rem;
-  color: #b77979;
+  color: var(--main-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,12 +283,8 @@ onMounted(async () => {
   height: auto; /* Maintain aspect ratio */
 }
 
-.toolbar-item:hover {
-  color: #000;
-}
-
 .vertical-separator {
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--border-1);
   height: 100%;
   margin: 0 1rem;
 }
@@ -305,7 +301,7 @@ onMounted(async () => {
   font-size: 1rem;
   width: 30px; /* Ensure consistent width */
   height: 30px; /* Ensure consistent height */
-  color: #b77979;
+  color: var(--main-color);
   display: flex;
   margin: 0 0.5rem;
   align-items: center;
@@ -338,25 +334,25 @@ onMounted(async () => {
 }
 
 .clock span, .date-clock span {
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 2rem;
   font-weight: bold;
 }
 
 .clock p, .date-clock p {
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 0.7rem;
   font-weight: bold;
 }
 
 .date-clock span {
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 1rem;
   font-weight: bold;
 }
 
 .clock p, .date-clock p {
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -370,13 +366,13 @@ onMounted(async () => {
 }
 
 .clock-done span {
-  color: #d97c7c;
+  color: var(--main-color);
   font-size: 2rem;
   font-weight: bold;
 }
 
 .clock-done p {
-  color: #d97c7c;
+  color: var(--main-color);
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -399,7 +395,7 @@ onMounted(async () => {
 }
 
 .date-text {
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 1.2rem !important;
   font-weight: bold;
 }
@@ -423,7 +419,7 @@ onMounted(async () => {
 
 .sim-count-container label {
   margin-bottom: 0.3rem; /* Add spacing between label and input */
-  color: #7B7B7B;
+  color: var(--text-2 );
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -432,13 +428,13 @@ onMounted(async () => {
   width: 60px;
   padding: 0.3rem;
   font-size: 0.9rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-1);
   border-radius: 4px;
   background-color: #f9f9f9;
 }
 
 .sim-count-input:disabled {
-  background-color: #e0e0e0;
+  background-color: var(--border-1);
   cursor: not-allowed;
 }
 
@@ -451,7 +447,7 @@ onMounted(async () => {
 
 .sim-interval-container label {
   margin-bottom: 0.3rem; /* Add spacing between label and input */
-  color: #7B7B7B;
+  color: var(--text-2);
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -460,9 +456,9 @@ onMounted(async () => {
   width: 70px;
   padding: 0.3rem;
   font-size: 0.9rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--text-2);
   border-radius: 4px;
-  background-color: #f9f9f9;
+  background-color: var(--background-2);
 }
 
 .sim-interval-input:disabled {
@@ -498,15 +494,15 @@ onMounted(async () => {
 .spinner-when-not-loading {
   width: 30px;
   height: 30px;
-  border: 4px solid #d97c7c; /* Blue */
+  border: 4px solid var(--main-color);
   border-radius: 50%;
 }
 
 .spinner {
   width: 30px;
   height: 30px;
-  border: 4px solid #f3f3f3; /* Light gray */
-  border-top: 4px solid #d97c7c; /* Blue */
+  border: 4px solid var(--background-2); /* Light gray */
+  border-top: 4px solid var(--main-color); /* Blue */
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
 }

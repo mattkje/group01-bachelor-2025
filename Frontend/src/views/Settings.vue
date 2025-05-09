@@ -141,7 +141,7 @@ onMounted(async () => {
 
 h1 {
   font-size: 1.8rem;
-  color: #333;
+  color: var(--text-1);
   text-align: center;
   margin-bottom: 1.5rem;
 }
@@ -161,7 +161,7 @@ h1 {
 label {
   display: block;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--text-2);
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
@@ -172,15 +172,32 @@ label {
   width: 100%;
   padding: 0.5rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-1);
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--background-2);
+  color: var(--text-1);
   transition: border-color 0.3s;
+}
+
+.sim-interval-input::-webkit-inner-spin-button,
+.sim-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--background-2);
+  color: var(--text-1);
+  border-radius: 4px;
+}
+
+.sim-interval-input:focus::-webkit-inner-spin-button,
+.sim-count-input:focus::-webkit-inner-spin-button {
+  background-color: var(--main-color);
+  color: var(--background-1);
 }
 
 .sim-interval-input:focus,
 .sim-count-input:focus {
-  border-color: #d97c7c;
+  border-color: var(--main-color);
+  border-width: 2px;
   outline: none;
 }
 
@@ -188,8 +205,8 @@ button {
   display: inline-block;
   padding: 0.7rem 1.5rem;
   font-size: 1rem;
-  color: #fff;
-  background-color: #e77474;
+  color: var(--text-inverse);
+  background-color: var(--main-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -197,7 +214,7 @@ button {
 }
 
 button:hover {
-  background-color: #c66;
+  background-color: var(--main-color-2);
 }
 
 .reset-simulations {
@@ -208,8 +225,8 @@ button:hover {
 .tooltip {
   width: 150px;
   visibility: hidden;
-  background-color: #333;
-  color: #fff;
+  background-color: var(--background-2);
+  color: var(--text-1);
   text-align: center;
   border-radius: 5px;
   padding: 0.5rem;
@@ -236,7 +253,7 @@ button:hover {
 
 .explanation-text {
   font-size: 0.8rem;
-  color: #555;
+  color: var(--text-2);
 }
 
 .switch {
@@ -259,7 +276,7 @@ button:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--border-1);
   transition: 0.4s;
   border-radius: 20px;
 }
@@ -277,7 +294,7 @@ button:hover {
 }
 
 input:checked + .slider {
-  background-color: #e77474;
+  background-color: var(--main-color);
 }
 
 input:checked + .slider:before {

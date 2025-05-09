@@ -124,9 +124,9 @@ onMounted(() => {
 }
 
 .tabs button.active {
-  background-color: #E77474;
-  color: white;
-  border-color: #E77474;
+  background-color: var(--main-color);
+  color: var(--text-1);
+  border-color: var(--main-color-2);
 }
 
 .zone-menu {
@@ -167,7 +167,7 @@ onMounted(() => {
   flex-direction: row;
   padding: 10px;
   align-items: center;
-  background-color: #f1f1f1;
+  background-color: var(--background-2);
   border-radius: 1rem;
   text-align: left;
   font-size: 0.8rem;
@@ -180,11 +180,11 @@ canvas {
 hr {
   margin: 0;
   border: none;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-1);
 }
 
 .vertical-separator {
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--border-1);
   height: auto; /* Adjust height dynamically */
   margin: 0;
   align-self: stretch; /* Ensure it stretches to match sibling height */
@@ -202,7 +202,7 @@ hr {
   width: 30px;
   height: 30px;
   margin-right: 1rem;
-  color: #b77979;
+  color: var(--main-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,7 +244,7 @@ hr {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #f8f8f8;
+  background-color: var(--background-1);
   margin-right: 0.5rem;
 }
 

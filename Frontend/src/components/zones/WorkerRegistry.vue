@@ -104,7 +104,7 @@ const onDragLeave = () => {
 <style scoped>
 .rounded-square {
   width: 280px;
-  border-left: 1px solid #e5e5e5;
+  border-left: 1px solid var(--border-1);
   display: flex;
   flex-direction: column;
 }
@@ -124,15 +124,15 @@ const onDragLeave = () => {
   font-size: 1.2rem;
   line-height: 0.7rem;
   font-weight: bold;
-  color: #7B7B7B;
-  border-bottom: 1px solid #e5e5e5;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border-1);
 }
 
 .title-bar hr {
   width: 100%;
   margin: 0.5rem 0;
   border: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--border-1);
 }
 
 .title-bar-status {
@@ -142,7 +142,7 @@ const onDragLeave = () => {
   align-items: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #7B7B7B;
+  color: var(--text-1);
 }
 
 .vertical-box {
@@ -158,36 +158,13 @@ const onDragLeave = () => {
 }
 
 .unqualified {
-  color: #f56e6e;
+  color: var(--main-color);
   border-radius: 0.5rem;
   padding: 10px;
   line-height: 0.2rem;
   margin-top: 0.1rem;
 }
 
-.icon-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  width: 20px;
-  height: 20px;
-  margin-right: 1rem;
-  color: #b77979;
-}
-
-.icon-button img {
-  width: 20px;
-  height: 20px;
-}
-
-.icon-button:hover {
-  color: #000;
-}
-
-.bell-icon {
-  margin-left: 6rem;
-}
 
 @keyframes spin {
   0% {
@@ -210,7 +187,7 @@ const onDragLeave = () => {
 
 .filter-text {
   font-size: 0.8rem;
-  color: #7B7B7B;
+  color: var(--text-1);
   margin: auto 1rem auto 0;
 }
 
@@ -219,9 +196,11 @@ const onDragLeave = () => {
 }
 
 .search-box input {
+  background-color: var(--background-2);
+  color: var(--text-1);
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-1);
   border-radius: 5px;
 }
 </style>

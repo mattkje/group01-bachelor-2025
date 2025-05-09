@@ -237,7 +237,7 @@ const toggleNotificationBubble = () => {
 .rounded-square {
   width: 250px;
   height: 100%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
   border-radius: 15px;
   overflow: hidden;
   display: flex;
@@ -247,7 +247,7 @@ const toggleNotificationBubble = () => {
 .on-drop-worker-box {
   height: 30px;
   width: 100%;
-  background-color: #ececec;
+  background-color: var(--main-color-3);
   border-radius: 7px;
   pointer-events: none;
 }
@@ -255,20 +255,20 @@ const toggleNotificationBubble = () => {
 .title-bar {
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--background-backdrop);
   padding: 1rem;
   font-size: 1.2rem;
   line-height: 0.7rem;
   font-weight: bold;
-  color: #7B7B7B;
-  border-bottom: 1px solid #e5e5e5;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border-1);
 }
 
 .title-bar hr {
   width: 100%;
   margin: 0.5rem 0;
   border: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--border-1);
 }
 
 .title-bar-status {
@@ -278,7 +278,7 @@ const toggleNotificationBubble = () => {
   align-items: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #7B7B7B;
+  color: var(--text-1);
 }
 
 .horizontal-box {
@@ -290,7 +290,7 @@ const toggleNotificationBubble = () => {
 }
 
 .task-summary {
-  color: #7B7B7B;
+  color: var(--text-1);
   display: flex;
   line-height: 1rem;
   font-size: 0.7rem;
@@ -322,7 +322,7 @@ const toggleNotificationBubble = () => {
   top: -25px;
   right: 0;
   background-color: #333;
-  color: #fff;
+  color: var(--background-1);
   padding: 5px;
   border-radius: 3px;
   font-size: 0.7rem;
@@ -335,7 +335,7 @@ const toggleNotificationBubble = () => {
 
 
 .unqualified {
-  color: #f56e6e;
+  color: var(--main-color);
   border-radius: 0.5rem;
   padding: 10px;
   line-height: 0.2rem;
@@ -369,7 +369,7 @@ const toggleNotificationBubble = () => {
   width: 20px;
   height: 20px;
   margin-right: 1rem;
-  color: #b77979;
+  color: var(--main-color-2);
 }
 
 .icon-button img {
@@ -378,7 +378,7 @@ const toggleNotificationBubble = () => {
 }
 
 .icon-button:hover {
-  color: #000;
+  color: var(--main-color-3);
 }
 
 .bell-icon {

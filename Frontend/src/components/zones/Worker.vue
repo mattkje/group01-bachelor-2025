@@ -175,7 +175,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #c0c0c0;
+  background-color: var(--background-2);
   border-radius: 10px 0 0 10px;
   max-height: 30px;
   padding: 0.5rem;
@@ -208,7 +208,7 @@ onMounted(async () => {
 
 .unq-worker-box:hover {
   animation: none;
-  background-color: #ff9292;
+  background-color: var(--main-color);
   border: 2px solid #ff4b4b;
 }
 
@@ -226,7 +226,7 @@ onMounted(async () => {
 }
 
 .not-present-worker-box {
-  background: #ececec;
+  background: var(--background-2);
   border-radius: 10px;
   opacity: 0.7;
 }
@@ -250,7 +250,7 @@ onMounted(async () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #f6f6f6;
+  background-color: var(--background-1);
   margin-right: 0.5rem;
 }
 
@@ -278,8 +278,8 @@ onMounted(async () => {
   position: absolute;
   top: -25px;
   right: 0;
-  background-color: #333;
-  color: #fff;
+  background-color: var(--background-1);
+  color: var(--text-1);
   padding: 5px;
   border-radius: 3px;
   font-size: 0.7rem;
@@ -297,8 +297,8 @@ onMounted(async () => {
 }
 
 .worker-status {
-  background-color: white;
-  color: white;
+  background-color: var(--background-1);
+  color: var(--text-1);
   font-size: 0.5rem;
   border-radius: 0.2rem;
   padding: 0.2rem;

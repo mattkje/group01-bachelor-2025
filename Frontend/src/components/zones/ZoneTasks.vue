@@ -108,7 +108,7 @@ ul {
 }
 
 ul li {
-  background-color: #f0f0f0;
+  background-color: var(--background-2);
   padding: 0.5em;
   border-radius: 4px;
   margin-bottom: 0.5em;

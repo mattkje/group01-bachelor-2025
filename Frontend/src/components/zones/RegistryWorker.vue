@@ -28,7 +28,7 @@ const props = defineProps<{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ececec;
+  background-color: var(--background-2);
   opacity: 0.5;
   border-radius: 10px;
   max-height: 30px;
@@ -36,10 +36,6 @@ const props = defineProps<{
   margin-bottom: 0.5rem;
   user-select: none !important;
   -webkit-user-select: none !important;
-}
-
-.worker-compact:hover {
-  background-color: #dcdcdc;
 }
 
 @keyframes pulse-border {
@@ -96,7 +92,7 @@ const props = defineProps<{
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #f6f6f6;
+  background-color: var(--background-1);
   margin-right: 0.5rem;
 }
 
@@ -124,8 +120,8 @@ const props = defineProps<{
   position: absolute;
   top: -25px;
   right: 0;
-  background-color: #333;
-  color: #fff;
+  background-color: var(--background-1);
+  color: var(--text-1);
   padding: 5px;
   border-radius: 3px;
   font-size: 0.7rem;
@@ -143,8 +139,8 @@ const props = defineProps<{
 }
 
 .worker-status {
-  background-color: white;
-  color: white;
+  background-color: var(--background-1);
+  color: var(--text-1);
   font-size: 0.5rem;
   border-radius: 0.2rem;
   padding: 0.2rem;
