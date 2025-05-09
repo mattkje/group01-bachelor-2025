@@ -456,6 +456,9 @@ public class WorldSimulation {
     }
 
     public LocalTime getCurrentTime() {
+        if (currentSimulationTime == null) {
+            currentSimulationTime = LocalTime.MIDNIGHT;
+        }
         return currentSimulationTime;
     }
 

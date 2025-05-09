@@ -61,6 +61,14 @@ public class PickerTask {
     @Schema(description = "The end time of the task.")
     private LocalDateTime endTime;
 
+    @Column(name = "mc_start_time")
+    @Schema(description = "The start time of the task in the Monte Carlo simulation.")
+    private LocalDateTime mcStartTime;
+
+    @Column(name = "mc_end_time")
+    @Schema(description = "The end time of the task in the Monte Carlo simulation.")
+    private LocalDateTime mcEndTime;
+
     @ManyToOne
     @JoinColumn(name = "zone_Id")
     @JsonIgnore
@@ -213,5 +221,21 @@ public class PickerTask {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public LocalDateTime getMcStartTime() {
+        return mcStartTime;
+    }
+
+    public void setMcStartTime(LocalDateTime mcStartTime) {
+        this.mcStartTime = mcStartTime;
+    }
+
+    public LocalDateTime getMcEndTime() {
+        return mcEndTime;
+    }
+
+    public void setMcEndTime(LocalDateTime mcEndTime) {
+        this.mcEndTime = mcEndTime;
     }
 }

@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS picker_task
     time_s         DOUBLE DEFAULT NULL,
     start_time    TIMESTAMP,
     end_time      TIMESTAMP,
+    mc_start_time TIMESTAMP,
+    mc_end_time   TIMESTAMP,
     date           DATE,
     zone_id        BIGINT NOT NULL,
     worker_id      BIGINT,
