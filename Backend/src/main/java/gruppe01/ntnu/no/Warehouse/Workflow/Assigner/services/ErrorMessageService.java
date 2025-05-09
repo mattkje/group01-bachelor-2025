@@ -4,7 +4,9 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ErrorMessageRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ErrorMessageService {
@@ -30,11 +32,11 @@ public class ErrorMessageService {
                 .toList();
     }
 
-    public ErrorMessage saveErrorMessage(ErrorMessage errorMessage) {
-        return errorMessageRepository.save(errorMessage);
+    public void saveErrorMessage(ErrorMessage errorMessage) {
+        errorMessageRepository.save(errorMessage);
     }
 
-    public ErrorMessage createErrorMessage( long zoneId, ErrorMessage errorMessage) {
+    public ErrorMessage createErrorMessage(long zoneId, ErrorMessage errorMessage) {
         if (zoneService.getZoneById(zoneId) == null) {
             return null;
         } else {
@@ -59,5 +61,20 @@ public class ErrorMessageService {
             errorMessageRepository.deleteById(id);
             return errorMessageRepository.findById(id).orElse(null);
         }
+    }
+
+    public Map<Long, ErrorMessage> generateErrorMessageMapFromZones() {
+        Map<Long, ErrorMessage> errorMessageMap = new HashMap<>();
+        zoneService.getAllZones().forEach(zone -> {
+            ErrorMessage errorMessage = new ErrorMessage();
+            errorMessage.setZoneId(zone.getId());
+            errorMessage.setMessage("");
+            errorMessageMap.put(zone.getId(), errorMessage);
+        });
+        return errorMessageMap;
+    }
+
+    public void deleteAll() {
+        errorMessageRepository.deleteAll();
     }
 }

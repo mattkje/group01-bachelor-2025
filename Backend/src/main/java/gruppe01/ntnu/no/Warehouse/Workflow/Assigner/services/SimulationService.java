@@ -32,7 +32,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private final AtomicInteger simCount = new AtomicInteger(1);
+    private final AtomicInteger simCount = new AtomicInteger(5);
 
     private final ZoneService zoneService;
 

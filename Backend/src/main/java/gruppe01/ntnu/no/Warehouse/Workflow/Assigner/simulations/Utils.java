@@ -1,5 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ErrorMessageService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.MonteCarloService;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 
+import static com.google.common.graph.ElementOrder.sorted;
+
 /**
  * Utility class for simulation-related operations.
  * Contains methods for processing simulation results and saving data.
@@ -22,13 +26,17 @@ public class Utils {
 
     private final MonteCarloService monteCarloService;
 
+    private final ErrorMessageService errorMessageService;
+
     /**
      * Constructor for Utils.
      *
      * @param monteCarloService the Monte Carlo simulation service
      */
-    public Utils(@Autowired MonteCarloService monteCarloService) {
+    public Utils(@Autowired MonteCarloService monteCarloService,
+                 @Autowired ErrorMessageService errorMessageService) {
         this.monteCarloService = monteCarloService;
+        this.errorMessageService = errorMessageService;
     }
 
     public Object getLatestEndTime(Map<Long, ZoneSimResult> zoneSimResults) {
@@ -99,6 +107,7 @@ public class Utils {
             saveGeneralSimulation(simulationResult, i);
             saveZoneSimulation(simulationResult.getZoneSimResultList(), i, now);
         }
+        this.getBestCaseScenarioForEachZoneSim(simulationResults);
     }
 
     private Integer findHighestValue(Map<LocalDateTime, Integer> timestamps) {
@@ -141,6 +150,33 @@ public class Utils {
                 break; // Exit the loop after recording the highest value
             }
         }
+    }
+
+    public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
+        Map<Long, ErrorMessage> errorMessages = this.errorMessageService.generateErrorMessageMapFromZones();
+        errorMessageService.deleteAll();
+        for (SimulationResult simulationResult : simulationResults) {
+            Map<Long, ZoneSimResult> zoneSimResults = simulationResult.getZoneSimResults();
+            for (Map.Entry<Long, ZoneSimResult> entry : zoneSimResults.entrySet()) {
+                LocalDateTime lastEndTime = entry.getValue().getLastEndTime();
+                ErrorMessage errorMessage = errorMessages.get(entry.getValue().getZone().getId());
+                if (lastEndTime != null && errorMessage != null && errorMessage.getTime() != null &&
+                    lastEndTime.isBefore(errorMessage.getTime())) {
+                    errorMessage.setTime(lastEndTime);
+                    // TODO: Consider doing list to string conversion in the service
+                    errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
+                } else {
+                    assert errorMessage != null;
+                    if (errorMessage.getTime() == null && lastEndTime != null){
+                        errorMessage.setTime(lastEndTime);
+                        errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
+                    } else {
+                        errorMessage.setMessage(entry.getValue().getErrorMessage().toString());
+                    }
+                }
+            }
+        }
+        errorMessages.values().stream().toList().forEach(errorMessageService::saveErrorMessage);
     }
 
 }

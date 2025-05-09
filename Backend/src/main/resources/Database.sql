@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS active_task
 CREATE TABLE IF NOT EXISTS error_message
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    message      TEXT NOT NULL,
+    message      LONGTEXT NOT NULL,
     zone_id      BIGINT,
     time        TIMESTAMP,
     FOREIGN KEY (zone_id) REFERENCES zone (id)
