@@ -31,9 +31,20 @@ CREATE TABLE IF NOT EXISTS active_task
     due_date   TIMESTAMP,
     start_time TIMESTAMP,
     end_time   TIMESTAMP,
+    mc_start_time TIMESTAMP,
+    mc_end_time TIMESTAMP,
     recurrence_type INT DEFAULT 0,
     eta        DATETIME(6) DEFAULT NULL,
     FOREIGN KEY (task_id) REFERENCES task (id)
+);
+
+CREATE TABLE IF NOT EXISTS error_message
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    message      TEXT NOT NULL,
+    zone_id      BIGINT,
+    time        TIMESTAMP,
+    FOREIGN KEY (zone_id) REFERENCES zone (id)
 );
 
 CREATE TABLE IF NOT EXISTS worker

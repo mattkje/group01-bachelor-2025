@@ -38,6 +38,14 @@ public class ActiveTask {
     @Schema(description = "The end time of the active task.")
     private LocalDateTime endTime;
 
+    @Column(name = "mc_start_time")
+    @Schema(description = "The start time of the active task in the Monte Carlo simulation.")
+    private LocalDateTime mcStartTime;
+
+    @Column(name = "mc_end_time")
+    @Schema(description = "The end time of the active task in the Monte Carlo simulation.")
+    private LocalDateTime mcEndTime;
+
     @Column(name = "eta")
     @Schema(description = "The estimated time of arrival for the active task.")
     private LocalDate eta;
@@ -180,5 +188,21 @@ public class ActiveTask {
                 this.workers.add(worker);
             }
         }
+    }
+
+    public LocalDateTime getMcStartTime() {
+        return mcStartTime;
+    }
+
+    public void setMcStartTime(LocalDateTime mcStartTime) {
+        this.mcStartTime = mcStartTime;
+    }
+
+    public LocalDateTime getMcEndTime() {
+        return mcEndTime;
+    }
+
+    public void setMcEndTime(LocalDateTime mcEndTime) {
+        this.mcEndTime = mcEndTime;
     }
 }
