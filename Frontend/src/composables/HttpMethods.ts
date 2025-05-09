@@ -47,6 +47,25 @@ export const postData = async (url: string, body?: any): Promise<void> => {
     }
 };
 
+export const postWithParams = async (url: string, params: Record<string, any>): Promise<void> => {
+    try {
+        const queryString = new URLSearchParams(params).toString();
+        const fullUrl = `${url}?${queryString}`;
+        const response = await fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to POST to ${fullUrl}: ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error(`Error in POST request to ${url}:`, error);
+        throw error;
+    }
+}
+
 export const deleteData = async (url: string): Promise<void> => {
     try {
         const response = await fetch(url, {
@@ -57,6 +76,15 @@ export const deleteData = async (url: string): Promise<void> => {
         }
     } catch (error) {
         console.error(`Error in DELETE request to ${url}:`, error);
+        throw error;
+    }
+};
+
+export const runCommand = async (url: string) => {
+    try {
+        await fetch(url);
+    } catch (error) {
+        console.error(`Error fetching data from ${url}:`, error);
         throw error;
     }
 };

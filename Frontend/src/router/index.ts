@@ -7,7 +7,6 @@ import Staff from "../views/Staff.vue";
 import Settings from "../views/Settings.vue";
 import Info from "../views/Info.vue";
 import WorkerProfile from "../views/WorkerProfile.vue";
-import ControlPanel from "../views/ControlPanel.vue";
 import ZoneMenu from "../views/ZoneMenu.vue";
 import TaskMenu from "../views/TaskMenu.vue";
 
@@ -19,7 +18,6 @@ const routes = [
   { path: '/settings', component: Settings},
   { path: '/info', component: Info},
   { path: '/workers/:id', component: WorkerProfile},
-  { path: '/controlpanel', component: ControlPanel},
   { path: '/zones/:id', component: ZoneMenu },
   { path: '/zones/:id/tasks', component: TaskMenu },
 ];

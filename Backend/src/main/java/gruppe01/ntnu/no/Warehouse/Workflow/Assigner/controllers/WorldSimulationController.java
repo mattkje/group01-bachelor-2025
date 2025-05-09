@@ -135,4 +135,16 @@ public class WorldSimulationController {
     public ResponseEntity<LocalDateTime> getCurrentDateTime() {
         return ResponseEntity.ok(worldSimulation.getCurrentDateTime());
     }
+
+    @PostMapping("/setIntervalId")
+    public void setIntervalId(
+            @Parameter(description = "IntervalId in milliseconds")
+            @RequestParam int intervalId) {
+        worldSimulation.setIntervalId(intervalId);
+    }
+
+    @GetMapping("/getIntervalId")
+    public ResponseEntity<Integer> getIntervalId() {
+        return ResponseEntity.ok(worldSimulation.getIntervalId());
+    }
 }

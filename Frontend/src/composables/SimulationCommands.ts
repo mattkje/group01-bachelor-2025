@@ -1,4 +1,4 @@
-import { fetchData, postData } from "@/composables/HttpMethods";
+import {fetchData, postData, runCommand} from "@/composables/HttpMethods";
 
 export const startSimulationClock = async (simulationTime: number, simCount: number) => {
     await postData(`http://localhost:8080/api/simulation/start?simulationTime=${simulationTime}&simCount=${simCount}`);
@@ -37,3 +37,7 @@ export const updateWorkerZone = async (workerId: number, zoneId: number) => {
         console.error('Error moving worker:', error);
     }
 };
+
+export const resetToInitialState = async () => {
+    await runCommand(`http://localhost:8080/api/resetSim`);
+}

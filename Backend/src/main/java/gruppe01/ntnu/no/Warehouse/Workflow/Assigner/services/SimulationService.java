@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
@@ -33,6 +34,8 @@ import smile.regression.RandomForest;
 public class SimulationService {
 
     private final AtomicInteger simCount = new AtomicInteger(5);
+
+    private final AtomicBoolean prediction = new AtomicBoolean(true);
 
     private final ZoneService zoneService;
 
@@ -120,6 +123,7 @@ public class SimulationService {
      */
     public Map<Long, List<String>> runCompleteSimulation(Map<String, RandomForest> models, LocalDateTime currentTime)
             throws ExecutionException, InterruptedException, IOException {
+        if (!prediction.get()) return null;
         List<SimulationResult> results;
         if (models == null) {
             results = monteCarloWithRealData.monteCarlo(getSimCount(), null, currentTime, timetableService);
@@ -224,6 +228,23 @@ public class SimulationService {
      */
     public void setSimCount(int newSimCount) {
         simCount.set(newSimCount);
+    }
+
+
+
+
+
+    /**
+     * Sets the prediction
+     *
+     * @param prediction The new prediction value
+     */
+    public void setPrediction(boolean prediction) {
+        this.prediction.set(prediction);
+    }
+
+    public boolean isPrediction() {
+        return this.prediction.get();
     }
 
 }

@@ -1,5 +1,5 @@
 import {License, Task, Worker} from "@/assets/types";
-import { deleteData , putData, postData } from "@/composables/HttpMethods";
+import {deleteData, putData, postData, postWithParams} from "@/composables/HttpMethods";
 
 export const addLicensesToWorker = async (workerId: number, licenses: License[]): Promise<void> => {
   try {
@@ -81,3 +81,15 @@ export const createActiveTask = async (taskId: number, newActiveTask: any) => {
     await postData(`http://localhost:8080/api/active-tasks/${taskId}`, newActiveTask);
   }
 }
+
+export const setPredictionStatus = async (paramData: any) => {
+  await postWithParams(`http://localhost:8080/api/setPrediction`, {
+    ["prediction"]: paramData,
+  });
+};
+
+export const setIntervalId = async (intervalId: any) => {
+  await postWithParams(`http://localhost:8080/api/simulation/setIntervalId`, {
+    ["intervalId"]: intervalId,
+  });
+};

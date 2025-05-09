@@ -103,3 +103,11 @@ export const fetchSimulationCount = async () => {
     return fetchData<number>('http://localhost:8080/api/getSimCount');
 }
 
+export const fetchPredictionStatus = async () => {
+    return fetchData<boolean>('http://localhost:8080/api/getPrediction');
+}
+
+export const fetchIntervalId = async () => {
+    return fetchData<number>('http://localhost:8080/api/simulation/getIntervalId');
+}
+

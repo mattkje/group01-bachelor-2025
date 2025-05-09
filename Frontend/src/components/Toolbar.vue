@@ -23,6 +23,9 @@ let completionTime = ref(null);
 let isPlaying = ref(false);
 const isPaused = ref(false);
 let simCount = ref(10);
+const isLoadingSimulation = ref(false);
+const intervals = ["10 min", "30 min", "60 min"];
+const selectedInterval = ref(intervals[0]);
 
 const fetchSimulationState = async () => {
   simCount.value = await fetchSimulationCount();
@@ -54,10 +57,10 @@ let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
 
-const intervals = ["10 min", "30 min", "60 min"];
-const selectedInterval = ref(intervals[0]);
+
 
 const startClock = async () => {
+  isLoadingSimulation.value = true;
   isPlaying.value = true;
   await startSimulationClock(60, simCount.value);
   await fetchSimulationState();
@@ -87,11 +90,11 @@ const abortSimulation = async () => {
 };
 
 const fastForwardClock = async () => {
+  speedIndex = (speedIndex + 1) % speeds.length; // Set speedIndex first
   if (intervalId) {
     clearInterval(intervalId);
   }
-  speedIndex = (speedIndex + 1) % speeds.length;
-  await fastForwardSimulationClock(speeds[speedIndex])
+  await fastForwardSimulationClock(speeds[speedIndex]);
 };
 
 const runSimulations = async () => {
@@ -164,6 +167,13 @@ watch(simCount, (newValue, oldValue) => {
   updateSimCount();
 });
 
+watch(currentTime, (newValue, oldValue) => {
+  if (newValue === oldValue) {
+    return;
+  }
+  isLoadingSimulation.value = false;
+})
+
 onMounted(async () => {
   await fetchSimulationState();
 });
@@ -177,47 +187,19 @@ onMounted(async () => {
         <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
       </div>
     </div>
-    <button class="toolbar-item" @click="runSimulations">
-      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
-    </button>
-    <div class="vertical-separator"/>
-    <div class="sim-interval-container">
-      <label for="sim-interval">Interval</label>
-      <select
-          id="sim-interval"
-          v-model="selectedInterval"
-          :disabled="isPlaying"
-          class="sim-interval-input"
-      >
-        <option v-for="interval in intervals" :key="interval" :value="interval">
-          {{ interval }}
-        </option>
-      </select>
-    </div>
-    <div class="vertical-separator"/>
-    <div class="sim-count-container">
-      <label for="sim-count">Sim Count</label>
-      <input
-          id="sim-count"
-          type="number"
-          v-model="simCount"
-          :disabled="isPlaying"
-          class="sim-count-input"
-      />
-    </div>
     <div class="vertical-separator"/>
     <div class="controls">
-      <button v-if="isPlaying" @click="abortSimulation">
+      <button v-if="isPlaying" :disabled="isLoadingSimulation" @click="abortSimulation">
         <img src="/src/assets/icons/stop.svg" alt="Stop"/>
       </button>
-      <button v-if="!isPlaying" @click="startClock">
+      <button v-if="!isPlaying" :disabled="isLoadingSimulation" @click="startClock">
         <img src="/src/assets/icons/play.svg" alt="Play"/>
       </button>
-      <button v-else @click="stopClock">
+      <button v-else :disabled="isLoadingSimulation" @click="stopClock">
         <img v-if="isPaused" src="/src/assets/icons/play.svg" alt="Play"/>
         <img v-else src="/src/assets/icons/pause.svg" alt="Pause"/>
       </button>
-      <button class="ff-arrow" @click="fastForwardClock">
+      <button class="ff-arrow" :disabled="isLoadingSimulation" @click="fastForwardClock">
         <img v-if="speedIndex === 0" src="/src/assets/icons/ff1x.svg" alt="Fast Forward"/>
         <img v-else-if="speedIndex === 1" src="/src/assets/icons/ff2x.svg" alt="Fast Forward"/>
         <img v-else-if="speedIndex === 2" src="/src/assets/icons/ff5x.svg" alt="Fast Forward"/>
@@ -225,14 +207,14 @@ onMounted(async () => {
       </button>
     </div>
     <div class="vertical-separator"/>
-    <div class="date-clock">
+    <div class="date-clock" :class="{ 'disabled-box': isLoadingSimulation }">
       <p>Date</p>
       <div class="clock-time">
         <span>{{ dateText }}</span>
       </div>
     </div>
     <div class="vertical-separator"/>
-    <div class="clock">
+    <div class="clock" :class="{ 'disabled-box': isLoadingSimulation }">
       <p>Time</p>
       <div v-if="currentTime" class="clock-time">
         <span>{{ currentTime.split(':')[0] }}</span>
@@ -244,12 +226,22 @@ onMounted(async () => {
       </div>
     </div>
     <div class="vertical-separator"/>
-    <div class="clock-done">
+    <div class="clock-done" :class="{ 'disabled-box': isLoadingSimulation }">
       <p v-if="!isFinished">Done By</p>
       <div class="clock-time">
         <span v-if="completionTime !== null ">{{ completionTime }}</span>
         <span v-else>{{ isFinished ? 'Done' : '00:00' }}</span>
       </div>
+    </div>
+    <div class="vertical-separator"/>
+    <div class="loading-spinner" v-if="isLoadingSimulation">
+      <div class="spinner"></div>
+    </div>
+    <!---<div class="loading-spinner" v-else>
+      <div class="spinner-when-not-loading"></div>
+    </div> -->
+    <div v-else class="simulation-button" @click="runSimulations">
+      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
     </div>
   </div>
 </template>
@@ -502,4 +494,39 @@ onMounted(async () => {
 .spin-animation {
   animation: spin 1s ease-in-out infinite;
 }
+
+.spinner-when-not-loading {
+  width: 30px;
+  height: 30px;
+  border: 4px solid #d97c7c; /* Blue */
+  border-radius: 50%;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 4px solid #f3f3f3; /* Light gray */
+  border-top: 4px solid #d97c7c; /* Blue */
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed; /* Show not-allowed cursor */
+}
+
+.disabled-box {
+  opacity: 0.5;
+  cursor: not-allowed; /* Show not-allowed cursor */
+}
+
+.simulation-button {
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 </style>

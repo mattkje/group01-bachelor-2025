@@ -216,6 +216,18 @@ public class SimulationController {
         return ResponseEntity.ok(simulationService.getSimCount());
     }
 
+    @PostMapping("/setPrediction")
+    public void setPrediction(
+            @Parameter(description = "Prediction value to set")
+            @RequestParam boolean prediction) {
+        simulationService.setPrediction(prediction);
+    }
+
+    @GetMapping("/getPrediction")
+    public ResponseEntity<Boolean> getPrediction() {
+        return ResponseEntity.ok(simulationService.isPrediction());
+    }
+
     @GetMapping("/resetSim")
     public void resetSim() {
         worldSimulation.resetSimulationDate();

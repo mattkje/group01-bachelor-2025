@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,6 +32,9 @@ import java.util.stream.Stream;
 @Component
 public class WorldSimulation {
 
+    private final AtomicInteger intervalId = new AtomicInteger(1);
+
+    private final List<Integer> intervals = List.of(10, 30, 60);
     private LocalTime currentSimulationTime;
 
     private LocalDate workday;
@@ -441,13 +445,13 @@ public class WorldSimulation {
             Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
             availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
-            if (currentTime.getMinute() % 10 == 0) {  // Log every 10 minutes
+            if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
                 System.out.println("Current time: " + currentTime);
                 worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);
                 // Hinder the simulation from running if there are no workers present
                 if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
                     LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
-                    //simulationService.runCompleteSimulation(randomForests, daytime);
+                    simulationService.runCompleteSimulation(randomForests, daytime);
                 }
             }
             currentSimulationTime = currentTime;
@@ -750,5 +754,12 @@ public class WorldSimulation {
         currentTime = LocalTime.MIDNIGHT;
         activeTaskService.deleteAllActiveTasks();
         pickerTaskService.deleteAllPickerTasks();
+    }
+
+    public void setIntervalId(int intervalId) {
+        this.intervalId.set(intervalId);
+    }
+    public int getIntervalId() {
+        return intervalId.get();
     }
 }

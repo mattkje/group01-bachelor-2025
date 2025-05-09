@@ -36,7 +36,6 @@ const tabs = ref<TabItem[]>([
   {name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks'},
   {name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff'},
   {separator: true},
-  {name: 'Control Panel', icon: cpIcon, iconSelected: cpIconSelected, path: '/controlpanel'},
   {name: 'Info', icon: infoIcon, iconSelected: infoIconSelected, path: '/info'},
 ]);
 
@@ -85,7 +84,6 @@ const activeTab = computed(() => {
   flex-direction: column;
   width: 250px;
   background-color: #ffffff;
-  color: #646464;
   padding: 1rem;
   border-right: #e0e0e0 1px solid;
 }
