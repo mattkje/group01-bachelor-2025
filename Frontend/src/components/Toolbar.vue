@@ -55,6 +55,9 @@ let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
 
+const intervals = ["10 min", "30 min", "60 min"]; // List of strings
+const selectedInterval = ref(intervals[0]);
+
 const updateCurrentTime = async () => {
   currentTime.value = await fetchSimulationTime();
   currentDate.value = await fetchSimulationDate();
@@ -189,8 +192,26 @@ onMounted(() => {
         <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
       </div>
     </div>
+    <button class="toolbar-item" @click="runSimulations">
+      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
+    </button>
+    <div class="vertical-separator"/>
+    <div class="sim-interval-container">
+      <label for="sim-interval">Interval</label>
+      <select
+          id="sim-interval"
+          v-model="selectedInterval"
+          :disabled="isPlaying"
+          class="sim-interval-input"
+      >
+        <option v-for="interval in intervals" :key="interval" :value="interval">
+          {{ interval }}
+        </option>
+      </select>
+    </div>
+    <div class="vertical-separator"/>
     <div class="sim-count-container">
-      <label for="sim-count">Sim Count:</label>
+      <label for="sim-count">Sim Count</label>
       <input
           id="sim-count"
           type="number"
@@ -199,9 +220,6 @@ onMounted(() => {
           class="sim-count-input"
       />
     </div>
-    <button class="toolbar-item" @click="runSimulations">
-      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
-    </button>
     <div class="vertical-separator"/>
     <div class="controls">
       <button v-if="isPlaying" @click="abortSimulation">
@@ -421,14 +439,16 @@ onMounted(() => {
 
 .sim-count-container {
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack label and input vertically */
+  align-items: center; /* Center align the content */
   margin-right: 1rem;
 }
 
 .sim-count-container label {
-  margin-right: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.3rem; /* Add spacing between label and input */
   color: #7B7B7B;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
 
 .sim-count-input {
@@ -441,6 +461,34 @@ onMounted(() => {
 }
 
 .sim-count-input:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.sim-interval-container {
+  display: flex;
+  flex-direction: column; /* Stack label and input vertically */
+  align-items: center; /* Center align the content */
+  margin-right: 1rem;
+}
+
+.sim-interval-container label {
+  margin-bottom: 0.3rem; /* Add spacing between label and input */
+  color: #7B7B7B;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.sim-interval-input {
+  width: 70px;
+  padding: 0.3rem;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.sim-interval-input:disabled {
   background-color: #e0e0e0;
   cursor: not-allowed;
 }

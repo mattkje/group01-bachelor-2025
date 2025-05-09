@@ -27,13 +27,22 @@ const route = useRoute();
 const zone = ref<Zone | null>(null);
 const tasks = ref<Task[] | null>(null);
 const activeTasks = ref<ActiveTask[] | null>(null);
-const currentDate = ref(new Date());
+const currentDate = ref('');
 
 const loadAllData = async () => {
   currentDate.value = await fetchSimulationDate();
-  tasks.value = await fetchAllTasksForZone(parseInt(route.params.id[0], 10));
-  activeTasks.value = await fetchAllActiveTasksForZone(parseInt(route.params.id[0], 10));
-  zone.value = await fetchZone(parseInt(route.params.id[0], 10));
+  tasks.value = await fetchAllTasksForZone(parseInt(route.params.id, 10));
+  activeTasks.value = await fetchAllActiveTasksForZone(parseInt(route.params.id, 10));
+  zone.value = await fetchZone(parseInt(route.params.id, 10));
+};
+
+const deleteActiveTaskMethod = async (id: number) => {
+  try {
+    await deleteActiveTask(id);
+    await loadAllData();
+  } catch (error) {
+    console.error('Error deleting active task:', error);
+  }
 };
 
 const handleActiveTaskAdded = () => {
@@ -57,7 +66,7 @@ onMounted(() => {
         <div class="vertical-task-box">
           <div
             v-if="activeTasks"
-            v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) >= currentDate)"
+            v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) >= new Date(currentDate))"
             :key="activeTask.id"
             class="task-item"
           >
@@ -67,7 +76,7 @@ onMounted(() => {
                 <p class="task-status">Status: {{ activeTask.startTime ? "In Progress" : "Pending" }}</p>
                 <p class="task-footer">Due: {{ new Date(activeTask.date).toLocaleDateString() }}</p>
               </div>
-              <button class="icon-button" @click="deleteActiveTask(activeTask.id)">
+              <button class="icon-button" @click="deleteActiveTaskMethod(activeTask.id)">
                 <img src="@/assets/icons/trash.svg">
               </button>
             </div>
@@ -99,7 +108,7 @@ onMounted(() => {
         <div class="vertical-task-box">
           <div
               v-if="activeTasks"
-              v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) < currentDate)"
+              v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) < new Date(currentDate))"
               :key="activeTask.id"
               class="task-item unfinished"
           >
@@ -109,7 +118,7 @@ onMounted(() => {
                 <p class="task-status">Status: {{ activeTask.startTime ? "In Progress" : "Pending" }}</p>
                 <p class="task-footer">Due: {{ new Date(activeTask.date).toLocaleDateString() }}</p>
               </div>
-              <button class="icon-button" @click="deleteActiveTask(activeTask.id)">
+              <button class="icon-button" @click="deleteActiveTaskMethod(activeTask.id)">
                 <img src="@/assets/icons/trash.svg">
               </button>
             </div>
