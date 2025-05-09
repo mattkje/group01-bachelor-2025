@@ -744,6 +744,7 @@ public class WorldSimulation {
 
     public void resetSimulationDate() {
         workday = LocalDate.now();
+        currentTime = LocalTime.MIDNIGHT;
         activeTaskService.deleteAllActiveTasks();
         pickerTaskService.deleteAllPickerTasks();
     }
