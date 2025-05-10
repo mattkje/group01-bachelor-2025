@@ -6,6 +6,8 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.stream.Collectors;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
@@ -333,11 +335,13 @@ public class ZoneService {
      *
      * @throws IOException if an I/O error occurs
      */
-    public void updateMachineLearningModel() throws IOException {
+    public void updateMachineLearningModel(LocalDateTime time) throws IOException {
+        LocalDateTime oneWeekAgo = time.minusDays(7);
         for (Zone zone : zoneRepository.findAll()) {
             if (zone.getIsPickerZone()) {
                 List<PickerTask> pickerTasks = zone.getPickerTask().stream()
-                        .filter(pickerTask -> pickerTask.getTime() > 0)
+                        .filter(pickerTask -> pickerTask.getTime() > 0 &&
+                                pickerTask.getDate().isAfter(ChronoLocalDate.from(oneWeekAgo)))
                         .collect(Collectors.toList());
                 machineLearningModelPicking.updateMachineLearningModel(pickerTasks, zone.getName());
             }

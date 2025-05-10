@@ -160,7 +160,7 @@ public class WorldSimulation {
         monteCarloDataService.flushMCData();
 
         if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
-            zoneService.updateMachineLearningModel();
+            zoneService.updateMachineLearningModel(workday.atTime(currentTime));
         }
 
         //Initialize the random forests for each zone
@@ -261,7 +261,7 @@ public class WorldSimulation {
      */
     private void startSimulating() throws InterruptedException, IOException, ExecutionException {
         //Runs while the current time is not equal to the end time and the simulation is not paused, which is 00:00.
-        while (!currentTime.equals(endTime) && !isPaused) {
+        while (!currentTime.equals(endTime) && !isPaused && isPlaying) {
             for (Timetable timetable : timetables) {
                 processTimetable(timetable);
             }
@@ -447,12 +447,15 @@ public class WorldSimulation {
 
             if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
                 System.out.println("Current time: " + currentTime);
-                worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);
                 // Hinder the simulation from running if there are no workers present
                 if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
                     LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
                     simulationService.runCompleteSimulation(randomForests, daytime);
                 }
+            }
+
+            if (currentTime.getMinute() % 10 == 0) {
+                worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);
             }
             currentSimulationTime = currentTime;
             currentTime = currentTime.plusMinutes(1);
@@ -735,23 +738,31 @@ public class WorldSimulation {
         }
     }
 
+    private void clearCollection(Collection<?> collection) {
+        if (collection != null) {
+            collection.clear();
+        }
+    }
+
     public void flushGraphs() {
-        activeTasksInProgress.clear();
-        pickerTasksInProgress.clear();
-        activeTaskEndTimes.clear();
-        pickerTaskEndTimes.clear();
-        availableWorkers.clear();
-        busyWorkers.clear();
-        workersDelayedBreak.clear();
-        workersOnBreak.clear();
-        workersWaitingForTask.clear();
+        clearCollection(activeTasksInProgress);
+        clearCollection(pickerTasksInProgress);
+        clearCollection((Collection<?>) activeTaskEndTimes);
+        clearCollection((Collection<?>) pickerTaskEndTimes);
+        clearCollection(availableWorkers);
+        clearCollection(busyWorkers);
+        clearCollection(workersDelayedBreak);
+        clearCollection(workersOnBreak);
+        clearCollection(workersWaitingForTask);
     }
 
     public void resetSimulationDate() {
         isPlaying = false;
         isPaused = false;
+        flushGraphs();
         workday = LocalDate.now();
         currentTime = LocalTime.MIDNIGHT;
+        workerService.removeTasks();
         activeTaskService.deleteAllActiveTasks();
         pickerTaskService.deleteAllPickerTasks();
     }

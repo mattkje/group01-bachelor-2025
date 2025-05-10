@@ -468,9 +468,9 @@ public class MachineLearningModelPicking {
   }
 
   public void updateMachineLearningModel(List<PickerTask> pickerTasks, String department) throws IOException {
-    if (!pickerTasks.isEmpty()) {
-      List<double[]> rows = new ArrayList<>();
+    List<double[]> rows = new ArrayList<>();
 
+    if (!pickerTasks.isEmpty()) {
       for (PickerTask pickerTask : pickerTasks) {
         rows.add(new double[]{
                 pickerTask.getDistance(),
@@ -484,6 +484,26 @@ public class MachineLearningModelPicking {
         });
       }
 
+      try (FileReader reader = new FileReader(
+              "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+                      department.toUpperCase() + "_time.csv");
+        CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+          for (CSVRecord record : parser) {
+            rows.add(new double[]{
+                    Double.parseDouble(record.get("distance_m")),
+                    Double.parseDouble(record.get("dpack_equivalent_amount")),
+                    Double.parseDouble(record.get("lines")),
+                    Double.parseDouble(record.get("weight_g")),
+                    Double.parseDouble(record.get("volume_ml")),
+                    Double.parseDouble(record.get("avg_height")),
+                    Double.parseDouble(record.get("picker")),
+                    Double.parseDouble(record.get("time_s"))
+            });
+          }
+        }
+      }
+
+    if (!rows.isEmpty()) {
       double[][] data = rows.toArray(new double[0][]);
 
       String[] columnNames = {
@@ -493,8 +513,8 @@ public class MachineLearningModelPicking {
 
       DataFrame dataFrame = DataFrame.of(data, columnNames);
 
+      // Train and save the model
       RandomForest model = RandomForest.fit(Formula.lhs("time_s"), dataFrame);
-
       saveModel(model, "pickroute_" + department.toUpperCase() + ".ser");
     }
   }
