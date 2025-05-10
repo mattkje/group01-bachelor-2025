@@ -109,8 +109,8 @@ public class WorkerSemaphore2 {
             if (timetableService.isEveryoneFinishedWorking(zoneId, startTime.get())) {
                 logger.warning("All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                         ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
-                return "All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
-                        ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId;
+                return "All finished at " + startTime.get() + ". ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
+                        ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + zoneId;
             }
 
             synchronized (workers) {
