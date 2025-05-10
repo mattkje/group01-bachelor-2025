@@ -83,7 +83,7 @@
   left: 0;
   width: 50px;
   height: 5px;
-  background-color: #e74c3c;
+  background-color: var(--main-color);
   border-radius: 2px;
 }
 
@@ -100,7 +100,7 @@ h2::after {
   left: 0;
   width: 50px;
   height: 3px;
-  background-color: #e74c3c;
+  background-color: var(--main-color);
   border-radius: 2px;
 }
 

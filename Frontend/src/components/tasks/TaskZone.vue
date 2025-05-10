@@ -144,7 +144,7 @@ onMounted( () => {
     .rounded-square {
       width: 250px;
       height: min-content;
-      border: 1px solid #e5e5e5;
+      border: 1px solid var(--border-1);
       border-radius: 15px;
       overflow: hidden;
       display: flex;
@@ -154,17 +154,17 @@ onMounted( () => {
     .title-bar {
       display: flex;
       flex-direction: column;
-      background-color: #f5f5f5;
+      background-color: var(--background-backdrop);
       padding: 1rem;
       font-size: 1.2rem;
       font-weight: bold;
-      color: #7b7b7b;
+      color: var(--text-1);
       margin-bottom: 0.5rem;
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid var(--border-1);
     }
 
     .task-summary {
-      color: #7b7b7b;
+      color: var(--text-1);
       display: flex;
       flex-direction: row;
       justify-content: space-between;
@@ -192,7 +192,7 @@ onMounted( () => {
       flex-direction: column;
       justify-content: space-between;
       padding: 0.5rem;
-      border: 1px solid #e5e5e5;
+      border: 1px solid var(--border-1);
       border-radius: 9px;
       margin: 0 0.4rem 0.4rem 0.4rem;
       font-size: 0.8rem;
@@ -211,14 +211,14 @@ onMounted( () => {
 
     .task-status {
       font-size: 0.6rem;
-      color: #505050;
+      color: var(--text-2);
     }
 
     .task-footer {
       margin-top: 0.5rem;
       text-align: right;
       font-size: 0.6rem;
-      color: #505050;;
+      color: var(--text-2);
     }
 
     .task-item.doing {
@@ -234,7 +234,7 @@ onMounted( () => {
     .add-task-button {
       margin: 1rem 0;
       background: none;
-      color: #7b7b7b;
+      color: var(--text-1);
       font-size: 1rem;
       border: none;
       border-radius: 5px;
@@ -242,7 +242,7 @@ onMounted( () => {
     }
 
     .add-task-button:hover {
-      color: #a4a4a4;
+      color: var(--text-2);
     }
 
     .collapsable-button {
@@ -250,7 +250,7 @@ onMounted( () => {
       border: none;
       cursor: pointer;
       font-size: 1.2rem;
-      color: #7b7b7b;
+      color: var(--text-1);
     }
 
     .top-bar {

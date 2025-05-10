@@ -34,7 +34,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background-color: #c0c0c0;
+    background-color: var(--background-1);
     border-radius: 0 10px 10px 0;
     max-height: 30px;
     padding: 0 0.2rem;
@@ -44,8 +44,8 @@
   }
 
   .overdue-task-box {
-    background-color: #ffcccc;
-    border: 2px solid #ff4b4b;
+    background-color: var(--main-color-3);
+    border: 2px solid var(--main-color);
   }
 
   .task-details {
@@ -56,13 +56,13 @@
 
   .task-name {
     font-size: 0.5rem;
-    color: #505050;
+    color: var(--text-1);
     font-weight: bold;
   }
 
   .task-status {
     font-size: 0.6rem;
-    color: #ff4b4b;
+    color: var(--main-color);
   }
 
   .workers-container {
@@ -92,6 +92,6 @@
   .connection-string {
     margin-top: 1rem;
     font-size: 0.8rem;
-    color: #333;
+    color: var(--text-1);
   }
   </style>

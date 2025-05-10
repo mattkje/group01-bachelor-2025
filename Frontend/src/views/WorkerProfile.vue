@@ -120,7 +120,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  border-right: #E0E0E0 1px solid;
+  border-right: var(--border-1) 1px solid;
 }
 
 .page-content {
@@ -141,7 +141,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   margin-top: 1rem;;
-  border-top: #E0E0E0 1px solid;
+  border-top: var(--border-1) 1px solid;
   margin-right: 2rem;
 }
 
@@ -164,7 +164,7 @@ onMounted(() => {
 }
 
 .option-bar {
-  background-color: white;
+  background-color: var(--background-1);
   padding: 0.5rem 1rem;
   width: 100%;
   display: flex;
@@ -174,9 +174,9 @@ onMounted(() => {
 
 .option-bar button {
   display: flex;
-  border: #dcdcdc 1px solid;
+  border: var(--border-1) 1px solid;
   border-radius: 0.5rem;
-  background-color: white;
+  background-color: var(--main-color);
   align-items: center;
   padding: 0.5rem 1rem;
   width: 12rem;
@@ -211,7 +211,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   font-size: 1rem;
-  color: #555;
+  color: var(--text-1);
 }
 
 .availability-indicator {
@@ -229,23 +229,32 @@ onMounted(() => {
   background-color: red;
 }
 
+::v-deep(.multiselect__dropdown) {
+  background-color: var(--background-1) !important;
+  border: 1px solid var(--border-1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 ::v-deep(.multiselect__tag) {
-  background-color: #E77474 !important;
-  color: white;
+  background-color: var(--main-color) !important;
+  color: white !important;
   border-radius: 5px;
 }
 
 ::v-deep(.multiselect__tags) {
+  background-color: var(--background-1) !important;
   border: none !important;
   box-shadow: none !important;
 }
 
 ::v-deep(.multiselect) {
+  background-color: var(--background-1) !important;
   max-width: 500px;
   width: 100%;
 }
 
 ::v-deep(.multiselect__content) {
+  background-color: var(--background-1) !important;
   max-width: 300px;
 }
 
@@ -264,8 +273,9 @@ onMounted(() => {
   justify-content: center;
   width: 150px;
   height: 150px;
+  aspect-ratio: 1;
   border-radius: 50%;
-  background-color: #f6f6f6;
+  background-color: var(--background-2);
   margin-right: 0.5rem;
 }
 
