@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ErrorMessageService;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,9 +19,11 @@ import java.util.List;
 public class ErrorMessageController {
 
     private final ErrorMessageService errorMessageService;
+    private final ZoneService zoneService;
 
-    public ErrorMessageController(ErrorMessageService errorMessageService) {
+    public ErrorMessageController(ErrorMessageService errorMessageService, ZoneService zoneService) {
         this.errorMessageService = errorMessageService;
+        this.zoneService = zoneService;
     }
 
     @Operation(
@@ -70,7 +73,7 @@ public class ErrorMessageController {
             @Parameter(description = "ID of the zone to retrieve error messages for")
             @PathVariable long zoneId) {
         List<ErrorMessage> errorMessages = errorMessageService.getErrorMessagesByZoneId(zoneId);
-        if (errorMessages.isEmpty()) {
+        if (zoneService.getZoneById(zoneId) == null) {
             return ResponseEntity.notFound().build();
         } else {
             return ResponseEntity.ok(errorMessages);
