@@ -157,8 +157,8 @@ public class MachineLearningModelPicking {
     double avgPercentageError2 = totalPercentageError2 / actual.length;
 
     // Print the results
-    System.out.println("Model 1 - MSE: " + mse1 + ", R2: " + r2_1);
-    System.out.println("Model 2 - MSE: " + mse2 + ", R2: " + r2_2);
+    System.out.println("Model 1 - MSE: " + mse1 + ", R2: " + r2_1 + ", Avg Percentage Error: " + avgPercentageError1 + "%");
+    System.out.println("Model 2 - MSE: " + mse2 + ", R2: " + r2_2 + ", Avg Percentage Error: " + avgPercentageError2 + "%");
 
     // Compare the models
     if (mse1 < mse2) {

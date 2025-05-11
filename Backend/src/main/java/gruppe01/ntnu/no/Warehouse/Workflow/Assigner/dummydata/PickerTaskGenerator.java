@@ -55,14 +55,17 @@ public class PickerTaskGenerator {
         for (Zone zone : zoneService.getAllPickerZones()) {
             Map<List<Double>, List<List<Double>>> mcValues = getMcValuesForZone(zone, mcValuesList);
             List<List<Double>> valueList = mcValues.values().iterator().next();
+            List<PickerTask> pickerTasks = new ArrayList<>();
 
             for (int i = 0; i < numDays; i++) {
                 LocalDate currentDate = startDate.plusDays(i);
                 for (int j = 0; j < numTasksPerDay; j++) {
                     PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random);
+                    pickerTasks.add(pickerTask);
                     pickerTaskService.savePickerTask(pickerTask);
                 }
             }
+            machineLearningModelPicking.createDBModel(pickerTasks, zone.getName());
         }
     }
 

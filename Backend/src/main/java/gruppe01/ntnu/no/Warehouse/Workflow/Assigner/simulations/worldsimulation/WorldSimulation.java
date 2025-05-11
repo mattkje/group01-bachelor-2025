@@ -243,6 +243,12 @@ public class WorldSimulation {
                 pickerTask.getWorker().setCurrentPickerTask(null);
                 pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
             }
+
+            for (Zone zone : zoneService.getAllPickerZones()) {
+                //machineLearningModelPicking.compareModels();
+            }
+
+
             System.out.println("Simulation finished");
             isPlaying = false;
         }
@@ -787,20 +793,35 @@ public class WorldSimulation {
 
     public List<Integer> getData(long zoneId) {
         List<Integer> data = new ArrayList<>();
+
         if (zoneId == 0) {
-            data.add(timetables.size());
-            data.add(activeTasksToday.size() + activeTasksWithDueDates.size() + pickerTasksToday.size());
-            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count());
+            data.add(timetables != null ? timetables.size() : 0);
+            data.add((activeTasksToday != null ? activeTasksToday.size() : 0)
+                    + (activeTasksWithDueDates != null ? activeTasksWithDueDates.size() : 0)
+                    + (pickerTasksToday != null ? pickerTasksToday.size() : 0));
+            data.add(activeTasksToday != null
+                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count()
+                    : 0);
             return data;
         } else if (zoneService.getZoneById(zoneId) == null) {
             return data;
         } else {
-            data.add((int) timetables.stream().filter(timetable -> timetable.getWorker().getZone() == zoneId).count());
-            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
-            + (int) activeTasksWithDueDates.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
-                    + (int) pickerTasksToday.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count());
-            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null &&
-                    activeTask.getTask().getZoneId() == zoneId).count());
+            data.add(timetables != null
+                    ? (int) timetables.stream().filter(timetable -> timetable.getWorker().getZone() == zoneId).count()
+                    : 0);
+            data.add((activeTasksToday != null
+                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
+                    : 0)
+                    + (activeTasksWithDueDates != null
+                    ? (int) activeTasksWithDueDates.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
+                    : 0)
+                    + (pickerTasksToday != null
+                    ? (int) pickerTasksToday.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
+                    : 0));
+            data.add(activeTasksToday != null
+                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null
+                    && activeTask.getTask().getZoneId() == zoneId).count()
+                    : 0);
             return data;
         }
     }
