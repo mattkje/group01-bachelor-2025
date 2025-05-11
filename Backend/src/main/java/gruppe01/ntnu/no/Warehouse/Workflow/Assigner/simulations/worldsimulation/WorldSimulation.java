@@ -804,4 +804,8 @@ public class WorldSimulation {
             return data;
         }
     }
+
+    public Map<String, RandomForest> getModels() {
+        return randomForests;
+    }
 }

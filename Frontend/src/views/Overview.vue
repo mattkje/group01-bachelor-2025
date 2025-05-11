@@ -6,7 +6,7 @@ import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
 import {fetchAllZones} from "@/composables/DataFetcher";
-import OverviewTaskSecion from "@/components/tasks/OverviewTaskSecion.vue";
+import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 
 let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
@@ -52,7 +52,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="tasks-container">
-      <OverviewTaskSecion :zone-id="selectedZoneObject.id"></OverviewTaskSecion>
+      <OverviewTaskSection :zone-id="selectedZoneObject.id"></OverviewTaskSection>
     </div>
   </div>
   <div v-else>

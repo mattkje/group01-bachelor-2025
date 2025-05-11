@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.concurrent.ExecutionException;
+import smile.regression.RandomForest;
 
 /**
  * WorldSimulationController handles HTTP requests related to world simulation operations.
@@ -146,5 +148,19 @@ public class WorldSimulationController {
     @GetMapping("/getIntervalId")
     public ResponseEntity<Integer> getIntervalId() {
         return ResponseEntity.ok(worldSimulation.getIntervalId());
+    }
+
+    @GetMapping("/getModels")
+    public Map<String,RandomForest> getModels() {
+        return worldSimulation.getModels();
+    }
+
+    @GetMapping("/getModel/{zoneId}")
+    public RandomForest getModel(@PathVariable Long zoneId) {
+        Map<String,RandomForest> models = worldSimulation.getModels();
+        if (models == null) {
+            return null;
+        }
+        return models.get(zoneId.toString());
     }
 }

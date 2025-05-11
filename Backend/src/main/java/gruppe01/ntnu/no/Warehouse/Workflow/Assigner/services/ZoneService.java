@@ -347,4 +347,25 @@ public class ZoneService {
             }
         }
     }
+
+    public Set<ActiveTask> getUnfinishedTasksByZoneIdAndDate(Long id, LocalDate date) {
+        Set<ActiveTask> activeTasks = new HashSet<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(date) && activeTask.getTask().getZoneId().equals(id) && activeTask.getEndTime() == null) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
+    public Set<PickerTask> getUnfinishedPickerTasksByZoneIdAndDate(Long id, LocalDate date) {
+        Set<PickerTask> pickerTasks = new HashSet<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().equals(date) && pickerTask.getZone().getId().equals(id) && pickerTask.getEndTime() == null) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return pickerTasks;
+    }
+
 }

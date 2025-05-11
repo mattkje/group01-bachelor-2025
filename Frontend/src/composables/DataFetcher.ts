@@ -66,6 +66,10 @@ export const fetchAllPickerTasksForZoneNow = async (zoneId: number) => {
     return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks-now`);
 }
 
+export const fetchAllPickerTasksByZoneForDate = async (zoneId: number , date: string) => {
+    return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks/${date}`);
+}
+
 export const fetchAllActiveTasks = async () => {
   return fetchData<ActiveTask[]>('http://localhost:8080/api/active-tasks');
 }
@@ -76,6 +80,9 @@ export const fetchAllActiveTasksForZone = async (zoneId: number) => {
 
 export const fetchAllActiveTasksForZoneNow = async (zoneId: number) => {
     return fetchData<ActiveTask[]>(`http://localhost:8080/api/zones/${zoneId}/active-tasks-now`);
+}
+export const fetchAllActiveTasksByZoneForDate = async (zoneId: number ,date: string) => {
+    return fetchData<ActiveTask[]>(`http://localhost:8080/api/zones/${zoneId}/active-tasks/${date}`);
 }
 
 export const fetchSimulationStatus = async (): Promise<number>  => {
