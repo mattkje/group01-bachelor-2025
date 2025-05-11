@@ -353,7 +353,6 @@ public class WorldSimulation {
                 }
             }
 
-
             // Assign tasks to available workers
             Iterator<ActiveTask> activeTaskIterator = activeTasksToday.iterator();
             while (activeTaskIterator.hasNext()) {
@@ -595,10 +594,11 @@ public class WorldSimulation {
         System.out.println("Workers present today: " + workersPresentToday.size());
 
         activeTasksToday = activeTaskService.getAllActiveTasks();
+        activeTasksWithDueDates = activeTasksToday;
 
         LocalDate finalWorkday = workday;
 
-        activeTasksWithDueDates = activeTasksToday.stream()
+        activeTasksWithDueDates = activeTasksWithDueDates.stream()
                 .filter(activeTask -> (
                         activeTask.getDate().equals(finalWorkday) &&
                                 activeTask.getDueDate() != null &&
@@ -607,12 +607,11 @@ public class WorldSimulation {
 
         activeTasksToday = activeTasksToday.stream()
                 .filter(activeTask -> activeTask.getDate().equals(finalWorkday) &&
-                        activeTask.getDueDate() != null &&
-                        activeTask.getDueDate().toLocalTime() == LocalTime.of(0, 0))
+                        activeTask.getDueDate() == null)
                 //.sorted(Comparator.comparing(ActiveTask::getStrictStart))
                 .collect(Collectors.toList());
 
-        System.out.println("Active tasks today: " + activeTasksToday.size());
+        System.out.println("Active tasks today: " + activeTasksToday.size() + activeTasksWithDueDates.size());
 
         pickerTasksToday = pickerTaskService.getAllPickerTasks().stream()
                 .filter(pickerTask -> pickerTask.getDate().equals(finalWorkday))
@@ -731,10 +730,18 @@ public class WorldSimulation {
 
     public void flushAllWorkerTasks() {
         List<Worker> allWorkers = workerService.getAllWorkers();
+        List<ActiveTask> allActiveTasks = activeTaskService.getAllActiveTasks();
         for (Worker worker : allWorkers) {
             worker.setCurrentTask(null);
             worker.setCurrentPickerTask(null);
             workerService.updateWorker(worker.getId(), worker);
+        }
+        for (ActiveTask activeTask : allActiveTasks) {
+            if (activeTask.getStartTime() != null && activeTask.getEndTime() == null) {
+                activeTask.setStartTime(null);
+                activeTask.setWorkers(null);
+                activeTaskService.updateActiveTask(activeTask.getId(), activeTask);
+            }
         }
     }
 
@@ -747,8 +754,12 @@ public class WorldSimulation {
     public void flushGraphs() {
         clearCollection(activeTasksInProgress);
         clearCollection(pickerTasksInProgress);
-        clearCollection((Collection<?>) activeTaskEndTimes);
-        clearCollection((Collection<?>) pickerTaskEndTimes);
+        if (activeTaskEndTimes != null) {
+            activeTaskEndTimes.clear();
+        }
+        if (pickerTaskEndTimes != null) {
+            pickerTaskEndTimes.clear();
+        }
         clearCollection(availableWorkers);
         clearCollection(busyWorkers);
         clearCollection(workersDelayedBreak);

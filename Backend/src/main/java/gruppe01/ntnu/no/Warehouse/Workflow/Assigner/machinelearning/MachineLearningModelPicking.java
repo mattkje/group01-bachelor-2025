@@ -20,6 +20,8 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import smile.regression.RandomForest;
+import smile.validation.metric.MSE;
+import smile.validation.metric.R2;
 
 /**
  * This class handles the machine learning model for predicting time spent on tasks.
@@ -81,6 +83,89 @@ public class MachineLearningModelPicking {
       return "Error: No data exists for: " + department.toUpperCase() + ".";
     }
     return "Model already exists. No new model trained.";
+  }
+
+  public String createDBModel(List<PickerTask> pickerTasks, String department) throws IOException {
+    String filePath = "pickroute_database_" + department.toUpperCase() + ".ser";
+
+    RandomForest model = loadModel(department, filePath);
+
+    if (model == null) {
+      List<double[]> rows = new ArrayList<>();
+
+      if (!pickerTasks.isEmpty()) {
+        for (PickerTask pickerTask : pickerTasks) {
+          rows.add(new double[]{
+                  pickerTask.getDistance(),
+                  pickerTask.getPackAmount(),
+                  pickerTask.getLinesAmount(),
+                  pickerTask.getWeight(),
+                  pickerTask.getVolume(),
+                  pickerTask.getAvgHeight(),
+                  (double) pickerTask.getWorker().getId(),
+                  pickerTask.getTime()
+          });
+        }
+      } else {
+        return "Error: No data exists for: " + department.toUpperCase() + ".";
+      }
+
+      double[][] data = rows.toArray(new double[0][]);
+
+      String[] columnNames = {
+              "distance_m", "dpack_equivalent_amount", "lines",
+              "weight_g", "volume_ml", "avg_height", "picker", "time_s"
+      };
+
+      DataFrame dataFrame = DataFrame.of(data, columnNames);
+
+      // Train and save the model
+      RandomForest randomForestModel = RandomForest.fit(Formula.lhs("time_s"), dataFrame);
+      saveModel(randomForestModel, "pickroute_database_" + department.toUpperCase() + ".ser");
+      return "";
+    }
+    return "Model already exists. No new model trained.";
+  }
+
+  public void compareModels(RandomForest model1, RandomForest model2, DataFrame testData) {
+    // Extract features and target from the test dataset
+    DataFrame features = testData.drop("time_s");
+    double[] actual = testData.column("time_s").toDoubleArray();
+
+    // Predict using the first model
+    double[] predictions1 = model1.predict(features);
+    double mse1 = MSE.of(actual, predictions1);
+    double r2_1 = R2.of(actual, predictions1);
+
+    // Calculate percentage error for Model 1
+    double totalPercentageError1 = 0.0;
+    for (int i = 0; i < actual.length; i++) {
+      totalPercentageError1 += Math.abs((actual[i] - predictions1[i]) / actual[i]) * 100;
+    }
+    double avgPercentageError1 = totalPercentageError1 / actual.length;
+
+    // Predict using the second model
+    double[] predictions2 = model2.predict(features);
+    double mse2 = MSE.of(actual, predictions2);
+    double r2_2 = R2.of(actual, predictions2);
+
+    // Calculate percentage error for Model 2
+    double totalPercentageError2 = 0.0;
+    for (int i = 0; i < actual.length; i++) {
+      totalPercentageError2 += Math.abs((actual[i] - predictions2[i]) / actual[i]) * 100;
+    }
+    double avgPercentageError2 = totalPercentageError2 / actual.length;
+
+    // Print the results
+    System.out.println("Model 1 - MSE: " + mse1 + ", R2: " + r2_1);
+    System.out.println("Model 2 - MSE: " + mse2 + ", R2: " + r2_2);
+
+    // Compare the models
+    if (mse1 < mse2) {
+      System.out.println("Model 1 is more accurate based on MSE.");
+    } else {
+      System.out.println("Model 2 is more accurate based on MSE.");
+    }
   }
 
   private List<Double> getWeights(RandomForest model) {
@@ -467,6 +552,13 @@ public class MachineLearningModelPicking {
     return models;
   }
 
+
+  /**
+   * Updates the machine learning model with new data from picker tasks.
+   *
+   * @param pickerTasks The list of picker tasks to update the model with.
+   * @param department The department for which the model is being updated.
+   */
   public void updateMachineLearningModel(List<PickerTask> pickerTasks, String department) throws IOException {
     List<double[]> rows = new ArrayList<>();
 

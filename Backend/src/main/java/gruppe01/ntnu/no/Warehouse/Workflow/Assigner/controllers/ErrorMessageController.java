@@ -113,6 +113,7 @@ public class ErrorMessageController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Successfully created error message"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "Zone not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/{zoneId}")
@@ -124,6 +125,8 @@ public class ErrorMessageController {
         if (errorMessage.getTime() == null || errorMessage.getMessage().isEmpty() ||
                 errorMessage.getMessage().isBlank()) {
             return ResponseEntity.badRequest().build();
+        } else if (zoneService.getZoneById(zoneId) == null) {
+            return ResponseEntity.notFound().build();
         } else {
             return ResponseEntity.ok(errorMessageService.createErrorMessage(zoneId, errorMessage));
         }
