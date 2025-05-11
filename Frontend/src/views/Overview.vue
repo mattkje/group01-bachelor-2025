@@ -52,7 +52,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="tasks-container">
-      <OverviewTaskSection :zone-id="selectedZoneObject.id"></OverviewTaskSection>
+      <OverviewTaskSection :zone="selectedZoneObject"></OverviewTaskSection>
     </div>
   </div>
   <div v-else>
