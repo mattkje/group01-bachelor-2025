@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
+import NotificationWidget from "@/components/widgets/NotificationWidget.vue";
+import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
@@ -7,11 +9,13 @@ import {fetchAllZones} from "@/composables/DataFetcher";
 import OverviewTaskSecion from "@/components/tasks/OverviewTaskSecion.vue";
 
 let selectedZoneId = ref<number>(1);
+let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
 
 const loadAllData = async () => {
   zones.value = await fetchAllZones()
 };
+
 
 onMounted(() => {
   loadAllData();
@@ -25,48 +29,24 @@ onMounted(() => {
         <h1>Dashboard</h1>
         <div class="vertical-separator"></div>
         <div class="zone-selector">
-          <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneId">
-            <option :value="0">All Zones</option>
-            <option v-for="zone in zones" :key="zone.id" :value="zone.id">
+          <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
+            <option :value="null">All Zones</option>
+            <option v-for="zone in zones" :key="zone.id" :value="zone">
               {{ zone.name }}
             </option>
           </select>
         </div>
       </div>
+      <div class="day-status">
+        <NotificationWidget :zone="selectedZoneObject" class="status-text-box"/>
+        <WorkerStatusWidget :zone="selectedZoneObject" class="status-text-box"/>
+      </div>
       <div class="monte-carlo-graph-container">
         <MonteCarloGraph class="monte-carlo-graph" :zone-id="selectedZoneId" :key="selectedZoneId"/>
       </div>
-      <div class="day-status">
-        <div class="status-text-box">
-          <p>Tasks Remaining:</p>
-          <p>5</p>
-        </div>
-        <div class="status-text-box">
-          <p>Tasks In Completed:</p>
-          <p>2</p>
-        </div>
-        <div class="status-text-box">
-          <p>Workers Present:</p>
-          <p>3</p>
-        </div>
-      </div>
-      <div class="day-status">
-        <div class="status-text-box">
-          <p>Tasks Overdue:</p>
-          <p>0</p>
-        </div>
-        <div class="status-text-box">
-          <p>Workers dead:</p>
-          <p>2</p>
-        </div>
-        <div class="status-text-box">
-          <p>Workers unavailable:</p>
-          <p>3</p>
-        </div>
-      </div>
     </div>
     <div class="tasks-container">
-      <OverviewTaskSecion :zone-id="selectedZoneId"></OverviewTaskSecion>
+      <OverviewTaskSecion :zone="selectedZoneObject"></OverviewTaskSecion>
     </div>
   </div>
 </template>
@@ -116,16 +96,8 @@ onMounted(() => {
 }
 
 .day-status {
-  height: 20%;
-  border: 1px solid var(--border-1);
-  flex-direction: row;
-  border-radius: 2rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
-  gap: 2rem;
-  color: var(--text-1);
+  flex-direction: row;
 }
 
 .status-text-box {
