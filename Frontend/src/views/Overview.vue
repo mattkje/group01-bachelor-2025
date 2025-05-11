@@ -4,6 +4,7 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
 import {fetchAllZones} from "@/composables/DataFetcher";
+import OverviewTaskSecion from "@/components/tasks/OverviewTaskSecion.vue";
 
 let selectedZoneId = ref<number>(1);
 let zones = ref<Zone[]>([]);
@@ -20,10 +21,10 @@ onMounted(() => {
 <template>
   <div class="container-container">
     <div class="overview">
-      <div class="monte-carlo-graph-container">
-        <h2>Monte Carlo Simulation</h2>
+      <div class="header">
+        <h1>Dashboard</h1>
+        <div class="vertical-separator"></div>
         <div class="zone-selector">
-          <label for="zone-dropdown">Select Zone:</label>
           <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneId">
             <option :value="0">All Zones</option>
             <option v-for="zone in zones" :key="zone.id" :value="zone.id">
@@ -31,6 +32,8 @@ onMounted(() => {
             </option>
           </select>
         </div>
+      </div>
+      <div class="monte-carlo-graph-container">
         <MonteCarloGraph class="monte-carlo-graph" :zone-id="selectedZoneId" :key="selectedZoneId"/>
       </div>
       <div class="day-status">
@@ -63,14 +66,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="tasks-container">
-      <h2>Tasks</h2>
-      <div class="tasks">
-        <p>Task 1</p>
-        <p>Task 2</p>
-        <p>Task 3</p>
-        <p>Task 4</p>
-        <p>Task 5</p>
-      </div>
+      <OverviewTaskSecion :zone-id="selectedZoneId"></OverviewTaskSecion>
     </div>
   </div>
 </template>
@@ -86,12 +82,23 @@ onMounted(() => {
   padding: 2rem;
 }
 
+.vertical-separator {
+  width: 1px;
+  height: 30px;
+  background-color: var(--border-1);
+  margin: 0.6rem 0.8rem;
+}
+
 .overview {
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.header {
+  display: flex;
 }
 
 .monte-carlo-graph-container {
@@ -130,10 +137,8 @@ onMounted(() => {
 }
 
 .zone-selector {
-  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
 }
 
 .zone-selector label {
@@ -143,16 +148,15 @@ onMounted(() => {
 .zone-selector select {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-1);
   font-size: 1rem;
 }
 
 .zone-selector-dropdown {
-  background-color: var(--background-2);
+  background-color: transparent;
   color: var(--text-1);
-  border: 1px solid var(--border-1);
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
 }
-
 .tasks-container {
   width: 100%;
   height: 100%;
@@ -161,9 +165,8 @@ onMounted(() => {
   border-radius: 2rem;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   font-size: 1.2rem;
-  gap: 2rem;
   color: var(--text-1);
 }
 
