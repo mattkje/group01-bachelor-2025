@@ -51,7 +51,7 @@ public class ZoneSimulator {
             if ((activeTasks == null || activeTasks.isEmpty()) &&
                     (pickerTasks == null || pickerTasks.isEmpty())) {
                 // ERROR: NO TASKS
-                zoneSimResult.setErrorMessage(zone.getId() + ":101");
+                zoneSimResult.setErrorMessage("101");
                 return zoneSimResult;
             }
             // Get the workers in the zone as a set
@@ -68,8 +68,8 @@ public class ZoneSimulator {
             // Check if the zone has any workers
             if (zoneWorkers.isEmpty()) {
                 // ERROR: NO WORKERS
-                zoneSimResult.setErrorMessage(zone.getId() +
-                        ":102");
+                zoneSimResult.setErrorMessage(
+                        "102");
                 return zoneSimResult;
             }
 
@@ -78,8 +78,8 @@ public class ZoneSimulator {
             // If the newtime is start of day, it means no workers are scheduled to work that day
             if (Objects.equals(newTime, startTime.toLocalDate().atStartOfDay())) {
                 // ERROR: NO WORKERS COMING TO WORK TODAY
-                zoneSimResult.setErrorMessage(zone.getId() +
-                        ":103");
+                zoneSimResult.setErrorMessage(
+                        "103");
                 return zoneSimResult;
             }
             this.lastTime.set(startTime);
