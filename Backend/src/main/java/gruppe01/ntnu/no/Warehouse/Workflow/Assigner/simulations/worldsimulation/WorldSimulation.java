@@ -784,4 +784,24 @@ public class WorldSimulation {
     public int getIntervalId() {
         return intervalId.get();
     }
+
+    public List<Integer> getData(long zoneId) {
+        List<Integer> data = new ArrayList<>();
+        if (zoneId == 0) {
+            data.add(timetables.size());
+            data.add(activeTasksToday.size() + activeTasksWithDueDates.size() + pickerTasksToday.size());
+            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count());
+            return data;
+        } else if (zoneService.getZoneById(zoneId) == null) {
+            return data;
+        } else {
+            data.add((int) timetables.stream().filter(timetable -> timetable.getWorker().getZone() == zoneId).count());
+            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
+            + (int) activeTasksWithDueDates.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
+                    + (int) pickerTasksToday.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count());
+            data.add((int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null &&
+                    activeTask.getTask().getZoneId() == zoneId).count());
+            return data;
+        }
+    }
 }

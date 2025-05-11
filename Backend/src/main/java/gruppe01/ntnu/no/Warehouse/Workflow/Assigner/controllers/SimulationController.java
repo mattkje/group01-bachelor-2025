@@ -232,4 +232,11 @@ public class SimulationController {
     public void resetSim() {
         worldSimulation.resetSimulationDate();
     }
+
+    @GetMapping("/zone-data/{zoneId}")
+    public ResponseEntity<List<Integer>> getZoneData(
+            @Parameter(description = "ID of the zone to retrieve data for")
+            @PathVariable long zoneId) {
+        return ResponseEntity.ok(worldSimulation.getData(zoneId));
+    }
 }
