@@ -110,7 +110,7 @@ public class WorkerSemaphore2 {
                 logger.warning("All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                         ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
                 // ERROR: WORKERS HAVE GONE HOME, TASK CAN NOT COMPLETE
-                return zoneId +  ",104," + (activeTask != null ? activeTask.getId() : "null") +
+                return zoneId +  ":104," + (activeTask != null ? activeTask.getId() : "null") +
                         "," + (pickerTask != null ? pickerTask.getId() : "null");
             }
 
@@ -123,7 +123,7 @@ public class WorkerSemaphore2 {
                 if (activeTask != null) {
                     if (!timetableService.isAnyoneQualifiedWorkingToday(zoneId, startTime.get(), activeTask)) {
                         // ERROR: NO QUALIFIED WORKERS AT ZONE FOR TASK
-                        return  zoneId + ",105," + activeTask.getId();
+                        return  zoneId + ":105," + activeTask.getId();
                     }
                     workerList.removeIf(worker -> !worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()));
                     // No qualified workers available currently
