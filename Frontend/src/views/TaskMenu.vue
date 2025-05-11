@@ -150,7 +150,7 @@ onMounted(() => {
 }
 
 .task-summary {
-  color: #7b7b7b;
+  color: var(--text-1);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -174,7 +174,7 @@ onMounted(() => {
   flex-direction: column;
   justify-content: space-between;
   padding: 0.5rem;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
   border-radius: 9px;
   margin: 0 0 0.4rem 0;
   font-size: 0.8rem;
@@ -193,12 +193,12 @@ onMounted(() => {
 
 .task-status {
   font-size: 0.6rem;
-  color: #505050;
+  color: var(--text-2);
 }
 
 .task-footer {
   font-size: 0.6rem;
-  color: #505050;;
+  color: var(--text-2);
 }
 
 .task-item.doing {
@@ -220,7 +220,7 @@ onMounted(() => {
 .add-task-button {
   margin: 0;
   background: none;
-  color: #7b7b7b;
+  color: var(--text-1);
   text-align: center;
   font-size: 2rem;
   font-weight: bold;
@@ -236,10 +236,6 @@ onMounted(() => {
 
 .add-task-button.rotated img {
   transform: rotate(45deg);
-}
-
-.add-task-button:hover {
-  color: #a4a4a4;
 }
 
 .icon-button {

@@ -97,12 +97,12 @@ const handleAddTask = (zoneId: number) => {
 .overview h2 {
   margin: 0 1rem;
   font-size: 1.5rem;
-  color: #505050;
+  color: var(--text-2);
 }
 
 hr {
   border: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--border-1);
   margin: 1rem 0;
 }
 </style>

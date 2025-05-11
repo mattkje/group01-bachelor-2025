@@ -223,10 +223,10 @@ table {
 }
 
 th, td {
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border-1);
   padding: 0.15rem;
   text-align: center;
-  color: #565656;
+  color: var(--text-2);
 }
 
 td {
@@ -250,14 +250,14 @@ thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #ffffff;
+  background-color: var(--background-1);
   border-top: none;
   font-size: 24px;
 }
 
 .schedule-box {
-  color: #fff;
-  border: 1px dashed #CCC;
+  color: var(--text-1);
+  border: 1px dashed var(--border-1);
   border-radius: 0.8rem;
   height: 100%;
   padding: 4px;
