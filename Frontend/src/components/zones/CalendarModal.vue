@@ -146,7 +146,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--background-1);
   width: 20%;
   padding: 20px;
   border-radius: 8px;
@@ -157,15 +157,15 @@ onMounted(() => {
 .modal-content button {
   margin-top: 10px;
   padding: 10px 15px;
-  background-color: #E77474;
-  color: white;
+  background-color: var(--main-color);
+  color: var(--text-1);
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .modal-content button:hover {
-  background-color: #C65A5A;
+  background-color: var(--main-color-2);
 }
 
 .modal-content h3 {

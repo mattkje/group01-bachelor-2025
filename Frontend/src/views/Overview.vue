@@ -8,22 +8,24 @@ import {Zone} from "@/assets/types";
 import {fetchAllZones} from "@/composables/DataFetcher";
 import OverviewTaskSecion from "@/components/tasks/OverviewTaskSecion.vue";
 
-let selectedZoneId = ref<number>(1);
 let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
 
 const loadAllData = async () => {
-  zones.value = await fetchAllZones()
+  zones.value = await fetchAllZones();
 };
 
-
 onMounted(() => {
-  loadAllData();
+  loadAllData().then(() => {
+    if (zones.value.length > 0) {
+      selectedZoneObject.value = zones.value[0]; // Set the first zone as the default
+    }
+  });
 });
 </script>
 
 <template>
-  <div class="container-container">
+  <div class="container-container" v-if="selectedZoneObject">
     <div class="overview">
       <div class="header">
         <h1>Dashboard</h1>
@@ -38,16 +40,23 @@ onMounted(() => {
         </div>
       </div>
       <div class="day-status">
-        <NotificationWidget :zone="selectedZoneObject" class="status-text-box"/>
-        <WorkerStatusWidget :zone="selectedZoneObject" class="status-text-box"/>
+        <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
+        <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
       </div>
       <div class="monte-carlo-graph-container">
-        <MonteCarloGraph class="monte-carlo-graph" :zone-id="selectedZoneId" :key="selectedZoneId"/>
+        <MonteCarloGraph
+            class="monte-carlo-graph"
+            :zone-id="selectedZoneObject.id"
+            :key="selectedZoneObject.id"
+        />
       </div>
     </div>
     <div class="tasks-container">
-      <OverviewTaskSecion :zone="selectedZoneObject"></OverviewTaskSecion>
+      <OverviewTaskSecion :zone-id="selectedZoneObject.id"></OverviewTaskSecion>
     </div>
+  </div>
+  <div v-else>
+    <p>Loading...</p>
   </div>
 </template>
 
@@ -87,7 +96,8 @@ onMounted(() => {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  border-radius: 2rem;
+  border-radius: 1rem;
+  padding: 0.7rem;
   border: 1px solid var(--border-1);
 }
 
@@ -96,6 +106,9 @@ onMounted(() => {
 }
 
 .day-status {
+  height: 100%;
+  width: 100%;
+  gap: 1rem;
   display: flex;
   flex-direction: row;
 }

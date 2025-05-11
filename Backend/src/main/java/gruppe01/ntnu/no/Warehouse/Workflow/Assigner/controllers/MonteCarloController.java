@@ -127,7 +127,7 @@ public class MonteCarloController {
     public ResponseEntity<Map<String, Object>> getAllData(
             @Parameter(description = "ID of the zone to retrieve data for")
             @PathVariable long zoneId) {
-        if (zoneService.getZoneById(zoneId) == null) {
+        if (zoneService.getZoneById(zoneId) == null && zoneId != 0) {
             return ResponseEntity.notFound().build();
         } else {
             Map<String, Object> response = new HashMap<>();

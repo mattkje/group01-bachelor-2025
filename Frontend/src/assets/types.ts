@@ -82,3 +82,18 @@ export interface WorldSimObject {
     realData: boolean;
     zoneId: number;
 }
+
+export interface Notification {
+    id: number;
+    message: string;
+    zoneId: number ;
+    timestamp: string | null;
+}
+
+export const ErrorCodes = new Map<number, string>([
+    [101, "No Tasks"],
+    [102, "No Workers in Zone"],
+    [103, "No Workers in Zone coming to work today"],
+    [104, "Task could not complete due to workers going home"],
+    [105, "No qualified workers for activetask in zone"],
+]);

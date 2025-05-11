@@ -11,17 +11,4 @@ body {
     color: var(--text-1);
 }
 
-a,
-.red {
-    text-decoration: none;
-    color: hsl(0, 61%, 27%);
-    transition: 0.4s;
-    padding: 3px;
-}
-
-@media (hover: hover) {
-    a:hover {
-        background-color: hsla(0, 100%, 75%, 0.2);
-    }
-}
 

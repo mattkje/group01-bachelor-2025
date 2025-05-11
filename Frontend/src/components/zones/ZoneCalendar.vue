@@ -226,7 +226,7 @@ th, td {
   border: 1px solid var(--border-1);
   padding: 0.15rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--text-1);
 }
 
 td {
@@ -236,15 +236,11 @@ td {
 thead th:first-child,
 tbody td:first-child {
   border-left: none;
-  width: auto;
-  font-size: 24px;
+  width: min-content;
+  font-size: 0.6rem;
   font-weight: 700;
 }
 
-thead th:not(:first-child),
-tbody td:not(:first-child) {
-  width: 11.5%;
-}
 
 thead th {
   position: sticky;
@@ -252,7 +248,7 @@ thead th {
   z-index: 1;
   background-color: var(--background-1);
   border-top: none;
-  font-size: 24px;
+  font-size: 1rem;
 }
 
 .schedule-box {
@@ -265,7 +261,7 @@ thead th {
   align-items: center;
   justify-content: center;
   background-color: transparent;
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   user-select: none;
 }
 
@@ -275,12 +271,13 @@ thead th {
 }
 
 .schedule-box.has-schedule {
-  background-color: #FFBDBD;
+  background-color: var(--border-1);
   border: none;
 }
 
 .schedule-box.has-schedule-today {
-  background-color: #E77474;
+  background-color: var(--main-color);
+  color: #ffffff;
   border: none;
 }
 

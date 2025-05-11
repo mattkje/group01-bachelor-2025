@@ -1,23 +1,136 @@
 <script setup lang="ts">
+import {ErrorCodes, Notification, Zone} from "@/assets/types";
+import {fetchNotifications} from "@/composables/DataFetcher";
+import {onMounted, ref} from "vue";
+
+const props = defineProps<{
+  zone: Zone;
+}>();
+
+const notifications = ref<Notification[]>([]);
+const messages = ref<string[]>([]);
+const zoneId = ref<number>(0);
+
+const loadAndHandleNotifications = async () => {
+  notifications.value = await fetchNotifications(props.zone.id);
+
+  //parse the notifications ","
+  notifications.value.forEach(notification => {
+    const parsedMessage = notification.message.split(',').map((message: string) => message.trim().replace(/\[|\]/g, ''));
+
+    // Also split message by ";" if it exists
+    parsedMessage.forEach(message => {
+      const parts = message.split(':');
+      zoneId.value = notification.zoneId;
+      identifyNotificationType(parts, notification.zoneId);
+    })
+
+  });
+};
+
+const identifyNotificationType = (parsedMessage: string[], zoneId: number) => {
+  const zone = `Error Zone ${zoneId}`;
+  const error = ErrorCodes.get(parseInt(parsedMessage[0])) || "Unknown Error";
+ const details = parsedMessage.slice(1).filter(item => item !== "null").join(" | ");
+
+  messages.value.push([zone, error, "Task(s): " + details].filter(Boolean).join(" | "));
+};
+
+onMounted(async () => {
+  await loadAndHandleNotifications();
+})
 
 </script>
 
 <template>
-  <div class="widget">
+  <div class="overview-widget">
     <h2>Notifications</h2>
+    <router-link class="notification" :to="`/zones/${zoneId}/tasks`">
+      <div
+        v-for="message in messages"
+        :key="message"
+        class="notification-item"
+      >
+        <img  src="@/assets/icons/info.svg" alt="Notification Icon" />
+      <p>{{ message }}</p>
+      </div>
+    </router-link>
   </div>
 </template>
 
 <style scoped>
-
-.widget {
+.overview-widget {
+  margin: 0 !important;
+  width: 100%;
+  max-height: 35vh;
   border: 1px solid var(--border-1);
-  flex-direction: row;
-  border-radius: 2rem;
+  flex-direction: column;
+  border-radius: 1rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
   font-size: 1.2rem;
   color: var(--text-1);
+  padding: 1rem;
+  overflow: auto;
+  position: relative; /* Required for the pseudo-element */
 }
+
+.overview-widget::after {
+  content: "";
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--background-1));
+  pointer-events: none;
+}
+
+.overview-widget h2 {
+  font-size: 1.2rem;
+  align-self: flex-start;
+  color: var(--text-1);
+  margin-bottom: 0.5rem;
+}
+
+.notification {
+  padding: 0;
+  width: 100%;
+  margin-top: 1rem;
+  text-decoration: none;
+  overflow: auto;
+}
+
+.notification-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  background-color: var(--background-2);
+  border: 1px solid var(--border-2);
+  border-radius: 0.3rem;
+  padding: 0.2rem;
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.3s ease 0.3s, border 0.3s ease 0.3s;
+}
+
+.notification-item:hover {
+  background-color: var(--main-color-3);
+  border: 2px solid var(--main-color);
+  cursor: pointer;
+}
+
+.notification-item p {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.notification-item img {
+  width: 20px;
+  height: 20px;
+}
+
 </style>

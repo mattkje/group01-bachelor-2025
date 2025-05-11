@@ -80,8 +80,23 @@ onMounted(async () => {
     <h1>Settings</h1>
     <div>
       <div class="sim-interval-container">
+        <div class="disable-predictions-container">
+          <label for="disable-predictions">Predictions</label>
+          <div class="input-with-text switch-version">
+            <label class="switch">
+              <input
+                  id="disable-predictions"
+                  type="checkbox"
+                  v-model="predictions"
+                  @change="updatePrediction"
+              />
+              <span class="slider"></span>
+            </label>
+            <span class="explanation-text">Run World simulations with monte-carlo predictions.</span>
+          </div>
+        </div>
         <label for="sim-interval">Simulation Interval</label>
-        <div class="input-with-text">
+        <div class="input-with-text" :class="predictions ? '' : 'disabled'">
           <select
               id="sim-interval"
               v-model="selectedIntervalId"
@@ -96,7 +111,7 @@ onMounted(async () => {
       </div>
       <div class="sim-count-container">
         <label for="sim-count">Simulation Count</label>
-        <div class="input-with-text">
+        <div class="input-with-text" :class="predictions ? '' : 'disabled'">
           <input
               id="sim-count"
               type="number"
@@ -105,21 +120,6 @@ onMounted(async () => {
               min="1"
           />
           <span class="explanation-text">Specifies the number of simulations to run.</span>
-        </div>
-      </div>
-      <div class="disable-predictions-container">
-        <label for="disable-predictions">Predictions</label>
-        <div class="input-with-text">
-          <label class="switch">
-            <input
-                id="disable-predictions"
-                type="checkbox"
-                v-model="predictions"
-                @change="updatePrediction"
-            />
-            <span class="slider"></span>
-          </label>
-          <span class="explanation-text">Run World simulations with monte-carlo predictions.</span>
         </div>
       </div>
       <button type="button" class="reset-simulations" @click="resetSimulations">
@@ -179,6 +179,10 @@ label {
   transition: border-color 0.3s;
 }
 
+.sim-interval-input:disabled, sim-count-input:disabled {
+  opacity: 0.5;
+}
+
 .sim-interval-input::-webkit-inner-spin-button,
 .sim-count-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -191,7 +195,7 @@ label {
 .sim-interval-input:focus::-webkit-inner-spin-button,
 .sim-count-input:focus::-webkit-inner-spin-button {
   background-color: var(--main-color);
-  color: var(--background-1);
+  color: var(--text-1);
 }
 
 .sim-interval-input:focus,
@@ -201,11 +205,13 @@ label {
   outline: none;
 }
 
+
+
 button {
   display: inline-block;
   padding: 0.7rem 1.5rem;
   font-size: 1rem;
-  color: var(--text-inverse);
+  color: white;
   background-color: var(--main-color);
   border: none;
   border-radius: 4px;
@@ -249,6 +255,10 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.input-with-text.disabled {
+  opacity: 0.5;
 }
 
 .explanation-text {
