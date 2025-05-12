@@ -159,10 +159,6 @@ public class WorldSimulation {
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
 
-        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
-            zoneService.updateMachineLearningModel(workday.atTime(currentTime));
-        }
-
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
             String zoneName = zone.getName().toUpperCase();
@@ -196,6 +192,10 @@ public class WorldSimulation {
             simulationSleepInMillis = 0;
         } else {
             simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
+        }
+
+        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
+            zoneService.updateMachineLearningModel(workday.atTime(currentTime));
         }
 
         //Initialize variables used in the simulation
