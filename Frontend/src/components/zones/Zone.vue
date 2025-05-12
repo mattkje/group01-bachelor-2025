@@ -4,7 +4,13 @@ import WorkerClass from '@/components/zones/Worker.vue';
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
 import {ActiveTask, License, PickerTask, Worker, Zone} from '@/assets/types';
 import axios from "axios";
-import {fetchPickerTasksForZone, fetchAllTasksForZone, fetchZone, fetchSimulationDate} from "@/composables/DataFetcher";
+import {
+  fetchPickerTasksForZone,
+  fetchAllTasksForZone,
+  fetchZone,
+  fetchSimulationDate,
+  fetchAllActiveTasksForZone, fetchSimulationTime
+} from "@/composables/DataFetcher";
 import {runMonteCarloSimulationForZone, updateWorkerZone} from "@/composables/SimulationCommands";
 
 const props = defineProps<{
@@ -15,12 +21,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['refreshWorkers']);
 
-const showPopup = ref(false);
-const selectedZone = ref<Zone | null>(null);
 const isDraggingOver = ref(false);
-const tasks = ref<ActiveTask[]>([]);
+const activeTasks = ref<ActiveTask[]>([]);
 const pickerTasks = ref<PickerTask[]>([]);
-const hasTasks = ref(false);
+const hasActiveTasks = ref(false);
 const hasPickerTasks = ref(false);
 const isSpinning = ref(false);
 let completionTime = ref<string>('');
@@ -31,20 +35,27 @@ const isPickerZone = ref(false);
 const currentDate = ref<string>('');
 const loading = ref(true);
 
-const loadCurrentDate = async () => {
-  const response = await fetchSimulationDate()
-  return response.data;
+const loadCurrentDateTime = async () => {
+  const date = await fetchSimulationDate();
+  const time = await fetchSimulationTime();
+  return new Date(`${date}T${time}`).toDateString();
 };
 
-const today = new Date(currentDate.value).toDateString();
+const remainingTasks = ref(0);
+const remainingPickerTasks = ref(0);
 
-const remainingTasks = computed(() =>
-    tasks.value.filter(task => new Date(task.date).toDateString() === today).length
-);
+const updateRemainingTasks = async () => {
+  const today = await loadCurrentDateTime();
+  remainingTasks.value = activeTasks.value.filter(task => {
+    const taskDate = new Date(task.date).toDateString();
+    return taskDate === today;
+  }).length;
 
-const remainingPickerTasks = computed(() =>
-    pickerTasks.value.filter(task => new Date(task.date).toDateString() === today).length
-);
+  remainingPickerTasks.value = pickerTasks.value.filter(task => {
+    const taskDate = new Date(task.date).toDateString();
+    return taskDate === today;
+  }).length;
+};
 const getThisZone = async (): Promise<Zone | null> => {
   try {
     const zone: Zone = await fetchZone(props.zoneId)
@@ -77,9 +88,9 @@ const runMonteCarloSimulation = async () => {
   }
 };
 
-const loadTasksForZone = async () => {
+const loadActiveTasksForZone = async () => {
   try {
-    tasks.value = await fetchAllTasksForZone(props.zoneId);
+    activeTasks.value = await fetchAllActiveTasksForZone(props.zoneId);
   } catch (error) {
     console.error('Failed to fetch tasks for zone:', error);
   }
@@ -89,7 +100,7 @@ const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
   if (isPickerZone.value) {
     return true;
   }
-  return tasks.value.some((task: ActiveTask) => {
+  return activeTasks.value.some((task: ActiveTask) => {
     if (!task.task || !task.task.requiredLicense) {
       return false;
     }
@@ -108,17 +119,17 @@ const loadPickerTasksForZone = async () => {
 };
 
 onMounted(async () => {
-  currentDate.value = await loadCurrentDate();
+  await updateRemainingTasks();
   const zone = await getThisZone();
   if (zone?.isPickerZone) {
     isPickerZone.value = true;
     await loadPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
   } else {
-    await loadTasksForZone();
-    hasTasks.value = tasks.value.length > 0;
+    await loadActiveTasksForZone();
+    hasActiveTasks.value = activeTasks.value.length > 0;
   }
-  loading.value = false; // Set loading to false after data is fetched
+  loading.value = false;
 });
 
 const onDragStart = (event: DragEvent, worker: Worker) => {
@@ -156,17 +167,28 @@ const toggleNotificationBubble = () => {
     <div class="title-bar">
       <div class="title-bar-status">
         {{ title }}
-        <div class="task-summary">
+        <div v-if="completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
           Done by: {{ completionTime }}
           <br/>
           <p v-if="remainingTasks"> Tasks: {{ remainingTasks }}</p>
           <p v-if="remainingPickerTasks"> Picker Tasks: {{ remainingPickerTasks }}</p>
         </div>
+        <div v-else-if="!completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
+          <p> Tasks: {{ remainingTasks }}</p>
+          <p> Picker Tasks: {{ remainingPickerTasks }}</p>
+        </div>
+        <div v-else-if="hasActiveTasks && hasPickerTasks" class="task-summary">
+          <p>No tasks remaining...</p>
+        </div>
+        <div v-else class="task-summary">
+          <p>Tasks: {{ remainingTasks }}</p>
+          <p>Picker Tasks: {{ remainingPickerTasks }}</p>
+        </div>
       </div>
       <hr>
       <div class="zone-options">
         <div class="zone-option">
-          <router-link :to="`/zones/${props.zoneId}`" class="icon-button">
+          <router-link :to="`/?id=${props.zoneId}`" class="icon-button">
               <img src="/src/assets/icons/zones.svg" alt="Assign"/>
           </router-link>
           <div class="status-popup">Tasks</div>
@@ -192,7 +214,7 @@ const toggleNotificationBubble = () => {
         </div>
       </div>
     </div>
-      <div v-if="hasTasks || hasPickerTasks" class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
+      <div class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
         <WorkerClass
             v-for="(worker, index) in workers"
             :key="index"
@@ -218,16 +240,7 @@ const toggleNotificationBubble = () => {
           </p>
         </div>
       </div>
-      <div v-else class="vertical-box" style="text-align: center; margin-top: 1rem; opacity: 0.5">
-        <img
-            src="/src/assets/icons/check.svg"
-            alt="Check"
-            style="margin: 10px auto; margin-top: 1rem; width: 50px; height: 50px;"
-        />
-        <p style="text-align: center; margin-top: 1rem;">
-          All tasks completed
-        </p>
-      </div>
+
     <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
   </div>
   </div>

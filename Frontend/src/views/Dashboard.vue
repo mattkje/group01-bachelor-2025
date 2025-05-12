@@ -16,11 +16,23 @@ const loadAllData = async () => {
 };
 
 onMounted(() => {
+
   loadAllData().then(() => {
     if (zones.value.length > 0) {
-      selectedZoneObject.value = zones.value[0]; // Set the first zone as the default
+      const urlParams = new URLSearchParams(window.location.search);
+      const zoneId = urlParams.get('id');
+      if (zoneId) {
+        const zone = zones.value.find(zone => zone.id === parseInt(zoneId));
+        if (zone) {
+          selectedZoneObject.value = zone;
+        }
+      } else {
+        selectedZoneObject.value = zones.value[0];
+      }
     }
   });
+
+
 });
 </script>
 

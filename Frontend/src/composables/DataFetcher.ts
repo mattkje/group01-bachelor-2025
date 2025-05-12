@@ -70,6 +70,10 @@ export const fetchAllPickerTasksByZoneForDate = async (zoneId: number , date: st
     return fetchData<PickerTask[]>(`http://localhost:8080/api/zones/${zoneId}/picker-tasks/${date}`);
 }
 
+export const fetchActiveTask = async (taskId: number) => {
+    return fetchData<ActiveTask>(`http://localhost:8080/api/active-tasks/${taskId}`);
+}
+
 export const fetchAllActiveTasks = async () => {
   return fetchData<ActiveTask[]>('http://localhost:8080/api/active-tasks');
 }

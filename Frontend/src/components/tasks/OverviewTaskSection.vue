@@ -8,12 +8,13 @@ import {
   fetchSimulationDate
 } from "@/composables/DataFetcher";
 import PickerTaskComponent from "@/components/tasks/PickerTaskComponent.vue";
+import ZoneCalendar from "@/components/zones/ZoneCalendar.vue";
 
 const selectedTab = ref('Current');
 const selectedOption = ref('best case');
 const displayEstimations = ref(false);
 
-const tabs = ['Current', 'Completed'];
+const tabs = ['Current', 'Completed', 'Schedule'];
 const dropdownOptions = ['best case', 'average case', 'worst case'];
 
 const props = defineProps<{
@@ -149,6 +150,9 @@ watch(() => props.zone, async () => {
          />
        </template>
        <p style="margin-top: 20vh" v-else>No current tasks</p>
+      </div>
+      <div v-else-if="selectedTab === 'Schedule'" class="task-container">
+        <ZoneCalendar :zone="zone" class="bottom-box-right"/>
       </div>
     </div>
   </div>

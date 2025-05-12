@@ -1,22 +1,27 @@
 <script setup lang="ts">
   import { onMounted, ref } from 'vue';
-  import {License, Task, Worker} from '@/assets/types';
-  import {fetchTask, fetchWorkersForTask} from "@/composables/DataFetcher";
+  import {ActiveTask, License, Task, Worker} from '@/assets/types';
+  import {fetchActiveTask, fetchSimulationDate, fetchTask, fetchWorkersForTask} from "@/composables/DataFetcher";
 
   const props = defineProps<{
     taskId: number;
     name: string;
     requiredLicenses: License[];
+    currentDate: string;
     zoneId: number;
   }>();
 
-  const task = ref<Task | null>(null);
+  const activeTask = ref<ActiveTask | null>(null);
   const workers = ref<Worker[]>([]);
   const isTaskOverdue = ref(false);
 
   onMounted(async () => {
-    task.value = await fetchTask(props.taskId)
-    workers.value = await fetchWorkersForTask(props.taskId)
+    activeTask.value = await fetchActiveTask(props.taskId);
+    workers.value = await fetchWorkersForTask(props.taskId);
+
+    isTaskOverdue.value = activeTask.value.dueDate
+      ? activeTask.value.dueDate.toString() < new Date(props.currentDate).toDateString()
+      : false;
   });
   </script>
 
@@ -24,7 +29,7 @@
     <div :class="['task-compact', { 'overdue-task-box': isTaskOverdue }]">
       <div class="task-details">
         <div class="task-name">{{ props.name }}</div>
-        <div class="task-status">{{ isTaskOverdue ? 'Overdue' : 'On Time' }}</div>
+        <div class="task-status">{{ isTaskOverdue ? 'Overdue': 'On Time' }}</div>
       </div>
     </div>
   </template>

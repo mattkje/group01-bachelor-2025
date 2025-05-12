@@ -68,11 +68,13 @@ const startPolling = () => {
 };
 
 const referenceTime = ref<Date | null>(null);
+const currentDate = ref<string>('');
 
 const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   try {
     const timeResponse = await fetchSimulationTime();
     const dateResponse = await fetchSimulationDate();
+    currentDate.value = dateResponse;
 
     const [hours, minutes, seconds] = timeResponse.split(':').map(Number);
     const [year, month, day] = dateResponse.split('-').map(Number);
@@ -104,6 +106,7 @@ const doesWorkerHaveUnfinishedActiveTask = (workerId: number): boolean => {
 };
 
 onMounted(() => {
+  fetchCurrentTimeFromBackend();
   startFetchingTime();
   startPolling();
 });
@@ -156,6 +159,7 @@ onMounted(async () => {
         :task-id="activeTask.id"
         :name="activeTask.task.name"
         :requiredLicenses="activeTask.task.requiredLicense"
+        :current-date="currentDate"
         :zone-id="props.zoneId"
     />
   </div>

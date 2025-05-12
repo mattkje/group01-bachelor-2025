@@ -31,7 +31,7 @@ type TabItem = {
 }
 
 const tabs = ref<TabItem[]>([
-  {name: 'Overview', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/'},
+  {name: 'Dashboard', icon: overviewIcon, iconSelected: overviewIconSelected, path: '/'},
   {name: 'Zones', icon: zonesIcon, iconSelected: zonesIconSelected, path: '/zones'},
   {name: 'Tasks', icon: tasksIcon, iconSelected: tasksIconSelected, path: '/tasks'},
   {name: 'Staff', icon: staffIcon, iconSelected: staffIconSelected, path: '/staff'},
