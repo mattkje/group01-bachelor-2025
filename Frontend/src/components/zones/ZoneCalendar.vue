@@ -237,7 +237,7 @@ thead th:first-child,
 tbody td:first-child {
   border-left: none;
   width: min-content;
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 700;
 }
 
@@ -261,7 +261,7 @@ thead th {
   align-items: center;
   justify-content: center;
   background-color: transparent;
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   user-select: none;
 }
 
@@ -329,13 +329,13 @@ thead th {
 
 @media (max-width: 1600px) {
   .schedule-box {
-    font-size: 16px;
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 800px) {
   .schedule-box {
-    font-size: 12px;
+    font-size: 0.7rem;
   }
 }
 </style>

@@ -340,9 +340,6 @@ onUnmounted(() => {
         <span class="color-indicator best-case"></span> Best Case
       </p>
       <p>
-        <span class="color-indicator probable-case"></span> Probable Case
-      </p>
-      <p>
         <span class="color-indicator worst-case"></span> Worst Case
       </p>
     </div>
@@ -372,7 +369,6 @@ onUnmounted(() => {
 
 .monte-carlo-graph {
   width: 100%;
-  height: 100%;
   background-color: var(--background-1); /* Adjusts for light/dark mode */
   border-radius: 8px;
   color: var(--text-1); /* Text color adjusts for light/dark mode */

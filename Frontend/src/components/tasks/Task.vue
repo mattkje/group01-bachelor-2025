@@ -34,7 +34,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-1);
+    background-color: var(--background-backdrop);
     border-radius: 0 10px 10px 0;
     max-height: 30px;
     padding: 0 0.2rem;

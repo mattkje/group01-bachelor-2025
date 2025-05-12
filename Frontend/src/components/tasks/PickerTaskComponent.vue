@@ -22,22 +22,13 @@ const taskBackgroundColor = computed(() => {
   } else if (startTime && endTime) {
     return "#D4EDD9";
   }
-  return "#FFF2F2";
+  return "var(--background-2)";
 });
 
-const taskTextColor = computed(() => {
-  const { startTime, endTime } = props.pickerTask;
-  if (startTime && !endTime) {
-    return "#B3B36B"; // Slightly darker yellow
-  } else if (startTime && endTime) {
-    return  "var(--text-1)"; // Slightly darker green
-  }
-  return "#E77474"; // Slightly darker red
-});
 </script>
 
 <template>
-  <div class="task-info-box" :style="{ backgroundColor: taskBackgroundColor, color: taskTextColor }">
+  <div class="task-info-box" :style="{ backgroundColor: taskBackgroundColor }">
     <div class="task-header">
       <div class="task-name">{{ props.pickerTask.id }}</div>
       <TaskDropdown v-if="!pickerTask.endTime" :pickerTask="props.pickerTask" @task-deleted="handleTaskDeleted" @task-updated="handleTaskUpdated"></TaskDropdown>
@@ -55,19 +46,18 @@ const taskTextColor = computed(() => {
 
 <style scoped>
 .task-info-box {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-1);
   border-radius: 10px;
-  padding: 1rem;
+  color: var(--text-1);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 300px;
-  max-height: 140px;
   position: relative;
 }
 
 .task-name {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   text-align: left;

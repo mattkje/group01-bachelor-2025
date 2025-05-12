@@ -132,21 +132,5 @@ hr {
   color: var(--main-color);
 }
 
-@media (max-width: 1400px) {
-  .tab span {
-    display: none;
-  }
 
-  .tab-icon {
-    margin-right: 0;
-    margin-left: 0;
-    width: 25px;
-    height: 25px;
-  }
-
-  .sidebar {
-    width: 60px;
-  }
-
-}
 </style>

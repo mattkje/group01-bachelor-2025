@@ -23,7 +23,7 @@ const taskBackgroundColor = computed(() => {
   } else if (startTime && endTime) {
     return "#CCFFCC"; // Green
   }
-  return "#FFF2F2"; // Default color
+  return "var(--background-2)";
 });
 </script>
 
@@ -50,15 +50,13 @@ const taskBackgroundColor = computed(() => {
 
 <style scoped>
 .task-info-box {
-  border: 1px solid #e5e5e5;
-  border-radius: 10px;
-  padding: 1rem;
+  border: 1px solid var(--border-1);
+  border-radius: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 300px;
-  color: #E77474;
-  max-height: 140px;
+  color: var(--text-1);
 }
 
 .task-header {
@@ -67,8 +65,7 @@ const taskBackgroundColor = computed(() => {
 }
 
 .task-name {
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1rem;
   margin-bottom: 0.5rem;
   text-align: left;
 }

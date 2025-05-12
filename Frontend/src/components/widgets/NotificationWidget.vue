@@ -114,7 +114,7 @@ onMounted(async () => {
   padding: 0.2rem;
   font-size: 0.7rem;
   margin-bottom: 0.5rem;
-  transition: background-color 0.3s ease 0.3s, border 0.3s ease 0.3s;
+  transition: background-color 0.1s ease 0.1s, border 0.1s ease 0.1s;
 }
 
 .notification-item:hover {

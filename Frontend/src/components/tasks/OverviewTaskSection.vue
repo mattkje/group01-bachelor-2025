@@ -173,7 +173,7 @@ watch(() => props.zone, async () => {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust column size */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 10px;
   justify-content: center;
   align-content: center;

@@ -26,33 +26,36 @@ onMounted(() => {
 
 <template>
   <div class="container-container" v-if="selectedZoneObject">
-    <div class="overview">
-      <div class="header">
-        <h1>Dashboard</h1>
-        <div class="vertical-separator"></div>
-        <div class="zone-selector">
-          <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
-            <option :value="null">All Zones</option>
-            <option v-for="zone in zones" :key="zone.id" :value="zone">
-              {{ zone.name }}
-            </option>
-          </select>
-        </div>
-      </div>
-      <div class="day-status">
-        <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
-        <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
-      </div>
-      <div class="monte-carlo-graph-container">
-        <MonteCarloGraph
-            class="monte-carlo-graph"
-            :zone-id="selectedZoneObject.id"
-            :key="selectedZoneObject.id"
-        />
+    <div class="header">
+      <h1>Dashboard</h1>
+      <div class="vertical-separator"></div>
+      <div class="zone-selector">
+        <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
+          <option :value="null">All Zones</option>
+          <option v-for="zone in zones" :key="zone.id" :value="zone">
+            {{ zone.name }}
+          </option>
+        </select>
       </div>
     </div>
-    <div class="tasks-container">
-      <OverviewTaskSection :zone="selectedZoneObject"></OverviewTaskSection>
+    <div class="overview-widget-area">
+      <div class="overview">
+
+        <div class="day-status">
+          <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
+          <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
+        </div>
+        <div class="monte-carlo-graph-container">
+          <MonteCarloGraph
+              class="monte-carlo-graph"
+              :zone-id="selectedZoneObject.id"
+              :key="selectedZoneObject.id"
+          />
+        </div>
+      </div>
+      <div class="tasks-container">
+        <OverviewTaskSection :zone="selectedZoneObject"></OverviewTaskSection>
+      </div>
     </div>
   </div>
   <div v-else>
@@ -65,9 +68,9 @@ onMounted(() => {
   height: 100%;
   width: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
   padding: 2rem;
 }
 
@@ -86,12 +89,27 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.header {
+.overview-widget-area {
+  width: 100%;
+  height: 100%;
   display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.header {
+  width: 100%;
+  align-content: center;
+  justify-content: flex-start;
+  display: flex;
+  border: 1px solid var(--border-1);
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
 .monte-carlo-graph-container {
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -106,7 +124,6 @@ onMounted(() => {
 }
 
 .day-status {
-  height: 100%;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -142,12 +159,13 @@ onMounted(() => {
   border: 1px solid transparent;
   border-radius: 0.5rem;
 }
+
 .tasks-container {
   width: 100%;
   height: 100%;
   border: 1px solid var(--border-1);
   flex-direction: row;
-  border-radius: 2rem;
+  border-radius: 1rem;
   display: flex;
   justify-content: center;
   align-items: flex-start;

@@ -175,7 +175,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--background-2);
+  background-color: var(--background-backdrop);
   border-radius: 10px 0 0 10px;
   max-height: 30px;
   padding: 0.5rem;
