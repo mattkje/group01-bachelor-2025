@@ -324,6 +324,14 @@ public class ActiveTaskService {
      * Deletes all active tasks.
      */
     public void deleteAllActiveTasks() {
+        List<ActiveTask> activeTasks = activeTaskRepository.findAll();
+        for (ActiveTask activeTask : activeTasks) {
+            // Clear relationships to avoid transient data issues
+            if (activeTask.getWorkers() != null) {
+                activeTask.getWorkers().clear();
+            }
+            activeTaskRepository.save(activeTask); // Save changes before deletion
+        }
         activeTaskRepository.deleteAll();
     }
 

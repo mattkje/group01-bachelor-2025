@@ -237,6 +237,10 @@ public class PickerTaskService {
     }
 
     public void deleteAllPickerTasks() {
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            pickerTask.setWorker(null);
+            pickerTaskRepository.save(pickerTask);
+        }
         pickerTaskRepository.deleteAll(pickerTaskRepository.findAll());
     }
 }
