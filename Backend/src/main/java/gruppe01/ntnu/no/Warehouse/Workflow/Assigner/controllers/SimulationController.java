@@ -137,7 +137,12 @@ public class SimulationController {
   public ResponseEntity<List<ZoneSimResult>> monteCarloZone(
       @Parameter(description = "ID of the zone to run simulation for")
       @PathVariable Long id) throws IOException {
-    return ResponseEntity.ok(simulationService.runZoneSimulation(id, null));
+    LocalDateTime time = worldSimulationController.getCurrentDateTime().getBody();
+    if (time == null) {
+      throw new IllegalArgumentException("Current date and time is not available");
+    }
+    Map<String, RandomForest> models = worldSimulationController.getModels();
+    return ResponseEntity.ok(simulationService.runZoneSimulation(id, time,models));
   }
 
   @Operation(
@@ -157,7 +162,7 @@ public class SimulationController {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     LocalDate date = LocalDate.parse(day, formatter);
     LocalDateTime dateTime = date.atStartOfDay();
-    return ResponseEntity.ok(simulationService.runZoneSimulation(id, dateTime));
+    return ResponseEntity.ok(simulationService.runZoneSimulation(id, dateTime,null));
   }
 
   @Operation(

@@ -72,7 +72,7 @@ public class SimulationService {
      * @param zoneId The ID of the zone to run the simulation on
      * @return A list of strings containing the predicted time of completion and any error messages
      */
-    public List<ZoneSimResult> runZoneSimulation(Long zoneId, LocalDateTime day) throws IOException {
+    public List<ZoneSimResult> runZoneSimulation(Long zoneId, LocalDateTime day, Map<String, RandomForest> models) throws IOException {
         Zone zone = zoneService.getZoneById(zoneId);
         // Ensure the zoneID exists
         if (zone == null) {
@@ -83,11 +83,15 @@ public class SimulationService {
         List<ZoneSimResult> zoneSimResults = new ArrayList<>();
         List<ActiveTask> activeTasks = new ArrayList<>();
         Set<PickerTask> pickerTasks = new HashSet<>();
-        RandomForest models = null;
+        RandomForest model = null;
 
         if (zone.getIsPickerZone()) {
+            if (models != null && models.get(zone.getName()) != null) {
+                model = models.get(zone.getName());
+            } else {
+                model = mlModel.getModel(zone.getName(), false);
+            }
             pickerTasks = zoneService.getPickerTasksByZoneId(zoneId);
-            models = mlModel.getModel(zone.getName(), false);
         } else {
             activeTasks = zoneService.getActiveTasksByZoneId(zoneId).stream().toList();
 
@@ -98,7 +102,6 @@ public class SimulationService {
         }
 
         for (int i = 0; i < getSimCount(); i++) {
-            System.out.println("Running simulation " + (i + 1) + " for zone " + zone.getName());
 
             // Create deep copies of activeTasks and pickerTasks
             List<ActiveTask> activeTasksCopy = deepCopyActiveTasks(activeTasks);
@@ -108,7 +111,7 @@ public class SimulationService {
                     zone,
                     activeTasksCopy,
                     pickerTasksCopy,
-                    models,
+                    model,
                     day,
                     timetableService
             );

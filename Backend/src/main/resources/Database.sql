@@ -503,25 +503,25 @@ VALUES (1, 1),
 
 
 INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)
-VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 30, 50, 1, 2, 1),
-       ('Restock Shelves', 'Restock the shelves with new inventory', 20, 40, 1, 3, 1),
-       ('Order Processing', 'Process customer orders for shipment', 20, 40, 2, 4, 1),
-       ('Quality Inspection', 'Inspect the quality of incoming goods', 25, 75, 1, 2, 2),
-       ('Package Orders', 'Package customer orders for delivery', 10, 40, 1, 2, 2),
-       ('Load Trucks', 'Load trucks with outgoing shipments', 30, 60, 2, 3, 3),
-       ('Unload Trucks', 'Unload trucks with incoming shipments', 20, 85, 2, 3, 3),
-       ('Cycle Counting', 'Perform cycle counting of inventory', 15, 35, 1, 1, 4),
-       ('Label Products', 'Label products with barcodes', 15, 45, 1, 2, 4),
-       ('Warehouse Cleaning', 'Clean and organize the warehouse', 15, 70, 1, 2, 5),
-       ('Safety Inspection', 'Inspect the warehouse for safety compliance', 30, 70, 1, 2, 5),
+VALUES ('Inventory Check', 'Check the inventory levels in the warehouse', 10, 30, 1, 2, 1),
+       ('Restock Shelves', 'Restock the shelves with new inventory', 10, 20, 1, 3, 1),
+       ('Order Processing', 'Process customer orders for shipment', 10, 30, 2, 4, 1),
+       ('Quality Inspection', 'Inspect the quality of incoming goods', 20, 45, 1, 2, 2),
+       ('Package Orders', 'Package customer orders for delivery', 10, 30, 1, 2, 2),
+       ('Load Trucks', 'Load trucks with outgoing shipments', 15, 40, 2, 3, 3),
+       ('Unload Trucks', 'Unload trucks with incoming shipments', 20, 45, 2, 3, 3),
+       ('Cycle Counting', 'Perform cycle counting of inventory', 15, 25, 1, 1, 4),
+       ('Label Products', 'Label products with barcodes', 15, 30, 1, 2, 4),
+       ('Warehouse Cleaning', 'Clean and organize the warehouse', 15, 35, 1, 2, 5),
+       ('Safety Inspection', 'Inspect the warehouse for safety compliance', 30, 35, 1, 2, 5),
        ('Plan Shipments', 'Plan the shipments for the day', 10, 20, 1, 1, 6),
-       ('Monitor Inventory', 'Monitor inventory levels and report discrepancies', 10, 40, 1, 2, 6),
-       ('Schedule Maintenance', 'Schedule maintenance for warehouse equipment', 20, 55, 1, 2, 7),
+       ('Monitor Inventory', 'Monitor inventory levels and report discrepancies', 10, 37, 1, 2, 6),
+       ('Schedule Maintenance', 'Schedule maintenance for warehouse equipment', 10, 40, 1, 2, 7),
        ('Update Records', 'Update warehouse records and logs', 10, 30, 1, 1, 7),
        ('Coordinate Teams', 'Coordinate teams for various tasks', 10, 25, 1, 2, 8),
        ('Review Performance', 'Review the performance of warehouse operations', 20, 40, 1, 2, 8),
-       ('System Monitoring', 'Monitor the warehouse management system for any issues', 20, 70, 1, 2, 9),
-       ('Security Check', 'Perform security checks and monitor surveillance systems', 45, 70, 1, 2, 9);
+       ('System Monitoring', 'Monitor the warehouse management system for any issues', 15, 50, 1, 2, 9),
+       ('Security Check', 'Perform security checks and monitor surveillance systems', 25, 60, 1, 2, 9);
 
 
 INSERT INTO task_license (task_id, license_id)
