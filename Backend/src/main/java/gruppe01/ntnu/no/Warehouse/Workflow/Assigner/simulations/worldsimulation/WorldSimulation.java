@@ -8,6 +8,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Component;
 import smile.regression.RandomForest;
 
@@ -35,6 +36,7 @@ public class WorldSimulation {
     private final AtomicInteger intervalId = new AtomicInteger(1);
 
     private final List<Integer> intervals = List.of(10, 30, 60);
+    private final ErrorMessageService errorMessageService;
     private LocalTime currentSimulationTime;
 
     private LocalDate workday;
@@ -118,17 +120,17 @@ public class WorldSimulation {
      * @param worldSimDataService   the service for WorldSimData entity
      */
     public WorldSimulation(
-            TimetableService timetableService,
-            ActiveTaskService activeTaskService,
-            ActiveTaskGenerator activeTaskGenerator,
-            TimeTableGenerator timeTableGenerator,
-            SimulationService simulationService,
-            MonteCarloDataService monteCarloDataService,
-            WorkerService workerService,
-            PickerTaskGenerator pickerTaskGenerator,
-            PickerTaskService pickerTaskService,
-            ZoneService zoneService,
-            WorldSimDataService worldSimDataService) {
+        TimetableService timetableService,
+        ActiveTaskService activeTaskService,
+        ActiveTaskGenerator activeTaskGenerator,
+        TimeTableGenerator timeTableGenerator,
+        SimulationService simulationService,
+        MonteCarloDataService monteCarloDataService,
+        WorkerService workerService,
+        PickerTaskGenerator pickerTaskGenerator,
+        PickerTaskService pickerTaskService,
+        ZoneService zoneService,
+        WorldSimDataService worldSimDataService, ErrorMessageService errorMessageService) {
         this.timetableService = timetableService;
         this.activeTaskService = activeTaskService;
         this.activeTaskGenerator = activeTaskGenerator;
@@ -140,6 +142,7 @@ public class WorldSimulation {
         this.pickerTaskService = pickerTaskService;
         this.zoneService = zoneService;
         this.worldSimDataService = worldSimDataService;
+        this.errorMessageService = errorMessageService;
     }
 
     /**
@@ -158,6 +161,7 @@ public class WorldSimulation {
 
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
+        errorMessageService.deleteAll();
 
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
@@ -453,10 +457,20 @@ public class WorldSimulation {
             if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
                 System.out.println("Current time: " + currentTime);
                 // Hinder the simulation from running if there are no workers present
-                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
-                    LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
-                    simulationService.runCompleteSimulation(randomForests, daytime);
-                }
+               if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
+                   LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
+                   CompletableFuture.runAsync(() -> {
+                     try {
+                       simulationService.runCompleteSimulation(randomForests, daytime);
+                     } catch (ExecutionException e) {
+                       throw new RuntimeException(e);
+                     } catch (InterruptedException e) {
+                       throw new RuntimeException(e);
+                     } catch (IOException e) {
+                       throw new RuntimeException(e);
+                     }
+                   });
+               }
             }
 
             if (currentTime.getMinute() % 10 == 0) {
