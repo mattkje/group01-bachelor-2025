@@ -802,6 +802,7 @@ public class WorldSimulation {
             data.add(activeTasksToday != null
                     ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count()
                     : 0);
+            data.add(availableWorkers != null ? availableWorkers.size() : 0);
             return data;
         } else if (zoneService.getZoneById(zoneId) == null) {
             return data;
@@ -821,6 +822,9 @@ public class WorldSimulation {
             data.add(activeTasksToday != null
                     ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null
                     && activeTask.getTask().getZoneId() == zoneId).count()
+                    : 0);
+            data.add(availableWorkers != null
+                    ? (int) availableWorkers.stream().filter(worker -> worker.getZone() == zoneId).count()
                     : 0);
             return data;
         }
