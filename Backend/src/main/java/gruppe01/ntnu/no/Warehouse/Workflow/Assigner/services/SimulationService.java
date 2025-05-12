@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations.ZoneSimulator;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import smile.regression.RandomForest;
 
@@ -33,7 +34,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private final AtomicInteger simCount = new AtomicInteger(5);
+    private final AtomicInteger simCount = new AtomicInteger(10);
 
     private final AtomicBoolean prediction = new AtomicBoolean(true);
 
@@ -97,10 +98,16 @@ public class SimulationService {
         }
 
         for (int i = 0; i < getSimCount(); i++) {
+            System.out.println("Running simulation " + (i + 1) + " for zone " + zone.getName());
+
+            // Create deep copies of activeTasks and pickerTasks
+            List<ActiveTask> activeTasksCopy = deepCopyActiveTasks(activeTasks);
+            Set<PickerTask> pickerTasksCopy = deepCopyPickerTasks(pickerTasks);
+
             ZoneSimResult zoneSimResult = zoneSimulator.runZoneSimulation(
                     zone,
-                    activeTasks,
-                    pickerTasks,
+                    activeTasksCopy,
+                    pickerTasksCopy,
                     models,
                     day,
                     timetableService
@@ -108,7 +115,22 @@ public class SimulationService {
             zoneSimResults.add(zoneSimResult);
         }
 
+
+
         return zoneSimResults;
+    }
+
+    // Utility methods for deep copying
+    private List<ActiveTask> deepCopyActiveTasks(List<ActiveTask> activeTasks) {
+        return activeTasks.stream()
+            .map(task -> new ActiveTask(task))
+            .collect(Collectors.toList());
+    }
+
+    private Set<PickerTask> deepCopyPickerTasks(Set<PickerTask> pickerTasks) {
+        return pickerTasks.stream()
+            .map(task -> new PickerTask(task))
+            .collect(Collectors.toSet());
     }
 
     /**

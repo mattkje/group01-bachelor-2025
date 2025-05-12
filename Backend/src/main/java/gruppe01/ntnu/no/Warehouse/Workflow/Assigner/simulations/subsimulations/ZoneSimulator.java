@@ -118,12 +118,16 @@ public class ZoneSimulator {
                         zoneSimResult.setErrorMessage(result);
                         return zoneSimResult;
                     }
+
                 }
             }
             // Wait for all tasks to complete
-            zoneLatch.await();
-            zoneExecutor.shutdown();
-            zoneExecutor.awaitTermination(1, TimeUnit.DAYS);
+           zoneLatch.await();
+           zoneExecutor.shutdown();
+           if (!zoneExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
+               zoneSimResult.setErrorMessage("100");
+               return zoneSimResult;
+           }
             return zoneSimResult;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

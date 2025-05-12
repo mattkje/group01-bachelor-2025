@@ -98,7 +98,6 @@ public class SimulationController {
 
   @GetMapping("/monte-carlo")
   public ResponseEntity<Map<Long, List<String>>> monteCarlo() throws Exception {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     LocalDateTime time = worldSimulationController.getCurrentDateTime().getBody();
     if (time == null) {
         throw new IllegalArgumentException("Current date and time is not available");
