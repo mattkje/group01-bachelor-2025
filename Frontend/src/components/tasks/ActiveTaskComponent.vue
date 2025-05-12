@@ -51,8 +51,8 @@ const taskBackgroundColor = computed(() => {
 <style scoped>
 .task-info-box {
   border: 1px solid var(--border-1);
-  border-radius: 1rem;
-  padding: 0.5rem;
+  border-radius: 0.7rem;
+  padding: 0.3rem;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -65,15 +65,15 @@ const taskBackgroundColor = computed(() => {
 }
 
 .task-name {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
   text-align: left;
 }
 
 .task-details {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   text-align: left;
 }
 
@@ -94,11 +94,11 @@ const taskBackgroundColor = computed(() => {
   }
 
   .task-name {
-    font-size: 1rem;
+    font-size: 0.7rem;
   }
 
   .task-details {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
   }
 }
 </style>

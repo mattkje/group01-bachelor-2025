@@ -88,18 +88,25 @@ const updateTasks = () => {
 .content {
   display: flex;
   flex-direction: column;
-  margin: 0 3.5rem;
-  height: 100%;
+  max-height: 45vh; /* Ensure the parent has a constrained height */
+  width: 100%;
+  padding: 1rem;
+  overflow: hidden; /* Prevent content from overflowing */
 }
 
 .activeTaskContainer {
   display: flex;
   flex-wrap: wrap;
+  flex: 1; /* Allow it to grow and fill available space */
+  gap: 1rem;
+  overflow-y: auto; /* Enable vertical scrolling */
   align-content: flex-start;
-  gap: 10px;
-  max-height: calc(100vh - 570px);
-  overflow-y: auto;
-  flex: 1;
+  justify-content: flex-start;
+}
+
+.activeTaskContainer > * {
+  flex: 1 1 250px;
+  max-width: 250px;
 }
 
 ul {
@@ -123,7 +130,7 @@ ul li::before {
 
 .placeholder {
   font-size: 1.2rem;
-  color: #888;
+  color: var(--text-2);
   text-align: center;
 }
 </style>

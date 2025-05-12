@@ -45,7 +45,7 @@ onMounted(async () => {
 <template>
   <div class="overview-widget">
     <h2>Notifications</h2>
-    <router-link class="notification" :to="`/zones/${zoneId}/tasks`">
+    <router-link class="notification" :to="`/zones/${zoneId}/tasks`" v-if="messages.length > 0">
       <div
         v-for="message in messages"
         :key="message"
@@ -55,6 +55,9 @@ onMounted(async () => {
       <p>{{ message }}</p>
       </div>
     </router-link>
+    <div class="no-notifications" v-else>
+      <p>No Notifications</p>
+    </div>
   </div>
 </template>
 
@@ -131,6 +134,16 @@ onMounted(async () => {
 .notification-item img {
   width: 20px;
   height: 20px;
+}
+
+.no-notifications {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  color: var(--text-2);
 }
 
 </style>

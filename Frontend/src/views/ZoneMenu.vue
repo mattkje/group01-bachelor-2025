@@ -58,7 +58,6 @@ onMounted(() => {
             <p>{{ currentZone.workers.length }} Workers | {{ currentZone.tasks.length }} Tasks</p>
           </div>
         </div>
-        <hr>
         <div class="workers-container">
           <h3>Workers</h3>
           <div class="workers">
@@ -71,19 +70,12 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div class="vertical-separator"/>
-      <div class="monte-carlo-graph">
-        <MonteCarloGraph :zone-id="currentZone.id"/>
-      </div>
+      <MonteCarloGraph :zone-id="currentZone.id" class="monte-carlo-graph-class"/>
     </div>
     <hr>
-    <div class="tabs">
-      <button :class="{ active: activeTab === 'calendar' }" @click="activeTab = 'calendar'">Calendar</button>
-      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Tasks</button>
-    </div>
     <div v-if="currentZone" class="bottom-container">
-      <ZoneTasks  :zone="currentZone" :tasks="currentZone.tasks" v-if="activeTab === 'tasks'" />
-      <ZoneCalendar v-if="activeTab === 'calendar'" :zone="currentZone"/>
+      <ZoneCalendar :zone="currentZone" class="bottom-box-right"/>
+      <ZoneTasks :zone="currentZone" :tasks="currentZone.tasks" class="bottom-box"/>
     </div>
   </div>
 </template>
@@ -91,46 +83,29 @@ onMounted(() => {
 <style scoped>
 .container-container {
   height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
-  max-height: 60%;
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: row;
 
 }
 
 .bottom-container {
-  min-height: 30%;
-}
-
-.tabs {
   display: flex;
-  position: relative;
-  top: -34px;
-}
-
-.tabs button {
-  padding: 10px 15px;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.tabs button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  transition: ease 0.2s;
-}
-
-.tabs button.active {
-  background-color: var(--main-color);
-  color: var(--text-1);
-  border-color: var(--main-color-2);
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
 }
 
 .zone-menu {
   padding: 1rem;
+  border-bottom: 1px solid var(--border-1);
 }
 
 .zone-menu h1 {
@@ -148,11 +123,11 @@ onMounted(() => {
 
 
 .zone-info {
-  min-width: 400px;
-  width: 20%;
+  width: 50%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  border-right: 1px solid var(--border-1);
 }
 
 .workers {
@@ -191,6 +166,8 @@ hr {
 }
 
 .workers-container {
+  height: 100%;
+  width: 100%;
   padding: 1rem;
 }
 
@@ -258,10 +235,18 @@ hr {
   align-items: center;
 }
 
-.monte-carlo-graph {
-  width: 100%;
-  padding: 20px;
-  min-height: 100%;
-  max-height: 100%;
+.monte-carlo-graph-class {
+  width: 50%;
+  padding: 2rem;
+}
+
+.bottom-box-right {
+  width: 50%;
+  border-right: 1px solid var(--border-1);
+}
+
+.bottom-box {
+  width: 50%;
+  padding: 2rem;
 }
 </style>

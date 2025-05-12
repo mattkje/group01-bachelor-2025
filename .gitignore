@@ -6,3 +6,5 @@ Backend/target/
 logs/WorkerSemaphore2.log
 logs/WorkerSemaphore2.log.lck
 WorkerSemaphore2.log
+pickroute_FRUIT.ser
+pickroute_FREEZE.ser

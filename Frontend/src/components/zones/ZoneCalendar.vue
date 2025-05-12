@@ -208,13 +208,10 @@ onMounted(() => {
 
 <style scoped>
 .calendar-container {
-  width: 90%;
-  max-width: 1200px;
+  width: 100%;
   height: 100%;
-  margin: 0 3.5rem;
+  margin: 0;
   overflow-y: auto;
-  overflow-x: auto;
-  flex: 1;
 }
 
 table {
@@ -237,7 +234,7 @@ thead th:first-child,
 tbody td:first-child {
   border-left: none;
   width: min-content;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 700;
 }
 
@@ -248,7 +245,7 @@ thead th {
   z-index: 1;
   background-color: var(--background-1);
   border-top: none;
-  font-size: 1rem;
+  font-size: 0.6rem;
 }
 
 .schedule-box {
@@ -306,7 +303,13 @@ thead th {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.top-calendar-navbar h2 {
+  font-size: 1rem;
+  color: var(--text-1);
+  margin: 0;
 }
 
 .top-calendar-navbar-buttons {
@@ -329,7 +332,7 @@ thead th {
 
 @media (max-width: 1600px) {
   .schedule-box {
-    font-size: 0.7rem;
+    font-size: 0.5rem;
   }
 }
 

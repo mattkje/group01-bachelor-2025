@@ -8,15 +8,17 @@ const props = defineProps<{
   zone: Zone;
 }>();
 
+const workersToday = ref(0);
 const workersPresent = ref(0);
 const pendingTasks = ref(0);
 const completedTasks = ref(0);
 
 const fetchWorkerStatus = async () => {
   const listOfNumbers: number[] = await fetchOverviewData(props.zone.id);
-  workersPresent.value = listOfNumbers[0];
+  workersToday.value = listOfNumbers[0];
   pendingTasks.value = listOfNumbers[1];
   completedTasks.value = listOfNumbers[2];
+  workersPresent.value = listOfNumbers[3];
 };
 
 onMounted(async () => {
@@ -26,22 +28,35 @@ onMounted(async () => {
 
 <template>
   <div class="overview-widget">
-    <h2>Worker Status</h2>
+    <h2>Day Status</h2>
     <div class="status-grid">
-      <hr>
-      <div class="status-item">
-        <span class="status-label">Workers Present:</span>
-        <span class="status-value">{{ workersPresent }}</span>
+      <div class="status-group">
+        <div class="status-header">
+          <img src="@/assets/icons/staff.svg">
+          <span class="status-title">Workers</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Present:</span>
+          <span class="status-value">{{ workersPresent }}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Today:</span>
+          <span class="status-value">{{ workersToday }}</span>
+        </div>
       </div>
-      <hr>
-      <div class="status-item">
-        <span class="status-label">Pending Tasks:</span>
-        <span class="status-value">{{ pendingTasks }}</span>
-      </div>
-      <hr>
-      <div class="status-item">
-        <span class="status-label">Completed Tasks:</span>
-        <span class="status-value">{{ completedTasks }}</span>
+      <div class="status-group">
+        <div class="status-header">
+          <img src="@/assets/icons/tasks.svg">
+          <span class="status-title">Tasks</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Pending:</span>
+          <span class="status-value">{{ pendingTasks }}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Completed:</span>
+          <span class="status-value">{{ completedTasks }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -79,6 +94,29 @@ onMounted(async () => {
   width: 100%;
 }
 
+.status-group {
+  margin-bottom: 1rem;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.status-header img {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.status-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-1);
+}
+
 .status-item {
   display: flex;
   justify-content: space-between;
@@ -95,7 +133,7 @@ onMounted(async () => {
   color: var(--main-color);
 }
 
-.status-grid hr {
+.status-group hr {
   width: 100%;
   border: none;
   border-top: 1px solid var(--border-1);
