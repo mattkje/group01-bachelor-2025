@@ -236,7 +236,7 @@ public class ZoneController {
       @PathVariable String date) {
     try {
       LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-      Set<ActiveTask> activeTasks = zoneService.getUnfinishedTasksByZoneIdAndDate(id, parsedDate);
+      Set<ActiveTask> activeTasks = zoneService.getAllTasksByZoneIdAndDate(id, parsedDate);
       if (activeTasks == null) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
       } else {
@@ -266,7 +266,7 @@ public class ZoneController {
     try {
       LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
       Set<PickerTask> pickerTasks =
-          zoneService.getUnfinishedPickerTasksByZoneIdAndDate(id, parsedDate);
+          zoneService.getAllPickerTasksByZoneIdAndDate(id, parsedDate);
       if (pickerTasks == null) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
       } else {

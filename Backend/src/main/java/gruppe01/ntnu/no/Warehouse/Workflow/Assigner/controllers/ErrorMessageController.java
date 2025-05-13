@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/error-messages")
@@ -152,4 +154,30 @@ public class ErrorMessageController {
             return ResponseEntity.ok().build();
         }
     }
+
+    @GetMapping("/done-by")
+    public ResponseEntity<Map<String, String>> getLastErrorMessageTime() {
+        String lastErrorMessageTime = errorMessageService.getLastErrorMessageTime();
+        if (lastErrorMessageTime == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("time", lastErrorMessageTime);
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    @GetMapping("/done-by/{zoneId}")
+    public ResponseEntity<Map<String, String>> getLastErrorMessageTimeByZone(@PathVariable long zoneId) {
+        String lastErrorMessageTime = errorMessageService.getErrorMessageTimeByZone(zoneId);
+        if (lastErrorMessageTime == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("time", lastErrorMessageTime);
+            return ResponseEntity.ok(response);
+        }
+    }
+
+
 }

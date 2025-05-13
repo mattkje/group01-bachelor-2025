@@ -129,3 +129,11 @@ export const fetchNotifications = async (zoneId: number) => {
 export const fetchOverviewData = async (zoneId: number) => {
     return fetchData<number[]>(`http://localhost:8080/api/zone-data/${zoneId}`);
 }
+
+export const fetchDoneBy = async () => {
+    return fetchData<string>(`http://localhost:8080/api/error-messages/done-by`);
+}
+
+export const fetchDoneByForZone = async (zoneId: number) => {
+    return fetchData<string>(`http://localhost:8080/api/error-messages/done-by/${zoneId}`);
+}

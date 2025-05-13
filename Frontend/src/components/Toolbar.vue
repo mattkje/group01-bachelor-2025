@@ -16,10 +16,9 @@ import {
 import axios from "axios";
 import { useSimulationTime } from "@/composables/useSimulationTime";
 
-const { currentTime, currentDate } = useSimulationTime();
+const { currentTime, currentDate, completionTime } = useSimulationTime();
 
 const isSpinning = ref(false);
-let completionTime = ref(null);
 let isPlaying = ref(false);
 const isPaused = ref(false);
 let simCount = ref(10);
@@ -131,13 +130,9 @@ const runSimulations = async () => {
 };
 
 const isFinished = computed(() => {
-  if (completionTime.value === null) {
+  if (completionTime.value !== null) {
     return false;
   }
-  const [hours, minutes] = completionTime.value.split(':').map(Number);
-  const [currentHours, currentMinutes] = currentTime.value.split(':').map(Number);
-
-  return hours < currentHours || (hours === currentHours && minutes < currentMinutes);
 });
 
 const dateText = computed(() => {
