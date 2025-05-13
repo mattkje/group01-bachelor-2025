@@ -94,13 +94,16 @@ public class MonteCarlo {
         if (currentTime == null) {
             currentTime = LocalDateTime.now();
         }
-        List<ActiveTask> activeTasks = activeTaskService.getActiveTasksForToday(currentTime);
+
+        List<ActiveTask> activeTasks = activeTaskService.getUnfinishedActiveTasksForToday(currentTime);
+        List<PickerTask> pickerTasks = pickerTaskService.getUnfinishedPickerTasksForToday(currentTime).stream().toList();
         // if no models are given, get them from the database
         if (models == null) {
             models = mlModel.getAllModels();
         }
         // Initialize lazy-loaded collections
         activeTasks.forEach(task -> Hibernate.initialize(task.getWorkers()));
+        pickerTasks.forEach(task -> Hibernate.initialize(task.getWorker()));
 
         // for loop iterating over the number of simulations
         for (int i = 0; i < simCount; i++) {
@@ -116,9 +119,10 @@ public class MonteCarlo {
                 List<ActiveTask> activeTasksCopy = activeTasks.stream()
                         .map(ActiveTask::new)
                         .toList();
-                Set<PickerTask> pickerTasksCopy =
-                        pickerTaskService.getPickerTasksForToday().stream().map(PickerTask::new)
-                                .collect(Collectors.toSet());
+                Set<PickerTask> pickerTasksCopy = pickerTasks.stream()
+                        .map(PickerTask::new)
+                        .collect(Collectors.toSet());
+
                 // Create a map to hold the results of the simulation
                 Map<Long, ZoneSimResult> zoneSimResults = new HashMap<>();
                 // Iterate over the zones and run the simulation for each zone
@@ -153,7 +157,9 @@ public class MonteCarlo {
                     });
                 }
 
+
                 warehouseExecutor.shutdown();
+                System.out.println("Did all simulations finish?");
                 if (!warehouseExecutor.awaitTermination(5, TimeUnit.MINUTES)) {
                     System.err.println("WarehouseExecutor did not terminate in the specified time.");
                     warehouseExecutor.shutdownNow(); // Force shutdown

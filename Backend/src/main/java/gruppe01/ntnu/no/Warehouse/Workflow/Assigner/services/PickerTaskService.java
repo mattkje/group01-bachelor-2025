@@ -6,6 +6,8 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.PickerTaskRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Set;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
@@ -254,5 +256,15 @@ public class PickerTaskService {
             pickerTaskRepository.save(pickerTask);
         }
         pickerTaskRepository.deleteAll(pickerTaskRepository.findAll());
+    }
+
+    public Set<PickerTask> getUnfinishedPickerTasksForToday(LocalDateTime currentTime) {
+        List<PickerTask> pickerTasks = new ArrayList<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(currentTime.toLocalDate()) && pickerTask.getEndTime() == null) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return Set.copyOf(pickerTasks);
     }
 }

@@ -518,4 +518,17 @@ public class ActiveTaskService {
     public void saveActiveTask(ActiveTask activeTask) {
         activeTaskRepository.save(activeTask);
     }
+
+    public List<ActiveTask> getUnfinishedActiveTasksForToday(LocalDateTime currentTime) {
+        if (currentTime == null) {
+            currentTime = LocalDateTime.now();
+        }
+        List<ActiveTask> activeTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(currentTime.toLocalDate()) && activeTask.getEndTime() == null) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
 }
