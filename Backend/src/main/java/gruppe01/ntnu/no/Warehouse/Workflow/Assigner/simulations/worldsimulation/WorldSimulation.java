@@ -63,6 +63,8 @@ public class WorldSimulation {
 
     private Map<PickerTask, LocalDateTime> pickerTaskEndTimes;
 
+    private Map<Long, Integer> completedTaskMap;
+
     private List<ActiveTask> activeTasksInProgress;
 
     private List<PickerTask> pickerTasksInProgress;
@@ -213,6 +215,7 @@ public class WorldSimulation {
         activeTaskEndTimes = new HashMap<>();
         pickerTasksInProgress = new ArrayList<>();
         pickerTaskEndTimes = new HashMap<>();
+        completedTaskMap = new HashMap<>();
 
         filterData();
 
@@ -415,6 +418,7 @@ public class WorldSimulation {
                 if (computedEndTime != null && !computedEndTime.toLocalTime().isAfter(currentTime)) {
                     task.setEndTime(computedEndTime);
                     task.setTime(Duration.between(task.getStartTime(), computedEndTime).toSeconds());
+                    completedTaskMap.put(task.getZoneId(), completedTaskMap.getOrDefault(task.getZoneId(), 0) + 1);
                     pickerTaskService.updatePickerTask(task.getId(), task.getZone().getId(), task);
                     Worker worker = task.getWorker();
                     worker.setCurrentPickerTask(null);
@@ -437,6 +441,7 @@ public class WorldSimulation {
                     // Now set endTime since we are processing completion
                     task.setEndTime(computedEndTime);
                     activeTaskService.updateActiveTask(task.getId(), task);
+                    completedTaskMap.put(task.getTask().getZoneId(), completedTaskMap.getOrDefault(task.getTask().getZoneId(), 0) + 1);
 
                     for (Worker worker : activeTaskService.getWorkersAssignedToTask(task.getId())) {
                         if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
@@ -812,9 +817,14 @@ public class WorldSimulation {
             data.add(timetables != null ? timetables.size() : 0);
             data.add((activeTasksToday != null ? activeTasksToday.size() : 0)
                     + (activeTasksWithDueDates != null ? activeTasksWithDueDates.size() : 0)
-                    + (pickerTasksToday != null ? pickerTasksToday.size() : 0));
+                    + (pickerTasksToday != null ? pickerTasksToday.size() : 0)
+                    + (activeTasksInProgress != null ? activeTasksInProgress.size() : 0)
+                    + (pickerTasksInProgress != null ? pickerTasksInProgress.size() : 0));
             data.add(activeTasksToday != null
                     ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count()
+                    : 0);
+            data.add(completedTaskMap != null
+                    ? completedTaskMap.values().stream().mapToInt(Integer::intValue).sum()
                     : 0);
             data.add(availableWorkers != null ? availableWorkers.size() : 0);
             return data;
@@ -832,10 +842,15 @@ public class WorldSimulation {
                     : 0)
                     + (pickerTasksToday != null
                     ? (int) pickerTasksToday.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
+                    : 0)
+                    + (activeTasksInProgress != null
+                    ? (int) activeTasksInProgress.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
+                    : 0)
+                    + (pickerTasksInProgress != null
+                    ? (int) pickerTasksInProgress.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
                     : 0));
-            data.add(activeTasksToday != null
-                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null
-                    && activeTask.getTask().getZoneId() == zoneId).count()
+            data.add(completedTaskMap != null ?
+                    completedTaskMap.getOrDefault(zoneId, 0)
                     : 0);
             data.add(availableWorkers != null
                     ? (int) availableWorkers.stream().filter(worker -> worker.getZone() == zoneId).count()
