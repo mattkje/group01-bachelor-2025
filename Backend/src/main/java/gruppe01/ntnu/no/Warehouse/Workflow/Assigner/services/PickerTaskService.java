@@ -106,6 +106,18 @@ public class PickerTaskService {
         return count;
     }
 
+    public List<PickerTask> getPickerTasksNotDoneForTodayInZone(LocalDate date, long zoneId) {
+        List<PickerTask> pickerTasks = new ArrayList<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (zoneId == 0 && pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() == null) {
+                pickerTasks.add(pickerTask);
+            } else if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() == null && pickerTask.getZone().getId().equals(zoneId)) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return pickerTasks;
+    }
+
     /**
      * Retrieves all PickerTask entities for a specific date.
      *

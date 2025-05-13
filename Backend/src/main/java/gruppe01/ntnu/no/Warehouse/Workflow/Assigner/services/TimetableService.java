@@ -222,7 +222,29 @@ public class TimetableService {
         List<Timetable> timetables = timetableRepository.findAll();
         List<Timetable> timetablesByDayAndZone = new ArrayList<>();
         for (Timetable timetable : timetables) {
-            if (timetable.getRealStartTime().toLocalDate().equals(day.toLocalDate()) &&
+            if (timetable.getRealStartTime() == null) {
+                continue;
+            }
+            if (zoneId == 0 && timetable.getRealStartTime().toLocalDate().equals(day.toLocalDate())) {
+                timetablesByDayAndZone.add(timetable);
+            } else if (timetable.getRealStartTime().toLocalDate().equals(day.toLocalDate()) &&
+                    timetable.getWorker().getZone().equals(zoneId)) {
+                timetablesByDayAndZone.add(timetable);
+            }
+        }
+        return timetablesByDayAndZone;
+    }
+
+    public List<Timetable> getTimetabelsOfWorkersWorkingByZone(LocalDateTime day, Long zoneId) {
+        List<Timetable> timetables = timetableRepository.findAll();
+        List<Timetable> timetablesByDayAndZone = new ArrayList<>();
+        for (Timetable timetable : timetables) {
+            if (timetable.getRealStartTime() == null) {
+                continue;
+            }
+            if (zoneId == 0 && timetable.getRealStartTime().isBefore(day) && timetable.getRealEndTime().isAfter(day)) {
+                timetablesByDayAndZone.add(timetable);
+            } else if (timetable.getRealStartTime().isBefore(day) && timetable.getRealEndTime().isAfter(day) &&
                     timetable.getWorker().getZone().equals(zoneId)) {
                 timetablesByDayAndZone.add(timetable);
             }

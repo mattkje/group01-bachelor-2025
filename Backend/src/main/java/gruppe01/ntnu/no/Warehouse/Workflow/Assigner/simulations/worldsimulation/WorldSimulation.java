@@ -39,9 +39,9 @@ public class WorldSimulation {
     private final ErrorMessageService errorMessageService;
     private LocalTime currentSimulationTime;
 
-    private LocalDate workday;
+    private LocalDate workday = LocalDate.now();
 
-    private LocalTime currentTime;
+    private LocalTime currentTime = LocalTime.MIDNIGHT;
 
     private LocalTime endTime;
 
@@ -694,20 +694,6 @@ public class WorldSimulation {
         workersWaitingForTask.remove(worker);
     }
 
-    /**
-     * Processes workers on break by applying the given action to each worker in the iterator.
-     *
-     * @param iterator The iterator for the workers on break.
-     * @param action   The action to apply to each worker.
-     */
-    private void processWorkersOnBreak(Iterator<Worker> iterator, Consumer<Worker> action) {
-        while (iterator.hasNext()) {
-            Worker worker = iterator.next();
-            action.accept(worker);
-            iterator.remove();
-        }
-    }
-
     public LocalDateTime getCurrentDateTime() {
         if (workday == null || currentTime == null) {
             return LocalDateTime.now();
@@ -770,51 +756,28 @@ public class WorldSimulation {
         List<Integer> data = new ArrayList<>();
 
         if (zoneId == 0) {
-            data.add(timetables != null ? timetables.size() : 0);
-            data.add((activeTasksToday != null ? activeTasksToday.size() : 0)
-                    + (activeTasksWithDueDates != null ? activeTasksWithDueDates.size() : 0)
-                    + (pickerTasksToday != null ? pickerTasksToday.size() : 0)
-                    + (activeTasksInProgress != null ? activeTasksInProgress.size() : 0)
-                    + (pickerTasksInProgress != null ? pickerTasksInProgress.size() : 0));
-            data.add(activeTasksToday != null
-                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getEndTime() != null).count()
-                    : 0);
+            data.add(timetableService.getTimetablesByDayAndZone(workday.atTime(currentTime), zoneId).size());
+            data.add(activeTaskService.getNotCompletedActiveTasksByDateAndZone(workday, zoneId).size()
+                    + pickerTaskService.getPickerTasksNotDoneForTodayInZone(workday, zoneId).size());
             data.add(completedTaskMap != null
                     ? completedTaskMap.values().stream().mapToInt(Integer::intValue).sum()
                     : 0);
-            data.add(availableWorkers != null ? availableWorkers.size() : 0);
+            data.add(timetableService.getTimetabelsOfWorkersWorkingByZone(workday.atTime(currentTime), zoneId).size());
             return data;
         } else if (zoneService.getZoneById(zoneId) == null) {
             return data;
         } else {
             //workers showing up today
-            data.add(timetables != null
-                    ? (int) timetables.stream().filter(timetable -> timetable.getWorker().getZone() == zoneId).count()
-                    : 0);
-            //all tasks
-            data.add((activeTasksToday != null
-                    ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
-                    : 0)
-                    + (activeTasksWithDueDates != null
-                    ? (int) activeTasksWithDueDates.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
-                    : 0)
-                    + (pickerTasksToday != null
-                    ? (int) pickerTasksToday.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
-                    : 0)
-                    + (activeTasksInProgress != null
-                    ? (int) activeTasksInProgress.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
-                    : 0)
-                    + (pickerTasksInProgress != null
-                    ? (int) pickerTasksInProgress.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
-                    : 0));
+            data.add(timetableService.getTimetablesByDayAndZone(workday.atTime(currentTime), zoneId).size());
+            //not started
+            data.add(activeTaskService.getNotCompletedActiveTasksByDateAndZone(workday, zoneId).size()
+                    + pickerTaskService.getPickerTasksNotDoneForTodayInZone(workday, zoneId).size());
             //completed tasks
             data.add(completedTaskMap != null ?
                     completedTaskMap.getOrDefault(zoneId, 0)
                     : 0);
             //workers at job
-            data.add(availableWorkers != null
-                    ? (int) availableWorkers.stream().filter(worker -> worker.getZone() == zoneId).count()
-                    : 0);
+            data.add(timetableService.getTimetabelsOfWorkersWorkingByZone(workday.atTime(currentTime), zoneId).size());
             return data;
         }
     }
@@ -828,6 +791,7 @@ public class WorldSimulation {
         activeTaskService.deleteAllActiveTasks();
         pickerTaskService.deleteAllPickerTasks();
         timetableService.deleteAllTimetables();
+
     }
 
     public Map<String, RandomForest> getModels() {

@@ -148,6 +148,28 @@ public class ActiveTaskService {
         return completedActiveTasks;
     }
 
+    public List<ActiveTask> getCompletedActiveTasksByDateAndZone(LocalDate date, Long zoneId) {
+        List<ActiveTask> completedActiveTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getEndTime() != null && activeTask.getDate().equals(date) && activeTask.getTask().getZoneId().equals(zoneId)) {
+                completedActiveTasks.add(activeTask);
+            }
+        }
+        return completedActiveTasks;
+    }
+
+    public List<ActiveTask> getNotCompletedActiveTasksByDateAndZone(LocalDate date, Long zoneId) {
+        List<ActiveTask> completedActiveTasks = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (zoneId == 0 && activeTask.getEndTime() == null && activeTask.getDate().equals(date)) {
+                completedActiveTasks.add(activeTask);
+            } else if (activeTask.getEndTime() == null && activeTask.getDate().equals(date) && activeTask.getTask().getZoneId().equals(zoneId)) {
+                completedActiveTasks.add(activeTask);
+            }
+        }
+        return completedActiveTasks;
+    }
+
     /**
      * Retrieves all active tasks that have not been started.
      *
@@ -172,6 +194,16 @@ public class ActiveTaskService {
         List<ActiveTask> activeTasksInProgress = new ArrayList<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
             if (activeTask.getStartTime() != null && activeTask.getEndTime() == null) {
+                activeTasksInProgress.add(activeTask);
+            }
+        }
+        return activeTasksInProgress;
+    }
+
+    public List<ActiveTask> getActiveTasksInProgressByZone(long zoneId) {
+        List<ActiveTask> activeTasksInProgress = new ArrayList<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getStartTime() != null && activeTask.getEndTime() == null && activeTask.getTask().getZoneId().equals(zoneId)) {
                 activeTasksInProgress.add(activeTask);
             }
         }
