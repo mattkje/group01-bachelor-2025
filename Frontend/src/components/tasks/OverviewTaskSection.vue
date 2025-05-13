@@ -42,11 +42,9 @@ const handleZoneChange = async () => {
   if (props.zone.isPickerZone) {
     await loadPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
-    tasks.value = [];
   } else {
     await loadTasksForZone();
     hasTasks.value = tasks.value.length > 0;
-    pickerTasks.value = [];
   }
   loading.value = false;
 };
@@ -71,6 +69,7 @@ const loadPickerTasksForZone = async () => {
   }
 };
 
+
 const tasksWithoutEndTime = computed(() => {
   return tasks.value.filter(task => !task.endTime);
 });
@@ -88,6 +87,8 @@ const pickerTasksWithEndTime = computed(() => {
 watch(() => props.zone, async () => {
   await handleZoneChange();
 });
+
+
 </script>
 <template>
   <div class="container">

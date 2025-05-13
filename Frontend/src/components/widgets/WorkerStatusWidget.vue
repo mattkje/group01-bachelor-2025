@@ -170,4 +170,29 @@ onMounted(async () => {
     font-size: 1.2rem;
   }
 }
+
+@media (max-height: 800px) {
+  .status-item {
+    width: 100%;
+    flex-direction: row;
+    font-size: 0.1rem;
+  }
+
+  .status-header img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .status-title {
+    font-size: 0.8rem;
+  }
+
+  .status-label {
+    font-size: 0.8rem;
+  }
+
+  .status-value {
+    font-size: 1.2rem;
+  }
+}
 </style>
