@@ -460,26 +460,24 @@ public class WorldSimulation {
 
 
            if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
-               System.out.println("Current time: " + currentTime);
                // Hinder the simulation from running if there are no workers present
-               if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
+               if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get().minus(Duration.ofMinutes(60))))) {
                    if (isSimulationRunning) {
                        System.out.println("A simulation is already running. Skipping this iteration.");
-                       return; // Skip if a simulation is already running
+                   } else {
+                       LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
+                       isSimulationRunning = true; // Mark simulation as running
+
+                       CompletableFuture.runAsync(() -> {
+                           try {
+                               simulationService.runCompleteSimulation(randomForests, daytime);
+                           } catch (ExecutionException | InterruptedException | IOException e) {
+                               throw new RuntimeException(e);
+                           } finally {
+                               isSimulationRunning = false; // Reset the flag when simulation completes
+                           }
+                       });
                    }
-
-                   LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
-                   isSimulationRunning = true; // Mark simulation as running
-
-                   CompletableFuture.runAsync(() -> {
-                       try {
-                           simulationService.runCompleteSimulation(randomForests, daytime);
-                       } catch (ExecutionException | InterruptedException | IOException e) {
-                           throw new RuntimeException(e);
-                       } finally {
-                           isSimulationRunning = false; // Reset the flag when simulation completes
-                       }
-                   });
                }
            }
 

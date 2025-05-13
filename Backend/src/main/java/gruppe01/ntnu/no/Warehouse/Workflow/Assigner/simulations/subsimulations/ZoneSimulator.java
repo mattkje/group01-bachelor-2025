@@ -84,8 +84,18 @@ public class ZoneSimulator {
       //System.out.println("Zone " + zone.getId() + " has " + zoneWorkers.size() + " workers");
 
       // Get the first start time for the zone for a worker that is available
-      LocalDateTime newTime =
-          timetableService.getFirstStartTimeByZoneAndDay(zone.getId(), startTime);
+
+
+      LocalDateTime newTime = timetableService.getFirstStartTimeByZoneAndDay(
+          zone.getId(), startTime);
+
+      if (activeTasks != null && !activeTasks.isEmpty()) {
+        // Get the earliest opportunity for the active tasks
+        LocalDateTime earliestOpportunity = getEarliestOpportunity(activeTasks);
+        if (earliestOpportunity != null) {
+          newTime = earliestOpportunity;
+        }
+      }
       // If the new time is start of day, it means no workers are scheduled to work that day
       if (Objects.equals(newTime, startTime.toLocalDate().atStartOfDay())) {
         // ERROR: NO WORKERS COMING TO WORK TODAY
@@ -94,7 +104,8 @@ public class ZoneSimulator {
         return zoneSimResult;
       }
       // If the new time is before the last time, set the last time to the new time
-      this.lastTime.set(newTime);
+      LocalDateTime finalNewTime = newTime;
+      this.lastTime.updateAndGet(current -> finalNewTime.isAfter(startTime) ? finalNewTime : startTime);
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       // Latch for the tasks in the zone ensuring that all tasks are completed before the simulation ends
       WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(timetableService);
@@ -345,26 +356,33 @@ public class ZoneSimulator {
   }
 
 
-  private void getEarliestOpportunity(List<ActiveTask> activeTasks) {
-    int fewest = activeTasks.stream()
-        .filter(task -> task.getEndTime() == null) // Exclude finished tasks
-        .min(Comparator.comparingInt(
-            task -> task.getTask().getMinWorkers())) // Find the task with the fewest minWorkers
-        .map(task -> task.getTask().getMinWorkers()) // Extract the minWorkers value
-        .orElse(0);
+  private LocalDateTime getEarliestOpportunity(List<ActiveTask> activeTasks) {
+      int fewest = activeTasks.stream()
+          .filter(task -> task.getEndTime() == null) // Exclude finished tasks
+          .min(Comparator.comparingInt(
+              task -> task.getTask().getMinWorkers())) // Find the task with the fewest minWorkers
+          .map(task -> task.getTask().getMinWorkers()) // Extract the minWorkers value
+          .orElse(0);
 
+      if (fewest == 0) {
+          return null;
+      }
 
-    if (fewest == 0) {
-        return;
-    }
-    LocalDateTime earliestTime = this.timetableService.getEarliestTimeWithMinWorkers(
-        fewest, activeTasks.getFirst().getTask().getZoneId(), this.lastTime.get());
+      // Filter tasks to include only those with exactly `fewest` minWorkers
+      List<ActiveTask> filteredTasks = activeTasks.stream()
+          .filter(task -> task.getTask().getMinWorkers() == fewest)
+          .toList();
 
-    if (earliestTime != null && !this.lastTime.get().isAfter(earliestTime)) {
-      this.lastTime.updateAndGet(current ->
-          current.isBefore(earliestTime) ? earliestTime : current
-      );
-    }
+      LocalDateTime earliestTime = this.timetableService.getEarliestTimeWithMinWorkers(
+          fewest, activeTasks.getFirst().getTask().getZoneId(), this.lastTime.get(),filteredTasks);
+
+      if (earliestTime != null && !this.lastTime.get().isAfter(earliestTime)) {
+          this.lastTime.updateAndGet(current ->
+              current.isBefore(earliestTime) ? earliestTime : current
+          );
+          return earliestTime;
+      }
+      return null;
   }
 }
 

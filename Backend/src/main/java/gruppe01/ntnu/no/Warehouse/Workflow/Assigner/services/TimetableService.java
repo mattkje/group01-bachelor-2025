@@ -2,6 +2,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TimetableRepository;
 
 import java.time.LocalDateTime;
@@ -27,15 +28,19 @@ public class TimetableService {
 
     private final WorkerRepository workerRepository;
 
+    private final ActiveTaskRepository activeTaskRepository;
+
     /**
      * Constructor for TimetableService.
      *
      * @param timetableRepository the repository for Timetable
      * @param workerRepository    the repository for Worker
      */
-    public TimetableService(TimetableRepository timetableRepository, WorkerRepository workerRepository) {
+    public TimetableService(TimetableRepository timetableRepository, WorkerRepository workerRepository
+    , ActiveTaskRepository activeTaskRepository) {
         this.timetableRepository = timetableRepository;
         this.workerRepository = workerRepository;
+        this.activeTaskRepository = activeTaskRepository;
     }
 
     /**
@@ -318,7 +323,7 @@ public class TimetableService {
     }
 
 
-    public LocalDateTime getEarliestTimeWithMinWorkers(int minWorkers, Long zoneId, LocalDateTime day) {
+    public LocalDateTime getEarliestTimeWithMinWorkers(int minWorkers, Long zoneId, LocalDateTime day, List<ActiveTask> activeTasks) {
         if (day == null) {
             throw new IllegalArgumentException("The 'day' parameter cannot be null.");
         }
@@ -335,7 +340,23 @@ public class TimetableService {
         int cumulativeCount = 0;
 
         for (LocalDateTime startTime : sortedStartTimes) {
-            cumulativeCount++;
+            // Filter workers available at this time
+            List<Worker> availableWorkers = timetables.stream()
+                    .filter(timetable -> timetable.getRealStartTime().equals(startTime) &&
+                            timetable.getWorker().getZone().equals(zoneId) &&
+                            timetable.getWorker().isAvailability())
+                    .map(Timetable::getWorker)
+                    .toList();
+
+            // Check if workers meet the license requirements for the active tasks
+            for (ActiveTask activeTask : activeTasks) {
+                List<Worker> qualifiedWorkers = availableWorkers.stream()
+                        .filter(worker -> worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))
+                        .toList();
+
+                cumulativeCount += qualifiedWorkers.size();
+            }
+
             if (cumulativeCount >= minWorkers) {
                 return startTime;
             }
