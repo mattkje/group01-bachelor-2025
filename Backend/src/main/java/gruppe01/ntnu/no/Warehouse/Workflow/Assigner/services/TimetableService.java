@@ -263,9 +263,9 @@ public class TimetableService {
         List<Timetable> timetables = timetableRepository.findAll();
         List<Timetable> timetablesForOneWeek = new ArrayList<>();
         for (Timetable timetable : timetables) {
-            if (((timetable.getRealStartTime().toLocalDate().isAfter(date) &&
-                    timetable.getRealStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
-                    (timetable.getRealStartTime().toLocalDate().equals(date))) &&
+            if (((timetable.getStartTime().toLocalDate().isAfter(date) &&
+                    timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
+                    (timetable.getStartTime().toLocalDate().equals(date))) &&
                     timetable.getWorker().getZone().equals(zoneId)) {
                 timetablesForOneWeek.add(timetable);
             }
