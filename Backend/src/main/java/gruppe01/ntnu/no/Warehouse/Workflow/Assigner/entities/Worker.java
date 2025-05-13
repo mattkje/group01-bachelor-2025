@@ -57,10 +57,6 @@ public class Worker {
     @JoinColumn(name = "current_picker_task_id")
     private PickerTask currentPickerTask;
 
-    @Column(name = "break_start_time")
-    @Schema(description = "The start time of the worker's break.")
-    private LocalTime breakStartTime;
-
     @Column(name = "dead")
     @Schema(description = "Indicates if the worker is dead.")
     private boolean dead;
@@ -97,7 +93,6 @@ public class Worker {
         this.availability = worker.availability;
         this.currentActiveTask = worker.currentActiveTask;
         this.currentPickerTask = worker.currentPickerTask;
-        this.breakStartTime = worker.breakStartTime;
         this.dead = worker.dead;
         this.workSchedule = worker.workSchedule;
     }
@@ -133,10 +128,6 @@ public class Worker {
 
     public void setCurrentTask(ActiveTask currentTask) {
         this.currentActiveTask = currentTask;
-    }
-
-    public void setBreakStartTime(LocalTime breakStartTime) {
-        this.breakStartTime = breakStartTime;
     }
 
     public void setDead(boolean dead) {
@@ -192,10 +183,6 @@ public class Worker {
 
     public boolean isDead() {
         return dead;
-    }
-
-    public LocalTime getBreakStartTime() {
-        return breakStartTime;
     }
 
     public Long getZone() {

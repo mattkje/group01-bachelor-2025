@@ -270,7 +270,7 @@ public class WorkerService {
     public void removeTasks() {
         List<Worker> workers = workerRepository.findAll();
         for (Worker worker : workers) {
-            worker.setCurrentPickerTask(null);
+            worker.setCurrentTask(null);
             worker.setCurrentPickerTask(null);
             workerRepository.save(worker);
         }

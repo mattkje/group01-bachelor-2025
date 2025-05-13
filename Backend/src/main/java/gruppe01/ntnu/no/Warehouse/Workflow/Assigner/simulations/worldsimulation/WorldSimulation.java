@@ -49,10 +49,6 @@ public class WorldSimulation {
 
     private List<Worker> availableWorkers;
 
-    private List<Worker> workersDelayedBreak;
-
-    private List<Worker> workersOnBreak;
-
     private List<ActiveTask> activeTasksWithDueDates;
 
     private List<Worker> workersWaitingForTask;
@@ -80,6 +76,8 @@ public class WorldSimulation {
     private boolean isPaused;
 
     private boolean isPlaying;
+
+    private boolean resetData;
 
     private volatile boolean isSimulationRunning = false;
 
@@ -210,8 +208,6 @@ public class WorldSimulation {
         Random random = new Random();
         availableWorkers = new ArrayList<>();
         busyWorkers = new ArrayList<>();
-        workersOnBreak = new ArrayList<>();
-        workersDelayedBreak = new ArrayList<>();
         activeTasksInProgress = new ArrayList<>();
         workersWaitingForTask = new ArrayList<>();
         activeTaskEndTimes = new HashMap<>();
@@ -281,13 +277,10 @@ public class WorldSimulation {
      */
     private void startSimulating() throws InterruptedException, IOException, ExecutionException {
         //Runs while the current time is not equal to the end time and the simulation is not paused, which is 00:00.
-        while (!currentTime.equals(endTime) && !isPaused && isPlaying) {
+        while (!currentTime.equals(endTime) && !isPaused && isPlaying && !resetData) {
             for (Timetable timetable : timetables) {
                 processTimetable(timetable);
             }
-
-            processWorkersOnBreak(workersDelayedBreak.iterator(), this::startBreak);
-            processWorkersOnBreak(workersOnBreak.iterator(), this::endBreak);
 
             // Assign tasks to available workers
             Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
@@ -497,6 +490,11 @@ public class WorldSimulation {
             currentTime = currentTime.plusMinutes(1);
             TimeUnit.MILLISECONDS.sleep(simulationSleepInMillis);
         }
+
+        if (resetData) {
+            isPlaying = false;
+            resetTaskData();
+        }
     }
 
     public LocalTime getCurrentTime() {
@@ -664,10 +662,6 @@ public class WorldSimulation {
     private void processTimetable(Timetable timetable) {
         LocalTime realStartTime = timetable.getRealStartTime().toLocalTime();
         LocalTime realEndTime = timetable.getRealEndTime().toLocalTime();
-        LocalTime midpoint = timetable.getStartTime().toLocalTime()
-                .plusHours(timetable.getEndTime().toLocalTime().minusHours(timetable.getStartTime().getHour()).getHour() / 2);
-        LocalTime breakStart = midpoint.minusMinutes(15L);
-        LocalTime breakEnd = midpoint.plusMinutes(15L);
 
         if (realStartTime.equals(currentTime) && timetable.getWorker().isAvailability()) {
             logAndAddWorker(timetable.getWorker(), "has started working");
@@ -676,18 +670,6 @@ public class WorldSimulation {
         if ((realEndTime.isBefore(currentTime) || realEndTime.equals(currentTime)) &&
                 (availableWorkers.contains(timetable.getWorker()) || workersWaitingForTask.contains(timetable.getWorker()))) {
             logAndRemoveWorker(timetable.getWorker(), "has stopped working");
-        }
-
-        if (breakStart.equals(currentTime) && !availableWorkers.contains(timetable.getWorker()) &&
-                !workersDelayedBreak.contains(timetable.getWorker())) {
-            workersDelayedBreak.add(timetable.getWorker());
-        } else if (midpoint.equals(currentTime) && availableWorkers.contains(timetable.getWorker())) {
-            logAndRemoveWorker(timetable.getWorker(), "is on break");
-        }
-
-        if (breakEnd.equals(currentTime) && !workersDelayedBreak.contains(timetable.getWorker()) &&
-                !workersOnBreak.contains(timetable.getWorker())) {
-            logAndAddWorker(timetable.getWorker(), "has ended their lunch break");
         }
     }
 
@@ -725,36 +707,6 @@ public class WorldSimulation {
             Worker worker = iterator.next();
             action.accept(worker);
             iterator.remove();
-        }
-    }
-
-    /**
-     * Starts a break for the worker if they are not currently assigned to a task and are not already on break.
-     *
-     * @param worker The worker to start a break for.
-     */
-    private void startBreak(Worker worker) {
-        if (worker.getCurrentTaskId() == null && !workersOnBreak.contains(worker)) {
-            System.out.println(worker.getName() + " is on break");
-            worker.setBreakStartTime(currentTime);
-            workersOnBreak.add(worker);
-            availableWorkers.remove(worker);
-        }
-    }
-
-    /**
-     * Ends the break for the worker if they have been on break for 30 minutes.
-     *
-     * @param worker The worker to end the break for.
-     */
-    private void endBreak(Worker worker) {
-        if (worker.getBreakStartTime().plusMinutes(30).equals(currentTime)) {
-            System.out.println(worker.getName() + " has ended their break");
-            worker.setBreakStartTime(null);
-            if (!availableWorkers.contains(worker) && !workersWaitingForTask.contains(worker)) {
-                availableWorkers.add(worker);
-                workersOnBreak.remove(worker);
-            }
         }
     }
 
@@ -799,20 +751,14 @@ public class WorldSimulation {
         }
         clearCollection(availableWorkers);
         clearCollection(busyWorkers);
-        clearCollection(workersDelayedBreak);
-        clearCollection(workersOnBreak);
         clearCollection(workersWaitingForTask);
     }
 
     public void resetSimulationDate() {
-        isPlaying = false;
-        isPaused = false;
-        flushGraphs();
-        workday = LocalDate.now();
-        currentTime = LocalTime.MIDNIGHT;
-        workerService.removeTasks();
-        activeTaskService.deleteAllActiveTasks();
-        pickerTaskService.deleteAllPickerTasks();
+        resetData = true;
+        if (!isPlaying) {
+            resetTaskData();
+        }
     }
 
     public void setIntervalId(int intervalId) {
@@ -843,9 +789,11 @@ public class WorldSimulation {
         } else if (zoneService.getZoneById(zoneId) == null) {
             return data;
         } else {
+            //workers showing up today
             data.add(timetables != null
                     ? (int) timetables.stream().filter(timetable -> timetable.getWorker().getZone() == zoneId).count()
                     : 0);
+            //all tasks
             data.add((activeTasksToday != null
                     ? (int) activeTasksToday.stream().filter(activeTask -> activeTask.getTask().getZoneId() == zoneId).count()
                     : 0)
@@ -861,14 +809,27 @@ public class WorldSimulation {
                     + (pickerTasksInProgress != null
                     ? (int) pickerTasksInProgress.stream().filter(pickerTask -> pickerTask.getZone().getId() == zoneId).count()
                     : 0));
+            //completed tasks
             data.add(completedTaskMap != null ?
                     completedTaskMap.getOrDefault(zoneId, 0)
                     : 0);
+            //workers at job
             data.add(availableWorkers != null
                     ? (int) availableWorkers.stream().filter(worker -> worker.getZone() == zoneId).count()
                     : 0);
             return data;
         }
+    }
+
+    public void resetTaskData() {
+        isPaused = false;
+        flushGraphs();
+        workday = LocalDate.now();
+        currentTime = LocalTime.MIDNIGHT;
+        workerService.removeTasks();
+        activeTaskService.deleteAllActiveTasks();
+        pickerTaskService.deleteAllPickerTasks();
+        timetableService.deleteAllTimetables();
     }
 
     public Map<String, RandomForest> getModels() {

@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS worker
     work_title    VARCHAR(255) NOT NULL,
     efficiency    DOUBLE       NOT NULL,
     availability  BOOLEAN DEFAULT TRUE,
-    break_start_time TIMESTAMP,
     dead          BOOLEAN DEFAULT FALSE
 );
 
@@ -96,14 +95,6 @@ CREATE TABLE IF NOT EXISTS task_license
     license_id BIGINT NOT NULL,
     FOREIGN KEY (task_id) REFERENCES task (id),
     FOREIGN KEY (license_id) REFERENCES license (id)
-);
-
-CREATE TABLE IF NOT EXISTS zone_worker
-(
-    zone_id   BIGINT NOT NULL,
-    worker_id BIGINT NOT NULL,
-    FOREIGN KEY (zone_id) REFERENCES zone (id),
-    FOREIGN KEY (worker_id) REFERENCES worker (id)
 );
 
 CREATE TABLE IF NOT EXISTS timetable
@@ -482,24 +473,6 @@ VALUES (1, 1), (1, 2), (1, 3), (1, 4),
          (32, 1), (32, 2), (32, 3), (32, 4),
          (33, 1), (33, 2), (33, 3), (33, 4),
          (34, 1), (34, 2), (34, 3), (34, 4);
-
--- Assuming zone IDs are from 1 to 6
-INSERT INTO zone_worker (zone_id, worker_id)
-VALUES (1, 1),
-       (1, 2),
-       (1, 13),
-       (2, 3),
-       (2, 4),
-       (2, 14),
-       (3, 5),
-       (3, 6),
-       (3, 15),
-       (4, 7),
-       (4, 8),
-       (5, 9),
-       (5, 10),
-       (5, 11),
-       (6, 12);
 
 
 INSERT INTO task (name, description, min_duration, max_duration, min_workers, max_workers, zone_id)

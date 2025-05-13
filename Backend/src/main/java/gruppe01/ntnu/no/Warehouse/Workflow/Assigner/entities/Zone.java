@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
@@ -39,6 +40,7 @@ public class Zone {
 
     @OneToMany(mappedBy = "zone", fetch = FetchType.LAZY)
     @Schema(description = "The picker tasks associated with this zone.")
+    @JsonIgnore
     private Set<PickerTask> pickerTask = new HashSet<>();
 
     @Column(name = "is_picker_zone")
