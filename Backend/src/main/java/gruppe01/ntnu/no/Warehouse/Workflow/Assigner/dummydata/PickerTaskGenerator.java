@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
@@ -41,8 +42,8 @@ public class PickerTaskGenerator {
      * @param machineLearningModelPicking The machine learning model for picking data.
      * @throws IOException If an error occurs while fetching machine learning data.
      */
-    public void generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay,
-                                    MachineLearningModelPicking machineLearningModelPicking) throws IOException {
+    public List<PickerTask> generatePickerTasks(LocalDate startDate, int numDays, int numTasksPerDay,
+                                    MachineLearningModelPicking machineLearningModelPicking, boolean testData) throws IOException {
 
         List<Map<List<Double>, List<List<Double>>>> mcValuesList = List.of(
                 machineLearningModelPicking.getMcValues("dry"),
@@ -51,6 +52,7 @@ public class PickerTaskGenerator {
         );
 
         Random random = new Random();
+        List<PickerTask> allPickerTasks = new ArrayList<>();
 
         for (Zone zone : zoneService.getAllPickerZones()) {
             Map<List<Double>, List<List<Double>>> mcValues = getMcValuesForZone(zone, mcValuesList);
@@ -60,13 +62,17 @@ public class PickerTaskGenerator {
             for (int i = 0; i < numDays; i++) {
                 LocalDate currentDate = startDate.plusDays(i);
                 for (int j = 0; j < numTasksPerDay; j++) {
-                    PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random);
+                    PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random, testData);
                     pickerTasks.add(pickerTask);
-                    pickerTaskService.savePickerTask(pickerTask);
+                    if (!testData) {
+                        pickerTaskService.savePickerTask(pickerTask);
+                    } else {
+                        allPickerTasks.add(pickerTask);
+                    }
                 }
             }
-            machineLearningModelPicking.createDBModel(pickerTasks, zone.getName());
         }
+        return allPickerTasks;
     }
 
     private Map<List<Double>, List<List<Double>>> getMcValuesForZone(Zone zone, List<Map<List<Double>, List<List<Double>>>> mcValuesList) {
@@ -77,7 +83,7 @@ public class PickerTaskGenerator {
         };
     }
 
-    private PickerTask createPickerTask(Zone zone, LocalDate date, List<List<Double>> valueList, Random random) {
+    private PickerTask createPickerTask(Zone zone, LocalDate date, List<List<Double>> valueList, Random random, boolean testData) {
         PickerTask pickerTask = new PickerTask();
         pickerTask.setZone(zone);
         pickerTask.setDate(date);
@@ -88,6 +94,11 @@ public class PickerTaskGenerator {
         pickerTask.setWeight((int) generateRandomValue(valueList.get(3), random));
         pickerTask.setVolume((int) generateRandomValue(valueList.get(4), random));
         pickerTask.setAvgHeight(generateRandomValue(valueList.get(5), random));
+        if (testData) {
+            Worker worker = new Worker();
+            worker.setId(random.nextLong(1, 51));
+            pickerTask.setWorker(worker);
+        }
 
         return pickerTask;
     }

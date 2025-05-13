@@ -1,8 +1,8 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -16,8 +16,6 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.measure.NominalScale;
 import smile.data.vector.DoubleVector;
-import java.io.FileReader;
-import java.io.IOException;
 
 import smile.regression.RandomForest;
 import smile.validation.metric.MSE;
@@ -36,6 +34,7 @@ public class MachineLearningModelPicking {
 
   Map<String, DataFrame> dataFrames = new HashMap<>();
   Map<String, RandomForest> randomForests = new HashMap<>();
+  private static final String METRICS_FILE = "model_performance_metrics.csv";
 
   /**
    * Creates a model if one does not exist
@@ -90,82 +89,75 @@ public class MachineLearningModelPicking {
 
     RandomForest model = loadModel(department, filePath);
 
-    if (model == null) {
-      List<double[]> rows = new ArrayList<>();
+    List<double[]> rows = new ArrayList<>();
 
-      if (!pickerTasks.isEmpty()) {
-        for (PickerTask pickerTask : pickerTasks) {
-          rows.add(new double[]{
-                  pickerTask.getDistance(),
-                  pickerTask.getPackAmount(),
-                  pickerTask.getLinesAmount(),
-                  pickerTask.getWeight(),
-                  pickerTask.getVolume(),
-                  pickerTask.getAvgHeight(),
-                  (double) pickerTask.getWorker().getId(),
-                  pickerTask.getTime()
-          });
-        }
-      } else {
-        return "Error: No data exists for: " + department.toUpperCase() + ".";
+    if (!pickerTasks.isEmpty()) {
+      for (PickerTask pickerTask : pickerTasks) {
+        rows.add(new double[]{
+                pickerTask.getDistance(),
+                pickerTask.getPackAmount(),
+                pickerTask.getLinesAmount(),
+                pickerTask.getWeight(),
+                pickerTask.getVolume(),
+                pickerTask.getAvgHeight(),
+                (double) pickerTask.getWorker().getId(),
+                pickerTask.getTime()
+        });
       }
+    } else {
+      return "Error: No data exists for: " + department.toUpperCase() + ".";
+    }
 
-      double[][] data = rows.toArray(new double[0][]);
+    double[][] data = rows.toArray(new double[0][]);
 
-      String[] columnNames = {
-              "distance_m", "dpack_equivalent_amount", "lines",
-              "weight_g", "volume_ml", "avg_height", "picker", "time_s"
-      };
+    String[] columnNames = {
+            "distance_m", "dpack_equivalent_amount", "lines",
+            "weight_g", "volume_ml", "avg_height", "picker", "time_s"
+    };
 
-      DataFrame dataFrame = DataFrame.of(data, columnNames);
+    DataFrame dataFrame = DataFrame.of(data, columnNames);
+
+    if (model == null) {
 
       // Train and save the model
       RandomForest randomForestModel = RandomForest.fit(Formula.lhs("time_s"), dataFrame);
       saveModel(randomForestModel, "pickroute_database_" + department.toUpperCase() + ".ser");
       return "";
+    } else {
+      model = trainModel(dataFrame);
+      saveModel(model, "pickroute_database_" + department.toUpperCase() + ".ser");
+      return "Model has been updated.";
     }
-    return "Model already exists. No new model trained.";
   }
 
-  public void compareModels(RandomForest model1, RandomForest model2, DataFrame testData) {
-    // Extract features and target from the test dataset
-    DataFrame features = testData.drop("time_s");
-    double[] actual = testData.column("time_s").toDoubleArray();
+  public void compareModels(String department, List<PickerTask> testData) throws IOException {
+    // Load the models
+    RandomForest model1 = loadModel(department, "pickroute_" + department.toUpperCase() + ".ser");
+    RandomForest model2 = loadModel(department, "pickroute_database_" + department.toUpperCase() + ".ser");
 
-    // Predict using the first model
-    double[] predictions1 = model1.predict(features);
-    double mse1 = MSE.of(actual, predictions1);
-    double r2_1 = R2.of(actual, predictions1);
-
-    // Calculate percentage error for Model 1
-    double totalPercentageError1 = 0.0;
-    for (int i = 0; i < actual.length; i++) {
-      totalPercentageError1 += Math.abs((actual[i] - predictions1[i]) / actual[i]) * 100;
+    if (model1 == null || model2 == null) {
+      throw new IllegalStateException("One or both models not found for department: " + department);
     }
-    double avgPercentageError1 = totalPercentageError1 / actual.length;
 
-    // Predict using the second model
-    double[] predictions2 = model2.predict(features);
-    double mse2 = MSE.of(actual, predictions2);
-    double r2_2 = R2.of(actual, predictions2);
+    double totalErrorModel2 = 0.0;
 
-    // Calculate percentage error for Model 2
-    double totalPercentageError2 = 0.0;
-    for (int i = 0; i < actual.length; i++) {
-      totalPercentageError2 += Math.abs((actual[i] - predictions2[i]) / actual[i]) * 100;
+    for (PickerTask pickerTask : testData) {
+      double predictedByModel1 = estimateTimeUsingModel(model1, pickerTask);
+      double predictedByModel2 = estimateTimeUsingModel(model2, pickerTask);
+
+      System.out.println("Model 1 Prediction: " + predictedByModel1);
+      System.out.println("Model 2 Prediction: " + predictedByModel2);
+
+      totalErrorModel2 += Math.abs(predictedByModel1 - predictedByModel2);
     }
-    double avgPercentageError2 = totalPercentageError2 / actual.length;
 
-    // Print the results
-    System.out.println("Model 1 - MSE: " + mse1 + ", R2: " + r2_1 + ", Avg Percentage Error: " + avgPercentageError1 + "%");
-    System.out.println("Model 2 - MSE: " + mse2 + ", R2: " + r2_2 + ", Avg Percentage Error: " + avgPercentageError2 + "%");
+    System.out.println("Total error model2: " + totalErrorModel2);
 
-    // Compare the models
-    if (mse1 < mse2) {
-      System.out.println("Model 1 is more accurate based on MSE.");
-    } else {
-      System.out.println("Model 2 is more accurate based on MSE.");
-    }
+    double maeModel2 = totalErrorModel2 / testData.size();
+
+    System.out.println("Model 2 of " + department + " MAE compared to Model 1: " + maeModel2);
+
+    saveMetrics(department, maeModel2);
   }
 
   private List<Double> getWeights(RandomForest model) {
@@ -319,12 +311,12 @@ public class MachineLearningModelPicking {
       return randomForests.get(department.toUpperCase());
     }
 
-    copyDefaultModelIfMissing(department.toUpperCase(), filePath);
-
     try {
       RandomForest model = ModelLoader.loadModel(filePath);
       if (model != null) {
         randomForests.put(department.toUpperCase(), model);
+      } else {
+        copyDefaultModelIfMissing(department.toUpperCase(), filePath);
       }
       return model;
     } catch (IOException | ClassNotFoundException e) {
@@ -609,5 +601,22 @@ public class MachineLearningModelPicking {
       RandomForest model = RandomForest.fit(Formula.lhs("time_s"), dataFrame);
       saveModel(model, "pickroute_" + department.toUpperCase() + ".ser");
     }
+  }
+
+  public void saveMetrics(String department, double mae) throws IOException {
+    try (FileWriter writer = new FileWriter(METRICS_FILE, true)) {
+      writer.write(department + "," + System.currentTimeMillis() + "," + mae + "\n");
+    }
+  }
+
+  public List<String[]> loadMetrics() throws IOException {
+    List<String[]> metrics = new ArrayList<>();
+    try (BufferedReader reader = new BufferedReader(new FileReader(METRICS_FILE))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        metrics.add(line.split(","));
+      }
+    }
+    return metrics;
   }
 }

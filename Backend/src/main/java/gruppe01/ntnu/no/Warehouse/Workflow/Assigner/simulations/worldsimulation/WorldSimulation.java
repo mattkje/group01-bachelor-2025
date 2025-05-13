@@ -180,7 +180,7 @@ public class WorldSimulation {
                 if (timetableService.getTimetablesByDate(workday).isEmpty()) {
                     timeTableGenerator.generateTimeTable(workday);
                 }
-                pickerTaskGenerator.generatePickerTasks(workday, 1, 20, machineLearningModelPicking);
+                pickerTaskGenerator.generatePickerTasks(workday, 1, 20, machineLearningModelPicking, false);
                 activeTasksExistForWorkday = true;
             } else {
                 workday = workday.plusDays(1);
@@ -251,8 +251,12 @@ public class WorldSimulation {
                 pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
             }
 
+            List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, true);
+            List<PickerTask> pickerTasksList = pickerTaskService.getAllPickerTasks().stream().filter(pickerTask -> pickerTask.getDate() == workday && pickerTask.getEndTime() != null).toList();
+
             for (Zone zone : zoneService.getAllPickerZones()) {
-                //machineLearningModelPicking.compareModels();
+                System.out.println(machineLearningModelPicking.createDBModel(pickerTasksList.stream().filter(pickerTask -> pickerTask.getZoneId() == zone.getId()).toList(), zone.getName()));
+                machineLearningModelPicking.compareModels(zone.getName(), pickerTasks.stream().filter(pickerTask -> pickerTask.getZone() == zone).toList());
             }
 
 
@@ -291,8 +295,7 @@ public class WorldSimulation {
                                     availableWorkers.stream(),
                                     workersWaitingForTask.stream())
                             .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
-                                    (task.getTask().getRequiredLicense().isEmpty() ||
-                                            worker.getLicenses().containsAll(task.getTask().getRequiredLicense())))
+                                            worker.getLicenses().containsAll(task.getTask().getRequiredLicense()))
                             .collect(Collectors.toList());
                     int workersSlots;
                     if (workers.size() >= task.getTask().getMinWorkers()) {
@@ -373,8 +376,7 @@ public class WorldSimulation {
 
                 List<Worker> workers = new ArrayList<>(availableWorkers.stream()
                         .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
-                                (task.getTask().getRequiredLicense().isEmpty() ||
-                                        worker.getLicenses().containsAll(task.getTask().getRequiredLicense())))
+                                        worker.getLicenses().containsAll(task.getTask().getRequiredLicense()))
                         .collect(Collectors.toList()));
                 int workersSlots = 0;
                 if (workers.size() >= task.getTask().getMinWorkers()) {

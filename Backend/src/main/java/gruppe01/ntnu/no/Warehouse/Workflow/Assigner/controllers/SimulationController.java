@@ -192,7 +192,7 @@ public class SimulationController {
     LocalDate startDate = LocalDate.parse(date);
     MachineLearningModelPicking machineLearningModelPicking = new MachineLearningModelPicking();
     pickerTaskGenerator.generatePickerTasks(startDate, numDays, numOfTasksPerDay,
-        machineLearningModelPicking);
+        machineLearningModelPicking, false);
   }
 
   @Operation(
