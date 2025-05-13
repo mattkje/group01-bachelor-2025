@@ -144,6 +144,7 @@ public class ZoneSimulator {
       }
       // Wait for all tasks to complete
       zoneLatch.await();
+      System.out.println("Zone " + zone.getId() + " simulation completed at " + this.lastTime.get());
       zoneExecutor.shutdown();
       if (!zoneExecutor.awaitTermination(1, TimeUnit.MINUTES)) {
         zoneSimResult.setErrorMessage("100");
@@ -166,7 +167,7 @@ public class ZoneSimulator {
             task2.getWorker() != null,
             task1.getWorker() != null
         ))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   /**
@@ -199,7 +200,7 @@ public class ZoneSimulator {
         // Set start time of task to the last time
         LocalDateTime startTime = this.lastTime.get();
         // Simulate the task duration using the model (divided by 60 to get minutes)
-        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
+        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask, pickerTask.getWorker().getId())) / 60;
         // Sleep for the task duration
         TimeUnit.MILLISECONDS.sleep(taskDuration);
         // Set picker task attributes

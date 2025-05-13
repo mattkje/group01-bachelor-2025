@@ -91,9 +91,9 @@ public class SimulationService {
             } else {
                 model = mlModel.getModel(zone.getName(), false);
             }
-            pickerTasks = zoneService.getPickerTasksByZoneId(zoneId);
+            pickerTasks = zoneService.getUnfinishedPickerTasksByZoneIdAndDate(zoneId,day.toLocalDate());
         } else {
-            activeTasks = zoneService.getActiveTasksByZoneId(zoneId).stream().toList();
+            activeTasks = zoneService.getUnfinishedTasksByZoneIdAndDate(zoneId, day.toLocalDate()).stream().toList();
 
         }
 

@@ -115,6 +115,7 @@ public class Utils {
 
     public void saveSimulationResults(List<SimulationResult> simulationResults, LocalDateTime now) {
         monteCarloService.dropAllData();
+        errorMessageService.deleteAll();
         for (int i = 0; i < simulationResults.size(); i++) {
             SimulationResult simulationResult = simulationResults.get(i);
             saveGeneralSimulation(simulationResult, i,now);
@@ -167,7 +168,6 @@ public class Utils {
 
  public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
      Map<Long, ErrorMessage> errorMessages = errorMessageService.generateErrorMessageMapFromZones();
-     errorMessageService.deleteAll();
      Map<Long, ZoneSimResult> bestCases = new HashMap<>();
 
      for (SimulationResult simulationResult : simulationResults) {

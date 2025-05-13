@@ -117,6 +117,8 @@ public class WorkerService {
         updatedWorker.setLicenses(worker.getLicenses());
         updatedWorker.setZone(worker.getZone());
         updatedWorker.setWorkerType(worker.getWorkerType());
+        updatedWorker.setCurrentPickerTask(worker.getCurrentPickerTask());
+        updatedWorker.setCurrentTask(worker.getCurrentActiveTask());
 
         if (worker.getWorkSchedule() != updatedWorker.getWorkSchedule()) {
             for (Timetable timetable : timetableRepository.findAll()) {

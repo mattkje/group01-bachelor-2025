@@ -142,8 +142,8 @@ public class MachineLearningModelPicking {
     double totalErrorModel2 = 0.0;
 
     for (PickerTask pickerTask : testData) {
-      double predictedByModel1 = estimateTimeUsingModel(model1, pickerTask);
-      double predictedByModel2 = estimateTimeUsingModel(model2, pickerTask);
+      double predictedByModel1 = estimateTimeUsingModel(model1, pickerTask, pickerTask.getWorker().getId());
+      double predictedByModel2 = estimateTimeUsingModel(model2, pickerTask, pickerTask.getWorker().getId());
 
       System.out.println("Model 1 Prediction: " + predictedByModel1);
       System.out.println("Model 2 Prediction: " + predictedByModel2);
@@ -473,7 +473,7 @@ public class MachineLearningModelPicking {
   }
 
   public long estimateTimeUsingModel(
-      RandomForest model, PickerTask pickerTask
+      RandomForest model, PickerTask pickerTask, long workerId
   ) throws IOException {
     if (model == null) {
       throw new IllegalStateException("Model not provided for department");
@@ -486,7 +486,7 @@ public class MachineLearningModelPicking {
         pickerTask.getWeight(),
         pickerTask.getVolume(),
         pickerTask.getAvgHeight(),
-        pickerTask.getWorker().getId()
+        workerId
     };
 
     // Create a DataFrame with only the feature columns (exclude time_s)
