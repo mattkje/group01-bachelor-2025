@@ -186,8 +186,8 @@ onMounted(() => {
     <span
         v-if="schedule.startTime.split('T')[0] === dateObj.isoDate"
     >
-      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }} -
-      {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' , hourCycle: 'h23'}) }} -
+      {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' , hourCycle: 'h23'}) }}
     </span>
           </div>
         </div>
