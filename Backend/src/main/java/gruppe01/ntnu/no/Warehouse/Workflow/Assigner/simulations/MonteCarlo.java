@@ -84,7 +84,6 @@ public class MonteCarlo {
     public List<SimulationResult> monteCarlo(int simCount, Map<String, RandomForest> models, LocalDateTime currentTime, TimetableService timetableService)
             throws InterruptedException, ExecutionException, IOException {
         // Zone simulator object to run the simulation
-        ZoneSimulator zoneSimulator = new ZoneSimulator();
         ExecutorService simulationExecutor =
                 Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         // List of futures to hold the results of the simulation
@@ -124,6 +123,7 @@ public class MonteCarlo {
                 Map<Long, ZoneSimResult> zoneSimResults = new HashMap<>();
                 // Iterate over the zones and run the simulation for each zone
                 for (Zone zone : zonesCopy) {
+                    ZoneSimulator zoneSimulator = new ZoneSimulator();
                     warehouseExecutor.submit(() -> {
                         try {
                             ZoneSimResult zoneSimResult = new ZoneSimResult();

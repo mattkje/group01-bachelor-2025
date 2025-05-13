@@ -18,7 +18,7 @@ const handleTaskUpdated = () => {
 const taskBackgroundColor = computed(() => {
   const { startTime, endTime } = props.pickerTask;
   if (startTime && !endTime) {
-    return "#FFFF99";
+    return "#fff3cd";
   } else if (startTime && endTime) {
     return "#D4EDD9";
   }
@@ -43,37 +43,32 @@ const taskBackgroundColor = computed(() => {
     </div>
   </div>
 </template>
-
 <style scoped>
 .task-info-box {
   border: 1px solid var(--border-1);
-  border-radius: 10px;
-  color: var(--text-1);
-  padding: 0.5rem;
+  border-radius: 0.7rem;
+  padding: 0.3rem;
   display: flex;
   flex-direction: column;
   width: 100%;
-  position: relative;
-}
-
-.task-name {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  text-align: left;
+  color: var(--text-1);
 }
 
 .task-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+}
+
+.task-name {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
   text-align: left;
 }
 
 .task-details {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   text-align: left;
 }
 
@@ -86,5 +81,19 @@ const taskBackgroundColor = computed(() => {
 
 .task-zone {
   align-self: flex-end;
+}
+
+@media (max-width: 1400px) {
+  .task-info-box {
+    max-height: 100px;
+  }
+
+  .task-name {
+    font-size: 0.7rem;
+  }
+
+  .task-details {
+    font-size: 0.6rem;
+  }
 }
 </style>

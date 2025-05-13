@@ -32,7 +32,6 @@ const showNotificationBubble = ref(false);
 const notificationMessage = ref<string[]>([]);
 const notification = ref(false);
 const isPickerZone = ref(false);
-const currentDate = ref<string>('');
 const loading = ref(true);
 
 const loadCurrentDateTime = async () => {

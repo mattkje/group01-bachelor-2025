@@ -7,9 +7,11 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.TimetableReposi
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.WorkerRepository;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -79,7 +81,7 @@ public class TimetableService {
     public List<Timetable> getTodaysTimetables() {
         List<Timetable> todaysTimetables = new ArrayList<>();
         for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+            if (timetable.getRealStartTime().toLocalDate().equals(LocalDate.now())) {
                 todaysTimetables.add(timetable);
             }
         }
@@ -96,7 +98,7 @@ public class TimetableService {
         List<Timetable> todayTimetables = new ArrayList<>();
         for (Timetable timetable : timetableRepository.findAll()) {
             if (timetable.getWorker().getZone().equals(zoneId) &&
-                    timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+                    timetable.getRealStartTime().toLocalDate().equals(LocalDate.now())) {
                 todayTimetables.add(timetable);
             }
         }
@@ -198,7 +200,7 @@ public class TimetableService {
      */
     public void deleteAllTimetablesForToday() {
         for (Timetable timetable : timetableRepository.findAll()) {
-            if (timetable.getStartTime().toLocalDate().equals(LocalDate.now())) {
+            if (timetable.getRealStartTime().toLocalDate().equals(LocalDate.now())) {
                 timetableRepository.delete(timetable);
             }
         }
@@ -215,7 +217,7 @@ public class TimetableService {
         List<Timetable> timetables = timetableRepository.findAll();
         List<Timetable> timetablesByDayAndZone = new ArrayList<>();
         for (Timetable timetable : timetables) {
-            if (timetable.getStartTime().toLocalDate().equals(day.toLocalDate()) &&
+            if (timetable.getRealStartTime().toLocalDate().equals(day.toLocalDate()) &&
                     timetable.getWorker().getZone().equals(zoneId)) {
                 timetablesByDayAndZone.add(timetable);
             }
@@ -234,9 +236,9 @@ public class TimetableService {
         List<Timetable> timetables = timetableRepository.findAll();
         List<Timetable> timetablesForOneWeek = new ArrayList<>();
         for (Timetable timetable : timetables) {
-            if (((timetable.getStartTime().toLocalDate().isAfter(date) &&
-                    timetable.getStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
-                    (timetable.getStartTime().toLocalDate().equals(date))) &&
+            if (((timetable.getRealStartTime().toLocalDate().isAfter(date) &&
+                    timetable.getRealStartTime().toLocalDate().isBefore(date.plusDays(7))) ||
+                    (timetable.getRealStartTime().toLocalDate().equals(date))) &&
                     timetable.getWorker().getZone().equals(zoneId)) {
                 timetablesForOneWeek.add(timetable);
             }
@@ -271,9 +273,12 @@ public class TimetableService {
      * @return true if the worker is working, false otherwise
      */
     public boolean workerIsWorking(LocalDateTime time, Long workerId) {
-        List<Timetable> timetables = timetableRepository.findByWorkerAndDateTime(workerId, time);
+        List<Timetable> timetables = timetableRepository.findWorkerTimetableForDay(workerId, time);
         return timetables.stream()
-                .anyMatch(timetable -> timetable.getWorker().isAvailability());
+                .anyMatch(timetable ->
+                    !timetable.getRealStartTime().isAfter(time) &&
+                    (timetable.getRealEndTime() == null || !timetable.getRealEndTime().isBefore(time))
+                );
     }
 
     /**
@@ -284,12 +289,12 @@ public class TimetableService {
      * @return true if the worker has finished their shift, false otherwise
      */
     public boolean workerHasFinishedShift(Long workerId, LocalDateTime time) {
-        List<Timetable> timetables = timetableRepository.findByWorkerAndDateTime(workerId, time);
+        List<Timetable> timetables = timetableRepository.findWorkerTimetableForDay(workerId, time);
         if (timetables.isEmpty()) {
             return false;
         }
         for (Timetable timetable : timetables) {
-            if (timetable.getEndTime() != null && timetable.getEndTime().isBefore(time)) {
+            if (timetable.getRealEndTime() != null && !timetable.getRealEndTime().isAfter(time)) {
                 return true;
             }
         }
@@ -307,9 +312,36 @@ public class TimetableService {
         List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
         return timetables.stream()
                 .filter(timetable -> timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability())
-                .map(Timetable::getStartTime)
+                .map(Timetable::getRealStartTime)
                 .min(LocalDateTime::compareTo)
                 .orElse(day.toLocalDate().atStartOfDay());
+    }
+
+
+    public LocalDateTime getEarliestTimeWithMinWorkers(int minWorkers, Long zoneId, LocalDateTime day) {
+        if (day == null) {
+            throw new IllegalArgumentException("The 'day' parameter cannot be null.");
+        }
+
+        List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
+
+        // Sort timetables by start time
+        List<LocalDateTime> sortedStartTimes = timetables.stream()
+                .filter(timetable -> timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability())
+                .map(Timetable::getRealStartTime)
+                .sorted()
+                .toList();
+
+        int cumulativeCount = 0;
+
+        for (LocalDateTime startTime : sortedStartTimes) {
+            cumulativeCount++;
+            if (cumulativeCount >= minWorkers) {
+                return startTime;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -322,11 +354,31 @@ public class TimetableService {
     public boolean isEveryoneFinishedWorking(Long zoneId, LocalDateTime time) {
         List<Timetable> timetables = timetableRepository.findByStartDate(time.toLocalDate());
         for (Timetable timetable : timetables) {
-            if (timetable.getWorker().getZone().equals(zoneId) && timetable.getEndTime().isAfter(time) && timetable.getWorker().isAvailability()) {
+            if (timetable.getWorker().getZone().equals(zoneId) && timetable.getRealEndTime().isAfter(time) && timetable.getWorker().isAvailability()) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Counts how many workers have not finished working in a specific zone at a specific time.
+     *
+     * @param zoneId the ID of the zone
+     * @param time   the time to check
+     * @return the number of workers who have not finished working, or 0 if none
+     */
+    public int countWorkersNotFinished(Long zoneId, LocalDateTime time) {
+
+        List<Timetable> timetables = timetableRepository.findByStartDate(time.toLocalDate());
+        int count = 0;
+        for (Timetable timetable : timetables) {
+            if (timetable.getWorker().getZone().equals(zoneId) && timetable.getRealEndTime().isAfter(time) && timetable.getWorker().isAvailability()) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     public Timetable deleteTimetable(Long id) {
@@ -350,4 +402,40 @@ public class TimetableService {
        }
        return false;
    }
+
+   public int countQualifiedWorkersToday(Long zoneId, LocalDateTime localDateTime, ActiveTask activeTask) {
+       int qualificationCount = 0;
+       List<Timetable> timetables = timetableRepository.findByStartDate(localDateTime.toLocalDate());
+       if (activeTask != null) {
+           for (Timetable timetable : timetables) {
+               if (timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability()) {
+                   // Check if the worker's end time has not passed
+                   if ((timetable.getRealEndTime() == null || timetable.getRealEndTime().isAfter(localDateTime)) &&
+                       timetable.getWorker().getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+                       qualificationCount++;
+                   }
+               }
+           }
+       }
+       return qualificationCount;
+   }
+
+   public int countWorkersCurrentlyAtWork(Long zoneId, LocalDateTime currentTime, ActiveTask activeTask) {
+       int count = 0;
+       List<Timetable> timetables = timetableRepository.findByStartDate(currentTime.toLocalDate());
+       if (activeTask != null) {
+           for (Timetable timetable : timetables) {
+               if (timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability()) {
+                   if (!timetable.getRealStartTime().isAfter(currentTime) &&
+                       (timetable.getRealEndTime() == null || !timetable.getRealEndTime().isBefore(currentTime))) {
+                       if (timetable.getWorker().getLicenses().containsAll(activeTask.getTask().getRequiredLicense())) {
+                           count++;
+                       }
+                   }
+               }
+           }
+       }
+       return count;
+   }
+
 }

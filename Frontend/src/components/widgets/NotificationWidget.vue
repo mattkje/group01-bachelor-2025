@@ -65,7 +65,7 @@ onMounted(async () => {
 .overview-widget {
   margin: 0 !important;
   width: 100%;
-  max-height: 35vh;
+  height: 100%;
   border: 1px solid var(--border-1);
   flex-direction: column;
   border-radius: 1rem;

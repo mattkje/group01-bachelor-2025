@@ -33,6 +33,7 @@ public class WorkerSemaphore2 {
 
     // Set of workers that are available
     private Set<Worker> workers;
+    private Set<Worker> originalWorkers;
     private final ReentrantLock lock = new ReentrantLock();
 
     // Static block to configure the logger
@@ -96,6 +97,8 @@ public class WorkerSemaphore2 {
 
         // Remove workers after iteration
         workersToRemove.forEach(workers::remove);
+
+
     }
 
     public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)
@@ -106,7 +109,8 @@ public class WorkerSemaphore2 {
             logger.info("Attempting to acquire workers for task.  " +
                     "ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                     ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
-            if (timetableService.isEveryoneFinishedWorking(zoneId, startTime.get())) {
+            int workersNotFinished = timetableService.countWorkersNotFinished(zoneId, startTime.get());
+            if (workersNotFinished == 0) {
                 logger.warning("All workers are finished working at " + startTime.get() + ". Unable to complete ActiveTask: " + (activeTask != null ? activeTask.getId() : "null") +
                         ", PickerTask: " + (pickerTask != null ? pickerTask.getId() : "null") + " at Zone: " + zoneId);
                 // ERROR: WORKERS HAVE GONE HOME, TASK CAN NOT COMPLETE
@@ -121,13 +125,17 @@ public class WorkerSemaphore2 {
                 Collections.shuffle(workerList);
 
                 if (activeTask != null) {
-                    if (!timetableService.isAnyoneQualifiedWorkingToday(zoneId, startTime.get(), activeTask)) {
+                    if (workersNotFinished < activeTask.getTask().getMinWorkers()){
+                        // ERROR: NOT ENOUGH WORKERS AT ZONE FOR TASK
+                        return "103:" + activeTask.getId();
+                    }
+                    if (timetableService.countQualifiedWorkersToday(zoneId, startTime.get(), activeTask) < activeTask.getTask().getMinWorkers()) {
                         // ERROR: NO QUALIFIED WORKERS AT ZONE FOR TASK
                         return  "105:" + activeTask.getId();
                     }
                     workerList.removeIf(worker -> !worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()));
                     // No qualified workers available currently
-                    if (workerList.isEmpty()) {
+                    if (workerList.isEmpty() || workerList.size() < activeTask.getTask().getMinWorkers()) {
                         return "";
                     }
                     for (Worker worker : workerList) {
@@ -136,18 +144,24 @@ public class WorkerSemaphore2 {
                             if (workersToRemove.size() == activeTask.getTask().getMaxWorkers()) {
                                 activeTask.addMultilpleWorkers(workersToRemove);
                                 workersToRemove.forEach(workers::remove);
+                                System.out.println("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                                 logger.info("Acquired workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                                 return "";
                             }
                         }
-                        logger.info("Starting time: " + startTime.get() + " Worker: " + worker.getName() + " Worker ID: " + worker.getId());
-                        logger.info("Worker " + worker.getName() + "is busy? " + timetableService.workerIsWorking(startTime.get(), worker.getId()));
+                        System.out.println(workerList.size() + " workers available for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
+                        System.out.println("Workers to remove: " + workersToRemove.size() + " activetask minworkers: " + activeTask.getTask().getMinWorkers() + "workerlist size: " + workerList.size() + "workers size: " + workers.size());
                         if (workersToRemove.size() >= activeTask.getTask().getMinWorkers()) {
                             activeTask.addMultilpleWorkers(workersToRemove);
                             workersToRemove.forEach(workers::remove);
+                            System.out.println("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                             logger.info("Acquired minimum workers for ActiveTask: " + activeTask.getId() + "at Zone: " + zoneId);
                             return "";
+                        } else if (timetableService.workerHasFinishedShift(worker.getId(), startTime.get())) {
+                            workers.remove(worker);
                         }
+
+                        System.out.println(timetableService.workerHasFinishedShift(worker.getId(), startTime.get()) + " worker has finished shift: " + worker.getId()  + "at work " + (timetableService.workerIsWorking(startTime.get(), worker.getId()))  + " at Zone: " + zoneId +" at time: " + startTime.get());
 
                     }
                 } else {
@@ -158,6 +172,7 @@ public class WorkerSemaphore2 {
                             if (pickerTask.getWorker() == null) {
                                 pickerTask.setWorker(worker);
                                 workersToRemove.forEach(workers::remove);
+                                System.out.println("Acquired worker for PickerTask: " + pickerTask.getId() + "at Zone: " + zoneId);
                                 logger.info("Acquired worker for PickerTask: " + pickerTask.getId() + "at Zone: " + zoneId);
                                 return "";
                             }
@@ -188,5 +203,13 @@ public class WorkerSemaphore2 {
             workers.addAll(allWorkers);
             logger.info("Released all workers: " + allWorkers.size() + " Worker size: " + workers.size() + " at Zone: " + allWorkers.get(0).getZone());
         }
+    }
+
+    public String getWorkers() {
+        StringBuilder sb = new StringBuilder();
+        for (Worker worker : workers) {
+            sb.append(worker.getId()).append(" ");
+        }
+        return sb.toString();
     }
 }

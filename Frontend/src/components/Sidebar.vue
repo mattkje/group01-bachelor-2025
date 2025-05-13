@@ -98,11 +98,11 @@ const activeTab = computed(() => {
   padding: 0.5rem 0;
   cursor: pointer;
   color: var(--text-2);
-  text-decoration: none
+  text-decoration: none;
+  border-radius: 0.7rem;
 }
 
 .tab:hover {
-  border-radius: 10px;
   background-color: var(--background-2);
 }
 
@@ -132,5 +132,31 @@ hr {
   color: var(--main-color);
 }
 
+@media (max-width: 1400px) {
+  .tab span {
+    display: none;
+  }
+
+  .tab {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem;
+    border-radius: 0.7rem;
+    justify-content: center;
+  }
+
+  .tab-icon {
+    margin-right: 0;
+    margin-left: 0;
+    width: 25px;
+    height: 25px;
+  }
+
+  .sidebar {
+    width: min-content;
+    padding: 0.5rem;
+  }
+
+}
 
 </style>

@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
@@ -28,6 +29,7 @@ public class Utils {
     private final ActiveTaskService activeTaskService;
 
     private final ZoneService zoneService;
+
     private final PickerTaskService pickerTaskService;
 
 
@@ -39,7 +41,8 @@ public class Utils {
     public Utils(@Autowired MonteCarloService monteCarloService,
                  @Autowired ErrorMessageService errorMessageService,
                  @Autowired ActiveTaskService activeTaskService,
-                 @Autowired ZoneService zoneService, PickerTaskService pickerTaskService) {
+                 @Autowired ZoneService zoneService,
+                 @Autowired PickerTaskService pickerTaskService) {
         this.monteCarloService = monteCarloService;
         this.errorMessageService = errorMessageService;
         this.activeTaskService = activeTaskService;
@@ -55,8 +58,11 @@ public class Utils {
                 .orElse(null);
     }
 
-    public Map<LocalDateTime, Integer> getTotalTasksCompleted(List<ZoneSimResult> zoneSimResults) {
-        LocalDateTime now = LocalDateTime.now();
+    public Map<LocalDateTime, Integer> getTotalTasksCompleted(List<ZoneSimResult> zoneSimResults, LocalDateTime startTime) {
+        LocalDateTime now = startTime;
+        if (now == null) {
+            now = LocalDateTime.now();
+        }
         LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
         Map<LocalDateTime, Integer> taskCompletionMap = new HashMap<>();
 
@@ -66,7 +72,6 @@ public class Utils {
             for (ZoneSimResult zoneSimResult : zoneSimResults) {
                 totalCompletedTasks += zoneSimResult.getCompletedTaskCountAtTime(time);
             }
-
             taskCompletionMap.put(time, totalCompletedTasks);
         }
 
@@ -112,7 +117,7 @@ public class Utils {
         monteCarloService.dropAllData();
         for (int i = 0; i < simulationResults.size(); i++) {
             SimulationResult simulationResult = simulationResults.get(i);
-            saveGeneralSimulation(simulationResult, i);
+            saveGeneralSimulation(simulationResult, i,now);
             saveZoneSimulation(simulationResult.getZoneSimResultList(), i, now);
         }
         this.getBestCaseScenarioForEachZoneSim(simulationResults);
@@ -145,16 +150,16 @@ public class Utils {
         }
     }
 
-    private void saveGeneralSimulation(SimulationResult simulationResult, int i) {
+    private void saveGeneralSimulation(SimulationResult simulationResult, int i, LocalDateTime now) {
 
-        Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList());
+        Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList(), now);
 
         int highestValue = findHighestValue(timestamps);
         for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .toList()) {
+            monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue(), 0L);
             if (entry.getValue() == highestValue) {
-                monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue(), null);
                 break; // Exit the loop after recording the highest value
             }
         }
@@ -182,7 +187,6 @@ public class Utils {
 
        if (errorMessage != null) {
            updateErrorMessage(errorMessage, lastEndTime, zoneSimResult);
-           // System.out.println("Putting key: " + zoneSimResult.getZone().getId() + ", value: " + zoneSimResult);
            bestCases.put(zoneSimResult.getZone().getId(), zoneSimResult);
        }
    }

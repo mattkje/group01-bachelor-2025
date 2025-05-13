@@ -81,6 +81,8 @@ public class WorldSimulation {
 
     private boolean isPlaying;
 
+    private volatile boolean isSimulationRunning = false;
+
     private HashMap<String, RandomForest> randomForests;
 
     private Optional<LocalDateTime> firstWorkerTime;
@@ -227,6 +229,7 @@ public class WorldSimulation {
             int randomEndTime = random.nextInt(16);
             timetable.setRealStartTime(timetableStartTime.plusMinutes(randomStartTime));
             timetable.setRealEndTime(timetableEndTime.plusMinutes(randomEndTime));
+            timetableService.updateTimetable(timetable.getId(), timetable);
             System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
         }
 
@@ -461,24 +464,31 @@ public class WorldSimulation {
             Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
             availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
-            if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
-                System.out.println("Current time: " + currentTime);
-                // Hinder the simulation from running if there are no workers present
+
+
+           if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
+               System.out.println("Current time: " + currentTime);
+               // Hinder the simulation from running if there are no workers present
                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get()))) {
+                   if (isSimulationRunning) {
+                       System.out.println("A simulation is already running. Skipping this iteration.");
+                       return; // Skip if a simulation is already running
+                   }
+
                    LocalDateTime daytime = LocalDateTime.of(workday, currentTime);
+                   isSimulationRunning = true; // Mark simulation as running
+
                    CompletableFuture.runAsync(() -> {
-                     try {
-                       simulationService.runCompleteSimulation(randomForests, daytime);
-                     } catch (ExecutionException e) {
-                       throw new RuntimeException(e);
-                     } catch (InterruptedException e) {
-                       throw new RuntimeException(e);
-                     } catch (IOException e) {
-                       throw new RuntimeException(e);
-                     }
+                       try {
+                           simulationService.runCompleteSimulation(randomForests, daytime);
+                       } catch (ExecutionException | InterruptedException | IOException e) {
+                           throw new RuntimeException(e);
+                       } finally {
+                           isSimulationRunning = false; // Reset the flag when simulation completes
+                       }
                    });
                }
-            }
+           }
 
             if (currentTime.getMinute() % 10 == 0) {
                 worldSimDataService.generateWorldSimData(workday.atTime(currentTime), false);

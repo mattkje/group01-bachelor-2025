@@ -141,6 +141,7 @@ public class SimulationController {
     if (time == null) {
       throw new IllegalArgumentException("Current date and time is not available");
     }
+    System.out.println("Current date and time: " + time);
     Map<String, RandomForest> models = worldSimulationController.getModels();
     return ResponseEntity.ok(simulationService.runZoneSimulation(id, time,models));
   }

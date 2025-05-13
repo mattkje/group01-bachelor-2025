@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
-import {License, ActiveTask, TimeTable, Task} from '@/assets/types';
-import TaskClass from "@/components/tasks/Task.vue";
+import {onMounted, onUnmounted, ref, watch, watchEffect} from 'vue';
+import { License, ActiveTask, TimeTable, Task } from '@/assets/types';
+import TaskClass from '@/components/tasks/Task.vue';
 import {
-  fetchAllActiveTasks, fetchAllPickerZones,
-  fetchAllTasksForZone, fetchSimulationDate,
+  fetchAllActiveTasks,
+  fetchAllPickerZones,
+  fetchAllTasksForZone,
+  fetchSimulationDate,
   fetchSimulationTime,
-  fetchTimeTables
-} from "@/composables/DataFetcher";
+  fetchTimeTables,
+} from '@/composables/DataFetcher';
+
+const POLLING_INTERVAL = 5000;
 
 const props = defineProps<{
   name: string;
@@ -19,56 +23,55 @@ const props = defineProps<{
 
 const activeTask = ref<ActiveTask | null>(null);
 const qualified = ref(false);
-const qualifiedForAnyTask = ref(false);
+const qualifiedForAnyTask = ref(true);
 const overtime = ref(false);
-
+const timeTables = ref<TimeTable[]>([]);
+const referenceTime = ref<Date | null>(null);
+const currentDate = ref<string>('');
+let pollingIntervalId: ReturnType<typeof setInterval> | null = null;
 
 const getActiveTaskByWorker = async (workerId: number) => {
-  const activeTasks = await fetchAllActiveTasks();
-  const workerTask = activeTasks.find((task: any) => task.workers.some((worker: any) => worker.id === workerId));
-  qualified.value = isWorkerQualified(workerTask);
-  return workerTask;
+  try {
+    const activeTasks = await fetchAllActiveTasks();
+    const workerTask = activeTasks.find((task: any) =>
+      task.workers.some((worker: any) => worker.id === workerId)
+    );
+    qualified.value = isWorkerQualified(workerTask);
+    return workerTask;
+  } catch (error) {
+    console.error('Error fetching active task:', error);
+    return null;
+  }
 };
 
 const doesWorkerFulfillAnyTaskLicense = async (zoneId: number): Promise<boolean> => {
-  if (await isZonePickerZone(zoneId)) return true;
-  const tasks = await fetchAllTasksForZone(zoneId);
-  return tasks.some((task: Task) =>
+  try {
+    if (await isZonePickerZone(zoneId)) return true;
+    const tasks = await fetchAllTasksForZone(zoneId);
+    return tasks.some((task: Task) =>
       task.requiredLicense.some((license: License) =>
-          props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+        props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
       )
-  );
+    );
+  } catch (error) {
+    console.error('Error checking task licenses:', error);
+    return false;
+  }
 };
 
 const isWorkerQualified = (task: any) => {
   if (props.zoneId === 0) return true;
-  if (task) {
-    return task.task.requiredLicense.every((license: any) => props.licenses.some((workerLicense: License) => workerLicense.id === license.id));
-  } else {
-    return true;
-  }
+  return task
+    ? task.task.requiredLicense.every((license: any) =>
+        props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+      )
+    : true;
 };
 
-const overtimeOccurance = (task: any) => {
+const overtimeOccurrence = (task: any) => {
   if (!task || !task.eta || !task.task.maxTime) return false;
   return task.task.maxTime < task.eta;
 };
-
-const timeTables = ref<TimeTable[]>([]);
-
-
-const startPolling = () => {
-  fetchTimeTables();
-  setInterval(async () => {
-    timeTables.value = await fetchTimeTables();
-    activeTask.value = await getActiveTaskByWorker(props.workerId);
-    qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-    overtime.value = overtimeOccurance(activeTask.value);
-  }, 5000);
-};
-
-const referenceTime = ref<Date | null>(null);
-const currentDate = ref<string>('');
 
 const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   try {
@@ -85,40 +88,63 @@ const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   }
 };
 
-const startFetchingTime = () => {
-  fetchCurrentTimeFromBackend();
-  setInterval(fetchCurrentTimeFromBackend, 5000);
-};
-
 const isWorkerPresent = (workerId: number): boolean => {
   if (!referenceTime.value) return false;
   return timeTables.value.some((timeTable: TimeTable) => {
     const realStartTime = new Date(timeTable.realStartTime);
     const realEndTime = new Date(timeTable.realEndTime);
-    return timeTable.workerId === workerId && realStartTime <= referenceTime.value! && realEndTime >= referenceTime.value!;
+    return (
+      timeTable.workerId === workerId &&
+      realStartTime <= referenceTime.value! &&
+      realEndTime >= referenceTime.value!
+    );
   });
 };
 
 const doesWorkerHaveUnfinishedActiveTask = (workerId: number): boolean => {
-  if (!referenceTime.value) return false;
-  if (!activeTask.value) return false;
-  return activeTask.value.workers.some(worker => worker.id === workerId) && (!activeTask.value.endTime || new Date(activeTask.value.endTime) >= referenceTime.value);
+  if (!referenceTime.value || !activeTask.value) return false;
+  return (
+    activeTask.value.workers.some((worker) => worker.id === workerId) &&
+    (!activeTask.value.endTime || new Date(activeTask.value.endTime) >= referenceTime.value)
+  );
 };
 
-onMounted(() => {
-  fetchCurrentTimeFromBackend();
-  startFetchingTime();
-  startPolling();
-});
 const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
-  const pickerZones = await fetchAllPickerZones();
-  return pickerZones.some((zone: any) => zone.id === zoneId);
+  try {
+    const pickerZones = await fetchAllPickerZones();
+    return pickerZones.some((zone: any) => zone.id === zoneId);
+  } catch (error) {
+    console.error('Error fetching picker zones:', error);
+    return false;
+  }
 };
+
+const startPolling = () => {
+  pollingIntervalId = setInterval(async () => {
+    try {
+      await fetchCurrentTimeFromBackend();
+      timeTables.value = await fetchTimeTables();
+      activeTask.value = await getActiveTaskByWorker(props.workerId);
+      qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
+      overtime.value = overtimeOccurrence(activeTask.value);
+    } catch (error) {
+      console.error('Error during polling:', error);
+    }
+  }, POLLING_INTERVAL);
+};
+
 
 onMounted(async () => {
+  await fetchCurrentTimeFromBackend();
+  timeTables.value = await fetchTimeTables();
   activeTask.value = await getActiveTaskByWorker(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-  overtime.value = overtimeOccurance(activeTask.value);
+  overtime.value = overtimeOccurrence(activeTask.value);
+  startPolling();
+});
+
+onUnmounted(() => {
+  if (pollingIntervalId) clearInterval(pollingIntervalId);
 });
 </script>
 
