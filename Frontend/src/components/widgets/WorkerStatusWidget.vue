@@ -28,7 +28,6 @@ onMounted(async () => {
 
 <template>
   <div class="overview-widget">
-    <h2>Day Status</h2>
     <div class="status-grid">
       <div class="status-group">
         <div class="status-header">
@@ -65,17 +64,14 @@ onMounted(async () => {
 <style scoped>
 .overview-widget {
   margin: 0 !important;
+  height: 100%;
   width: 100%;
-  max-height: 35vh;
-  border: 1px solid var(--border-1);
-  border-radius: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-start !important;
   align-items: flex-start !important;
   font-size: 1.2rem;
   color: var(--text-1);
-  padding: 1rem;
   box-sizing: border-box;
 }
 
@@ -89,16 +85,23 @@ onMounted(async () => {
 .status-grid {
   height: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  flex-direction: row;
+  gap: 1rem;
   width: 100%;
 }
 
 .status-group {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  width: calc(50% - 0.5rem);
+  height: 100%;
+  border: 1px solid var(--border-1);
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
 .status-header {
+  width: 100%;
   display: flex;
   align-items: center;
   margin-bottom: 0.5rem;
@@ -119,8 +122,10 @@ onMounted(async () => {
 
 .status-item {
   display: flex;
+  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  font-size: 1rem;
+  font-size: clamp(1rem, 3vh, 6rem);
   width: 100%;
 }
 
@@ -138,5 +143,31 @@ onMounted(async () => {
   border: none;
   border-top: 1px solid var(--border-1);
   margin: 0.5rem 0;
+}
+
+@media (max-width: 1400px) {
+
+  .status-item {
+    width: 100%;
+    flex-direction: row;
+    font-size: 0.1rem;
+  }
+
+  .status-header img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .status-title {
+    font-size: 0.8rem;
+  }
+
+  .status-label {
+    font-size: 0.8rem;
+  }
+
+  .status-value {
+    font-size: 1.2rem;
+  }
 }
 </style>

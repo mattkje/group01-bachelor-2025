@@ -116,7 +116,7 @@ onMounted(() => {
   display: flex;
   border: 1px solid var(--border-1);
   border-radius: 1rem;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .monte-carlo-graph-container {
@@ -136,6 +136,7 @@ onMounted(() => {
 }
 
 .day-status {
+  height: 100%;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -185,5 +186,33 @@ onMounted(() => {
   color: var(--text-1);
 }
 
+@media (max-width: 1400px) {
+
+  .tasks-container {
+    width: 50%;
+    min-width: 20%;
+  }
+
+  .overview {
+    flex-direction: column;
+  }
+
+}
+
+@media (max-height: 800px) {
+  .day-status {
+    height: 30%;
+  }
+
+  .overview {
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .monte-carlo-graph-container {
+    height: 65%;
+  }
+}
 
 </style>

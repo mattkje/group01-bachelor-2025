@@ -104,52 +104,54 @@ watch(() => props.zone, async () => {
       </div>
 
       <!-- Dropdown and switch on the right -->
-      <div class="controls">
-        <select v-model="selectedOption">
-          <option v-for="option in dropdownOptions" :key="option" :value="option">
-            {{ option }}
-          </option>
-        </select>
 
-        <div class="switch">
-          <label>
-            <input type="checkbox" v-model="displayEstimations" />
-            <span class="text-span">Display estimations</span>
-          </label>
-        </div>
-      </div>
     </div>
-    <hr />
     <div class="content">
-      <div v-if="selectedTab === 'Completed'" class="task-container">
-        <template v-if="tasksWithEndTime.length > 0 || pickerTasksWithEndTime.length > 0">
-          <ActiveTaskComponent
-              v-for="(task, index) in tasksWithEndTime"
-              :key="index"
-              :active-task="task"
-          />
-          <PickerTaskComponent
-              v-for="(task, index) in pickerTasksWithEndTime"
-              :key="index"
-              :picker-task="task"
-          />
-        </template>
-        <p style="margin-top: 20vh" v-else>No completed tasks</p>
-      </div>
-      <div v-else-if="selectedTab === 'Current'" class="task-container">
-       <template v-if="tasksWithoutEndTime.length > 0 || pickerTasksWithoutEndTime.length > 0">
-         <ActiveTaskComponent
-             v-for="(task, index) in tasksWithoutEndTime"
-             :key="index"
-             :active-task="task"
-         />
-         <PickerTaskComponent
-             v-for="(task, index) in pickerTasksWithoutEndTime"
-             :key="index"
-             :picker-task="task"
-         />
-       </template>
-       <p style="margin-top: 20vh" v-else>No current tasks</p>
+      <div class="task-content" v-if="selectedTab === 'Current' || selectedTab === 'Completed'">
+        <div class="controls">
+          <select v-model="selectedOption">
+            <option v-for="option in dropdownOptions" :key="option" :value="option">
+              {{ option }}
+            </option>
+          </select>
+
+          <div class="switch">
+            <label>
+              <input type="checkbox" v-model="displayEstimations" />
+              <span class="text-span">Display estimations</span>
+            </label>
+          </div>
+        </div>
+        <div v-if="selectedTab === 'Completed'" class="task-container">
+          <template v-if="tasksWithEndTime.length > 0 || pickerTasksWithEndTime.length > 0">
+            <ActiveTaskComponent
+                v-for="(task, index) in tasksWithEndTime"
+                :key="index"
+                :active-task="task"
+            />
+            <PickerTaskComponent
+                v-for="(task, index) in pickerTasksWithEndTime"
+                :key="index"
+                :picker-task="task"
+            />
+          </template>
+          <p style="margin-top: 20vh" v-else>No completed tasks</p>
+        </div>
+        <div v-else-if="selectedTab === 'Current'" class="task-container">
+          <template v-if="tasksWithoutEndTime.length > 0 || pickerTasksWithoutEndTime.length > 0">
+            <ActiveTaskComponent
+                v-for="(task, index) in tasksWithoutEndTime"
+                :key="index"
+                :active-task="task"
+            />
+            <PickerTaskComponent
+                v-for="(task, index) in pickerTasksWithoutEndTime"
+                :key="index"
+                :picker-task="task"
+            />
+          </template>
+          <p style="margin-top: 20vh" v-else>No current tasks</p>
+        </div>
       </div>
       <div v-else-if="selectedTab === 'Schedule'" class="task-container">
         <ZoneCalendar :zone="zone" class="bottom-box-right"/>
@@ -194,23 +196,56 @@ watch(() => props.zone, async () => {
   border-bottom: 1px solid #ddd;
 }
 
+.tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
 .tabs button {
-  margin-right: 10px;
-  padding: 5px 10px;
+  padding: 0.7rem;
+  width: 7rem;
+  border-radius: 0.7rem;
   border: none;
   background: none;
   cursor: pointer;
 }
 
 .tabs button.active {
-  font-weight: bold;
-  border-bottom: 2px solid var(--main-color);
+  color: var(--main-color);
+  background-color: var(--main-color-3);
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 1rem;
+  margin-left: auto;
+  margin-bottom: 1rem;
+}
+
+.controls select {
+  padding: 0.5rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--border-1);
+  background-color: var(--background-2);
+}
+
+.controls select:focus {
+  outline: none;
+  border-color: var(--main-color);
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.switch input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
 
 .switch label {
@@ -228,5 +263,28 @@ hr {
 .text-span {
   font-size: 0.8rem;
   color: var(--text-1);
+}
+
+.task-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 1400px) {
+
+  .task-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .tabs button {
+    width: 5rem;
+  }
+  .controls select {
+    width: 100px;
+  }
+  .controls {
+    gap: 0.5rem;
+  }
 }
 </style>
