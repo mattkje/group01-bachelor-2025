@@ -349,15 +349,22 @@ public class TimetableService {
         if (day == null) {
             throw new IllegalArgumentException("The 'day' parameter cannot be null.");
         }
+        if (activeTasks == null || activeTasks.isEmpty()) {
+            throw new IllegalArgumentException("The 'activeTasks' parameter cannot be null or empty.");
+        }
 
         List<Timetable> timetables = timetableRepository.findByStartDateSortedByTime(day.toLocalDate());
 
         int totalQualifiedWorkers = 0;
         for (Timetable timetable : timetables) {
-            if (timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability()) {
-                // Count the total number of qualified workers for all active tasks
+
+            Worker worker = timetable.getWorker();
+            if (worker == null || timetable.getRealStartTime() == null) {
+                continue; // Skip invalid timetables
+            }
+            if (worker.getZone().equals(zoneId) && worker.isAvailability()) {
                 if (activeTasks.stream().anyMatch(activeTask ->
-                        timetable.getWorker().getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))) {
+                        worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))) {
                     totalQualifiedWorkers++;
                 }
                 if (totalQualifiedWorkers >= minWorkers) {
@@ -366,7 +373,7 @@ public class TimetableService {
             }
         }
 
-        return null;
+        return null; // No time found with the required number of workers
     }
 
     /**

@@ -215,4 +215,12 @@ onMounted(() => {
   }
 }
 
+@media (min-height: 1000px) {
+  .day-status {
+    height: auto;
+  }
+
+}
+
+
 </style>

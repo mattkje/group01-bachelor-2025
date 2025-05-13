@@ -129,7 +129,7 @@ public class WorkerSemaphore2 {
                             workers.remove(worker);
                         }
 
-                        //System.out.println(timetableService.workerHasFinishedShift(worker.getId(), startTime.get()) + " worker has finished shift: " + worker.getId()  + "at work " + (timetableService.workerIsWorking(startTime.get(), worker.getId()))  + " at Zone: " + zoneId +" at time: " + startTime.get());
+                       // System.out.println(timetableService.workerHasFinishedShift(worker.getId(), startTime.get()) + " worker has finished shift: " + worker.getId()  + "at work " + (timetableService.workerIsWorking(startTime.get(), worker.getId()))  + " at Zone: " + zoneId +" at time: " + startTime.get());
 
                     }
                 } else {
@@ -140,7 +140,7 @@ public class WorkerSemaphore2 {
                             if (pickerTask.getWorker() == null) {
                                 pickerTask.setWorker(worker);
                                 workersToRemove.forEach(workers::remove);
-                                System.out.println("Acquired worker for PickerTask: " + pickerTask.getId() + "at Zone: " + zoneId + " at time: " + startTime.get());
+                                //System.out.println("Acquired worker for PickerTask: " + pickerTask.getId() + "at Zone: " + zoneId + " at time: " + startTime.get());
                                 return "";
                             }
                         } else {
