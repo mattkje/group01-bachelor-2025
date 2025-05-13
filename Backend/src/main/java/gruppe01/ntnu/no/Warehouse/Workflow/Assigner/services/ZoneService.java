@@ -368,4 +368,23 @@ public class ZoneService {
         return pickerTasks;
     }
 
+    public Set<ActiveTask> getAllTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
+        Set<ActiveTask> activeTasks = new HashSet<>();
+        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
+            if (activeTask.getDate().equals(parsedDate) && activeTask.getTask().getZoneId().equals(id)) {
+                activeTasks.add(activeTask);
+            }
+        }
+        return activeTasks;
+    }
+
+    public Set<PickerTask> getAllPickerTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
+        Set<PickerTask> pickerTasks = new HashSet<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().equals(parsedDate) && pickerTask.getZone().getId().equals(id)) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return pickerTasks;
+    }
 }

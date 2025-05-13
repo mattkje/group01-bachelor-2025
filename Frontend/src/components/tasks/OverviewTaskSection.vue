@@ -102,9 +102,6 @@ watch(() => props.zone, async () => {
           {{ tab }}
         </button>
       </div>
-
-      <!-- Dropdown and switch on the right -->
-
     </div>
     <div class="content">
       <div class="task-content" v-if="selectedTab === 'Current' || selectedTab === 'Completed'">
