@@ -78,7 +78,7 @@ public class SimulationService {
         if (zone == null) {
             throw new IllegalArgumentException("Zone ID cannot be null and must be a real zone");
         }
-        ZoneSimulator zoneSimulator = new ZoneSimulator();
+
         // Create a list of zoneSimResult
         List<ZoneSimResult> zoneSimResults = new ArrayList<>();
         List<ActiveTask> activeTasks = new ArrayList<>();
@@ -102,7 +102,7 @@ public class SimulationService {
         }
 
         for (int i = 0; i < getSimCount(); i++) {
-
+            ZoneSimulator zoneSimulator = new ZoneSimulator();
             // Create deep copies of activeTasks and pickerTasks
             List<ActiveTask> activeTasksCopy = deepCopyActiveTasks(activeTasks);
             Set<PickerTask> pickerTasksCopy = deepCopyPickerTasks(pickerTasks);
@@ -150,6 +150,7 @@ public class SimulationService {
             throws ExecutionException, InterruptedException, IOException {
         if (!prediction.get()) return null;
         List<SimulationResult> results;
+        System.out.println("Running simulation ");
         if (models == null) {
             results = monteCarloWithRealData.monteCarlo(getSimCount(), null, currentTime, timetableService);
             if (currentTime == null) {
@@ -159,7 +160,7 @@ public class SimulationService {
             results = monteCarloWithRealData.monteCarlo(getSimCount(), models, currentTime, timetableService);
         }
         HashMap<Long, List<String>> newResult = new HashMap<>();
-
+        System.out.println("Simulation finished");
         if (!results.isEmpty()) {
             // Calculate the average zone durations using the current time as the reference
             Map<Long, LocalDateTime> averageZoneDurations = utils.getSimResultAverages(results);
