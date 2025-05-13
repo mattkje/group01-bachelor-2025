@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue';
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
 import ActiveTaskComponent from "@/components/tasks/ActiveTaskComponent.vue";
 import {ActiveTask, PickerTask, Zone} from "@/assets/types";
 import {
@@ -19,6 +19,7 @@ const dropdownOptions = ['best case', 'average case', 'worst case'];
 
 const props = defineProps<{
   zone: Zone;
+  zoneId: number;
 }>();
 
 const tasks = ref<ActiveTask[]>([]);
@@ -28,23 +29,32 @@ const hasTasks = ref(false);
 const hasPickerTasks = ref(false);
 const loading = ref(true);
 
+let intervalId: ReturnType<typeof setInterval> | undefined;
+
 onMounted(async () => {
   await handleZoneChange();
+  intervalId = setInterval(handleZoneChange, 5000); // Fetch data every 5 seconds
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId); // Clear interval on component unmount
+  }
 });
 
 const handleZoneChange = async () => {
+  console.log("zone id " + props.zoneId)
   loading.value = true;
   currentDate.value = await loadCurrentDate();
-
-  console.log('Current date:', currentDate.value);
-
-  console.log(props.zone.name);
-  if (props.zone.isPickerZone) {
+  if (props.zoneId != 0 && props.zone.isPickerZone) {
     await loadPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
-  } else {
+  } else if (props.zoneId != 0) {
     await loadTasksForZone();
     hasTasks.value = tasks.value.length > 0;
+  } else {
+    await loadPickerTasksForZone();
+    await loadTasksForZone();
   }
   loading.value = false;
 };
@@ -69,7 +79,6 @@ const loadPickerTasksForZone = async () => {
   }
 };
 
-
 const tasksWithoutEndTime = computed(() => {
   return tasks.value.filter(task => !task.endTime);
 });
@@ -84,10 +93,9 @@ const pickerTasksWithEndTime = computed(() => {
 });
 
 // Watch for changes to the zone prop
-watch(() => props.zone, async () => {
+watch(() => props.zoneId, async () => {
   await handleZoneChange();
 });
-
 
 </script>
 <template>
@@ -162,15 +170,18 @@ watch(() => props.zone, async () => {
 <style scoped>
 .container {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .content {
   width: 100%;
+  height: 100%;
   padding: 20px;
   display: flex;
   justify-content: center;
+  overflow-y: auto;
 }
 
 .task-container {
@@ -180,10 +191,9 @@ watch(() => props.zone, async () => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 10px;
   justify-content: center;
-  align-content: center;
   justify-items: center;
   text-align: center;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 .toolbar {

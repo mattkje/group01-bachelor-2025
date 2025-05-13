@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
-import {fetchOverviewData} from "@/composables/DataFetcher";
-import {Zone} from "@/assets/types";
-
+import { ref, onMounted, onUnmounted } from 'vue';
+import { fetchOverviewData } from "@/composables/DataFetcher";
+import { Zone } from "@/assets/types";
 
 const props = defineProps<{
   zone: Zone;
@@ -21,9 +20,18 @@ const fetchWorkerStatus = async () => {
   workersPresent.value = listOfNumbers[3];
 };
 
-onMounted(async () => {
-  await fetchWorkerStatus();
-})
+let intervalId: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+  fetchWorkerStatus();
+  intervalId = setInterval(fetchWorkerStatus, 5000); // Fetch every 5 seconds
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
 </script>
 
 <template>

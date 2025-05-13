@@ -43,7 +43,7 @@ onMounted(() => {
       <div class="vertical-separator"></div>
       <div class="zone-selector">
         <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
-          <option :value="null">All Zones</option>
+          <option :key="0" :value="{ id: 0 }">All Zones</option>
           <option v-for="zone in zones" :key="zone.id" :value="zone">
             {{ zone.name }}
           </option>
@@ -66,7 +66,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="tasks-container">
-        <OverviewTaskSection :zone="selectedZoneObject"></OverviewTaskSection>
+        <OverviewTaskSection :zone="selectedZoneObject" :zone-id="selectedZoneObject.id"></OverviewTaskSection>
       </div>
     </div>
   </div>
@@ -137,6 +137,7 @@ onMounted(() => {
 
 .day-status {
   height: 100%;
+  max-height: 25vh;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -184,6 +185,7 @@ onMounted(() => {
   align-items: flex-start;
   font-size: 1.2rem;
   color: var(--text-1);
+  overflow-y: auto;
 }
 
 @media (max-width: 1400px) {

@@ -371,7 +371,7 @@ public class ZoneService {
     public Set<ActiveTask> getAllTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
         Set<ActiveTask> activeTasks = new HashSet<>();
         for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-            if (activeTask.getDate().equals(parsedDate) && activeTask.getTask().getZoneId().equals(id)) {
+            if (activeTask.getDate().equals(parsedDate) && (id == 0 || activeTask.getTask().getZoneId().equals(id))) {
                 activeTasks.add(activeTask);
             }
         }
@@ -381,7 +381,7 @@ public class ZoneService {
     public Set<PickerTask> getAllPickerTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
         Set<PickerTask> pickerTasks = new HashSet<>();
         for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-            if (pickerTask.getDate().equals(parsedDate) && pickerTask.getZone().getId().equals(id)) {
+            if (pickerTask.getDate().equals(parsedDate) && (id == 0 || pickerTask.getZone().getId().equals(id))) {
                 pickerTasks.add(pickerTask);
             }
         }
