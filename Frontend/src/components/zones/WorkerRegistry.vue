@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, ref, watch} from 'vue';
 import WorkerClass from '@/components/zones/RegistryWorker.vue';
 import {Worker} from '@/assets/types';
 import {updateWorkerZone} from "@/composables/SimulationCommands";
@@ -16,9 +16,21 @@ const emit = defineEmits(['refreshWorkers']);
 
 const isDraggingOver = ref(false);
 const showBusy = ref(false);
+const showWorkersWithZone = ref(false);
 const showUnavailable = ref(false);
 const searchQuery = ref('');
 
+watch(showBusy, (newValue) => {
+  if (newValue) {
+    showWorkersWithZone.value = true;
+  }
+});
+
+watch(showWorkersWithZone, (newValue) => {
+  if (!newValue) {
+    showBusy.value = false;
+  }
+});
 
 const filteredWorkers = computed(() => {
   let workers: Worker[];
@@ -27,20 +39,29 @@ const filteredWorkers = computed(() => {
   } else {
     workers = props.workers;
   }
-  if (!showUnavailable.value) {
-    workers = workers.filter(worker => worker.availability);
-  }
   if (searchQuery.value) {
     workers = workers.filter(worker =>
         worker.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     );
   }
-  // Sort workers so that non-busy workers are shown at the top
+
+
+  if (searchQuery && searchQuery.value.length === 0) {
+    if (!showWorkersWithZone.value) {
+      workers = workers.filter(worker => worker.zone === props.zoneId);
+    }
+  }
+  if (!showUnavailable.value) {
+    workers = workers.filter(worker => worker.availability);
+  }
+
   workers = workers.sort((a, b) => {
     if (a.availability && !b.availability) return -1;
     if (!a.availability && b.availability) return 1;
     return 0;
   });
+
+
   return workers;
 });
 
@@ -74,11 +95,15 @@ const onDragLeave = () => {
       </div>
       <hr/>
       <div class="filter-box">
-        <p class="filter-text">Show busy workers</p>
+        <p class="filter-text">In Zone</p>
+        <input type="checkbox" v-model="showWorkersWithZone"/>
+      </div>
+      <div class="filter-box">
+        <p class="filter-text">Busy</p>
         <input type="checkbox" v-model="showBusy"/>
       </div>
       <div class="filter-box">
-        <p class="filter-text">Show unavailable workers</p>
+        <p class="filter-text">Unavailable</p>
         <input type="checkbox" v-model="showUnavailable"/>
       </div>
       <div class="search-box">
@@ -89,11 +114,10 @@ const onDragLeave = () => {
       <WorkerClass
           v-for="(worker, index) in filteredWorkers"
           :key="index"
-          :name="worker.name"
-          :worker-id="worker.id"
-          :availability="worker.availability"
-          :zone-id="props.zoneId"
-          :licenses="worker.licenses"
+          :worker="worker"
+          :busyWorkers="props.taskLessWorkers"
+          :style="{ opacity: worker.availability ? 1 : 0.5,
+                   cursor: worker.availability ? 'grab' : 'not-allowed' }"
           @dragstart="(event) => onDragStart(event, worker)"
       />
       <div v-if="isDraggingOver" class="on-drop-worker-box"/>
@@ -119,7 +143,7 @@ const onDragLeave = () => {
 .title-bar {
   display: flex;
   flex-direction: column;
-  
+
   padding: 1rem;
   font-size: 1.2rem;
   line-height: 0.7rem;
@@ -182,7 +206,8 @@ const onDragLeave = () => {
 .filter-box {
   display: flex;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  justify-content: space-between;
 }
 
 .filter-text {

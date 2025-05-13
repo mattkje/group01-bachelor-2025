@@ -1,23 +1,36 @@
 <script setup lang="ts">
-import {License} from "@/assets/types";
+import {License, Worker} from "@/assets/types";
 
 const props = defineProps<{
-  name: string;
-  workerId: number;
-  licenses: License[];
-  availability: boolean;
-  zoneId: number;
+  worker: Worker;
+  busyWorkers: Worker[];
 }>();
+
+const isWorkerBusy = (worker: Worker): boolean => {
+  return !props.busyWorkers.some((busyWorker: Worker) => busyWorker.id === worker.id);
+};
 
 </script>
 
 <template>
-  <div class="worker-compact rdy-worker-box">
+  <div
+      :class="{
+     'worker-compact': true,
+     'rdy-worker-box': !isWorkerBusy(props.worker),
+     'busy-worker-box': isWorkerBusy(props.worker),
+   }"
+      :draggable="props.worker.availability && !isWorkerBusy(props.worker)"
+      :style="{ cursor: isWorkerBusy(props.worker) || !props.worker.availability ? 'not-allowed' : 'grab' }"
+  >
     <div class="worker-profile">
       <div class="worker-image-container">
-        <img class="worker-image" src="@/assets/icons/profile.svg" />
+        <img class="worker-image" src="@/assets/icons/profile.svg"/>
       </div>
-      <div class="worker-name">{{ name }}</div>
+      <div class="worker-name">{{ worker.name }}</div>
+      <img v-if="!props.worker.availability" class="warning-icon" src="@/assets/icons/error.svg"/>
+      <img v-else-if="isWorkerBusy(props.worker)" class="status-icon" src="@/assets/icons/busy.svg"/>
+      <img v-else-if="!isWorkerBusy(props.worker)" class="status-icon" src="@/assets/icons/ready.svg"/>
+
     </div>
   </div>
 </template>
@@ -69,13 +82,19 @@ const props = defineProps<{
   opacity: 1;
 }
 
+.busy-worker-box {
+  background-color: #cccccc; /* Grey for busy and ready */
+}
+
 .busy-unq-worker-box {
   background-color: #ffebc0; /* Yellow for busy and unqualified */
 }
 
 .worker-profile {
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between !important;
 }
 
 .worker-name {
@@ -101,18 +120,20 @@ const props = defineProps<{
   max-height: 70%;
 }
 
-.warning-icon {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 20px;
-  height: 20px;
-}
 
 .status-icon {
-  margin-top: 7px;
+  margin-left: auto;
   width: 20px;
   height: 20px;
+  filter: saturate(0);
+}
+
+.warning-icon {
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  filter: saturate(0);
+  opacity: 0.5;
 }
 
 .status-popup {

@@ -46,8 +46,8 @@ const addLicensesToWorker = async (workerId: number, licenses: License[]): Promi
   await addLicensesToWorker(workerId, licenses);
 };
 
-const changeWorkerAvailability = async (worker: Ref<Worker>, isAvailable: Ref<boolean>) => {
-  await updateWorkerAvailability(worker.value, isAvailable.value)
+const changeWorkerAvailability = async (worker: Worker, isAvailable: boolean) => {
+  await updateWorkerAvailability(worker, isAvailable);
 };
 
 const confirmDelete = async () => {
@@ -90,6 +90,16 @@ onMounted(() => {
            </span>
               {{ worker.availability ? 'Available' : 'Unavailable' }} - Working from 9:00 AM to 5:00 PM
             </p>
+            <div class="option-bar">
+              <button @click="changeWorkerAvailability(worker, !worker.availability)">
+                <img src="@/assets/icons/edit.svg" alt="Change Availability"/>
+                <span>{{ worker.availability ? 'Set Unavailable' : 'Set Available' }}</span>
+              </button>
+              <button @click="showDeleteConfirmation = true">
+                <img src="@/assets/icons/trash.svg" alt="Delete Worker"/>
+                <span>Delete Worker</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

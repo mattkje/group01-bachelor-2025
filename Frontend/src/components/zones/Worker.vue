@@ -25,7 +25,6 @@ const activeTask = ref<ActiveTask | null>(null);
 const pickerTask = ref<PickerTask | null>(null);
 const qualified = ref(false);
 const qualifiedForAnyTask = ref(true);
-const overtime = ref(false);
 const timeTables = ref<TimeTable[]>([]);
 const referenceTime = ref<Date | null>(null);
 const currentDate = ref<string>('');
@@ -82,11 +81,6 @@ const doesWorkerFulfillAnyTaskLicense = async (zoneId: number): Promise<boolean>
     console.error('Error checking task licenses:', error);
     return false;
   }
-};
-
-const overtimeOccurrence = (task: any) => {
-  if (!task || !task.eta || !task.task.maxTime) return false;
-  return task.task.maxTime < task.eta;
 };
 
 const fetchCurrentTimeFromBackend = async (): Promise<void> => {
@@ -146,7 +140,6 @@ const startPolling = () => {
       timeTables.value = await fetchTimeTables();
       await setTaskBasedOnZoneType(props.workerId);
       qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-      overtime.value = overtimeOccurrence(activeTask.value);
     } catch (error) {
       console.error('Error during polling:', error);
     }
@@ -159,7 +152,6 @@ onMounted(async () => {
   timeTables.value = await fetchTimeTables();
   await setTaskBasedOnZoneType(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-  overtime.value = overtimeOccurrence(activeTask.value);
   startPolling();
 });
 
@@ -180,20 +172,27 @@ onUnmounted(() => {
         <div class="worker-name">{{ props.name }}</div>
       </div>
       <div class="status-container">
-        <img :draggable="!activeTask && !pickerTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
-             src="/src/assets/icons/busy.svg"
-             class="status-icon" alt="Busy"/>
         <img :draggable="!activeTask && !pickerTask"
              v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
              src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
-        <img :draggable="!activeTask && !pickerTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
-             alt="Error"/>
-        <img :draggable="!activeTask && !pickerTask"
-             v-if="!qualifiedForAnyTask && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
-             src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
         <img :draggable="!activeTask && !pickerTask"
              v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
              src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
+        <TaskClass
+            v-if="activeTask"
+            :active-task="activeTask"
+            :requiredLicenses="activeTask.task.requiredLicense"
+            :qualified="qualifiedForAnyTask"
+            :current-date="currentDate"
+            :picker-task="null"/>
+
+        <TaskClass
+            v-if="pickerTask"
+            :active-task="null"
+            :requiredLicenses="[]"
+            :qualified="true"
+            :current-date="currentDate"
+            :picker-task="pickerTask"/>
         <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
              class="status-popup">
           Unqualified
@@ -208,24 +207,8 @@ onUnmounted(() => {
              class="status-popup">Ready
         </div>
         <div v-if="!isWorkerPresent(workerId)" class="status-popup">Not Present</div>
-        <div v-if="overtime" class="status-popup">Error occurred</div>
       </div>
     </div>
-    <TaskClass
-        v-if="activeTask"
-        :active-task="activeTask"
-        :requiredLicenses="activeTask.task.requiredLicense"
-        :qualified="qualifiedForAnyTask"
-        :current-date="currentDate"
-        :picker-task="null"/>
-
-    <TaskClass
-        v-if="pickerTask"
-        :active-task="null"
-        :requiredLicenses="[]"
-        :qualified="true"
-        :current-date="currentDate"
-        :picker-task="pickerTask"/>
   </div>
 </template>
 <style scoped>
@@ -244,7 +227,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   background-color: var(--background-backdrop);
-  border-radius: 10px 0 0 10px;
+  border-radius: 10px;
   max-height: 30px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
@@ -252,24 +235,25 @@ onUnmounted(() => {
   -webkit-user-select: none !important;
 }
 
+
 @keyframes pulse-border {
   0% {
-    border-color: #ff4b4b;
+    border-color: var(--main-color);
     box-shadow: 0 0 2px #ff4b4b;
   }
   50% {
-    border-color: #ffb4b4;
+    border-color: var(--main-color-2);
     box-shadow: 0 0 0 #ff4b4b;
   }
   100% {
-    border-color: #ff4b4b;
+    border-color: var(--main-color);
     box-shadow: 0 0 2px #ff4b4b;
   }
 }
 
 .unq-worker-box {
-  background-color: #ffcccc; /* Red for unqualified and ready */
-  border: 2px solid #ff4b4b;
+  background-color: var(--main-color-3);
+  border: 2px solid var(--main-color);
   animation: pulse-border 2s infinite;
   border-radius: 10px;
 }
@@ -281,22 +265,26 @@ onUnmounted(() => {
 }
 
 .rdy-worker-box {
-  background-color: #bfffab;
+  background-color: var(--ready-color);
   border-radius: 10px
 }
 
 .rdy-worker-box:hover {
-  background-color: #a3ff8f;
+  background-color: var(--ready-color-2);
 }
 
 .busy-unq-worker-box {
-  background-color: #ffebc0;
+  background-color: var(--yellow-color);
 }
 
 .not-present-worker-box {
   background: var(--background-2);
   border-radius: 10px;
   opacity: 0.7;
+}
+
+.not-present-worker-box:hover {
+  border: 2px solid var(--border-1);
 }
 
 .worker-profile {
