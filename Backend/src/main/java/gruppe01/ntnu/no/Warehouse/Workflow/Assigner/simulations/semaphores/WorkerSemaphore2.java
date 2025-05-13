@@ -97,7 +97,8 @@ public class WorkerSemaphore2 {
 
         // Remove workers after iteration
         workersToRemove.forEach(workers::remove);
-        originalWorkers = Set.copyOf(workers);
+
+
     }
 
     public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)

@@ -34,7 +34,7 @@ import smile.regression.RandomForest;
 @Service
 public class SimulationService {
 
-    private final AtomicInteger simCount = new AtomicInteger(10);
+    private final AtomicInteger simCount = new AtomicInteger(1);
 
     private final AtomicBoolean prediction = new AtomicBoolean(true);
 

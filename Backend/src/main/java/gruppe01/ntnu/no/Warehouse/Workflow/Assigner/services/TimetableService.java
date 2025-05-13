@@ -325,14 +325,23 @@ public class TimetableService {
 
         List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
 
-        return timetables.stream()
+        // Sort timetables by start time
+        List<LocalDateTime> sortedStartTimes = timetables.stream()
                 .filter(timetable -> timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability())
-                .collect(Collectors.groupingBy(Timetable::getRealStartTime, Collectors.counting()))
-                .entrySet().stream()
-                .filter(entry -> entry.getValue() >= minWorkers)
-                .map(Map.Entry::getKey)
-                .min(LocalDateTime::compareTo)
-                .orElse(null);
+                .map(Timetable::getRealStartTime)
+                .sorted()
+                .toList();
+
+        int cumulativeCount = 0;
+
+        for (LocalDateTime startTime : sortedStartTimes) {
+            cumulativeCount++;
+            if (cumulativeCount >= minWorkers) {
+                return startTime;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -360,6 +369,7 @@ public class TimetableService {
      * @return the number of workers who have not finished working, or 0 if none
      */
     public int countWorkersNotFinished(Long zoneId, LocalDateTime time) {
+
         List<Timetable> timetables = timetableRepository.findByStartDate(time.toLocalDate());
         int count = 0;
         for (Timetable timetable : timetables) {
@@ -367,6 +377,7 @@ public class TimetableService {
                 count++;
             }
         }
+
         return count;
     }
 

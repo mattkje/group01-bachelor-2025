@@ -40,8 +40,10 @@ public class ZoneSimulator {
 
   private TimetableService timetableService;
 
+  private List<ActiveTask> activeTasks = new ArrayList<>();
 
-  public ZoneSimResult runZoneSimulation(Zone zone, List<ActiveTask> activeTasks,
+
+  public ZoneSimResult runZoneSimulation(Zone zone, List<ActiveTask> activeTasksList,
                                          Set<PickerTask> pickerTasks,
                                          RandomForest randomForest,
                                          LocalDateTime startTime,
@@ -51,6 +53,7 @@ public class ZoneSimulator {
     ZoneSimResult zoneSimResult = new ZoneSimResult();
     this.timetableService = timetableService;
     zoneSimResult.setZone(zone);
+    this.activeTasks = activeTasksList;
     try {
       // Check if the zone has any tasks
       if ((activeTasks == null || activeTasks.isEmpty()) &&
@@ -78,7 +81,7 @@ public class ZoneSimulator {
         return zoneSimResult;
       }
 
-      System.out.println("Zone " + zone.getId() + " has " + zoneWorkers.size() + " workers");
+      //System.out.println("Zone " + zone.getId() + " has " + zoneWorkers.size() + " workers");
 
       // Get the first start time for the zone for a worker that is available
       LocalDateTime newTime =
@@ -91,7 +94,7 @@ public class ZoneSimulator {
         return zoneSimResult;
       }
       // If the new time is before the last time, set the last time to the new time
-      this.lastTime.set(this.lastTime.get().isAfter(newTime) ? this.lastTime.get() : newTime);
+      this.lastTime.set(newTime);
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(zoneWorkers.size());
       // Latch for the tasks in the zone ensuring that all tasks are completed before the simulation ends
       WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(timetableService);
@@ -112,7 +115,6 @@ public class ZoneSimulator {
             zoneSimResult.setErrorMessage(result);
             return zoneSimResult;
           }
-          this.getEarliestOpportunity(activeTasks);
         }
       } else {
         zoneLatch = new CountDownLatch(pickerTasks.size());
@@ -242,9 +244,8 @@ public class ZoneSimulator {
             zoneSimResult.setErrorMessage(acquireWorkerError);
             return;
           }
-          System.out.println(
-              "trying to acquire " + activeTask.getTask().getMinWorkers() + " workers for task " +
-                  activeTask.getId() + "semaphore " + availableZoneWorkersSemaphore.getWorkers() + "at time " + this.lastTime.get());
+          this.getEarliestOpportunity(activeTasks);
+         // System.out.println("trying to acquire " + activeTask.getTask().getMinWorkers() + " workers for task " + activeTask.getId() + "semaphore " + availableZoneWorkersSemaphore.getWorkers() + "at time " + this.lastTime.get());
         }
         // Set start time of task to the last time
 
@@ -255,9 +256,7 @@ public class ZoneSimulator {
         // Set the task attributes
         activeTask.setStartTime(startTime);
         activeTask.setEndTime(activeTask.getStartTime().plusMinutes(sleepTime));
-        System.out.println(
-            "Task " + activeTask.getId() + " Started at " + activeTask.getStartTime()+" completed at time " + activeTask.getEndTime());
-        // Set the last time to the end time of the task
+        //System.out.println( "Task " + activeTask.getId() + " Started at " + activeTask.getStartTime()+" completed at time " + activeTask.getEndTime());
         // Set the last time to the end time of the task
         synchronized (this.lastTime) {
           this.lastTime.updateAndGet(current ->
@@ -353,6 +352,7 @@ public class ZoneSimulator {
             task -> task.getTask().getMinWorkers())) // Find the task with the fewest minWorkers
         .map(task -> task.getTask().getMinWorkers()) // Extract the minWorkers value
         .orElse(0);
+
 
     if (fewest == 0) {
         return;
