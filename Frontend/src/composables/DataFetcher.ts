@@ -27,8 +27,8 @@ export const fetchWorker = async (workerId: number) => {
     return fetchData<Worker>(`http://localhost:8080/api/workers/${workerId}`);
 }
 
-export const fetchWorkersForTask = async (taskId: number) => {
-    return fetchData<Worker[]>(`http://localhost:8080/api/active-tasks/${taskId}/workers`);
+export const fetchWorkersFromActiveTask = async (activeTaskId: number) => {
+    return fetchData<Worker[]>(`http://localhost:8080/api/active-tasks/${activeTaskId}/workers`);
 }
 
 export const fetchWorkersForZone = async (zoneId: number) => {

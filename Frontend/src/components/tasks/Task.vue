@@ -1,34 +1,39 @@
 <script setup lang="ts">
   import { onMounted, ref } from 'vue';
-  import {ActiveTask, License, Task, Worker} from '@/assets/types';
-  import {fetchActiveTask, fetchSimulationDate, fetchTask, fetchWorkersForTask} from "@/composables/DataFetcher";
+  import {ActiveTask, License, PickerTask, Task, Worker} from '@/assets/types';
+  import {fetchActiveTask, fetchSimulationDate, fetchTask, fetchWorkersFromActiveTask} from "@/composables/DataFetcher";
 
   const props = defineProps<{
-    taskId: number;
-    name: string;
+    activeTask: ActiveTask | null;
+    pickerTask: PickerTask | null;
     requiredLicenses: License[];
+    qualified: boolean;
     currentDate: string;
-    zoneId: number;
   }>();
 
   const activeTask = ref<ActiveTask | null>(null);
-  const workers = ref<Worker[]>([]);
+  const pickerTask = ref<PickerTask | null>(null);
   const isTaskOverdue = ref(false);
 
   onMounted(async () => {
-    activeTask.value = await fetchActiveTask(props.taskId);
-    workers.value = await fetchWorkersForTask(props.taskId);
+    if (props.activeTask) {
+      activeTask.value = props.activeTask;
 
-    isTaskOverdue.value = activeTask.value.dueDate
-      ? activeTask.value.dueDate.toString() < new Date(props.currentDate).toDateString()
-      : false;
+      isTaskOverdue.value = activeTask.value.dueDate
+          ? activeTask.value.dueDate.toString() < new Date(props.currentDate).toDateString()
+          : false;
+    } else if (props.pickerTask) {
+      pickerTask.value = props.pickerTask;
+    }
+
   });
   </script>
 
   <template>
-    <div :class="['task-compact', { 'overdue-task-box': isTaskOverdue }]">
+    <div :class="['task-compact', { 'overdue-task-box': isTaskOverdue, 'unqualified': !qualified }]">
       <div class="task-details">
-        <div class="task-name">{{ props.name }}</div>
+        <div v-if="activeTask" class="task-name">{{ props.activeTask.task.name }}</div>
+        <div v-else-if="pickerTask" class="task-name">{{ props.pickerTask.id }}</div>
         <div class="task-status">{{ isTaskOverdue ? 'Overdue': 'On Time' }}</div>
       </div>
     </div>
@@ -46,6 +51,10 @@
     margin-bottom: 0.5rem;
     user-select: none !important;
     -webkit-user-select: none !important;
+  }
+
+  .unqualified {
+    background-color: #ffebc0;
   }
 
   .overdue-task-box {

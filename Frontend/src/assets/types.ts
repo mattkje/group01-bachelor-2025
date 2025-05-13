@@ -47,6 +47,7 @@ export interface Worker {
     dead: boolean;
     licenses: License[];
     workerType: string;
+    currentTaskId: number;
 }
 
 export interface TimeTable {

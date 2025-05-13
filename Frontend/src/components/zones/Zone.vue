@@ -95,20 +95,6 @@ const loadActiveTasksForZone = async () => {
   }
 };
 
-const isWorkerQualifiedForAnyTask = async (worker: Worker) => {
-  if (isPickerZone.value) {
-    return true;
-  }
-  return activeTasks.value.some((task: ActiveTask) => {
-    if (!task.task || !task.task.requiredLicense) {
-      return false;
-    }
-    return task.task.requiredLicense.every((license: License) =>
-        worker.licenses.some((workerLicense: License) => workerLicense.id === license.id)
-    );
-  });
-};
-
 const loadPickerTasksForZone = async () => {
   try {
     pickerTasks.value = await fetchPickerTasksForZone(props.zoneId)
@@ -221,7 +207,6 @@ const toggleNotificationBubble = () => {
             :worker-id="worker.id"
             :licenses="worker.licenses"
             :availability="worker.availability"
-            :qualified="isWorkerQualifiedForAnyTask(worker)"
             :zone-id="props.zoneId"
             :class="{ 'unavailable': !worker.availability }"
             @dragstart="(event) => onDragStart(event, worker)"

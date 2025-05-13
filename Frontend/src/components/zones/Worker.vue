@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref, watch, watchEffect} from 'vue';
-import { License, ActiveTask, TimeTable, Task } from '@/assets/types';
+import {License, ActiveTask, TimeTable, Task, PickerTask} from '@/assets/types';
 import TaskClass from '@/components/tasks/Task.vue';
 import {
-  fetchAllActiveTasks,
+  fetchAllActiveTasks, fetchAllPickerTasks,
   fetchAllPickerZones,
   fetchAllTasksForZone,
   fetchSimulationDate,
   fetchSimulationTime,
-  fetchTimeTables,
+  fetchTimeTables, fetchWorker,
 } from '@/composables/DataFetcher';
 
 const POLLING_INTERVAL = 5000;
@@ -22,6 +22,7 @@ const props = defineProps<{
 }>();
 
 const activeTask = ref<ActiveTask | null>(null);
+const pickerTask = ref<PickerTask | null>(null);
 const qualified = ref(false);
 const qualifiedForAnyTask = ref(true);
 const overtime = ref(false);
@@ -30,42 +31,57 @@ const referenceTime = ref<Date | null>(null);
 const currentDate = ref<string>('');
 let pollingIntervalId: ReturnType<typeof setInterval> | null = null;
 
-const getActiveTaskByWorker = async (workerId: number) => {
+const getActiveOrPickerTaskByWorker = async (workerId: number) => {
   try {
-    const activeTasks = await fetchAllActiveTasks();
-    const workerTask = activeTasks.find((task: any) =>
-      task.workers.some((worker: any) => worker.id === workerId)
-    );
-    qualified.value = isWorkerQualified(workerTask);
-    return workerTask;
+    const worker = await fetchWorker(workerId);
+    let unknownTypeTasks: any;
+    if (await isZonePickerZone(props.zoneId)) {
+      unknownTypeTasks = await fetchAllPickerTasks();
+      const pickerTask = unknownTypeTasks.find((task: PickerTask) => task.id === worker.currentTaskId);
+      return pickerTask || null;
+    } else {
+      unknownTypeTasks = await fetchAllActiveTasks();
+      const activeTask = unknownTypeTasks.find((task: ActiveTask) => task.id === worker.currentTaskId);
+      return activeTask || null;
+    }
+
   } catch (error) {
-    console.error('Error fetching active task:', error);
+    console.error('Error fetching active task by worker:', error);
     return null;
+  }
+};
+
+const setTaskBasedOnZoneType = async (workerId: number) => {
+  try {
+    const worker = await fetchWorker(workerId);
+    if (await isZonePickerZone(props.zoneId)) {
+      const pickerTasks = await fetchAllPickerTasks();
+      pickerTask.value = pickerTasks.find((task: PickerTask) => task.id === worker.currentTaskId);
+      activeTask.value = null;
+    } else {
+      const activeTasks = await fetchAllActiveTasks();
+      activeTask.value = activeTasks.find((task: ActiveTask) => task.id === worker.currentTaskId);
+      pickerTask.value = null;
+    }
+  } catch (error) {
+    console.error('Error setting task based on zone type:', error);
   }
 };
 
 const doesWorkerFulfillAnyTaskLicense = async (zoneId: number): Promise<boolean> => {
   try {
     if (await isZonePickerZone(zoneId)) return true;
+    if (props.licenses === null || props.licenses.length === 0) return false;
     const tasks = await fetchAllTasksForZone(zoneId);
     return tasks.some((task: Task) =>
-      task.requiredLicense.some((license: License) =>
-        props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
-      )
+        task.requiredLicense.some((license: License) =>
+            props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
+        )
     );
   } catch (error) {
     console.error('Error checking task licenses:', error);
     return false;
   }
-};
-
-const isWorkerQualified = (task: any) => {
-  if (props.zoneId === 0) return true;
-  return task
-    ? task.task.requiredLicense.every((license: any) =>
-        props.licenses.some((workerLicense: License) => workerLicense.id === license.id)
-      )
-    : true;
 };
 
 const overtimeOccurrence = (task: any) => {
@@ -94,19 +110,23 @@ const isWorkerPresent = (workerId: number): boolean => {
     const realStartTime = new Date(timeTable.realStartTime);
     const realEndTime = new Date(timeTable.realEndTime);
     return (
-      timeTable.workerId === workerId &&
-      realStartTime <= referenceTime.value! &&
-      realEndTime >= referenceTime.value!
+        timeTable.workerId === workerId &&
+        realStartTime <= referenceTime.value! &&
+        realEndTime >= referenceTime.value!
     );
   });
 };
 
 const doesWorkerHaveUnfinishedActiveTask = (workerId: number): boolean => {
-  if (!referenceTime.value || !activeTask.value) return false;
-  return (
-    activeTask.value.workers.some((worker) => worker.id === workerId) &&
-    (!activeTask.value.endTime || new Date(activeTask.value.endTime) >= referenceTime.value)
-  );
+  if (!referenceTime.value) return false;
+  if (pickerTask.value && pickerTask.value.worker) {
+    return pickerTask.value.worker?.id === workerId && !pickerTask.value.endTime;
+  } else if (activeTask.value) {
+    return (
+        activeTask.value.workers.some((worker) => worker.id === workerId) &&
+        (!activeTask.value.endTime || new Date(activeTask.value.endTime) >= referenceTime.value)
+    );
+  }
 };
 
 const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
@@ -124,7 +144,7 @@ const startPolling = () => {
     try {
       await fetchCurrentTimeFromBackend();
       timeTables.value = await fetchTimeTables();
-      activeTask.value = await getActiveTaskByWorker(props.workerId);
+      await setTaskBasedOnZoneType(props.workerId);
       qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
       overtime.value = overtimeOccurrence(activeTask.value);
     } catch (error) {
@@ -137,7 +157,7 @@ const startPolling = () => {
 onMounted(async () => {
   await fetchCurrentTimeFromBackend();
   timeTables.value = await fetchTimeTables();
-  activeTask.value = await getActiveTaskByWorker(props.workerId);
+  await setTaskBasedOnZoneType(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
   overtime.value = overtimeOccurrence(activeTask.value);
   startPolling();
@@ -151,8 +171,8 @@ onUnmounted(() => {
 <template>
   <div class="worker-task-container">
     <div
-        :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
-        :draggable="!activeTask">
+        :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
+        :draggable="!activeTask && !pickerTask">
       <div class="worker-profile">
         <div class="worker-image-container">
           <img class="worker-image" src="@/assets/icons/profile.svg" draggable="false"/>
@@ -160,34 +180,52 @@ onUnmounted(() => {
         <div class="worker-name">{{ props.name }}</div>
       </div>
       <div class="status-container">
-        <img :draggable="!activeTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)" src="/src/assets/icons/busy.svg"
+        <img :draggable="!activeTask && !pickerTask" v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
+             src="/src/assets/icons/busy.svg"
              class="status-icon" alt="Busy"/>
-        <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
+        <img :draggable="!activeTask && !pickerTask"
+             v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
              src="/src/assets/icons/ready.svg" class="status-icon" alt="Ready"/>
-        <img :draggable="!activeTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
+        <img :draggable="!activeTask && !pickerTask" v-if="overtime" src="/src/assets/icons/overtime.svg" class="status-icon"
              alt="Error"/>
-        <img :draggable="!activeTask" v-if="!qualified && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
+        <img :draggable="!activeTask && !pickerTask"
+             v-if="!qualifiedForAnyTask && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
              src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
-        <img :draggable="!activeTask" v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
+        <img :draggable="!activeTask && !pickerTask"
+             v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
              src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
-        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">
+        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
+             class="status-popup">
           Unqualified
         </div>
-        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)" class="status-popup">Busy</div>
-        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)" class="status-popup">Busy & Unqualified</div>
-        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)" class="status-popup">Ready</div>
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)"
+             class="status-popup">Busy
+        </div>
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)"
+             class="status-popup">Busy & Unqualified
+        </div>
+        <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
+             class="status-popup">Ready
+        </div>
         <div v-if="!isWorkerPresent(workerId)" class="status-popup">Not Present</div>
         <div v-if="overtime" class="status-popup">Error occurred</div>
       </div>
     </div>
     <TaskClass
-        v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && activeTask"
-        :task-id="activeTask.id"
-        :name="activeTask.task.name"
+        v-if="activeTask"
+        :active-task="activeTask"
         :requiredLicenses="activeTask.task.requiredLicense"
+        :qualified="qualifiedForAnyTask"
         :current-date="currentDate"
-        :zone-id="props.zoneId"
-    />
+        :picker-task="null"/>
+
+    <TaskClass
+        v-if="pickerTask"
+        :active-task="null"
+        :requiredLicenses="[]"
+        :qualified="true"
+        :current-date="currentDate"
+        :picker-task="pickerTask"/>
   </div>
 </template>
 <style scoped>
