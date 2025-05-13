@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref, watch, watchEffect} from 'vue';
 import { License, ActiveTask, TimeTable, Task } from '@/assets/types';
+import TaskClass from '@/components/tasks/Task.vue';
 import {
   fetchAllActiveTasks,
   fetchAllPickerZones,
@@ -67,7 +68,7 @@ const isWorkerQualified = (task: any) => {
     : true;
 };
 
-const overtimeOccurance = (task: any) => {
+const overtimeOccurrence = (task: any) => {
   if (!task || !task.eta || !task.task.maxTime) return false;
   return task.task.maxTime < task.eta;
 };
@@ -121,26 +122,16 @@ const isZonePickerZone = async (zoneId: number): Promise<boolean> => {
 const startPolling = () => {
   pollingIntervalId = setInterval(async () => {
     try {
+      await fetchCurrentTimeFromBackend();
       timeTables.value = await fetchTimeTables();
       activeTask.value = await getActiveTaskByWorker(props.workerId);
       qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-      overtime.value = overtimeOccurance(activeTask.value);
+      overtime.value = overtimeOccurrence(activeTask.value);
     } catch (error) {
       console.error('Error during polling:', error);
     }
   }, POLLING_INTERVAL);
 };
-
-watchEffect(() => {
-  // This will automatically re-run whenever any of the reactive properties change
-  console.log('Worker status updated:', {
-    activeTask: activeTask.value,
-    qualified: qualified.value,
-    qualifiedForAnyTask: qualifiedForAnyTask.value,
-    overtime: overtime.value,
-    timeTables: timeTables.value,
-  });
-});
 
 
 onMounted(async () => {
@@ -148,7 +139,7 @@ onMounted(async () => {
   timeTables.value = await fetchTimeTables();
   activeTask.value = await getActiveTaskByWorker(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
-  overtime.value = overtimeOccurance(activeTask.value);
+  overtime.value = overtimeOccurrence(activeTask.value);
   startPolling();
 });
 
