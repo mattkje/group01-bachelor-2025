@@ -226,43 +226,15 @@ public class WorldSimulation {
             timetable.setRealStartTime(timetableStartTime.plusMinutes(randomStartTime));
             timetable.setRealEndTime(timetableEndTime.plusMinutes(randomEndTime));
             timetableService.updateTimetable(timetable.getId(), timetable);
-            System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
+            if (timetable.getWorker().isAvailability()) {
+                System.out.println(timetable.getWorker().getName() + " Starts working at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime());
+            } else {
+                System.out.println(timetable.getWorker().getName() + " Is scheduled to work at: " + timetable.getRealStartTime().toLocalTime() + " and ends at: " + timetable.getRealEndTime().toLocalTime() + " but is not available");
+            }
         }
 
         //Starts the simulation
         startSimulating();
-
-        //Last snippet of code that is run. If there are any unfinished tasks, they are set to finished.
-        if (isPaused) {
-            System.out.println("Simulation paused");
-        } else {
-            for (ActiveTask activeTask : activeTasksInProgress) {
-                activeTask.setEndTime(activeTaskEndTimes.get(activeTask));
-                for (Worker worker : activeTask.getWorkers()) {
-                    worker.setCurrentTask(null);
-                }
-                activeTaskService.updateActiveTask(activeTask.getId(), activeTask);
-            }
-
-            for (PickerTask pickerTask : pickerTasksInProgress) {
-                pickerTask.setEndTime(pickerTaskEndTimes.get(pickerTask));
-                pickerTask.getWorker().setCurrentPickerTask(null);
-                pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
-            }
-
-            List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, true);
-            List<PickerTask> pickerTasksList = pickerTaskService.getAllPickerTasks().stream().filter(pickerTask -> pickerTask.getDate() == workday && pickerTask.getEndTime() != null).toList();
-
-            for (Zone zone : zoneService.getAllPickerZones()) {
-                System.out.println(machineLearningModelPicking.createDBModel(pickerTasksList.stream().filter(pickerTask -> pickerTask.getZoneId() == zone.getId()).toList(), zone.getName()));
-                machineLearningModelPicking.compareModels(zone.getName(), pickerTasks.stream().filter(pickerTask -> pickerTask.getZone() == zone).toList());
-            }
-
-
-            System.out.println("Simulation finished");
-            isPlaying = false;
-        }
-
     }
 
 
@@ -291,7 +263,8 @@ public class WorldSimulation {
                                     availableWorkers.stream(),
                                     workersWaitingForTask.stream())
                             .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
-                                            worker.getLicenses().containsAll(task.getTask().getRequiredLicense()))
+                                            worker.getLicenses().containsAll(task.getTask().getRequiredLicense()) &&
+                                    worker.isAvailability())
                             .collect(Collectors.toList());
                     int workersSlots;
                     if (workers.size() >= task.getTask().getMinWorkers()) {
@@ -341,7 +314,8 @@ public class WorldSimulation {
                     PickerTask task = pickerTaskIterator.next();
 
                     List<Worker> workers = new ArrayList<>(availableWorkers.stream()
-                            .filter(worker -> worker.getZone().equals(task.getZone().getId()))
+                            .filter(worker -> worker.getZone().equals(task.getZone().getId()) &&
+                                    worker.isAvailability())
                             .collect(Collectors.toList()));
                     Iterator<Worker> workerIterator = workers.iterator();
 
@@ -350,13 +324,14 @@ public class WorldSimulation {
                     }
 
                     Worker worker = workerIterator.next();
-                    worker.setCurrentPickerTask(task);
                     task.setStartTime(LocalDateTime.of(workday, currentTime));
                     pickerTaskService.assignWorkerToPickerTask(task.getId(), worker.getId());
-                    pickerTaskEndTimes.put(task, getPickerEndTime(task));
+                    pickerTaskEndTimes.put(task, getPickerEndTime(task, worker.getId()));
+                    task.setWorker(worker);
+                    worker.setCurrentPickerTask(task);
+                    workerService.updateWorker(worker.getId(), worker);
                     busyWorkers.add(worker);
                     availableWorkers.remove(worker);
-                    workerService.updateWorker(worker.getId(), worker);
                     System.out.println(worker.getName() + " has started working on task: " +
                             task.getId());
                     pickerTasksInProgress.add(task);
@@ -372,7 +347,8 @@ public class WorldSimulation {
 
                 List<Worker> workers = new ArrayList<>(availableWorkers.stream()
                         .filter(worker -> worker.getZone().equals(task.getTask().getZoneId()) &&
-                                        worker.getLicenses().containsAll(task.getTask().getRequiredLicense()))
+                                        worker.getLicenses().containsAll(task.getTask().getRequiredLicense()) &&
+                                worker.isAvailability())
                         .collect(Collectors.toList()));
                 int workersSlots = 0;
                 if (workers.size() >= task.getTask().getMinWorkers()) {
@@ -408,6 +384,7 @@ public class WorldSimulation {
                 }
             }
 
+            //Checks if picker tasks are completed
             Iterator<PickerTask> pickerTaskInProgressIterator = pickerTasksInProgress.iterator();
             while (pickerTaskInProgressIterator.hasNext()) {
                 PickerTask task = pickerTaskInProgressIterator.next();
@@ -457,9 +434,8 @@ public class WorldSimulation {
             Set<Worker> uniqueAvailableWorkers = new HashSet<>(availableWorkers);
             availableWorkers = new ArrayList<>(uniqueAvailableWorkers);
 
-
-
            if (currentTime.getMinute() % intervals.get(intervalId.get()) == 0) {
+               System.out.println("Current time: " + currentTime);
                // Hinder the simulation from running if there are no workers present
                if (firstWorkerTime.isPresent() && currentTime.isAfter(LocalTime.from(firstWorkerTime.get().minus(Duration.ofMinutes(60))))) {
                    if (isSimulationRunning) {
@@ -492,6 +468,37 @@ public class WorldSimulation {
         if (resetData) {
             isPlaying = false;
             resetTaskData();
+        }
+
+        //Last snippet of code that is run. If there are any unfinished tasks, they are set to finished.
+        if (isPaused) {
+            System.out.println("Simulation paused");
+        } else {
+            for (ActiveTask activeTask : activeTasksInProgress) {
+                activeTask.setEndTime(activeTaskEndTimes.get(activeTask));
+                for (Worker worker : activeTask.getWorkers()) {
+                    worker.setCurrentTask(null);
+                }
+                activeTaskService.updateActiveTask(activeTask.getId(), activeTask);
+            }
+
+            for (PickerTask pickerTask : pickerTasksInProgress) {
+                pickerTask.setEndTime(pickerTaskEndTimes.get(pickerTask));
+                pickerTask.getWorker().setCurrentPickerTask(null);
+                pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
+            }
+
+            List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, true);
+            List<PickerTask> pickerTasksList = pickerTaskService.getAllPickerTasks().stream().filter(pickerTask -> pickerTask.getDate() == workday && pickerTask.getEndTime() != null).toList();
+
+            for (Zone zone : zoneService.getAllPickerZones()) {
+                System.out.println(machineLearningModelPicking.createDBModel(pickerTasksList.stream().filter(pickerTask -> pickerTask.getZoneId() == zone.getId()).toList(), zone.getName()));
+                machineLearningModelPicking.compareModels(zone.getName(), pickerTasks.stream().filter(pickerTask -> pickerTask.getZone() == zone).toList());
+            }
+
+
+            System.out.println("Simulation finished");
+            isPlaying = false;
         }
     }
 
@@ -549,8 +556,8 @@ public class WorldSimulation {
         return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
     }
 
-    public LocalDateTime getPickerEndTime(PickerTask task) throws IOException {
-        long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(randomForests.get(task.getZone().getName().toUpperCase()), task);
+    public LocalDateTime getPickerEndTime(PickerTask task, long workerId) throws IOException {
+        long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(randomForests.get(task.getZone().getName().toUpperCase()), task, workerId);
 
         int randomOffset = ThreadLocalRandom.current().nextInt(-5, 6) * 60;
 

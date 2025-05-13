@@ -199,7 +199,7 @@ public class ZoneSimulator {
         // Set start time of task to the last time
         LocalDateTime startTime = this.lastTime.get();
         // Simulate the task duration using the model (divided by 60 to get minutes)
-        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask)) / 60;
+        int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask, pickerTask.getWorker().getId())) / 60;
         // Sleep for the task duration
         TimeUnit.MILLISECONDS.sleep(taskDuration);
         // Set picker task attributes
