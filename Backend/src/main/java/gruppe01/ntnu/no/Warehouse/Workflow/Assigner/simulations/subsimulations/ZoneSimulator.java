@@ -378,7 +378,7 @@ public class ZoneSimulator {
           );
           return earliestTime;
       }
-      
+
       return null;
   }
 }

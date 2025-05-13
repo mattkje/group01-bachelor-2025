@@ -114,11 +114,11 @@ public class Utils {
     }
 
     public void saveSimulationResults(List<SimulationResult> simulationResults, LocalDateTime now) {
+        System.out.println("Saving simulation results...");
         monteCarloService.dropAllData();
-        errorMessageService.deleteAll();
         for (int i = 0; i < simulationResults.size(); i++) {
             SimulationResult simulationResult = simulationResults.get(i);
-            saveGeneralSimulation(simulationResult, i,now);
+            saveGeneralSimulation(simulationResult, i, now);
             saveZoneSimulation(simulationResult.getZoneSimResultList(), i, now);
         }
         this.getBestCaseScenarioForEachZoneSim(simulationResults);
@@ -166,74 +166,73 @@ public class Utils {
         }
     }
 
- public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
-     Map<Long, ErrorMessage> errorMessages = errorMessageService.generateErrorMessageMapFromZones();
-     Map<Long, ZoneSimResult> bestCases = new HashMap<>();
+    public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
+        Map<Long, ErrorMessage> errorMessages = errorMessageService.generateErrorMessageMapFromZones();
+        Map<Long, ZoneSimResult> bestCases = new HashMap<>();
 
-     for (SimulationResult simulationResult : simulationResults) {
-         simulationResult.getZoneSimResults().forEach((zoneId, zoneSimResult) -> {
-             processZoneSimResult(zoneSimResult, errorMessages, bestCases);
-         });
-     }
-
-     this.saveBestCases(bestCases);
-
-     errorMessages.values().forEach(errorMessageService::saveErrorMessage);
- }
-
-   private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, ErrorMessage> errorMessages, Map<Long, ZoneSimResult> bestCases) {
-       LocalDateTime lastEndTime = zoneSimResult.getLastEndTime();
-       ErrorMessage errorMessage = errorMessages.get(zoneSimResult.getZone().getId());
-
-       if (errorMessage != null) {
-           updateErrorMessage(errorMessage, lastEndTime, zoneSimResult);
-           bestCases.put(zoneSimResult.getZone().getId(), zoneSimResult);
-       }
-   }
-
-   private void updateErrorMessage(ErrorMessage errorMessage, LocalDateTime lastEndTime, ZoneSimResult zoneSimResult) {
-       if (lastEndTime != null && (errorMessage.getTime() == null || lastEndTime.isBefore(errorMessage.getTime()))) {
-           errorMessage.setTime(lastEndTime);
-       }
-       errorMessage.setMessage(zoneSimResult.getErrorMessage().toString());
-   }
-
-   private void saveBestCases(Map<Long, ZoneSimResult> bestCases) {
-       bestCases.values().forEach(zoneSimResult -> {
-           if (zoneSimResult.getZone() != null) {
-               if (zoneSimResult.getZone().getIsPickerZone()) {
-                   savePickerTasks(zoneSimResult);
-               } else {
-                   saveActiveTasks(zoneSimResult);
-               }
-           }
-       });
-   }
-
-   private void savePickerTasks(ZoneSimResult zoneSimResult) {
-       Set<PickerTask> pickerTasks = zoneService.getTodayUnfinishedPickerTasksByZoneId(zoneSimResult.getZone().getId());
-       zoneSimResult.getPickerTasks().forEach(zonePickerTask -> {
-           pickerTasks.stream()
-               .filter(pickerTask -> pickerTask.equals(zonePickerTask)) // Match the same PickerTask
-               .forEach(pickerTask -> {
-                   pickerTask.setMcStartTime(zonePickerTask.getStartTime()); // Set startTime
-                   pickerTask.setMcEndTime(zonePickerTask.getEndTime());     // Set endTime
-                   pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZoneId(), pickerTask); // Update the task
-               });
-       });
-   }
-
-private void saveActiveTasks(ZoneSimResult zoneSimResult) {
-    Set<ActiveTask> activeTasks = zoneService.getTodayUnfinishedTasksByZoneId(zoneSimResult.getZone().getId());
-    zoneSimResult.getActiveTasks().forEach(zoneActiveTask -> {
-        activeTasks.stream()
-            .filter(activeTask -> activeTask.equals(zoneActiveTask)) // Match the same ActiveTask
-            .forEach(activeTask -> {
-                activeTask.setMcStartTime(zoneActiveTask.getStartTime()); // Set mcStartTime
-                activeTask.setMcEndTime(zoneActiveTask.getEndTime());     // Set mcEndTime
-                activeTaskService.updateActiveTask(activeTask.getId(), activeTask); // Update the task
+        for (SimulationResult simulationResult : simulationResults) {
+            simulationResult.getZoneSimResults().forEach((zoneId, zoneSimResult) -> {
+                processZoneSimResult(zoneSimResult, errorMessages, bestCases);
             });
-    });
-}
+        }
+        errorMessageService.deleteAll();
+        errorMessages.values().forEach(errorMessageService::saveErrorMessage);
+        this.saveBestCases(bestCases);
+    }
+
+    private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, ErrorMessage> errorMessages, Map<Long, ZoneSimResult> bestCases) {
+        LocalDateTime lastEndTime = zoneSimResult.getLastEndTime();
+        ErrorMessage errorMessage = errorMessages.get(zoneSimResult.getZone().getId());
+
+        if (errorMessage != null) {
+            updateErrorMessage(errorMessage, lastEndTime, zoneSimResult);
+            bestCases.put(zoneSimResult.getZone().getId(), zoneSimResult);
+        }
+    }
+
+    private void updateErrorMessage(ErrorMessage errorMessage, LocalDateTime lastEndTime, ZoneSimResult zoneSimResult) {
+        if (lastEndTime != null && (errorMessage.getTime() == null || lastEndTime.isBefore(errorMessage.getTime()))) {
+            errorMessage.setTime(lastEndTime);
+        }
+        errorMessage.setMessage(zoneSimResult.getErrorMessage().toString());
+    }
+
+    private void saveBestCases(Map<Long, ZoneSimResult> bestCases) {
+        bestCases.values().forEach(zoneSimResult -> {
+            if (zoneSimResult.getZone() != null) {
+                if (zoneSimResult.getZone().getIsPickerZone()) {
+                    savePickerTasks(zoneSimResult);
+                } else {
+                    saveActiveTasks(zoneSimResult);
+                }
+            }
+        });
+    }
+
+    private void savePickerTasks(ZoneSimResult zoneSimResult) {
+        Set<PickerTask> pickerTasks = zoneService.getTodayUnfinishedPickerTasksByZoneId(zoneSimResult.getZone().getId());
+        zoneSimResult.getPickerTasks().forEach(zonePickerTask -> {
+            pickerTasks.stream()
+                    .filter(pickerTask -> pickerTask.equals(zonePickerTask)) // Match the same PickerTask
+                    .forEach(pickerTask -> {
+                        pickerTask.setMcStartTime(zonePickerTask.getStartTime()); // Set startTime
+                        pickerTask.setMcEndTime(zonePickerTask.getEndTime());     // Set endTime
+                        pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZoneId(), pickerTask); // Update the task
+                    });
+        });
+    }
+
+    private void saveActiveTasks(ZoneSimResult zoneSimResult) {
+        Set<ActiveTask> activeTasks = zoneService.getTodayUnfinishedTasksByZoneId(zoneSimResult.getZone().getId());
+        zoneSimResult.getActiveTasks().forEach(zoneActiveTask -> {
+            activeTasks.stream()
+                    .filter(activeTask -> activeTask.equals(zoneActiveTask)) // Match the same ActiveTask
+                    .forEach(activeTask -> {
+                        activeTask.setMcStartTime(zoneActiveTask.getStartTime()); // Set mcStartTime
+                        activeTask.setMcEndTime(zoneActiveTask.getEndTime());     // Set mcEndTime
+                        activeTaskService.updateActiveTask(activeTask.getId(), activeTask); // Update the task
+                    });
+        });
+    }
 
 }

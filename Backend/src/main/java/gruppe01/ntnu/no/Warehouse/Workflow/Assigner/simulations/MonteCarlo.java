@@ -159,7 +159,6 @@ public class MonteCarlo {
 
 
                 warehouseExecutor.shutdown();
-                System.out.println("Did all simulations finish?");
                 if (!warehouseExecutor.awaitTermination(5, TimeUnit.MINUTES)) {
                     System.err.println("WarehouseExecutor did not terminate in the specified time.");
                     warehouseExecutor.shutdownNow(); // Force shutdown
