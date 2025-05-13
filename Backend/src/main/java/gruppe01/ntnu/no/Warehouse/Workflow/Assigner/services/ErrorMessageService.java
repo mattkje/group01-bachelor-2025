@@ -4,6 +4,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories.ErrorMessageRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,5 +77,23 @@ public class ErrorMessageService {
 
     public void deleteAll() {
         errorMessageRepository.deleteAll();
+    }
+
+    public String getLastErrorMessageTime() {
+        ErrorMessage lastErrorMessage = errorMessageRepository.findTopByOrderByTimeDesc();
+        if (lastErrorMessage != null && lastErrorMessage.getTime() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            return lastErrorMessage.getTime().format(formatter);
+        }
+        return "00:00";
+    }
+
+    public String getErrorMessageTimeByZone(long zoneId) {
+        ErrorMessage lastErrorMessage = errorMessageRepository.findTopByZoneIdOrderByTimeDesc(zoneId);
+        if (lastErrorMessage != null && lastErrorMessage.getTime() != null && lastErrorMessage.getZoneId() == zoneId) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            return lastErrorMessage.getTime().format(formatter);
+        }
+        return "00:00";
     }
 }

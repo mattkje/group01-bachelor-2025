@@ -350,37 +350,19 @@ public class TimetableService {
             throw new IllegalArgumentException("The 'day' parameter cannot be null.");
         }
 
-        List<Timetable> timetables = timetableRepository.findByStartDate(day.toLocalDate());
+        List<Timetable> timetables = timetableRepository.findByStartDateSortedByTime(day.toLocalDate());
 
-        // Sort timetables by start time
-        List<LocalDateTime> sortedStartTimes = timetables.stream()
-                .filter(timetable -> timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability())
-                .map(Timetable::getRealStartTime)
-                .sorted()
-                .toList();
-
-        int cumulativeCount = 0;
-
-        for (LocalDateTime startTime : sortedStartTimes) {
-            // Filter workers available at this time
-            List<Worker> availableWorkers = timetables.stream()
-                    .filter(timetable -> timetable.getRealStartTime().equals(startTime) &&
-                            timetable.getWorker().getZone().equals(zoneId) &&
-                            timetable.getWorker().isAvailability())
-                    .map(Timetable::getWorker)
-                    .toList();
-
-            // Check if workers meet the license requirements for the active tasks
-            for (ActiveTask activeTask : activeTasks) {
-                List<Worker> qualifiedWorkers = availableWorkers.stream()
-                        .filter(worker -> worker.getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))
-                        .toList();
-
-                cumulativeCount += qualifiedWorkers.size();
-            }
-
-            if (cumulativeCount >= minWorkers) {
-                return startTime;
+        int totalQualifiedWorkers = 0;
+        for (Timetable timetable : timetables) {
+            if (timetable.getWorker().getZone().equals(zoneId) && timetable.getWorker().isAvailability()) {
+                // Count the total number of qualified workers for all active tasks
+                if (activeTasks.stream().anyMatch(activeTask ->
+                        timetable.getWorker().getLicenses().containsAll(activeTask.getTask().getRequiredLicense()))) {
+                    totalQualifiedWorkers++;
+                }
+                if (totalQualifiedWorkers >= minWorkers) {
+                    return timetable.getRealStartTime();
+                }
             }
         }
 
