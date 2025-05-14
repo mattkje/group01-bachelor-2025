@@ -137,3 +137,7 @@ export const fetchDoneBy = async () => {
 export const fetchDoneByForZone = async (zoneId: number) => {
     return fetchData<string>(`http://localhost:8080/api/error-messages/done-by/${zoneId}`);
 }
+
+export const fetchSpeed = async () => {
+    return fetchData<number>(`http://localhost:8080/api/simulation/getSpeed`);
+}

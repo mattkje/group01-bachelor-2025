@@ -107,6 +107,8 @@ public class WorldSimulation {
 
     private final WorldSimDataService worldSimDataService;
 
+    private int speedFactory = 1;
+
     /**
      * Constructor for WorldSimulation.
      *
@@ -156,10 +158,13 @@ public class WorldSimulation {
      */
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws IOException, InterruptedException, ExecutionException {
         isPlaying = true;
+        isPaused = false;
+        resetData = false;
         workday = startDate;
         boolean activeTasksExistForWorkday = false;
         machineLearningModelPicking = new MachineLearningModelPicking();
         randomForests = new HashMap<>();
+        this.speedFactory = 1;
 
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
@@ -198,10 +203,6 @@ public class WorldSimulation {
             simulationSleepInMillis = 0;
         } else {
             simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
-        }
-
-        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
-            zoneService.updateMachineLearningModel(workday.atTime(currentTime));
         }
 
         //Initialize variables used in the simulation
@@ -489,15 +490,6 @@ public class WorldSimulation {
                 pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
             }
 
-            List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, true);
-            List<PickerTask> pickerTasksList = pickerTaskService.getAllPickerTasks().stream().filter(pickerTask -> pickerTask.getDate() == workday && pickerTask.getEndTime() != null).toList();
-
-            for (Zone zone : zoneService.getAllPickerZones()) {
-                System.out.println(machineLearningModelPicking.createDBModel(pickerTasksList.stream().filter(pickerTask -> pickerTask.getZoneId() == zone.getId()).toList(), zone.getName()));
-                machineLearningModelPicking.compareModels(zone.getName(), pickerTasks.stream().filter(pickerTask -> pickerTask.getZone() == zone).toList());
-            }
-
-
             System.out.println("Simulation finished");
             isPlaying = false;
         }
@@ -582,6 +574,7 @@ public class WorldSimulation {
     }
 
     public void changeSimulationSpeed(double speedFactor) {
+        this.speedFactory = (int) speedFactor;
         if (speedFactor > 0) {
             if (speedFactor == 1) {
                 simulationSleepInMillis = TimeUnit.MINUTES.toMillis(60) / 1440;
@@ -800,6 +793,10 @@ public class WorldSimulation {
         pickerTaskService.deleteAllPickerTasks();
         timetableService.deleteAllTimetables();
 
+    }
+
+    public int getSpeedFactory() {
+        return speedFactory;
     }
 
     public Map<String, RandomForest> getModels() {

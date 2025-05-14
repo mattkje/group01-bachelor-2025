@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearn
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
@@ -43,6 +44,8 @@ public class SimulationController {
 
   private final WorldSimulationController worldSimulationController;
 
+  private final MachineLearningModelPicking machineLearningModelPicking;
+
   /**
    * Constructor for SimulationController.
    *
@@ -57,13 +60,14 @@ public class SimulationController {
                               WorldSimulation worldSimulation,
                               SimulationService simulationService,
                               PickerTaskGenerator pickerTaskGenerator,
-                              WorldSimulationController worldSimulationController) {
+                              WorldSimulationController worldSimulationController, MachineLearningModelPicking machineLearningModelPicking) {
     this.activeTaskGeneratorService = activeTaskGeneratorService;
     this.timeTableGenerator = timeTableGenerator;
     this.worldSimulation = worldSimulation;
     this.simulationService = simulationService;
     this.pickerTaskGenerator = pickerTaskGenerator;
     this.worldSimulationController = worldSimulationController;
+    this.machineLearningModelPicking = machineLearningModelPicking;
   }
 
   /**
@@ -263,5 +267,11 @@ public class SimulationController {
             @Parameter(description = "ID of the zone to retrieve data for")
             @PathVariable long zoneId) {
         return ResponseEntity.ok(worldSimulation.getData(zoneId));
+    }
+
+    @GetMapping("/create-data/{department}")
+    public ResponseEntity<String> createData(@PathVariable String department) throws IOException, URISyntaxException {
+      machineLearningModelPicking.createSynetheticData(department);
+      return ResponseEntity.ok("Data created");
     }
 }

@@ -4,7 +4,7 @@ import {
   fetchSimulationCount,
   fetchSimulationDate,
   fetchSimulationStatus,
-  fetchSimulationTime
+  fetchSimulationTime, fetchSpeed
 } from "@/composables/DataFetcher";
 import {
   fastForwardSimulationClock,
@@ -179,6 +179,7 @@ watch(currentTime, (newValue, oldValue) => {
 })
 
 onMounted(async () => {
+  speedIndex = await fetchSpeed();
   await fetchSimulationState();
 });
 </script>
