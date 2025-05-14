@@ -201,7 +201,7 @@ watch(selectedZoneObject, async (newZone) => {
 
 .tasks-container {
   width: 100%;
-  height: 100%;
+  height: 97%;
   border: 1px solid var(--border-1);
   flex-direction: row;
   border-radius: 1rem;

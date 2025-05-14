@@ -200,6 +200,7 @@ watch(() => props.zoneId, async () => {
   padding: 20px;
   display: flex;
   justify-content: center;
+  overflow-y: auto;
 }
 
 .task-container {
