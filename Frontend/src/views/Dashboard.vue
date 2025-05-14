@@ -68,7 +68,7 @@ watch(selectedZoneObject, async (newZone) => {
           <div class="day-status-container">
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
             <div class="done-by" v-if="selectedZoneObject.id !== 0">
-              <h2>Zone Done By:</h2>
+              <h2>Zone Done:</h2>
               <p>{{ doneBy }}</p>
             </div>
           </div>
@@ -215,7 +215,7 @@ watch(selectedZoneObject, async (newZone) => {
 .done-by {
   width: 100%;
   height: 100%;
-  max-height: 10vh;
+  max-height: 50px;
   justify-content: center;
   align-items: center;
   font-size: 1.2rem;
@@ -267,6 +267,9 @@ watch(selectedZoneObject, async (newZone) => {
     padding: 0 1rem;
   }
 
+  .done-by h2 {
+    font-size: 0.75rem;
+  }
   .overview {
     flex-direction: column;
     overflow-y: auto;

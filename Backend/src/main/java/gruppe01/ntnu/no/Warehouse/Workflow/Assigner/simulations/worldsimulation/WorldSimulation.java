@@ -105,7 +105,7 @@ public class WorldSimulation {
 
     private final WorldSimDataService worldSimDataService;
 
-    private int speedFactory = 1;
+    private int speedFactory = 0;
 
     /**
      * Constructor for WorldSimulation.
@@ -162,7 +162,7 @@ public class WorldSimulation {
         boolean activeTasksExistForWorkday = false;
         machineLearningModelPicking = new MachineLearningModelPicking();
         randomForests = new HashMap<>();
-        this.speedFactory = 1;
+        this.speedFactory = 0;
 
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();

@@ -71,7 +71,12 @@ const formattedTimes = computed(() => {
             Task Estimated to not complete
           </div>
         </div>
-        <div v-else>ETA: {{ props.activeTask.task.maxTime }}</div>
+        <div v-else>
+          {{ props.activeTask.dueDate
+              ? 'Due: ' + new Date(props.activeTask.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'No deadline'
+          }}
+        </div>
       </div>
       <div class="task-zone">Zone {{ props.activeTask.task.zoneId }}</div>
     </div>

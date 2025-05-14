@@ -200,7 +200,7 @@ public class ZoneSimulator {
                 // Simulate the task duration using the model (divided by 60 to get minutes)
                 int taskDuration = (int) (mlModel.estimateTimeUsingModel(randomForest, pickerTask, pickerTask.getWorker().getId())) / 60;
                 // Sleep for the task duration
-                TimeUnit.MILLISECONDS.sleep(taskDuration);
+                TimeUnit.MILLISECONDS.sleep(300);
                 // Set picker task attributes
                 pickerTask.setStartTime(startTime);
                 pickerTask.setEndTime(startTime.plusMinutes(taskDuration));
@@ -246,8 +246,10 @@ public class ZoneSimulator {
             try {
                 // Acquire the workers for the task
                 while (activeTask.getWorkers().size() < activeTask.getTask().getMinWorkers()) {
+                    //System.out.println(activeTask.getId() + " waiting for workers at " + this.lastTime);
+
                     String acquireWorkerError =
-                            availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, lastTime,
+                            availableZoneWorkersSemaphore.acquireMultiple(activeTask, null, this.lastTime,
                                     activeTask.getTask().getZoneId());
                     // if this, then task will not complete
                     if (!acquireWorkerError.isEmpty()) {
@@ -258,25 +260,25 @@ public class ZoneSimulator {
                     //System.out.println("trying to acquire " + activeTask.getTask().getMinWorkers() + " workers for task " + activeTask.getId() + "semaphore " + availableZoneWorkersSemaphore.getWorkers() + "at time " + this.lastTime.get());
                 }
                 // Set start time of task to the last time
-
                 LocalDateTime startTime = this.lastTime.get();
                 int sleepTime = calculateSleepTime(activeTask);
                 // Simulate the task duration
-                TimeUnit.MILLISECONDS.sleep(sleepTime);
+                TimeUnit.MILLISECONDS.sleep( 300);
                 // Set the task attributes
                 activeTask.setStartTime(startTime);
                 activeTask.setEndTime(activeTask.getStartTime().plusMinutes(sleepTime));
-                //System.out.println("Task " + activeTask.getId() + " Started at " + activeTask.getStartTime() + " completed at time " + activeTask.getEndTime());
                 // Set the last time to the end time of the task
                 synchronized (this.lastTime) {
+                    LocalDateTime finalStartTime = startTime;
                     this.lastTime.updateAndGet(current ->
-                            startTime.plusMinutes(sleepTime).isAfter(current) ? startTime.plusMinutes(sleepTime) :
+                            finalStartTime.plusMinutes(sleepTime).isAfter(current) ? finalStartTime.plusMinutes(sleepTime) :
                                     current
                     );
                 }
                 // Add the task to the simulation result
                 zoneSimResult.addTask(activeTask, null);
                 // Release the workers back to the semaphore
+                //System.out.println("Releasing workers for task " + activeTask.getId() + " at " + this.lastTime.get());
                 availableZoneWorkersSemaphore.releaseAll(activeTask.getWorkers());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

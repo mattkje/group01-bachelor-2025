@@ -82,10 +82,23 @@ const loadPickerTasksForZone = async () => {
 };
 
 const tasksWithoutEndTime = computed(() => {
-  return tasks.value.filter(task => !task.endTime);
+  return tasks.value
+    .filter(task => !task.endTime)
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
 });
+
 const tasksWithEndTime = computed(() => {
-  return tasks.value.filter(task => task.endTime);
+  return tasks.value
+    .filter(task => task.endTime)
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
 });
 const pickerTasksWithoutEndTime = computed(() => {
   return pickerTasks.value.filter(task => !task.endTime);
@@ -210,7 +223,7 @@ watch(() => props.zoneId, async () => {
 .task-container > div {
   flex: 1 1 calc(33.33% - 1rem);
   max-width: 300px;
-  height: 70px;
+  max-height: 95px;
   min-width: 150px;
 }
 

@@ -76,7 +76,7 @@ public class WorkerSemaphore2 {
 
     }
 
-    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask, AtomicReference<LocalDateTime> startTime, Long zoneId)
+    public String acquireMultiple(ActiveTask activeTask, PickerTask pickerTask,AtomicReference<LocalDateTime> startTime, Long zoneId)
             throws InterruptedException {
         // Acquire the lock to ensure thread safety
         lock.lock();
