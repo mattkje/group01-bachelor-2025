@@ -113,8 +113,7 @@ public class WorkerController {
     public ResponseEntity<Worker> addWorker(
             @Parameter(description = "Worker object to be created")
             @RequestBody Worker worker) {
-        if (worker.getWorkerType().isEmpty() || worker.getWorkerType().isBlank() || worker.getEfficiency() <= 0 ||
-                worker.getName().isBlank() || worker.getName().isEmpty() || worker.getWorkSchedule() == null) {
+        if (worker.getEfficiency() <= 0 || worker.getName().isBlank() || worker.getName().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } else {
             return new ResponseEntity<>(workerService.addWorker(worker), HttpStatus.CREATED);
