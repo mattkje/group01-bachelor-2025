@@ -55,19 +55,19 @@ const extendedLabels = Array.from({length: 144}, (_, i) => {
 
 
 const chartData = ref(
-  {
-    labels: extendedLabels,
-    datasets: [
-      {
-        label: 'Tasks Done Over Time',
-        data: [],
-        borderColor: 'rgb(131,131,131)',
-        tension: 0.01,
-        pointRadius: 0,
-        fill: false,
-      },
-    ],
-  } as any
+    {
+      labels: extendedLabels,
+      datasets: [
+        {
+          label: 'Tasks Done Over Time',
+          data: [],
+          borderColor: 'rgb(131,131,131)',
+          tension: 0.01,
+          pointRadius: 0,
+          fill: false,
+        },
+      ],
+    } as any
 );
 const chartOptions = ref();
 chartOptions.value = {
@@ -93,6 +93,16 @@ chartOptions.value = {
   },
 };
 
+const removeFirstValues = (list: number[], numToRemove: number) => {
+  if (numToRemove > list.length) {
+    console.error("Cannot remove more elements than the list contains.");
+    return;
+  }
+  for (let i = 0; i < numToRemove; i++) {
+    list.shift();
+  }
+}
+
 function generateChartData() {
   currentTimeIndex.value = dataValues.value.length - 1;
   console.log(currentTimeIndex.value);
@@ -103,20 +113,23 @@ function generateChartData() {
 
   const maxLength = (24 * 60) / 10;
 
-  if (dataValues.value.length > maxLength) {
-    const excessLength = dataValues.value.length - maxLength;
-    dataValues.value.splice(0, excessLength);
-  }
 
-  ListOfListsOfValues.value.forEach((list, index) => {
-    if (list.length > maxLength) {
-      const excessLength = list.length - maxLength;
-      list.splice(0, excessLength);
+  ListOfListsOfValues.value.forEach((monecarloSimlist, index) => {
+    if (monecarloSimlist.length + dataValues.value.length > maxLength) {
+      removeFirstValues(monecarloSimlist, monecarloSimlist.length + dataValues.value.length - maxLength);
+    }
+
+    // Remove last values from monecarloSimlist if they are the same as the last value
+    while (
+        monecarloSimlist.length > 1 &&
+        monecarloSimlist[monecarloSimlist.length - 1] === monecarloSimlist[monecarloSimlist.length - 2]
+        ) {
+      monecarloSimlist.pop();
     }
 
     simulatedDatasets.value.push({
       label: `Case ${index + 1}`,
-      data: [...Array(dataValues.value.length - 1).fill(null), ...list],
+      data: [...Array(dataValues.value.length - 1).fill(null), ...monecarloSimlist],
       borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
