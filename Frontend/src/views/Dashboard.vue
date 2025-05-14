@@ -18,7 +18,7 @@ const loadAllData = async (zoneId:string) => {
   if (zoneId) {
     doneBy.value = await fetchDoneByForZone(parseInt(zoneId));
   } else {
-    selectedZoneObject.value = zones.value[0];
+    doneBy.value = await fetchDoneByForZone(zones.value[0].id).then(response => response.time);
   }
 
 };
@@ -56,9 +56,9 @@ onMounted(() => {
           </option>
         </select>
       </div>
-      <div class="doneby">
-        <label>Zone Done By:</label>
-
+      <div class="doneby" v-if="doneBy">
+        <p class="donebytext">Zone Done By:</p>
+        <p class="donebytext2">{{ doneBy }}</p>
       </div>
     </div>
     <div class="overview-widget-area">
@@ -196,6 +196,28 @@ onMounted(() => {
   align-items: flex-start;
   font-size: 1.2rem;
   color: var(--text-1);
+}
+
+.doneby {
+  margin-left: auto;
+  margin-right: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px
+
+}
+
+.donebytext {
+  color: var(--main-color);
+  font-size: 1.2rem;
+  font-weight: bolder;
+}
+
+.donebytext2 {
+  color: var(--main-color);
+  font-size: 1.8rem;
+  font-weight: bolder;
 }
 
 @media (max-width: 1400px) {
