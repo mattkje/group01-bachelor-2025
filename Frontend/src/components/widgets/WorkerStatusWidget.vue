@@ -118,23 +118,26 @@ onUnmounted(() => {
 }
 
 .status-header img {
+  width: 20px;
+  height: 20px;
   font-size: 1.5rem;
   margin-right: 0.5rem;
 }
 
+
 .status-title {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: bold;
   color: var(--text-1);
 }
 
 .status-item {
+  width: 100%;
+  flex-direction: row;
+  font-size: 0.1rem;
   display: flex;
   align-items: center;
-  flex-direction: column;
   justify-content: space-between;
-  font-size: clamp(1rem, 3vh, 6rem);
-  width: 100%;
 }
 
 .status-label {
@@ -144,6 +147,7 @@ onUnmounted(() => {
 
 .status-value {
   color: var(--main-color);
+  font-size: 1.2rem;
 }
 
 .status-group hr {
@@ -153,54 +157,5 @@ onUnmounted(() => {
   margin: 0.5rem 0;
 }
 
-@media (max-width: 1400px) {
 
-  .status-item {
-    width: 100%;
-    flex-direction: row;
-    font-size: 0.1rem;
-  }
-
-  .status-header img {
-    width: 20px;
-    height: 20px;
-  }
-
-  .status-title {
-    font-size: 0.8rem;
-  }
-
-  .status-label {
-    font-size: 0.8rem;
-  }
-
-  .status-value {
-    font-size: 1.2rem;
-  }
-}
-
-@media (max-height: 800px) {
-  .status-item {
-    width: 100%;
-    flex-direction: row;
-    font-size: 0.1rem;
-  }
-
-  .status-header img {
-    width: 20px;
-    height: 20px;
-  }
-
-  .status-title {
-    font-size: 0.8rem;
-  }
-
-  .status-label {
-    font-size: 0.8rem;
-  }
-
-  .status-value {
-    font-size: 1.2rem;
-  }
-}
 </style>

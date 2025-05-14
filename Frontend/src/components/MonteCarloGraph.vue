@@ -88,7 +88,7 @@ chartOptions.value = {
     y: {
       beginAtZero: false,
       min: 0,
-      max: taskCount.value + 20,
+
     },
   },
 };
@@ -261,7 +261,7 @@ function generateChartData() {
       y: {
         beginAtZero: false,
         min: 0,
-        max: taskCount.value + 20,
+        max: taskCount.value + Math.round(taskCount.value * 0.2),
       },
     },
   };

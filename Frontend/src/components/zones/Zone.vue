@@ -9,7 +9,7 @@ import {
   fetchAllTasksForZone,
   fetchZone,
   fetchSimulationDate,
-  fetchAllActiveTasksForZone, fetchSimulationTime
+  fetchAllActiveTasksForZone, fetchSimulationTime, fetchAllActiveTasksByZoneForDate, fetchAllPickerTasksByZoneForDate
 } from "@/composables/DataFetcher";
 import {runMonteCarloSimulationForZone, updateWorkerZone} from "@/composables/SimulationCommands";
 
@@ -34,25 +34,27 @@ const notification = ref(false);
 const isPickerZone = ref(false);
 const loading = ref(true);
 
-const loadCurrentDateTime = async () => {
-  const date = await fetchSimulationDate();
-  const time = await fetchSimulationTime();
-  return new Date(`${date}T${time}`).toDateString();
-};
 
-const remainingTasks = ref(0);
+const remainingActiveTasks = ref(0);
 const remainingPickerTasks = ref(0);
 
 const updateRemainingTasks = async () => {
-  const today = await loadCurrentDateTime();
-  remainingTasks.value = activeTasks.value.filter(task => {
-    const taskDate = new Date(task.date).toDateString();
-    return taskDate === today;
+  remainingActiveTasks.value = activeTasks.value.filter(activeTask => {
+    if (!activeTask.endTime) {
+      hasActiveTasks.value = true;
+      return true;
+    }
+    return false;
   }).length;
 
-  remainingPickerTasks.value = pickerTasks.value.filter(task => {
-    const taskDate = new Date(task.date).toDateString();
-    return taskDate === today;
+  hasActiveTasks.value = remainingActiveTasks.value > 0;
+
+  remainingPickerTasks.value = pickerTasks.value.filter(pickerTask => {
+    if (!pickerTask.endTime) {
+      hasPickerTasks.value = true;
+      return true;
+    }
+    return false;
   }).length;
 };
 const getThisZone = async (): Promise<Zone | null> => {
@@ -87,33 +89,22 @@ const runMonteCarloSimulation = async () => {
   }
 };
 
-const loadActiveTasksForZone = async () => {
-  try {
-    activeTasks.value = await fetchAllActiveTasksForZone(props.zoneId);
-  } catch (error) {
-    console.error('Failed to fetch tasks for zone:', error);
-  }
-};
-
-const loadPickerTasksForZone = async () => {
-  try {
-    pickerTasks.value = await fetchPickerTasksForZone(props.zoneId)
-  } catch (error) {
-    console.error('Failed to fetch picker tasks for zone:', error);
-  }
-};
-
-onMounted(async () => {
-  await updateRemainingTasks();
+const loadAllTasksForZone = async () => {
   const zone = await getThisZone();
+  const date = await fetchSimulationDate();
   if (zone?.isPickerZone) {
     isPickerZone.value = true;
-    await loadPickerTasksForZone();
-    hasPickerTasks.value = pickerTasks.value.length > 0;
+    pickerTasks.value = await fetchAllPickerTasksByZoneForDate(props.zoneId, date);
   } else {
-    await loadActiveTasksForZone();
-    hasActiveTasks.value = activeTasks.value.length > 0;
+    activeTasks.value = await fetchAllActiveTasksByZoneForDate(props.zoneId, date);
   }
+
+};
+
+
+onMounted(async () => {
+  await loadAllTasksForZone();
+  await updateRemainingTasks();
   loading.value = false;
 });
 
@@ -155,19 +146,15 @@ const toggleNotificationBubble = () => {
         <div v-if="completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
           Done by: {{ completionTime }}
           <br/>
-          <p v-if="remainingTasks"> Tasks: {{ remainingTasks }}</p>
+          <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
           <p v-if="remainingPickerTasks"> Picker Tasks: {{ remainingPickerTasks }}</p>
         </div>
         <div v-else-if="!completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
-          <p> Tasks: {{ remainingTasks }}</p>
-          <p> Picker Tasks: {{ remainingPickerTasks }}</p>
-        </div>
-        <div v-else-if="hasActiveTasks && hasPickerTasks" class="task-summary">
-          <p>No tasks remaining...</p>
+          <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
+          <p v-if="remainingPickerTasks">Picker Tasks: {{ remainingPickerTasks }}</p>
         </div>
         <div v-else class="task-summary">
-          <p>Tasks: {{ remainingTasks }}</p>
-          <p>Picker Tasks: {{ remainingPickerTasks }}</p>
+          <p>Done</p>
         </div>
       </div>
       <hr>

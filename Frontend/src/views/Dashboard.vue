@@ -61,17 +61,20 @@ watch(selectedZoneObject, async (newZone) => {
           </option>
         </select>
       </div>
-     <div class="doneby" v-if="selectedZoneObject.id !== 0">
-       <p class="donebytext">Zone Done By:</p>
-       <p class="donebytext2">{{ doneBy }}</p>
-     </div>
     </div>
     <div class="overview-widget-area">
       <div class="overview">
 
         <div class="day-status">
           <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
-          <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
+          <div class="day-status-container">
+            <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
+            <div class="done-by" v-if="selectedZoneObject.id !== 0">
+              <h2>Zone Done By:</h2>
+              <p>{{ doneBy }}</p>
+            </div>
+          </div>
+
         </div>
         <div class="monte-carlo-graph-container">
           <MonteCarloGraph
@@ -153,12 +156,19 @@ watch(selectedZoneObject, async (newZone) => {
 }
 
 .day-status {
-  height: 100%;
-  max-height: 25vh;
+  max-height: 30%;
   width: 100%;
   gap: 1rem;
   display: flex;
   flex-direction: row;
+}
+
+.day-status-container {
+  width: 100%;
+  height: 100%;
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-text-box {
@@ -204,21 +214,26 @@ watch(selectedZoneObject, async (newZone) => {
   color: var(--text-1);
 }
 
-.doneby {
-  margin-left: auto;
-  margin-right: 1rem;
+.done-by {
+  width: 100%;
+  height: 100%;
+  max-height: 10vh;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  border: 1px solid var(--border-1);
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
 }
 
-.donebytext {
+.done-by h2 {
   color: var(--main-color);
   font-size: 0.8rem;
   font-weight: bolder;
 }
 
-.donebytext2 {
+.done-by p {
   color: var(--main-color);
   font-size: 1.8rem;
   font-weight: bolder;
@@ -239,9 +254,19 @@ watch(selectedZoneObject, async (newZone) => {
 
 }
 
-@media (max-height: 800px) {
+@media (max-height: 1000px) {
   .day-status {
     height: 30%;
+
+  }
+
+  .day-status-container {
+    flex-direction: row;
+  }
+
+  .done-by {
+    max-height: 100%;
+    padding: 0 1rem;
   }
 
   .overview {
@@ -253,6 +278,8 @@ watch(selectedZoneObject, async (newZone) => {
   .monte-carlo-graph-container {
     height: 65%;
   }
+
+
 }
 
 @media (min-height: 1000px) {

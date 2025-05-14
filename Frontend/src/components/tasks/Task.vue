@@ -35,15 +35,17 @@ onMounted(async () => {
       <div v-if="activeTask" :class="['task-name', {'overdue': isTaskOverdue }]">{{
           props.activeTask.task.name
         }}
+        <p v-if="isTaskOverdue" class="task-status">Overdue</p>
       </div>
       <div v-else-if="pickerTask" class="task-name" :class="['task-name', { 'overdue': isTaskOverdue } ]">
         {{ props.pickerTask.id }}
+        <p v-if="isTaskOverdue" class="task-status">Overdue</p>
       </div>
       <img :draggable="!activeTask && !pickerTask"
            v-if="!qualified"
            src="/src/assets/icons/warning.svg" class="status-icon" alt="Unqualified"/>
-      <img v-if="isTaskOverdue" src="/src/assets/icons/overtime.svg" class="status-icon"/>
-      <img src="/src/assets/icons/busy.svg" class="status-icon-rotating"
+      <img v-if="isTaskOverdue" src="/src/assets/icons/busyOvertime.svg" class="status-icon-rotating"/>
+      <img v-else src="/src/assets/icons/busy.svg" class="status-icon-rotating"
            alt="Error"/>
     </div>
   </div>
@@ -99,7 +101,7 @@ onMounted(async () => {
 }
 
 .task-status {
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   color: var(--main-color);
 }
 
