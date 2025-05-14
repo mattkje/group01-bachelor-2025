@@ -107,6 +107,8 @@ public class WorldSimulation {
 
     private final WorldSimDataService worldSimDataService;
 
+    private int speedFactory = 1;
+
     /**
      * Constructor for WorldSimulation.
      *
@@ -160,6 +162,7 @@ public class WorldSimulation {
         boolean activeTasksExistForWorkday = false;
         machineLearningModelPicking = new MachineLearningModelPicking();
         randomForests = new HashMap<>();
+        this.speedFactory = 1;
 
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
@@ -582,6 +585,7 @@ public class WorldSimulation {
     }
 
     public void changeSimulationSpeed(double speedFactor) {
+        this.speedFactory = (int) speedFactor;
         if (speedFactor > 0) {
             if (speedFactor == 1) {
                 simulationSleepInMillis = TimeUnit.MINUTES.toMillis(60) / 1440;
@@ -800,6 +804,10 @@ public class WorldSimulation {
         pickerTaskService.deleteAllPickerTasks();
         timetableService.deleteAllTimetables();
 
+    }
+
+    public int getSpeedFactory() {
+        return speedFactory;
     }
 
     public Map<String, RandomForest> getModels() {

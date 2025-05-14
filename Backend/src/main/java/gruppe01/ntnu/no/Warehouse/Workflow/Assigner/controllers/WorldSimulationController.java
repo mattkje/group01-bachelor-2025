@@ -163,4 +163,9 @@ public class WorldSimulationController {
         }
         return models.get(zoneId.toString());
     }
+
+    @GetMapping("/getSpeed")
+    public ResponseEntity<Integer> getSpeed() {
+        return ResponseEntity.ok(worldSimulation.getSpeedFactory());
+    }
 }
