@@ -109,9 +109,9 @@ function generateChartData() {
   taskCount.value = activeTasks.value;
   simulatedDatasets.value = [];
 
-  const baseColor = 'rgba(150, 150, 150, 0.3)';
+  const baseColor = 'rgba(150, 150, 150, 0.2)';
 
-  const maxLength = (24 * 60) / 10;
+  const maxLength = 145;
 
 
   ListOfListsOfValues.value.forEach((monecarloSimlist, index) => {
@@ -133,7 +133,8 @@ function generateChartData() {
       borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
-      borderWidth: 1.5,
+      borderWidth: 1,
+      borderDash: [4, 2],
       fill: false,
     });
   });
@@ -167,6 +168,8 @@ function generateChartData() {
   });
 
   const lastDataValue = dataValues.value[dataValues.value.length - 1] || 0;
+  let topPointXValue = 0;
+  let worstPointXValue = 0;
 
   let bestCaseValueList = [];
   if (bestCaseIndex !== -1) {
@@ -176,6 +179,10 @@ function generateChartData() {
       cumulativeValue += increment;
       return cumulativeValue;
     });
+  }
+  if (bestCaseValueList.length > 0) {
+    const maxIndex = bestCaseValueList.indexOf(Math.max(...bestCaseValueList));
+    topPointXValue = dataValues.value.length - 1 + maxIndex
   }
 
   let worstCaseValueList = [];
@@ -188,14 +195,20 @@ function generateChartData() {
     });
   }
 
+  if (worstCaseValueList.length > 0) {
+    const minIndex = worstCaseValueList.indexOf(Math.max(...worstCaseValueList));
+    worstPointXValue = dataValues.value.length - 1 + minIndex
+  }
+
 
   // Add a new line for the best case
   if (bestCaseIndex !== -1) {
     simulatedDatasets.value.push({
       label: 'Best Case Line',
       data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...bestCaseValueList],
-      borderColor: 'rgb(126,196,177)',
-      borderWidth: 2,
+      borderColor: 'rgb(39,194,191)',
+      borderWidth: 1,
+      borderDash: [4, 2],
       tension: 0,
       pointRadius: 0,
       fill: false,
@@ -208,7 +221,8 @@ function generateChartData() {
       label: 'Worst Case Line',
       data: [null, ...Array(dataValues.value.length - 2).fill(null), lastDataValue, ...worstCaseValueList],
       borderColor: 'rgba(255, 99, 132, 1)',
-      borderWidth: 2,
+      borderWidth: 1,
+      borderDash: [4, 2],
       tension: 0,
       pointRadius: 0,
       fill: false,
@@ -223,8 +237,10 @@ function generateChartData() {
         data: [...dataValues.value, ...Array(144 - dataValues.value.length).fill(null)],
         borderColor: 'rgb(131,131,131)',
         tension: 0.01,
+        borderWidth: 2,
         pointRadius: 0,
-        fill: false,
+        fill: true,
+        backgroundColor: 'rgba(39,194,191,0.2)',
       },
       ...simulatedDatasets.value,
     ],
@@ -264,7 +280,7 @@ function generateChartData() {
         ctx.moveTo(left, yPosition);
         ctx.lineTo(chart.chartArea.right, yPosition);
         ctx.strokeStyle = 'rgba(255,164,164,0.8)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.setLineDash([]);
@@ -283,29 +299,69 @@ function generateChartData() {
     beforeDraw(chart) {
       const {ctx, chartArea: {top, bottom, left, right}, scales: {x}} = chart;
 
+      // Draw the current time vertical line
       if (currentTimeIndex.value !== undefined && currentTimeIndex.value >= 0) {
         const xPosition = x.getPixelForValue(currentTimeIndex.value);
 
         if (xPosition >= left && xPosition <= right) {
           ctx.save();
           ctx.beginPath();
-          ctx.setLineDash([5, 5]);
           ctx.moveTo(xPosition, top);
           ctx.lineTo(xPosition, bottom);
-          ctx.strokeStyle = 'rgba(121,121,121,0.8)';
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgba(121,121,121,0.3)';
+          ctx.lineWidth = 1;
           ctx.stroke();
 
           ctx.setLineDash([]);
-          ctx.font = '12px Arial';
+          ctx.font = '8px Istok Web';
           ctx.fillStyle = 'rgba(121,121,121,0.8)';
           ctx.textAlign = 'center';
           ctx.fillText('Now', xPosition, top - 1);
           ctx.restore();
         }
       }
+
+      if (topPointXValue !== undefined && topPointXValue >= 0) {
+        const xPosition = x.getPixelForValue(topPointXValue);
+
+        if (xPosition >= left && xPosition <= right) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([4, 2]);
+          ctx.moveTo(xPosition, top);
+          ctx.lineTo(xPosition, bottom);
+          ctx.strokeStyle = 'rgba(39,194,191,0.8)'; // Green color for best case
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+
+      }
+
+      if (worstPointXValue !== undefined && worstPointXValue >= 0) {
+        const xPosition = x.getPixelForValue(worstPointXValue);
+
+        if (xPosition >= left && xPosition <= right) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([4, 2]);
+          ctx.moveTo(xPosition, top);
+          ctx.lineTo(xPosition, bottom);
+          ctx.strokeStyle = 'rgba(255, 99, 132, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+
+      }
     },
   };
+
+
   ChartJS.unregister(horizontalLinePlugin, verticalLinePlugin);
   ChartJS.register(horizontalLinePlugin, verticalLinePlugin);
 }
@@ -367,6 +423,12 @@ onUnmounted(() => {
       <p>
         <span class="color-indicator worst-case"></span> Worst Case
       </p>
+      <p>
+        <span class="color-indicator-dotted-line best-finish"></span> Optimistic Finish
+      </p>
+      <p>
+        <span class="color-indicator-dotted-line worst-finish"></span> Pessimistic Finish
+      </p>
     </div>
   </div>
 </template>
@@ -380,8 +442,13 @@ onUnmounted(() => {
   margin-right: 5px;
 }
 
+.color-indicator-container p {
+  font-size: 0.7rem;
+  margin: 0;
+}
+
 .best-case {
-  background-color: rgb(126, 196, 177); /* Green */
+  background-color: rgb(39, 194, 191); /* Green */
 }
 
 .probable-case {
@@ -392,12 +459,26 @@ onUnmounted(() => {
   background-color: var(--main-color);
 }
 
+.best-finish {
+  border-bottom: 2px dashed rgb(39, 194, 191);
+}
+
+.worst-finish {
+  border-bottom: 2px dashed rgb(255, 99, 132); /* Red */
+}
+
+.color-indicator-dotted-line {
+  display: inline-block;
+  width: 20px;
+  margin-right: 5px;
+}
+
 .monte-carlo-graph {
   width: 100%;
   height: 90%;
-  background-color: var(--background-1); /* Adjusts for light/dark mode */
+  background-color: var(--background-1, #f0f0f0);
   border-radius: 8px;
-  color: var(--text-1); /* Text color adjusts for light/dark mode */
+  color: var(--text-1, #000); /* Fallback to black */
 }
 
 canvas {
