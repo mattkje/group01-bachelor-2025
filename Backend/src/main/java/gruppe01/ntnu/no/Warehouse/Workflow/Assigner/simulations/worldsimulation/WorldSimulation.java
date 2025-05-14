@@ -19,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -489,7 +488,6 @@ public class WorldSimulation {
 
             System.out.println("Simulation finished");
             isPlaying = false;
-            currentTime = LocalTime.MIDNIGHT;
         }
     }
 
@@ -686,6 +684,8 @@ public class WorldSimulation {
     public LocalDateTime getCurrentDateTime() {
         if (workday == null || currentTime == null) {
             return LocalDateTime.now();
+        } else if (currentTime == LocalTime.of(23, 59)) {
+            return LocalDateTime.of(workday, LocalTime.MIDNIGHT);
         }
         return LocalDateTime.of(workday, currentTime);
     }
