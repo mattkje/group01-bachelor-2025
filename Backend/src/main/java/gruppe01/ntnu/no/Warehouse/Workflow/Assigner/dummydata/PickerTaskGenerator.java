@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -53,6 +54,8 @@ public class PickerTaskGenerator {
 
         Random random = new Random();
         List<PickerTask> allPickerTasks = new ArrayList<>();
+        int[] dueHours = {7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+        int[] dueMinutes = {0, 15, 30, 45};
 
         for (Zone zone : zoneService.getAllPickerZones()) {
             Map<List<Double>, List<List<Double>>> mcValues = getMcValuesForZone(zone, mcValuesList);
@@ -62,7 +65,7 @@ public class PickerTaskGenerator {
             for (int i = 0; i < numDays; i++) {
                 LocalDate currentDate = startDate.plusDays(i);
                 for (int j = 0; j < numTasksPerDay; j++) {
-                    PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random, testData);
+                    PickerTask pickerTask = createPickerTask(zone, currentDate, valueList, random, testData, dueHours, dueMinutes);
                     pickerTasks.add(pickerTask);
                     if (!testData) {
                         pickerTaskService.savePickerTask(pickerTask);
@@ -83,7 +86,8 @@ public class PickerTaskGenerator {
         };
     }
 
-    private PickerTask createPickerTask(Zone zone, LocalDate date, List<List<Double>> valueList, Random random, boolean testData) {
+    private PickerTask createPickerTask(Zone zone, LocalDate date, List<List<Double>> valueList, Random random,
+                                        boolean testData, int[] dueHours, int[] dueMinutes) {
         PickerTask pickerTask = new PickerTask();
         pickerTask.setZone(zone);
         pickerTask.setDate(date);
@@ -94,6 +98,7 @@ public class PickerTaskGenerator {
         pickerTask.setWeight((int) generateRandomValue(valueList.get(3), random));
         pickerTask.setVolume((int) generateRandomValue(valueList.get(4), random));
         pickerTask.setAvgHeight(generateRandomValue(valueList.get(5), random));
+        pickerTask.setDueDate(generateDueDate(dueHours, dueMinutes, random));
         if (testData) {
             Worker worker = new Worker();
             worker.setId(random.nextLong(1, 51));
@@ -112,5 +117,11 @@ public class PickerTaskGenerator {
 
     private double roundToTwoDecimals(double value) {
         return Math.round(value * 100.0) / 100.0;
+    }
+
+    private LocalDateTime generateDueDate(int[] dueHours, int[] dueMinutes, Random random) {
+        int hour = dueHours[random.nextInt(dueHours.length)];
+        int minute = dueMinutes[random.nextInt(dueMinutes.length)];
+        return LocalDateTime.now().withHour(hour).withMinute(minute).withSecond(0);
     }
 }
