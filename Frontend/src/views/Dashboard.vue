@@ -215,7 +215,6 @@ watch(selectedZoneObject, async (newZone) => {
 .done-by {
   width: 100%;
   height: 100%;
-  max-height: 50px;
   justify-content: center;
   align-items: center;
   font-size: 1.2rem;
