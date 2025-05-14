@@ -16,11 +16,11 @@ const handleTaskUpdated = () => {
 };
 
 const taskBackgroundColor = computed(() => {
-  const { startTime, endTime } = props.pickerTask;
+  const {startTime, endTime} = props.pickerTask;
   if (startTime && !endTime) {
-    return "#fff3cd";
+    return "var(--main-color-3)"; // Yellow
   } else if (startTime && endTime) {
-    return "#D4EDD9";
+    return "var(--busy-color-2)"; // Green
   }
   return "var(--background-2)";
 });
