@@ -161,7 +161,7 @@ watch(() => props.zoneId, async () => {
           <p style="margin-top: 20vh" v-else>No current tasks</p>
         </div>
       </div>
-      <div v-else-if="selectedTab === 'Schedule'" class="task-container">
+      <div v-else-if="selectedTab === 'Schedule'" class="calendar-container">
         <ZoneCalendar :zone="zone" class="bottom-box-right"/>
       </div>
     </div>
@@ -195,6 +195,12 @@ watch(() => props.zoneId, async () => {
   justify-items: center;
   text-align: center;
   overflow-y: auto;
+}
+
+.calendar-container {
+  width: 100%;
+  height: 100%;
+  gap: 10px;
 }
 
 .task-container > div {
