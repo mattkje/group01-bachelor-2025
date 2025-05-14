@@ -8,3 +8,4 @@ logs/WorkerSemaphore2.log.lck
 WorkerSemaphore2.log
 pickroute_FRUIT.ser
 pickroute_FREEZE.ser
+/Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/

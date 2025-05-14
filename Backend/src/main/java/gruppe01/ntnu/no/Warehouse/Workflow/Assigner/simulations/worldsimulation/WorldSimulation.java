@@ -158,6 +158,8 @@ public class WorldSimulation {
      */
     public void runWorldSimulation(int simulationTime, LocalDate startDate) throws IOException, InterruptedException, ExecutionException {
         isPlaying = true;
+        isPaused = false;
+        resetData = false;
         workday = startDate;
         boolean activeTasksExistForWorkday = false;
         machineLearningModelPicking = new MachineLearningModelPicking();
@@ -201,10 +203,6 @@ public class WorldSimulation {
             simulationSleepInMillis = 0;
         } else {
             simulationSleepInMillis = TimeUnit.MINUTES.toMillis(simulationTime) / 1440;
-        }
-
-        if (workday.getDayOfWeek() == DayOfWeek.MONDAY) {
-            zoneService.updateMachineLearningModel(workday.atTime(currentTime));
         }
 
         //Initialize variables used in the simulation
@@ -491,15 +489,6 @@ public class WorldSimulation {
                 pickerTask.getWorker().setCurrentPickerTask(null);
                 pickerTaskService.updatePickerTask(pickerTask.getId(), pickerTask.getZone().getId(), pickerTask);
             }
-
-            List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, true);
-            List<PickerTask> pickerTasksList = pickerTaskService.getAllPickerTasks().stream().filter(pickerTask -> pickerTask.getDate() == workday && pickerTask.getEndTime() != null).toList();
-
-            for (Zone zone : zoneService.getAllPickerZones()) {
-                System.out.println(machineLearningModelPicking.createDBModel(pickerTasksList.stream().filter(pickerTask -> pickerTask.getZoneId() == zone.getId()).toList(), zone.getName()));
-                machineLearningModelPicking.compareModels(zone.getName(), pickerTasks.stream().filter(pickerTask -> pickerTask.getZone() == zone).toList());
-            }
-
 
             System.out.println("Simulation finished");
             isPlaying = false;

@@ -85,6 +85,10 @@ public class PickerTask {
     @Schema(description = "The date when the task is to be performed.")
     private LocalDate date;
 
+    @Column(name = "due_date")
+    @Schema(description = "The due date for the task.")
+    private LocalDateTime dueDate;
+
     public PickerTask() {
     }
 
@@ -238,6 +242,14 @@ public class PickerTask {
 
     public void setMcEndTime(LocalDateTime mcEndTime) {
         this.mcEndTime = mcEndTime;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
     }
 
     @Override

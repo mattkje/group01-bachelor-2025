@@ -52,14 +52,12 @@ public class ActiveTaskGenerator {
         Random random = new Random();
         int minNumTasks = 120;
         int maxNumTasks = 180;
-        int dueDateChance = 50;
-        int strictStartChance = 5;
-        int[] dueHours = {8, 9, 10, 11, 12, 13, 14, 15, 16};
+        int[] dueHours = {7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
         int[] dueMinutes = {0, 15, 30, 45};
 
         for (LocalDate currentDate = startDate; !currentDate.isAfter(endDate); currentDate = currentDate.plusDays(1)) {
             int numTasks = random.nextInt(maxNumTasks - minNumTasks + 1) + minNumTasks;
-            generateTasksForDay(currentDate, tasks, numTasks, dueDateChance, dueHours, dueMinutes, random, strictStartChance);
+            generateTasksForDay(currentDate, tasks, numTasks, dueHours, dueMinutes, random);
         }
     }
 
@@ -69,17 +67,15 @@ public class ActiveTaskGenerator {
      * @param date              The date for which active tasks are generated.
      * @param tasks             The list of available tasks to assign.
      * @param numTasks          The number of active tasks to generate.
-     * @param dueDateChance     The percentage chance of assigning a due date to a task.
      * @param dueHours          The possible hours for the due date.
      * @param dueMinutes        The possible minutes for the due date.
      * @param random            The random number generator.
-     * @param strictStartChance The percentage chance of assigning a strict start time.
      */
-    private void generateTasksForDay(LocalDate date, List<Task> tasks, int numTasks, int dueDateChance,
-                                     int[] dueHours, int[] dueMinutes, Random random, int strictStartChance) {
+    private void generateTasksForDay(LocalDate date, List<Task> tasks, int numTasks, int[] dueHours, int[] dueMinutes,
+                                     Random random) {
         for (int i = 0; i < numTasks; i++) {
             Task task = tasks.get(random.nextInt(tasks.size()));
-            LocalDateTime dueDate = generateDueDate(date, dueDateChance, dueHours, dueMinutes, random, strictStartChance);
+            LocalDateTime dueDate = generateDueDate(date, dueHours, dueMinutes, random);
 
             ActiveTask activeTask = new ActiveTask();
             activeTask.setTask(task);
@@ -94,20 +90,14 @@ public class ActiveTaskGenerator {
      * Generates a random due date for a task based on the given parameters.
      *
      * @param date              The base date for the due date.
-     * @param dueDateChance     The percentage chance of assigning a due date.
      * @param dueHours          The possible hours for the due date.
      * @param dueMinutes        The possible minutes for the due date.
      * @param random            The random number generator.
-     * @param strictStartChance The percentage chance of assigning a strict start time.
      * @return The generated due date, or null if no due date is assigned.
      */
-    private LocalDateTime generateDueDate(LocalDate date, int dueDateChance, int[] dueHours, int[] dueMinutes,
-                                          Random random, int strictStartChance) {
-        if (random.nextInt(100) < dueDateChance || random.nextInt(100) < strictStartChance) {
-            int hour = dueHours[random.nextInt(dueHours.length)];
-            int minute = dueMinutes[random.nextInt(dueMinutes.length)];
-            return LocalDateTime.of(date, LocalTime.of(hour, minute));
-        }
-        return null;
+    private LocalDateTime generateDueDate(LocalDate date, int[] dueHours, int[] dueMinutes, Random random) {
+        int hour = dueHours[random.nextInt(dueHours.length)];
+        int minute = dueMinutes[random.nextInt(dueMinutes.length)];
+        return LocalDateTime.of(date, LocalTime.of(hour, minute));
     }
 }
