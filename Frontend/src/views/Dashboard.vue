@@ -185,7 +185,6 @@ onMounted(() => {
   align-items: flex-start;
   font-size: 1.2rem;
   color: var(--text-1);
-  overflow-y: auto;
 }
 
 @media (max-width: 1400px) {

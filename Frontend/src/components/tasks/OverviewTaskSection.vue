@@ -170,30 +170,36 @@ watch(() => props.zoneId, async () => {
 <style scoped>
 .container {
   width: 100%;
-  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .content {
   width: 100%;
-  height: 100%;
+  max-height: 100%;
   padding: 20px;
   display: flex;
   justify-content: center;
-  overflow-y: auto;
 }
 
 .task-container {
   width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-  justify-content: center;
-  justify-items: center;
+  max-height: 60vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+  align-content: flex-start;
   text-align: center;
   overflow-y: auto;
+}
+
+.task-container > div {
+  flex: 1 1 calc(33.33% - 1rem); /* Adjusts to fit 3 items per row */
+  max-width: 300px;
+  height: 70px;
+  min-width: 150px; /* Ensures a minimum size */
 }
 
 .toolbar {
@@ -225,6 +231,7 @@ watch(() => props.zoneId, async () => {
 }
 
 .controls {
+  height: 7%;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -281,9 +288,11 @@ hr {
 }
 
 @media (max-width: 1400px) {
-
   .task-container {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    max-height: 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
   }
   .tabs button {
     width: 5rem;
@@ -293,6 +302,10 @@ hr {
   }
   .controls {
     gap: 0.5rem;
+  }
+
+  .task-container > div {
+    flex: 1 1 100%; /* Stacks items vertically */
   }
 }
 </style>

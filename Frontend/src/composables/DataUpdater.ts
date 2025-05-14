@@ -93,3 +93,9 @@ export const setIntervalId = async (intervalId: any) => {
     ["intervalId"]: intervalId,
   });
 };
+
+export const createWorker = async (worker: Worker) => {
+    if (worker) {
+        await postData(`http://localhost:8080/api/workers`, worker);
+    }
+}

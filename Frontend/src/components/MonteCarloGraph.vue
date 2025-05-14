@@ -369,6 +369,7 @@ onUnmounted(() => {
 
 .monte-carlo-graph {
   width: 100%;
+  height: 90%;
   background-color: var(--background-1); /* Adjusts for light/dark mode */
   border-radius: 8px;
   color: var(--text-1); /* Text color adjusts for light/dark mode */
@@ -379,6 +380,7 @@ canvas {
 }
 
 .color-indicator-container {
+  height: 10%;
   display: flex;
   justify-content: flex-start;
   gap: 2rem;

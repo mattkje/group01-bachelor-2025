@@ -43,10 +43,8 @@ export interface Worker {
     zone: number;
     efficiency: number;
     availability: boolean;
-    breakStartTime: string;
     dead: boolean;
     licenses: License[];
-    workerType: string;
     currentTaskId: number;
 }
 

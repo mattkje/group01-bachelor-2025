@@ -2,12 +2,34 @@
 import {ref, computed, onMounted} from 'vue';
 import {Zone, Worker} from "@/assets/types";
 import {fetchAllWorkers, fetchAllZones} from "@/composables/DataFetcher";
+import {createWorker} from "@/composables/DataUpdater";
 
 const workers = ref<Worker[]>([]);
 const zones = ref<Zone[]>([]);
 const searchQuery = ref('');
 const selectedZones = ref<number[]>([]);
 const showAvailableOnly = ref(false);
+const showAddWorkerPopup = ref(false);
+const newWorkerName = ref('');
+
+const addWorker = async () => {
+  if (newWorkerName.value.trim()) {
+
+    const newWorker: Worker = {
+      id: null, // The ID is auto-generated, so no need to set it here
+      name: newWorkerName.value,
+      efficiency: 1,
+      zone: 0,
+      dead: false,
+      availability: true,
+      currentTaskId: null,
+      licenses: [],
+    };
+    await createWorker(newWorker);
+    newWorkerName.value = '';
+    showAddWorkerPopup.value = false;
+  }
+};
 
 const loadAllData = async () => {
   zones.value = await fetchAllZones()
@@ -35,84 +57,132 @@ onMounted(() => {
 
 <template>
   <div class="staff-page">
-    <div class="filters">
-      <input v-model="searchQuery" type="text" placeholder="Search by name" class="search-bar"/>
-      <div class="filter-group">
-        <label v-for="zone in zones" :key="zone.id">
-          <input type="checkbox" :value="zone.id" v-model="selectedZones"/>
-          {{ zone.name }}
-        </label>
-        <label>
-          <input type="checkbox" :value="0" v-model="selectedZones"/>
-          Unassigned
-        </label>
+    <div class="content">
+      <div class="staff-cards">
+        <div v-for="worker in filteredWorkers" :key="worker.id" class="staff-card">
+          <div class="card-header">
+            <div class="left-items">
+              <h3>{{ worker.name }}</h3>
+            </div>
+            <router-link :to="`/workers/${worker.id}`" class="edit-link">
+              <img src="@/assets/icons/edit.svg" alt="Edit" width="20" height="20"/>
+            </router-link>
+          </div>
+          <hr>
+          <div class="card-body">
+            <p><strong>Zone:</strong> {{ getZoneName(worker.zone) }}</p>
+            <p><strong>Licenses:</strong> {{ worker.licenses.map(license => license.name).join(', ') }}</p>
+            <p><strong>Availability:</strong> {{ worker.availability ? 'Available' : 'Unavailable' }}</p>
+          </div>
+        </div>
       </div>
-      <div class="filter-group">
-        <label>
-          <input v-model="showAvailableOnly" type="checkbox"/>
-          Available Only
-        </label>
+      <div class="filters">
+        <div class="filter-header">
+          <input v-model="searchQuery" type="text" placeholder="Search by name" class="search-bar"/>
+          <button class="add-worker-btn" @click="showAddWorkerPopup = true">Add Worker</button>
+        </div>
+        <div class="filter-group">
+          <h4>Zones</h4>
+          <div class="filter-options">
+            <select v-model="selectedZones" multiple class="multi-select-dropdown">
+              <option v-for="zone in zones" :key="zone.id" :value="zone.id">
+                {{ zone.name }}
+              </option>
+            </select>
+            <label>
+              <input type="checkbox" :value="0" v-model="selectedZones"/>
+              Unassigned
+            </label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <h4>Availability</h4>
+          <label>
+            <input v-model="showAvailableOnly" type="checkbox"/>
+            Available Only
+          </label>
+        </div>
       </div>
     </div>
-    <div class="staff-cards">
-      <div v-for="worker in filteredWorkers" :key="worker.id" class="staff-card">
-        <div class="card-header">
-          <div class="left-items">
-            <h3>{{ worker.name }}</h3>
-          </div>
-          <router-link :to="`/workers/${worker.id}`" class="edit-link">
-            <img src="@/assets/icons/edit.svg" alt="Edit" width="20" height="20"/>
-          </router-link>
-        </div>
-        <hr>
-        <div class="card-body">
-          <p><strong>Zone:</strong> {{ getZoneName(worker.zone) }}</p>
-          <p><strong>Licenses:</strong> {{ worker.licenses.map(license => license.name).join(', ') }}</p>
-          <p><strong>Availability:</strong> {{ worker.availability ? 'Available' : 'Unavailable' }}</p>
+    <div v-if="showAddWorkerPopup" class="popup-overlay" @click.self="showAddWorkerPopup = false">
+      <div class="popup">
+        <h3>Add Worker</h3>
+        <input v-model="newWorkerName" type="text" placeholder="Full Name" class="popup-input"/>
+        <div class="popup-actions">
+          <button @click="addWorker">Add</button>
+          <button @click="showAddWorkerPopup = false">Cancel</button>
         </div>
       </div>
     </div>
   </div>
 </template>
-
 <style scoped>
 .staff-page {
-  max-height: 95%;
-  padding: 2rem;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.content {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
 }
 
 .filters {
+  padding: 1rem;
+  min-width: 20%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1rem;
-  position: -webkit-sticky;
-  position: sticky;
-  top: -2rem;
-  background-color: var(--background-1);
-  z-index: 1000;
-  padding: 1rem;
-  border-bottom: var(--border-1) 1px solid;
+  border-left: 1px solid var(--border-1);
 }
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 3rem;
+  align-items: center;
+}
+
 
 .search-bar {
   color: var(--text-1);
   background-color: var(--background-2);
-  padding: 0.5rem;
+  padding: 1rem;
+  height: 3rem;
   border: 1px solid var(--border-1);
-  border-radius: 4px;
+  border-radius: 1rem;
   width: 100%;
 }
 
+.multi-select-dropdown {
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-1);
+  border-radius: 4px;
+  background-color: var(--background-2);
+  color: var(--text-1);
+  font-size: 1rem;
+}
+
+.multi-select-dropdown:focus {
+  outline: none;
+  border-color: var(--main-color);
+}
+
 .filter-group {
+  width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .filter-group label {
-  color: var(--text-2s);
+  color: var(--text-2);
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -154,9 +224,15 @@ onMounted(() => {
 }
 
 .staff-cards {
-  display: flex;
-  flex-wrap: wrap;
+  height: 100%;
+  width: 100%;
+  padding: 1rem;
   gap: 1rem;
+  display: flex;
+  justify-content: flex-start;
+  align-content: flex-start;
+  flex-wrap: wrap;
+  overflow-y: auto;
 }
 
 .staff-card {
@@ -164,6 +240,7 @@ onMounted(() => {
   border: 1px solid var(--border-1);
   border-radius: 1.5rem;
   padding: 1rem;
+  max-height: 170px;
   width: calc(33.333% - 1rem);
 }
 
@@ -221,5 +298,42 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background-color: var(--background-1);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.add-worker-btn {
+  background-color: var(--main-color);
+  color: white;
+  height: 3rem;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
 }
 </style>
