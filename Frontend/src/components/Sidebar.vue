@@ -13,8 +13,6 @@ import staffIconSelected from '../assets/icons/staffSelected.svg';
 import tasksIconSelected from '../assets/icons/tasksSelected.svg';
 import settingsIconSelected from '../assets/icons/settingsSelected.svg';
 import infoIconSelected from '../assets/icons/infoSelected.svg';
-import cpIcon from '../assets/icons/cp.svg';
-import cpIconSelected from '../assets/icons/cpSelected.svg';
 
 type TabItem = {
   name: string;

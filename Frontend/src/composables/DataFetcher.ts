@@ -1,4 +1,4 @@
-import {ActiveTask, License, Notification, PickerTask, Task, Worker, Zone} from "@/assets/types";
+import {ActiveTask, License, Notification, NotificationDone, PickerTask, Task, Worker, Zone} from "@/assets/types";
 import { fetchData } from "@/composables/HttpMethods";
 
 export const fetchAllMonteCarloGraphData = async (zoneId: number) => {
@@ -131,7 +131,7 @@ export const fetchOverviewData = async (zoneId: number) => {
 }
 
 export const fetchDoneBy = async () => {
-    return fetchData<string>(`http://localhost:8080/api/error-messages/done-by`);
+    return fetchData<NotificationDone>(`http://localhost:8080/api/error-messages/done-by`);
 }
 
 export const fetchDoneByForZone = async (zoneId: number) => {

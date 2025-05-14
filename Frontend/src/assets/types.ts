@@ -93,6 +93,10 @@ export interface Notification {
     timestamp: string | null;
 }
 
+export interface NotificationDone {
+    time: string;
+}
+
 export const ErrorCodes = new Map<number, string>([
     [101, "No Tasks"],
     [102, "No Workers in Zone"],

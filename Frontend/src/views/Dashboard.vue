@@ -51,8 +51,6 @@ watch(selectedZoneObject, async (newZone) => {
 <template>
   <div class="container-container" v-if="selectedZoneObject">
     <div class="header">
-      <h1>Dashboard</h1>
-      <div class="vertical-separator"></div>
       <div class="zone-selector">
         <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
           <option :key="0" :value="{ id: 0 }">All Zones</option>

@@ -6,7 +6,7 @@
   <div class="container">
     <div class="logo">
       <img src="@/assets/icons/wws.svg" alt="Logo" class="logo-icon"/>
-      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
+      <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator</span></span>
     </div>
     <p>This application is developed as part of a bachelor thesis project. It utilizes Monte Carlo simulations to model
       and analyze complex systems and processes.</p>

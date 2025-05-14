@@ -14,17 +14,15 @@ import {
   stopSimulationClock
 } from "@/composables/SimulationCommands";
 import axios from "axios";
-import { useSimulationTime } from "@/composables/useSimulationTime";
+import {useSimulationTime} from "@/composables/useSimulationTime";
 
-const { currentTime, currentDate, completionTime } = useSimulationTime();
+const {currentTime, currentDate, completionTime} = useSimulationTime();
 
 const isSpinning = ref(false);
 let isPlaying = ref(false);
 const isPaused = ref(false);
 let simCount = ref(10);
 const isLoadingSimulation = ref(false);
-const intervals = ["10 min", "30 min", "60 min"];
-const selectedInterval = ref(intervals[0]);
 
 const fetchSimulationState = async () => {
   simCount.value = await fetchSimulationCount();
@@ -55,7 +53,6 @@ const fetchSimulationState = async () => {
 let intervalId: number | null = null;
 let speedIndex = 0;
 const speeds = [1, 2, 5, 10];
-
 
 
 const startClock = async () => {
@@ -144,15 +141,20 @@ const isFinished = computed(() => {
 
 const dateText = computed(() => {
   if (!currentDate.value) {
-    return '00/00/0000';
+    return 'No Date';
   }
-  return new Date(currentDate.value).toLocaleDateString();
+  return new Date(currentDate.value).toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 });
 
 async function updateSimCount() {
   try {
     await axios.post('http://localhost:8080/api/setSimCount', null, {
-      params: { simCount: simCount.value },
+      params: {simCount: simCount.value},
     });
     console.log('SIM_COUNT updated successfully');
   } catch (error) {
@@ -186,7 +188,7 @@ onMounted(async () => {
     <div class="toolbar-title">
       <div class="logo">
         <img src="@/assets/icons/wws.svg" alt="Logo" class="logo-icon"/>
-        <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator™</span></span>
+        <span class="logo-text">Warehouse&nbsp;Workflow<br><span class="regular-font">Simulator</span></span>
       </div>
     </div>
     <div class="vertical-separator"/>
@@ -209,41 +211,44 @@ onMounted(async () => {
       </button>
     </div>
     <div class="vertical-separator"/>
-    <div class="date-clock" :class="{ 'disabled-box': isLoadingSimulation }">
-      <p>Date</p>
-      <div class="clock-time">
-        <span>{{ dateText }}</span>
-      </div>
-    </div>
-    <div class="vertical-separator"/>
     <div class="clock" :class="{ 'disabled-box': isLoadingSimulation }">
-      <p>Time</p>
-      <div v-if="currentTime" class="clock-time">
-        <span>{{ currentTime.split(':')[0] }}</span>
-        <span class="blink">:</span>
-        <span>{{ currentTime.split(':')[1] }}</span>
+      <div v-if="currentTime">
+        <div class="clock-time">
+          <span>{{ currentTime.split(':')[0] }}</span>
+          <span class="blink">:</span>
+          <span>{{ currentTime.split(':')[1] }}</span>
+        </div>
+        <div class="clock-date">
+          <span>{{ dateText }}</span>
+        </div>
       </div>
-      <div v-else class="clock-time">
-        <span>00:00</span>
+      <div v-else>
+        <div class="clock-time">
+          <span>00:00</span>
+        </div>
+        <div class="clock-date">
+          <span>No Date</span>
+        </div>
       </div>
     </div>
     <div class="vertical-separator"/>
-    <div class="clock-done" :class="{ 'disabled-box': isLoadingSimulation }">
-      <p v-if="!isFinished">Done By</p>
+    <div class="clock clock-done" :class="{ 'disabled-box': isLoadingSimulation }">
       <div class="clock-time">
         <span v-if="completionTime !== null ">{{ completionTime }}</span>
         <span v-else>{{ isFinished ? 'Done' : '00:00' }}</span>
       </div>
+      <div class="clock-date-done">
+        <span v-if="!isFinished">ETA</span>
+      </div>
     </div>
     <div class="vertical-separator"/>
-    <div class="loading-spinner" v-if="isLoadingSimulation || isSpinning">
-      <div class="spinner"></div>
-    </div>
-    <!---<div class="loading-spinner" v-else>
-      <div class="spinner-when-not-loading"></div>
-    </div> -->
-    <div v-else class="simulation-button" @click="runSimulations" title="Run Simulations">
-      <img src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
+    <div class="end-box">
+      <div class="loading-spinner" v-if="isLoadingSimulation || isSpinning">
+        <div class="spinner"></div>
+      </div>
+      <div v-else class="simulation-button" @click="runSimulations" title="Run Simulations">
+        <img src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
+      </div>
     </div>
   </div>
 </template>
@@ -287,7 +292,7 @@ onMounted(async () => {
 
 .vertical-separator {
   border-left: 1px solid var(--border-1);
-  height: 100%;
+  height: 60%;
   margin: 0 1rem;
 }
 
@@ -322,21 +327,17 @@ onMounted(async () => {
 .clock {
   display: flex;
   flex-direction: column;
-  line-height: 1.5rem;
-  width: 6rem;
-  align-content: center;
-  align-self: center;
+  width: 5rem;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2rem;
 }
 
-.date-clock {
-  display: flex;
-  background: none;
-  border: none;
-  flex-direction: column;
-  line-height: 1.5rem;
-  width: 6rem;
-  align-content: center;
-  align-self: center;
+.clock span, .date-clock span {
+  color: var(--text-2);
+  margin-top: 0.3rem;
+
+  font-size: 1.9rem;
 }
 
 .clock-time {
@@ -344,48 +345,43 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.clock span, .date-clock span {
-  color: var(--text-2);
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.clock p, .date-clock p {
-  color: var(--text-2);
-  font-size: 0.7rem;
-  font-weight: bold;
-}
-
-.date-clock span {
-  color: var(--text-2);
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-.clock p, .date-clock p {
-  color: var(--text-2);
-  font-size: 0.7rem;
-  font-weight: bold;
-}
-
-.clock-done {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.5rem;
-  align-content: center;
-  align-self: center;
-}
-
 .clock-done span {
   color: var(--main-color);
-  font-size: 2rem;
-  font-weight: bold;
+
 }
 
 .clock-done p {
   color: var(--main-color);
-  font-size: 0.7rem;
-  font-weight: bold;
+  right: 6.8rem;
+}
+
+.clock-date {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.clock-date span {
+  color: var(--text-2);
+  font-size: 0.8rem !important;
+  text-align: center;
+  white-space: nowrap;
+
+}
+
+.clock-date-done {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.clock-date-done span {
+  color: var(--main-color);
+  font-size: 0.8rem !important;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .logo {
@@ -421,6 +417,13 @@ onMounted(async () => {
   margin-bottom: 0.2rem;
 }
 
+.end-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+}
+
 .sim-count-container {
   display: flex;
   flex-direction: column; /* Stack label and input vertically */
@@ -430,7 +433,7 @@ onMounted(async () => {
 
 .sim-count-container label {
   margin-bottom: 0.3rem; /* Add spacing between label and input */
-  color: var(--text-2 );
+  color: var(--text-2);
   font-size: 0.7rem;
   font-weight: bold;
 }
@@ -533,11 +536,11 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.8s ease;
 }
 
 .simulation-button:hover {
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(360deg);
 }
 
 .simulation-button:active {
