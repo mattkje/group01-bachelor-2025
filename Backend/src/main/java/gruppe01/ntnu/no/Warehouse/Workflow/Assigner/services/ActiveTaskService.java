@@ -254,13 +254,16 @@ public class ActiveTaskService {
      * @return The updated active task.
      */
     public ActiveTask updateActiveTask(Long id, ActiveTask activeTask) {
-        if (!activeTaskRepository.findById(id).isPresent()) return null;
+        if (activeTaskRepository.findById(id).isEmpty()) return null;
         ActiveTask updatedActiveTask = activeTaskRepository.findById(id).get();
         updatedActiveTask.setTask(activeTask.getTask());
         updatedActiveTask.setWorkers(activeTask.getWorkers());
         updatedActiveTask.setStartTime(activeTask.getStartTime());
         updatedActiveTask.setEndTime(activeTask.getEndTime());
         updatedActiveTask.setDueDate(activeTask.getDueDate());
+        updatedActiveTask.setMcStartTime(activeTask.getMcStartTime());
+        updatedActiveTask.setMcEndTime(activeTask.getMcEndTime());
+
         if (updatedActiveTask.getRecurrenceType() != activeTask.getRecurrenceType()) {
             for (Task task : taskRepository.findAll()) {
                 if (task.getZoneId().equals(activeTask.getTask().getZoneId()) && task.getId().equals(id)) {

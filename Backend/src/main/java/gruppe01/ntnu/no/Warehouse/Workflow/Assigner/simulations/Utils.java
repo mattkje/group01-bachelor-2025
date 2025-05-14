@@ -121,38 +121,38 @@ public class Utils {
             saveGeneralSimulation(simulationResult, i, now);
             saveZoneSimulation(simulationResult.getZoneSimResultList(), i, now);
         }
-        this.getBestCaseScenarioForEachZoneSim(simulationResults);
+        System.out.println("Simulation results saved.");
+        this.getBestCaseScenarioForEachZoneSim(simulationResults, now);
     }
 
-    private Integer findHighestValue(Map<LocalDateTime, Integer> timestamps) {
-        return Collections.max(timestamps.values());
-    }
 
-    private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int i, LocalDateTime now) {
+    private void saveZoneSimulation(List<ZoneSimResult> zoneSimResultList, int simulationIndex, LocalDateTime now) {
+        if (zoneSimResultList == null || now == null) {
+            throw new IllegalArgumentException("zoneSimResultList and now cannot be null");
+        }
+
+        LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
+
         for (ZoneSimResult zoneSimResult : zoneSimResultList) {
-            if (zoneSimResult.getZone() == null) {
-                continue; // Skip if zone is null
+            if (zoneSimResult == null || zoneSimResult.getZone() == null || zoneSimResult.getZone().getId() == null) {
+                continue;
             }
-            Map<LocalDateTime, Integer> timestamps = new HashMap<>();
-            LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59);
+
+            Map<LocalDateTime, Integer> timestamps = new TreeMap<>(); // TreeMap ensures sorted order by default
 
             for (LocalDateTime time = now; !time.isAfter(endOfDay); time = time.plusMinutes(10)) {
                 timestamps.put(time, zoneSimResult.getCompletedTaskCountAtTime(time));
             }
-            for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .toList()) {
-                monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
-                        entry.getValue(), zoneSimResult.getZone().getId());
-            }
+
+            timestamps.forEach((time, completedTasks) ->
+                monteCarloService.generateSimulationDataPoint(simulationIndex, time, completedTasks, zoneSimResult.getZone().getId())
+            );
         }
     }
 
     private void saveGeneralSimulation(SimulationResult simulationResult, int i, LocalDateTime now) {
 
         Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList(), now);
-
-        int highestValue = findHighestValue(timestamps);
         for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .toList()) {
@@ -160,8 +160,9 @@ public class Utils {
         }
     }
 
-    public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults) {
-        Map<Long, ErrorMessage> errorMessages = errorMessageService.generateErrorMessageMapFromZones();
+    public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults, LocalDateTime now) {
+        Map<Long, ErrorMessage> errorMessages =
+            errorMessageService.generateErrorMessageMapFromZones();
         Map<Long, ZoneSimResult> bestCases = new HashMap<>();
 
         for (SimulationResult simulationResult : simulationResults) {
@@ -169,9 +170,12 @@ public class Utils {
                 processZoneSimResult(zoneSimResult, errorMessages, bestCases);
             });
         }
+        System.out.println("SAVING ZONE SIM RESULTS");
+        System.out.println("Best cases size: " + bestCases.size());
         errorMessageService.deleteAll();
         errorMessages.values().forEach(errorMessageService::saveErrorMessage);
-        this.saveBestCases(bestCases);
+        this.saveBestCases(bestCases, now);
+        System.out.println("ALL ZONE SIM RESULTS SAVED");
     }
 
     private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, ErrorMessage> errorMessages, Map<Long, ZoneSimResult> bestCases) {
@@ -191,20 +195,20 @@ public class Utils {
         errorMessage.setMessage(zoneSimResult.getErrorMessage().toString());
     }
 
-    private void saveBestCases(Map<Long, ZoneSimResult> bestCases) {
+    private void saveBestCases(Map<Long, ZoneSimResult> bestCases, LocalDateTime now) {
         bestCases.values().forEach(zoneSimResult -> {
             if (zoneSimResult.getZone() != null) {
                 if (zoneSimResult.getZone().getIsPickerZone()) {
-                    savePickerTasks(zoneSimResult);
+                    savePickerTasks(zoneSimResult,now);
                 } else {
-                    saveActiveTasks(zoneSimResult);
+                    saveActiveTasks(zoneSimResult,now);
                 }
             }
         });
     }
 
-    private void savePickerTasks(ZoneSimResult zoneSimResult) {
-        Set<PickerTask> pickerTasks = zoneService.getTodayUnfinishedPickerTasksByZoneId(zoneSimResult.getZone().getId());
+    private void savePickerTasks(ZoneSimResult zoneSimResult, LocalDateTime now) {
+        Set<PickerTask> pickerTasks = zoneService.getUnfinishedPickerTasksByZoneIdAndDate(zoneSimResult.getZone().getId(),now.toLocalDate());
         zoneSimResult.getPickerTasks().forEach(zonePickerTask -> {
             pickerTasks.stream()
                     .filter(pickerTask -> pickerTask.equals(zonePickerTask)) // Match the same PickerTask
@@ -216,8 +220,8 @@ public class Utils {
         });
     }
 
-    private void saveActiveTasks(ZoneSimResult zoneSimResult) {
-        Set<ActiveTask> activeTasks = zoneService.getTodayUnfinishedTasksByZoneId(zoneSimResult.getZone().getId());
+    private void saveActiveTasks(ZoneSimResult zoneSimResult, LocalDateTime now) {
+        Set<ActiveTask> activeTasks = zoneService.getUnfinishedTasksByZoneIdAndDate(zoneSimResult.getZone().getId(), now.toLocalDate());
         zoneSimResult.getActiveTasks().forEach(zoneActiveTask -> {
             activeTasks.stream()
                     .filter(activeTask -> activeTask.equals(zoneActiveTask)) // Match the same ActiveTask

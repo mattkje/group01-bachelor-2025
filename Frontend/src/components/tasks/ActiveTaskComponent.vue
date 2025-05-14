@@ -3,7 +3,7 @@ import {defineProps, computed} from 'vue';
 import TaskDropdown from "@/components/tasks/TaskDropdown.vue";
 import {ActiveTask} from "@/assets/types";
 
-const props = defineProps<{ activeTask: ActiveTask }>();
+const props = defineProps<{ activeTask: ActiveTask; estimate: boolean }>();
 
 const emit = defineEmits(["taskDeleted", "taskUpdated"]);
 
@@ -17,13 +17,35 @@ const handleTaskUpdated = (updatedTask: ActiveTask) => {
 
 // Computed property to determine the background color
 const taskBackgroundColor = computed(() => {
-  const {startTime, endTime} = props.activeTask;
+  const {startTime, endTime, mcStartTime, mcEndTime} = props.activeTask;
+
+  if (props.estimate) {
+    if (mcStartTime && mcEndTime) {
+      return "#CCFFCC"; // Green
+    } else {
+      return "#FFCCCC"; // Red
+    }
+  }
+
   if (startTime && !endTime) {
     return "var(--main-color-3)"; // Yellow
   } else if (startTime && endTime) {
     return "var(--busy-color-2)"; // Green
   }
   return "var(--background-2)";
+});
+
+const formattedTimes = computed(() => {
+  const formatTime = (time: string | null) => {
+    if (!time) return "N/A";
+    const date = new Date(time);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return {
+    mcStartTime: formatTime(props.activeTask.mcStartTime),
+    mcEndTime: formatTime(props.activeTask.mcEndTime),
+  };
 });
 </script>
 
@@ -41,7 +63,15 @@ const taskBackgroundColor = computed(() => {
     <div class="task-details">
       <div class="workers-info">
         <div>{{ props.activeTask.workers.length }} / {{ props.activeTask.task.maxWorkers }} workers</div>
-        <div>ETA: {{ props.activeTask.task.maxTime }}</div>
+        <div v-if="props.estimate">
+          <div v-if="props.activeTask.mcStartTime && props.activeTask.mcEndTime">
+            Estimated: {{ formattedTimes.mcStartTime }} - {{ formattedTimes.mcEndTime }},
+          </div>
+          <div v-else>
+            Task Estimated to not complete
+          </div>
+        </div>
+        <div v-else>ETA: {{ props.activeTask.task.maxTime }}</div>
       </div>
       <div class="task-zone">Zone {{ props.activeTask.task.zoneId }}</div>
     </div>

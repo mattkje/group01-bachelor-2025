@@ -28,6 +28,7 @@ const currentDate = ref<string>('');
 const hasTasks = ref(false);
 const hasPickerTasks = ref(false);
 const loading = ref(true);
+const showEstimations = ref(false);
 
 let intervalId: ReturnType<typeof setInterval> | undefined;
 
@@ -125,7 +126,7 @@ watch(() => props.zoneId, async () => {
 
           <div class="switch">
             <label>
-              <input type="checkbox" v-model="displayEstimations" />
+              <input type="checkbox" v-model="showEstimations" />
               <span class="text-span">Display estimations</span>
             </label>
           </div>
@@ -136,11 +137,13 @@ watch(() => props.zoneId, async () => {
                 v-for="(task, index) in tasksWithEndTime"
                 :key="index"
                 :active-task="task"
+                :estimate="showEstimations"
             />
             <PickerTaskComponent
                 v-for="(task, index) in pickerTasksWithEndTime"
                 :key="index"
                 :picker-task="task"
+                :estimate="showEstimations"
             />
           </template>
           <p style="margin-top: 20vh" v-else>No completed tasks</p>
@@ -151,11 +154,13 @@ watch(() => props.zoneId, async () => {
                 v-for="(task, index) in tasksWithoutEndTime"
                 :key="index"
                 :active-task="task"
+                :estimate="showEstimations"
             />
             <PickerTaskComponent
                 v-for="(task, index) in pickerTasksWithoutEndTime"
                 :key="index"
                 :picker-task="task"
+                :estimate="showEstimations"
             />
           </template>
           <p style="margin-top: 20vh" v-else>No current tasks</p>
@@ -204,10 +209,10 @@ watch(() => props.zoneId, async () => {
 }
 
 .task-container > div {
-  flex: 1 1 calc(33.33% - 1rem); /* Adjusts to fit 3 items per row */
+  flex: 1 1 calc(33.33% - 1rem);
   max-width: 300px;
   height: 70px;
-  min-width: 150px; /* Ensures a minimum size */
+  min-width: 150px;
 }
 
 .toolbar {

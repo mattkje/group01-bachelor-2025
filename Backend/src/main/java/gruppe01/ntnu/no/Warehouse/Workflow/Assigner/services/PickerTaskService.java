@@ -196,6 +196,7 @@ public class PickerTaskService {
      */
     public PickerTask updatePickerTask(Long pickerTaskId, Long zoneId, PickerTask pickerTask) {
         return pickerTaskRepository.findById(pickerTaskId).map(existingTask -> {
+
             // Update fields
             existingTask.setDistance(pickerTask.getDistance());
             existingTask.setPackAmount(pickerTask.getPackAmount());
@@ -206,6 +207,8 @@ public class PickerTaskService {
             existingTask.setTime(pickerTask.getTime());
             existingTask.setStartTime(pickerTask.getStartTime());
             existingTask.setEndTime(pickerTask.getEndTime());
+            existingTask.setMcEndTime(pickerTask.getMcEndTime());
+            existingTask.setMcStartTime(pickerTask.getMcStartTime());
             existingTask.setDate(pickerTask.getDate());
             existingTask.setWorker(pickerTask.getWorker());
 

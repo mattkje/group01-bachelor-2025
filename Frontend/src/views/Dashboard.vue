@@ -5,22 +5,29 @@ import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
 import {ref, onMounted} from 'vue';
 import {Zone} from "@/assets/types";
-import {fetchAllZones} from "@/composables/DataFetcher";
+import {fetchAllZones, fetchDoneByForZone, fetchNotifications} from "@/composables/DataFetcher";
 import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 
 let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
+let doneBy = ref<string>("");
 
-const loadAllData = async () => {
+const loadAllData = async (zoneId:string) => {
   zones.value = await fetchAllZones();
+
+  if (zoneId) {
+    doneBy.value = await fetchDoneByForZone(parseInt(zoneId));
+  } else {
+    selectedZoneObject.value = zones.value[0];
+  }
+
 };
 
 onMounted(() => {
-
-  loadAllData().then(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const zoneId = urlParams.get('id');
+  loadAllData(zoneId).then(() => {
     if (zones.value.length > 0) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const zoneId = urlParams.get('id');
       if (zoneId) {
         const zone = zones.value.find(zone => zone.id === parseInt(zoneId));
         if (zone) {
@@ -48,6 +55,10 @@ onMounted(() => {
             {{ zone.name }}
           </option>
         </select>
+      </div>
+      <div class="doneby">
+        <label>Zone Done By:</label>
+
       </div>
     </div>
     <div class="overview-widget-area">

@@ -30,6 +30,8 @@ export interface ActiveTask {
     dueDate: string;
     startTime: string;
     endTime: string;
+    mcStartTime: string
+    mcEndTime: string;
     eta: string;
     date: string;
     task: Task;
@@ -68,6 +70,8 @@ export interface PickerTask {
     time: number;
     startTime: string;
     endTime: string;
+    mcStartTime: string
+    mcEndTime: string;
     date: string;
     zoneId: number;
     worker: Worker;
