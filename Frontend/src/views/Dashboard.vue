@@ -77,7 +77,7 @@ onMounted(() => {
 
 <style scoped>
 .container-container {
-  height: 100%;
+  height: calc(90vh - 4rem);
   width: 100%;
   display: flex;
   flex-direction: column;

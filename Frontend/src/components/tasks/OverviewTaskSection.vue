@@ -49,9 +49,11 @@ const handleZoneChange = async () => {
   if (props.zoneId != 0 && props.zone.isPickerZone) {
     await loadPickerTasksForZone();
     hasPickerTasks.value = pickerTasks.value.length > 0;
+    tasks.value = [];
   } else if (props.zoneId != 0) {
     await loadTasksForZone();
     hasTasks.value = tasks.value.length > 0;
+    pickerTasks.value = [];
   } else {
     await loadPickerTasksForZone();
     await loadTasksForZone();
@@ -185,12 +187,12 @@ watch(() => props.zoneId, async () => {
 
 .task-container {
   width: 100%;
-  max-height: 60vh;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: flex-start;
-  align-content: flex-start;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  justify-content: center;
+  justify-items: center;
   text-align: center;
   overflow-y: auto;
 }

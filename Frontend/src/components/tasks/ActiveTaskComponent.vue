@@ -57,6 +57,7 @@ const taskBackgroundColor = computed(() => {
   flex-direction: column;
   width: 100%;
   color: var(--text-1);
+  max-height: 75px;
 }
 
 .task-header {

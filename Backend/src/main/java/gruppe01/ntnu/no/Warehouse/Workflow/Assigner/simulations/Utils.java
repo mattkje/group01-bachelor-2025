@@ -144,9 +144,6 @@ public class Utils {
                     .toList()) {
                 monteCarloService.generateSimulationDataPoint(i, entry.getKey(),
                         entry.getValue(), zoneSimResult.getZone().getId());
-                if (entry.getValue().equals(Collections.max(timestamps.values()))) {
-                    break;
-                }
             }
         }
     }
@@ -160,9 +157,6 @@ public class Utils {
                 .sorted(Map.Entry.comparingByKey())
                 .toList()) {
             monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue(), 0L);
-            if (entry.getValue() == highestValue) {
-                break; // Exit the loop after recording the highest value
-            }
         }
     }
 
