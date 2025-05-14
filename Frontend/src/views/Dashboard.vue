@@ -122,6 +122,7 @@ onMounted(() => {
 
 .header {
   width: 100%;
+  max-height: 65px;
   align-content: center;
   justify-content: flex-start;
   display: flex;
@@ -202,15 +203,13 @@ onMounted(() => {
   margin-left: auto;
   margin-right: 1rem;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px
-
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .donebytext {
   color: var(--main-color);
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   font-weight: bolder;
 }
 
@@ -218,6 +217,8 @@ onMounted(() => {
   color: var(--main-color);
   font-size: 1.8rem;
   font-weight: bolder;
+  position: relative;
+  top: -0.5rem;
 }
 
 @media (max-width: 1400px) {
