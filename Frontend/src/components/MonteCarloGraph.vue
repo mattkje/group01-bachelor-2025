@@ -101,7 +101,19 @@ function generateChartData() {
 
   const baseColor = 'rgba(150, 150, 150, 0.3)';
 
+  const maxLength = (24 * 60) / 10;
+
+  if (dataValues.value.length > maxLength) {
+    const excessLength = dataValues.value.length - maxLength;
+    dataValues.value.splice(0, excessLength);
+  }
+
   ListOfListsOfValues.value.forEach((list, index) => {
+    if (list.length > maxLength) {
+      const excessLength = list.length - maxLength;
+      list.splice(0, excessLength);
+    }
+
     simulatedDatasets.value.push({
       label: `Case ${index + 1}`,
       data: [...Array(dataValues.value.length - 1).fill(null), ...list],

@@ -44,7 +44,6 @@ onMounted(async () => {
 
 <template>
   <div class="overview-widget">
-    <h2>Notifications</h2>
     <router-link class="notification" :to="`/zones/${zoneId}/tasks`" v-if="messages.length > 0">
       <div
         v-for="message in messages"
@@ -74,7 +73,7 @@ onMounted(async () => {
   align-items: flex-start !important;
   font-size: 1.2rem;
   color: var(--text-1);
-  padding: 1rem;
+  padding: 0 1rem;
   overflow: auto;
   position: relative; /* Required for the pseudo-element */
 }
@@ -82,7 +81,7 @@ onMounted(async () => {
 .overview-widget::after {
   content: "";
   position: absolute;
-  bottom: 1rem;
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 2rem;
@@ -100,12 +99,12 @@ onMounted(async () => {
 .notification {
   padding: 0;
   width: 100%;
-  margin-top: 1rem;
   text-decoration: none;
   overflow: auto;
 }
 
 .notification-item {
+  margin-top: 1rem;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -116,7 +115,6 @@ onMounted(async () => {
   border-radius: 0.3rem;
   padding: 0.2rem;
   font-size: 0.7rem;
-  margin-bottom: 0.5rem;
   transition: background-color 0.1s ease 0.1s, border 0.1s ease 0.1s;
 }
 

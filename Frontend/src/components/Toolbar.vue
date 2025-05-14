@@ -229,14 +229,14 @@ onMounted(async () => {
       </div>
     </div>
     <div class="vertical-separator"/>
-    <div class="loading-spinner" v-if="isLoadingSimulation">
+    <div class="loading-spinner" v-if="isLoadingSimulation || isSpinning">
       <div class="spinner"></div>
     </div>
     <!---<div class="loading-spinner" v-else>
       <div class="spinner-when-not-loading"></div>
     </div> -->
     <div v-else class="simulation-button" @click="runSimulations" title="Run Simulations">
-      <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
+      <img src="/src/assets/icons/simulationSelected.svg" alt="Assign"/>
     </div>
   </div>
 </template>
