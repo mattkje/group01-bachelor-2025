@@ -420,6 +420,7 @@ public class WorldSimulation {
 
                     for (Worker worker : activeTaskService.getWorkersAssignedToTask(task.getId())) {
                         if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
+                        workersWaitingForTask.remove(worker);
                         worker.setCurrentTask(null);
                         workerService.updateWorker(worker.getId(), worker);
                         System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
