@@ -89,11 +89,18 @@ const abortSimulation = async () => {
 };
 
 const fastForwardClock = async () => {
-  speedIndex = (speedIndex + 1) % speeds.length; // Set speedIndex first
+  speedIndex = (speedIndex + 1) % speeds.length;
+
   if (intervalId) {
     clearInterval(intervalId);
   }
-  await fastForwardSimulationClock(speeds[speedIndex]);
+  isLoadingSimulation.value = true;
+
+  try {
+    await fastForwardSimulationClock(speeds[speedIndex]); // Perform the async operation
+  } finally {
+    isLoadingSimulation.value = false; // Reset loading state
+  }
 };
 
 const runSimulations = async () => {
@@ -301,6 +308,15 @@ onMounted(async () => {
   margin: 0 0.5rem;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.controls button:hover {
+  transform: scale(1.1);
+}
+
+.controls button:active {
+  transform: scale(0.9);
 }
 
 .clock {
@@ -514,12 +530,18 @@ button:disabled {
 
 .simulation-button {
   cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
 }
 
+.simulation-button:hover {
+  transform: scale(1.1);
+}
 
+.simulation-button:active {
+  transform: scale(0.9);
+}
 
 </style>
