@@ -3,7 +3,7 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import NotificationWidget from "@/components/widgets/NotificationWidget.vue";
 import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, watch} from 'vue';
 import {Zone} from "@/assets/types";
 import {fetchAllZones, fetchDoneByForZone, fetchNotifications} from "@/composables/DataFetcher";
 import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
@@ -11,10 +11,10 @@ import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
 let doneBy = ref<string>("");
+let zoneId2 = ref<number>(0);
 
 const loadAllData = async (zoneId:string) => {
   zones.value = await fetchAllZones();
-
   if (zoneId) {
     doneBy.value = await fetchDoneByForZone(parseInt(zoneId));
   } else {
@@ -38,8 +38,13 @@ onMounted(() => {
       }
     }
   });
+});
 
-
+watch(selectedZoneObject, async (newZone) => {
+  if (newZone) {
+    zoneId2.value = newZone.id;
+    doneBy.value = await fetchDoneByForZone(newZone.id).then(response => response.time);
+  }
 });
 </script>
 
@@ -56,10 +61,10 @@ onMounted(() => {
           </option>
         </select>
       </div>
-      <div class="doneby" v-if="doneBy">
-        <p class="donebytext">Zone Done By:</p>
-        <p class="donebytext2">{{ doneBy }}</p>
-      </div>
+     <div class="doneby" v-if="selectedZoneObject.id !== 0">
+       <p class="donebytext">Zone Done By:</p>
+       <p class="donebytext2">{{ doneBy }}</p>
+     </div>
     </div>
     <div class="overview-widget-area">
       <div class="overview">

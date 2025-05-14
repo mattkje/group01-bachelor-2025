@@ -44,7 +44,6 @@ onUnmounted(() => {
 });
 
 const handleZoneChange = async () => {
-  console.log("zone id " + props.zoneId)
   loading.value = true;
   currentDate.value = await loadCurrentDate();
   if (props.zoneId != 0 && props.zone.isPickerZone) {
@@ -114,23 +113,23 @@ watch(() => props.zoneId, async () => {
           {{ tab }}
         </button>
       </div>
+      <div class="controls" v-if="selectedTab==='Current'">
+        <select v-model="selectedOption">
+          <option v-for="option in dropdownOptions" :key="option" :value="option">
+            {{ option }}
+          </option>
+        </select>
+
+        <div class="switch">
+          <label>
+            <input type="checkbox" v-model="showEstimations" />
+            <span class="text-span">Display estimations</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="content">
       <div class="task-content" v-if="selectedTab === 'Current' || selectedTab === 'Completed'">
-        <div class="controls">
-          <select v-model="selectedOption">
-            <option v-for="option in dropdownOptions" :key="option" :value="option">
-              {{ option }}
-            </option>
-          </select>
-
-          <div class="switch">
-            <label>
-              <input type="checkbox" v-model="showEstimations" />
-              <span class="text-span">Display estimations</span>
-            </label>
-          </div>
-        </div>
         <div v-if="selectedTab === 'Completed'" class="task-container">
           <template v-if="tasksWithEndTime.length > 0 || pickerTasksWithEndTime.length > 0">
             <ActiveTaskComponent
@@ -244,12 +243,10 @@ watch(() => props.zoneId, async () => {
 }
 
 .controls {
-  height: 7%;
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-left: auto;
-  margin-bottom: 1rem;
 }
 
 .controls select {
