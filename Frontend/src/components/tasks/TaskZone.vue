@@ -222,12 +222,12 @@ onMounted( () => {
     }
 
     .task-item.doing {
-      background-color: #fff3cd;
+      background-color: var(--main-color-3);
       color: #181818;
     }
 
     .task-item.completed {
-      background-color: #d4edda;
+      background-color: var(--busy-color-2);
       color: #181818;
     }
 

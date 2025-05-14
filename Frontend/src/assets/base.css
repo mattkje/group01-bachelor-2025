@@ -15,8 +15,8 @@
     --main-color-2: #ff9797;
     --main-color-3: #FFF2F2;
 
-  --ready-color: #bfffab;
-    --ready-color-2: #a3ff8f;
+  --busy-color: #c5c5c5;
+  --busy-color-2: #d9d9d9;
 
   --yellow-color: #ffebc0;
     --yellow-color-2: #ffebc0;
@@ -39,8 +39,8 @@
     --main-color-2: #ff9797;
     --main-color-3: #3b2f2f;
 
-    --ready-color: #3f5438;
-    --ready-color-2: #4b6a3c;
+    --busy-color: #424242;
+    --busy-color-2: #5d5d5d;
 
     --yellow-color: #443e32;
     --yellow-color-2: #443e32;

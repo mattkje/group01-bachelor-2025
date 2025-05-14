@@ -163,7 +163,7 @@ onUnmounted(() => {
 <template>
   <div class="worker-task-container">
     <div
-        :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId), 'rdy-worker-box': !doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
+        :class="['worker-compact', { 'unq-worker-box': !qualifiedForAnyTask && !doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId),'busy-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId), 'busy-unq-worker-box': doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId), 'not-present-worker-box': !isWorkerPresent(workerId), 'hover-effect': !activeTask }]"
         :draggable="!activeTask && !pickerTask">
       <div class="worker-profile">
         <div class="worker-image-container">
@@ -197,10 +197,10 @@ onUnmounted(() => {
              class="status-popup">
           Unqualified
         </div>
-        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualified && isWorkerPresent(workerId)"
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
              class="status-popup">Busy
         </div>
-        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualified && isWorkerPresent(workerId)"
+        <div v-if="doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
              class="status-popup">Busy & Unqualified
         </div>
         <div v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
@@ -264,13 +264,13 @@ onUnmounted(() => {
   border: 2px solid #ff4b4b;
 }
 
-.rdy-worker-box {
-  background-color: var(--ready-color);
+.busy-worker-box {
+  background-color: var(--busy-color);
   border-radius: 10px
 }
 
-.rdy-worker-box:hover {
-  background-color: var(--ready-color-2);
+.busy-worker-box:hover {
+  background-color: var(--busy-color-2);
 }
 
 .busy-unq-worker-box {
