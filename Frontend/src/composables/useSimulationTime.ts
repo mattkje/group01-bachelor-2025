@@ -1,6 +1,6 @@
 // Composable: useSimulationTime.ts
 import {ref, onMounted, onUnmounted} from "vue";
-import {fetchSimulationTime, fetchSimulationDate, fetchDoneBy} from "@/composables/DataFetcher";
+import {fetchSimulationTime, fetchSimulationDate, fetchDoneBy, fetchSimulationStatus} from "@/composables/DataFetcher";
 
 export function useSimulationTime() {
     const currentTime = ref("00:00");
@@ -10,11 +10,14 @@ export function useSimulationTime() {
 
     const updateTime = async () => {
         try {
+
             currentTime.value = await fetchSimulationTime();
             currentDate.value = await fetchSimulationDate();
             const notificationDoneObject = await fetchDoneBy();
             completionTime.value = notificationDoneObject.time;
         } catch (error) {
+            console.log("Could not fetch date, Retrying...");
+            currentTime.value = "00:00";
         }
     };
 

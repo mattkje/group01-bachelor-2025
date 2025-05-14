@@ -145,7 +145,6 @@ const dateText = computed(() => {
   }
   return new Date(currentDate.value).toLocaleDateString('en-US', {
     weekday: 'short',
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
   });

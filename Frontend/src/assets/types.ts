@@ -73,6 +73,7 @@ export interface PickerTask {
     mcStartTime: string
     mcEndTime: string;
     date: string;
+    dueDate: string;
     zoneId: number;
     worker: Worker;
 }

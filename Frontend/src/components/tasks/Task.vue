@@ -18,14 +18,15 @@ const isTaskOverdue = ref(false);
 onMounted(async () => {
   if (props.activeTask) {
     activeTask.value = props.activeTask;
-
     isTaskOverdue.value = activeTask.value.dueDate
-        ? activeTask.value.dueDate.toString() < new Date(props.currentDate).toDateString()
+        ? new Date(activeTask.value.dueDate).getTime() < new Date(props.currentDate).getTime()
         : false;
   } else if (props.pickerTask) {
     pickerTask.value = props.pickerTask;
+    isTaskOverdue.value = pickerTask.value.dueDate
+        ? new Date(pickerTask.value.dueDate).getTime() < new Date(props.currentDate).getTime()
+        : false;
   }
-
 });
 </script>
 

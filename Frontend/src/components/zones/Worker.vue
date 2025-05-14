@@ -87,7 +87,7 @@ const fetchCurrentTimeFromBackend = async (): Promise<void> => {
   try {
     const timeResponse = await fetchSimulationTime();
     const dateResponse = await fetchSimulationDate();
-    currentDate.value = dateResponse;
+    currentDate.value = `${dateResponse} ${timeResponse}`;
 
     const [hours, minutes, seconds] = timeResponse.split(':').map(Number);
     const [year, month, day] = dateResponse.split('-').map(Number);
