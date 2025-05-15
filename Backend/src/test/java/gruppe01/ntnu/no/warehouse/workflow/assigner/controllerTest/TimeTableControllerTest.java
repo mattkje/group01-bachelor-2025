@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.TimetableController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Timetable;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TimetableService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,6 +30,12 @@ public class TimeTableControllerTest {
 
   @MockitoBean
   private TimetableService timetableService;
+
+  @MockitoBean
+  private ZoneService zoneService;
+
+  @MockitoBean
+  private WorkerService workerService;
 
   @Test
   void testGetTimetables() throws Exception {

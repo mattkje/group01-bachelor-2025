@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.TaskController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Task;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TaskService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,9 @@ public class TaskControllerTest {
 
   @MockitoBean
   private TaskService taskService;
+
+  @MockitoBean
+  private ZoneService zoneService;
 
   @Test
   void testGetAllTasks() throws Exception {

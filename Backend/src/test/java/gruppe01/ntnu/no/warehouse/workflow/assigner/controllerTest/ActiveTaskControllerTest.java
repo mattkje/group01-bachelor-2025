@@ -8,6 +8,9 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.ActiveTaskContro
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ActiveTaskService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TaskService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +29,15 @@ class ActiveTaskControllerTest {
 
   @MockitoBean
   private ActiveTaskService activeTaskService;
+
+  @MockitoBean
+  private ZoneService zoneService;
+
+  @MockitoBean
+  private TaskService taskService;
+
+  @MockitoBean
+  private WorkerService workerService;
 
   @Test
   void testGetAllActiveTasks() throws Exception {
