@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.PickerTaskController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.PickerTaskService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,6 +27,12 @@ public class PickerTaskControllerTest {
 
   @MockitoBean
   private PickerTaskService pickerTaskService;
+
+  @MockitoBean
+  private ZoneService zoneService;
+
+  @MockitoBean
+  private WorkerService workerService;
 
   @Test
   void testGetAllPickerTasks() throws Exception {
