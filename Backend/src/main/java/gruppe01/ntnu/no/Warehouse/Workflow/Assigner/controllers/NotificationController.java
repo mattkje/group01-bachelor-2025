@@ -106,6 +106,9 @@ public class NotificationController {
       @PathVariable long zoneId) {
     List<Notification> notifications = notificationService.getNotificationsByZoneId(zoneId);
     if (zoneService.getZoneById(zoneId) == null) {
+      if (zoneId == 0) {
+        return ResponseEntity.ok(notificationService.getAllNotification());
+      }
       return ResponseEntity.notFound().build();
     } else {
       return ResponseEntity.ok(notifications);

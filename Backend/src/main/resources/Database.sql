@@ -165,7 +165,7 @@ END;
 
 
 INSERT INTO worker (id, name, zone_id, work_title, efficiency, availability)
-VALUES (40, 'John Doe', 1, 'Warehouse Manager', 1.1, true),
+VALUES
        (1, 'Jane Smith', 1, 'Warehouse Supervisor', 0.9, true),
        (3, 'Alice Johnson', 2, 'Warehouse Technician', 1.2, true),
        (2, 'Bob Brown', 2, 'Forklift Operator', 0.8, false),
@@ -205,6 +205,7 @@ VALUES (40, 'John Doe', 1, 'Warehouse Manager', 1.1, true),
        (37, 'Holly Zinc', 7, 'Warehouse Technician', 0.85, true),
        (38, 'Ian Lead', 1, 'Warehouse Engineer', 1.2, true),
        (39, 'Judy Tin', 2, 'Warehouse Specialist', 1.1, true),
+       (40, 'John Doe', 1, 'Warehouse Manager', 1.1, true),
        (41, 'Kevin Aluminum', 3, 'Warehouse Analyst', 1.0, true),
        (42, 'Oliver Stone', 9, 'Warehouse Operator', 1.1, true),
        (43, 'Emma Watson', 9, 'Inventory Specialist', 1.2, true),

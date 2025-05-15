@@ -104,17 +104,14 @@ public class WorldSimDataService {
    * @return a list of integers representing the completed tasks for the specified zone
    */
   public List<Integer> getWorldSimValues(long zoneId) {
-    List<Integer> worldSimValues = new ArrayList<>();
-
-    for (WorldSimData worldSimData : worldSimDataRepository.findAll()) {
-      if (worldSimData.getZone() != null && worldSimData.getZone().getId().equals(zoneId)) {
-        worldSimValues.add(worldSimData.getCompletedTasks());
-      } else if (worldSimData.getZone() == null && zoneId == 0) {
-        worldSimValues.add(worldSimData.getCompletedTasks());
-      }
+    if (zoneId == 0) {
+      return worldSimDataRepository.findAllByZoneIdZero().stream()
+          .map(WorldSimData::getCompletedTasks)
+          .toList();
     }
-
-    return worldSimValues;
+    return worldSimDataRepository.findAllByZoneId(zoneId).stream()
+        .map(WorldSimData::getCompletedTasks)
+        .toList();
   }
 
   /**
