@@ -1,7 +1,7 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.machinelearning;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.PickerTaskGenerator;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -22,16 +22,10 @@ import org.springframework.stereotype.Component;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.measure.NominalScale;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 
-import smile.io.Read;
 import smile.io.Write;
 import smile.regression.RandomForest;
-import smile.validation.metric.MSE;
-import smile.validation.metric.R2;
 
 /**
  * This class handles the machine learning model for predicting time spent on tasks.
@@ -52,9 +46,10 @@ public class MachineLearningModelPicking {
   Map<String, RandomForest> randomForests = new HashMap<>();
   private static final String METRICS_FILE = "model_performance_metrics.csv";
 
-    public MachineLearningModelPicking() {}
+  public MachineLearningModelPicking() {
+  }
 
-    /**
+  /**
    * Creates a model if one does not exist
    * It loads an existing model if available, otherwise it trains a new one.
    *
@@ -103,13 +98,14 @@ public class MachineLearningModelPicking {
   }
 
   public void createSynetheticData(String department) throws IOException, URISyntaxException {
-    DataFrame data = parseCsvToDataFrame(department, "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+    DataFrame data = parseCsvToDataFrame(department,
+        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
             department.toUpperCase() + "_time.csv");
 
     // Columns used for regression
     String[] featureCols = new String[] {
-            "distance_m", "dpack_equivalent_amount", "lines",
-            "weight_g", "volume_ml", "avg_height", "picker"
+        "distance_m", "dpack_equivalent_amount", "lines",
+        "weight_g", "volume_ml", "avg_height", "picker"
     };
     String targetCol = "time_s";
 
@@ -137,13 +133,13 @@ public class MachineLearningModelPicking {
         double[] colData = colSamples.get(col);
         double sampled = colData[random.nextInt(colData.length)];
         inputRow[j] = sampled;
-        sampleVectors.put(col, DoubleVector.of(col, new double[]{sampled}));
+        sampleVectors.put(col, DoubleVector.of(col, new double[] {sampled}));
       }
 
       // Create single-row DataFrame
       DoubleVector[] allVectors = Stream.concat(
-              sampleVectors.values().stream(),
-              Stream.of(DoubleVector.of("time_s", new double[] {0.0}))
+          sampleVectors.values().stream(),
+          Stream.of(DoubleVector.of("time_s", new double[] {0.0}))
       ).toArray(DoubleVector[]::new);
 
       // Create the DataFrame
@@ -166,7 +162,8 @@ public class MachineLearningModelPicking {
     DataFrame syntheticDF = DataFrame.of(syntheticDataArray, fullColumns);
 
     // Save synthetic dataset
-    Write.csv(syntheticDF, Paths.get("Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
+    Write.csv(syntheticDF, Paths.get(
+        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
             department.toUpperCase() + "_time.csv"));
     System.out.println("Synthetic data saved to synthetic_output.csv");
     System.out.println(createDBModel(department));
@@ -176,19 +173,21 @@ public class MachineLearningModelPicking {
     // Define the file path for the model
     String filePath = "pickroute_database_" + department.toUpperCase() + ".ser";
 
-    DataFrame dataFrame = parseCsvToDataFrame(department, "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
+    DataFrame dataFrame = parseCsvToDataFrame(department,
+        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
             department.toUpperCase() + "_time.csv");
 
     // Check if the model file exists
     File modelFile = new File(filePath);
 
-    List<PickerTask> pickerTasks = pickerTaskGenerator.generatePickerTasks(LocalDate.now(), 1, 20, this, true);
+    List<PickerTask> pickerTasks =
+        pickerTaskGenerator.generatePickerTasks(LocalDate.now(), 1, 20, this, true);
 
     // If the model file doesn't exist, train a new model
     if (!modelFile.exists()) {
       Formula formula = Formula.of("time_s", new String[] {
-              "distance_m", "dpack_equivalent_amount", "lines", "weight_g",
-              "volume_ml", "avg_height", "picker"
+          "distance_m", "dpack_equivalent_amount", "lines", "weight_g",
+          "volume_ml", "avg_height", "picker"
       });
 
       // Train a new RandomForest model with the provided data
@@ -206,7 +205,8 @@ public class MachineLearningModelPicking {
 
       // If the model is null or invalid, log an error
       if (model == null) {
-        return "Error: Existing model could not be loaded for department: " + department.toUpperCase();
+        return "Error: Existing model could not be loaded for department: " +
+            department.toUpperCase();
       }
 
       // Train the model with the new data
@@ -223,7 +223,8 @@ public class MachineLearningModelPicking {
   public void compareModels(String department, List<PickerTask> testData) throws IOException {
     // Load the models
     RandomForest model1 = loadModel(department, "pickroute_" + department.toUpperCase() + ".ser");
-    RandomForest model2 = loadModel(department, "pickroute_database_" + department.toUpperCase() + ".ser");
+    RandomForest model2 =
+        loadModel(department, "pickroute_database_" + department.toUpperCase() + ".ser");
 
     if (model1 == null || model2 == null) {
       throw new IllegalStateException("One or both models not found for department: " + department);
@@ -235,8 +236,10 @@ public class MachineLearningModelPicking {
     double totalErrorModel2 = 0.0;
 
     for (PickerTask pickerTask : testData) {
-      double predictedByModel1 = estimateTimeUsingModel(model1, pickerTask, pickerTask.getWorker().getId());
-      double predictedByModel2 = estimateTimeUsingModel(model2, pickerTask, pickerTask.getWorker().getId());
+      double predictedByModel1 =
+          estimateTimeUsingModel(model1, pickerTask, pickerTask.getWorker().getId());
+      double predictedByModel2 =
+          estimateTimeUsingModel(model2, pickerTask, pickerTask.getWorker().getId());
 
       System.out.println("Model 1 Prediction: " + predictedByModel1);
       System.out.println("Model 2 Prediction: " + predictedByModel2);
@@ -316,7 +319,8 @@ public class MachineLearningModelPicking {
       // Convert lists to arrays and build the DataFrame
       smile.data.vector.DoubleVector[] vectors = new smile.data.vector.DoubleVector[headers.size()];
       for (int i = 0; i < headers.size(); i++) {
-        double[] columnArray = columnData.get(i).stream().mapToDouble(Double::doubleValue).toArray();
+        double[] columnArray =
+            columnData.get(i).stream().mapToDouble(Double::doubleValue).toArray();
         vectors[i] = smile.data.vector.DoubleVector.of(headers.get(i), columnArray);
       }
 
@@ -358,13 +362,13 @@ public class MachineLearningModelPicking {
     }
     // Train the RandomForest model
     String[] featureColumns = new String[] {
-            "distance_m",
-            "dpack_equivalent_amount",
-            "lines",
-            "weight_g",
-            "volume_ml",
-            "avg_height",
-            "picker"
+        "distance_m",
+        "dpack_equivalent_amount",
+        "lines",
+        "weight_g",
+        "volume_ml",
+        "avg_height",
+        "picker"
     };
 
     Formula formula = Formula.of(target, featureColumns);
@@ -500,8 +504,8 @@ public class MachineLearningModelPicking {
     if (model != null) {
 
       List<Double> weights = getWeights(model);
-            String csvFilePath =
-            "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+      String csvFilePath =
+          "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
               department.toUpperCase() + "_time.csv";
       DataFrame data = parseCsvToDataFrame(department, csvFilePath);
       List<List<Double>> minMaxValues = getMinMaxValues(data);
@@ -576,7 +580,7 @@ public class MachineLearningModelPicking {
   }
 
   public long estimateTimeUsingModel(
-          RandomForest model, PickerTask pickerTask, long workerId
+      RandomForest model, PickerTask pickerTask, long workerId
   ) throws IOException {
     if (model == null) {
       throw new IllegalStateException("Model not provided for department");
@@ -584,25 +588,25 @@ public class MachineLearningModelPicking {
 
     // Extract features from the PickerTask object
     double[] features = new double[] {
-            pickerTask.getDistance(),
-            pickerTask.getPackAmount(),
-            pickerTask.getLinesAmount(),
-            pickerTask.getWeight(),
-            pickerTask.getVolume(),
-            pickerTask.getAvgHeight(),
-            workerId
+        pickerTask.getDistance(),
+        pickerTask.getPackAmount(),
+        pickerTask.getLinesAmount(),
+        pickerTask.getWeight(),
+        pickerTask.getVolume(),
+        pickerTask.getAvgHeight(),
+        workerId
     };
 
     // Create a DataFrame with only the feature columns (exclude time_s)
     DataFrame featureDataFrame = DataFrame.of(
-            DoubleVector.of("distance_m", new double[] {features[0]}),
-            DoubleVector.of("dpack_equivalent_amount", new double[] {features[1]}),
-            DoubleVector.of("lines", new double[] {features[2]}),
-            DoubleVector.of("weight_g", new double[] {features[3]}),
-            DoubleVector.of("volume_ml", new double[] {features[4]}),
-            DoubleVector.of("avg_height", new double[] {features[5]}),
-            DoubleVector.of("picker", new double[] {features[6]}),
-            DoubleVector.of("time_s", new double[] {0.0})
+        DoubleVector.of("distance_m", new double[] {features[0]}),
+        DoubleVector.of("dpack_equivalent_amount", new double[] {features[1]}),
+        DoubleVector.of("lines", new double[] {features[2]}),
+        DoubleVector.of("weight_g", new double[] {features[3]}),
+        DoubleVector.of("volume_ml", new double[] {features[4]}),
+        DoubleVector.of("avg_height", new double[] {features[5]}),
+        DoubleVector.of("picker", new double[] {features[6]}),
+        DoubleVector.of("time_s", new double[] {0.0})
     );
     // Predict the time using the model
     double[] predictions = model.predict(featureDataFrame);
@@ -640,8 +644,8 @@ public class MachineLearningModelPicking {
     return model;
   }
 
-  public Map<String,RandomForest> getAllModels() throws IOException {
-    Map<String,RandomForest> models = new HashMap<>();
+  public Map<String, RandomForest> getAllModels() throws IOException {
+    Map<String, RandomForest> models = new HashMap<>();
     String[] departments = {"DRY", "FREEZE", "FRUIT"};
     for (String department : departments) {
       RandomForest model = getModel(department, false);
@@ -655,57 +659,58 @@ public class MachineLearningModelPicking {
    * Updates the machine learning model with new data from picker tasks.
    *
    * @param pickerTasks The list of picker tasks to update the model with.
-   * @param department The department for which the model is being updated.
+   * @param department  The department for which the model is being updated.
    */
-  public void updateMachineLearningModel(List<PickerTask> pickerTasks, String department) throws IOException {
+  public void updateMachineLearningModel(List<PickerTask> pickerTasks, String department)
+      throws IOException {
     List<double[]> rows = new ArrayList<>();
 
     if (!pickerTasks.isEmpty()) {
       for (PickerTask pickerTask : pickerTasks) {
-        rows.add(new double[]{
-                pickerTask.getDistance(),
-                pickerTask.getPackAmount(),
-                pickerTask.getLinesAmount(),
-                pickerTask.getWeight(),
-                pickerTask.getVolume(),
-                pickerTask.getAvgHeight(),
-                (double) pickerTask.getWorker().getId(),
-                pickerTask.getTime()
+        rows.add(new double[] {
+            pickerTask.getDistance(),
+            pickerTask.getPackAmount(),
+            pickerTask.getLinesAmount(),
+            pickerTask.getWeight(),
+            pickerTask.getVolume(),
+            pickerTask.getAvgHeight(),
+            (double) pickerTask.getWorker().getId(),
+            pickerTask.getTime()
         });
       }
 
       try (FileReader reader = new FileReader(
-              "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
-                      department.toUpperCase() + "_time.csv");
-        CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
-          for (CSVRecord record : parser) {
-            rows.add(new double[]{
-                    Double.parseDouble(record.get("distance_m")),
-                    Double.parseDouble(record.get("dpack_equivalent_amount")),
-                    Double.parseDouble(record.get("lines")),
-                    Double.parseDouble(record.get("weight_g")),
-                    Double.parseDouble(record.get("volume_ml")),
-                    Double.parseDouble(record.get("avg_height")),
-                    Double.parseDouble(record.get("picker")),
-                    Double.parseDouble(record.get("time_s"))
-            });
-          }
+          "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+              department.toUpperCase() + "_time.csv");
+           CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        for (CSVRecord record : parser) {
+          rows.add(new double[] {
+              Double.parseDouble(record.get("distance_m")),
+              Double.parseDouble(record.get("dpack_equivalent_amount")),
+              Double.parseDouble(record.get("lines")),
+              Double.parseDouble(record.get("weight_g")),
+              Double.parseDouble(record.get("volume_ml")),
+              Double.parseDouble(record.get("avg_height")),
+              Double.parseDouble(record.get("picker")),
+              Double.parseDouble(record.get("time_s"))
+          });
         }
       }
+    }
 
     if (!rows.isEmpty()) {
       double[][] data = rows.toArray(new double[0][]);
 
       String[] columnNames = {
-              "distance_m", "dpack_equivalent_amount", "lines",
-              "weight_g", "volume_ml", "avg_height", "picker", "time_s"
+          "distance_m", "dpack_equivalent_amount", "lines",
+          "weight_g", "volume_ml", "avg_height", "picker", "time_s"
       };
 
       DataFrame dataFrame = DataFrame.of(data, columnNames);
 
       Formula formula = Formula.of("time_s", new String[] {
-              "distance_m", "dpack_equivalent_amount", "lines", "weight_g",
-              "volume_ml", "avg_height", "picker"
+          "distance_m", "dpack_equivalent_amount", "lines", "weight_g",
+          "volume_ml", "avg_height", "picker"
       });
       RandomForest model = RandomForest.fit(formula, dataFrame);
 

@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner;
+package gruppe01.ntnu.no.warehouse.workflow.assigner;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,8 +12,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class WarehouseWorkflowAssignerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(WarehouseWorkflowAssignerApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(WarehouseWorkflowAssignerApplication.class, args);
+  }
 
 }

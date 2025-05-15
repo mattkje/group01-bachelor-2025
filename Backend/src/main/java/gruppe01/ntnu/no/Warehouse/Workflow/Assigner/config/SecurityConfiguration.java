@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.config;
+package gruppe01.ntnu.no.warehouse.Workflow.Assigner.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.entities;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;

@@ -1,13 +1,13 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllerTest;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.controllerTest;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.ZoneController;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.ZoneController;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.*;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

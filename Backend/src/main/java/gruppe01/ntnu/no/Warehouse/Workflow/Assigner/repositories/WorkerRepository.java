@@ -1,6 +1,6 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.repositories;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface WorkerRepository extends JpaRepository<Worker, Long> {
 
-    @EntityGraph(attributePaths = "licenses")
-    @Query("SELECT w FROM Worker w")
-    List<Worker> findAllWithLicenses();
+  @EntityGraph(attributePaths = "licenses")
+  @Query("SELECT w FROM Worker w")
+  List<Worker> findAllWithLicenses();
 }
