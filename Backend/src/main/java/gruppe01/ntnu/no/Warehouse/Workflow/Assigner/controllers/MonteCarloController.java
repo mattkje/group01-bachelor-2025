@@ -131,7 +131,7 @@ public class MonteCarloController {
    *
    * @param zoneId the ID of the zone to retrieve simulation values for
    * @return a ResponseEntity containing the Monte Carlo simulation values or a 404
-   status if not found
+  status if not found
    */
   @Operation(
       summary = "Generate Monte Carlo simulation data",
