@@ -259,7 +259,7 @@ public class SimulationController {
   )
   @GetMapping("/run-world-simulation")
   public void runWorldSimulation() throws Exception {
-    worldSimulation.runWorldSimulation(2, LocalDate.now());
+    worldSimulation.runWorldSimulation(2, LocalDate.now(), false);
   }
 
   /**

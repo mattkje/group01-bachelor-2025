@@ -66,7 +66,7 @@ public class WorldSimulationController {
       simulationService.setSimCount(simCount);
     }
 
-    worldSimulation.runWorldSimulation(simulationTime, LocalDate.now());
+    worldSimulation.runWorldSimulation(simulationTime, LocalDate.now(), false);
   }
 
   /**

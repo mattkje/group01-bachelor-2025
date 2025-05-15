@@ -78,7 +78,7 @@ public class WorldSimulation {
 
   private volatile boolean isSimulationRunning = false;
 
-  private HashMap<String, RandomForest> randomForests;
+  private HashMap<String, RandomForest> randomForests = new HashMap<>();
 
   private Optional<LocalDateTime> firstWorkerTime;
 
@@ -153,7 +153,7 @@ public class WorldSimulation {
    * @param startDate      The start date for the simulation.
    * @throws IOException, InterruptedException, ExecutionException
    */
-  public void runWorldSimulation(int simulationTime, LocalDate startDate)
+  public void runWorldSimulation(int simulationTime, LocalDate startDate, boolean isTestMode)
       throws IOException, InterruptedException, ExecutionException {
     isPlaying = true;
     isPaused = false;
@@ -161,7 +161,6 @@ public class WorldSimulation {
     workday = startDate;
     boolean activeTasksExistForWorkday = false;
     machineLearningModelPicking = new MachineLearningModelPicking();
-    randomForests = new HashMap<>();
     this.speedFactory = 0;
 
     flushAllWorkerTasks();
@@ -236,8 +235,10 @@ public class WorldSimulation {
       }
     }
 
-    //Starts the simulation
-    startSimulating();
+    if (!isTestMode) {
+      //Starts the simulation
+      startSimulating();
+    }
   }
 
   /**
@@ -613,7 +614,7 @@ public class WorldSimulation {
     LocalDate startDate = LocalDate.of(2024, 1, 1);
     int numDays = 365;
     for (int i = 0; i < numDays; i++) {
-      runWorldSimulation(0, startDate.plusDays(i));
+      runWorldSimulation(0, startDate.plusDays(i), false);
     }
 
   }
