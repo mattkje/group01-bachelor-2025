@@ -1,9 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
 
-        import jakarta.persistence.Entity;
-        import jakarta.persistence.GeneratedValue;
-        import jakarta.persistence.GenerationType;
-        import jakarta.persistence.Id;
+        import jakarta.persistence.*;
 
         import java.time.LocalDateTime;
 
@@ -14,6 +11,7 @@ package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities;
             @GeneratedValue(strategy = GenerationType.IDENTITY)
             private long id;
 
+            @Column(columnDefinition = "LONGTEXT")
             private String message;
 
             private long zoneId;
