@@ -13,9 +13,9 @@ const zoneId = ref<number>(0);
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 const loadAndHandleNotifications = async () => {
-  messages.value = [];
-  notifications.value = await fetchNotifications(props.zone.id);
 
+  notifications.value = await fetchNotifications(props.zone.id);
+  messages.value = [];
   // Parse the notifications ","
   notifications.value.forEach(notification => {
     const parsedMessage = notification.message.split(',').map((message: string) => message.trim().replace(/\[|\]/g, ''));

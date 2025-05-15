@@ -6,7 +6,9 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepository;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -261,29 +263,12 @@ public class ActiveTaskService {
    * @param activeTask The updated active task data.
    * @return The updated active task.
    */
+  @Transactional
   public ActiveTask updateActiveTask(Long id, ActiveTask activeTask) {
-      if (activeTaskRepository.findById(id).isEmpty()) {
-          return null;
-      }
-    ActiveTask updatedActiveTask = activeTaskRepository.findById(id).get();
-    updatedActiveTask.setTask(activeTask.getTask());
-    updatedActiveTask.setWorkers(activeTask.getWorkers());
-    updatedActiveTask.setStartTime(activeTask.getStartTime());
-    updatedActiveTask.setEndTime(activeTask.getEndTime());
-    updatedActiveTask.setDueDate(activeTask.getDueDate());
-    updatedActiveTask.setMcStartTime(activeTask.getMcStartTime());
-    updatedActiveTask.setMcEndTime(activeTask.getMcEndTime());
-
-    if (updatedActiveTask.getRecurrenceType() != activeTask.getRecurrenceType()) {
-      for (Task task : taskRepository.findAll()) {
-        if (task.getZoneId().equals(activeTask.getTask().getZoneId()) && task.getId().equals(id)) {
-          taskRepository.delete(task);
-        }
-      }
-      createRepeatingActiveTaskUntilNextMonth(activeTask);
+    if (activeTaskRepository.findById(id).isEmpty()) {
+      return null;
     }
-    updatedActiveTask.setRecurrenceType(activeTask.getRecurrenceType());
-    return activeTaskRepository.save(updatedActiveTask);
+    return activeTaskRepository.save(activeTask);
   }
 
   /**
@@ -300,12 +285,12 @@ public class ActiveTaskService {
       if (worker != null) {
         worker.setZone(activeTask.getTask().getZoneId());
         worker.setCurrentTask(activeTask);
-          if (activeTask.getWorkers() == null) {
-              activeTask.setWorkers(new ArrayList<>());
-          }
-          if (!activeTask.getWorkers().contains(worker)) {
-              activeTask.addWorker(worker);
-          }
+        if (activeTask.getWorkers() == null) {
+          activeTask.setWorkers(new ArrayList<>());
+        }
+        if (!activeTask.getWorkers().contains(worker)) {
+          activeTask.addWorker(worker);
+        }
         return activeTaskRepository.save(activeTask);
       }
       return null;
