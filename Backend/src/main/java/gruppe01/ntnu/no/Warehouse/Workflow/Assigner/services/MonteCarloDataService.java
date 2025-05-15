@@ -43,31 +43,25 @@ public class MonteCarloDataService {
    * @return a list of lists containing Monte Carlo data values
    */
   public List<List<Integer>> getMCDataValues(long zoneId) {
-    Map<Integer, List<Integer>> groupedBySimCount = new HashMap<>();
 
+    Map<Integer, List<Integer>> groupedBySimCount = new HashMap<>();
+    // Retrieve world simulation values
     List<Integer> worldSimValues = worldSimDataService.getWorldSimValues(zoneId);
     if (worldSimValues == null || worldSimValues.isEmpty()) {
       return new ArrayList<>();
     }
-    int lastValue = worldSimValues.getLast();
+    int lastValue = worldSimValues.get(worldSimValues.size() - 1);
 
-    for (MonteCarloData monteCarloData : monteCarloDataRepository.findAll()) {
-      if ((zoneService.getZoneById(zoneId) != null && monteCarloData.getZoneId() == zoneId &&
-          zoneId != 0) ||
-          (zoneService.getZoneById(zoneId) == null && zoneId == 0)) {
-
-        int simCount = monteCarloData.getSimNo();
-        groupedBySimCount.putIfAbsent(simCount, new ArrayList<>());
-        groupedBySimCount.get(simCount).add(monteCarloData.getCompletedTasks() + lastValue);
-      }
+    // Fetch Monte Carlo data and process it
+    List<MonteCarloData> monteCarloDataList = monteCarloDataRepository.findAllByZoneId(zoneId);
+    System.out.println("List zie: " + monteCarloDataList.size());
+    for (MonteCarloData monteCarloData : monteCarloDataList) {
+      int simCount = monteCarloData.getSimNo();
+      groupedBySimCount.putIfAbsent(simCount, new ArrayList<>());
+      groupedBySimCount.get(simCount).add(monteCarloData.getCompletedTasks() + lastValue);
     }
 
     return new ArrayList<>(groupedBySimCount.values());
-  }
-
-  public String getZoneEndTime(long zoneId) {
-    //MonteCarloData monteCarloData = monteCarloDataRepository.findLastByZoneId(zoneId).getTime();
-    return "";
   }
 
   public void flushMCData() {

@@ -102,7 +102,7 @@ public class ZoneSimulator {
       LocalDateTime finalNewTime = newTime;
       this.lastTime.updateAndGet(_ -> finalNewTime.isAfter(startTime) ? finalNewTime : startTime);
       ExecutorService zoneExecutor = Executors.newFixedThreadPool(
-          Math.min(activeTasksList != null ? activeTasksList.size() : pickerTasks.size(),  100)
+          Math.min(activeTasksList != null ? activeTasksList.size() : pickerTasks.size(),  20)
       );
       // Latch for the tasks in the zone ensuring that all tasks are completed before the simulation ends
       WorkerSemaphore2 availableZoneWorkersSemaphore = new WorkerSemaphore2(timetableService);

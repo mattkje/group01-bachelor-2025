@@ -14,7 +14,9 @@ const selectedTab = ref('Current');
 const selectedOption = ref('best case');
 const displayEstimations = ref(false);
 
-const tabs = ['Current', 'Completed', 'Schedule'];
+const tabs = computed(() => {
+  return isZoneNull.value ? ['Current', 'Completed'] : ['Current', 'Completed', 'Schedule'];
+});
 const dropdownOptions = ['best case', 'average case', 'worst case'];
 
 const props = defineProps<{
@@ -29,6 +31,9 @@ const hasTasks = ref(false);
 const hasPickerTasks = ref(false);
 const loading = ref(true);
 const showEstimations = ref(false);
+const isZoneNull = computed(() => {
+  return props.zoneId === 0;
+});
 
 let intervalId: ReturnType<typeof setInterval> | undefined;
 
@@ -183,7 +188,7 @@ watch(() => props.zoneId, async () => {
         </div>
       </div>
       <div v-else-if="selectedTab === 'Schedule'" class="calendar-container">
-        <ZoneCalendar :zone="zone" class="bottom-box-right"/>
+        <ZoneCalendar :zone="zone" class="bottom-box-right" v-if="!isZoneNull"/>
       </div>
     </div>
   </div>
