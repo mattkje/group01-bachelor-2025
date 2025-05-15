@@ -1,13 +1,13 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.subsimulations;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.subsimulations;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.TimetableService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.semaphores.WorkerSemaphore2;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.machinelearning.MachineLearningModelPicking;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TimetableService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.results.ZoneSimResult;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.semaphores.WorkerSemaphore2;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import org.springframework.cglib.core.Local;
 import smile.regression.RandomForest;
 
 /**

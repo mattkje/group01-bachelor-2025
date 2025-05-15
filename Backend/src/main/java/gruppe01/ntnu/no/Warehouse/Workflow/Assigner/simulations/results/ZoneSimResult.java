@@ -1,8 +1,8 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.results;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,16 +12,16 @@ import java.util.Objects;
 public class ZoneSimResult {
 
   private Zone zone;
-  private  List<ActiveTask> activeTasks;
-  private  List<PickerTask> pickerTasks;
+  private List<ActiveTask> activeTasks;
+  private List<PickerTask> pickerTasks;
   private List<String> errorMessages = new ArrayList<>();
 
-    public ZoneSimResult() {
-        this.activeTasks = new ArrayList<>();
-        this.pickerTasks = new ArrayList<>();
-    }
+  public ZoneSimResult() {
+    this.activeTasks = new ArrayList<>();
+    this.pickerTasks = new ArrayList<>();
+  }
 
-    public void setZone(Zone zone) {
+  public void setZone(Zone zone) {
     this.zone = zone;
   }
 
@@ -30,15 +30,15 @@ public class ZoneSimResult {
   }
 
   public void addTask(ActiveTask task, PickerTask pickerTask) {
-      if (task == null && pickerTask == null) {
-          throw new IllegalArgumentException("Both task and pickerTask cannot be null");
-      }
-      if (task == null) {
-          this.pickerTasks.add(pickerTask);
+    if (task == null && pickerTask == null) {
+      throw new IllegalArgumentException("Both task and pickerTask cannot be null");
+    }
+    if (task == null) {
+      this.pickerTasks.add(pickerTask);
 
-      } else {
-          this.activeTasks.add(task);
-      }
+    } else {
+      this.activeTasks.add(task);
+    }
   }
 
   public List<String> getErrorMessage() {
@@ -77,11 +77,11 @@ public class ZoneSimResult {
     return zone;
   }
 
-    public List<ActiveTask> getActiveTasks() {
-        return activeTasks;
-    }
+  public List<ActiveTask> getActiveTasks() {
+    return activeTasks;
+  }
 
-    public List<PickerTask> getPickerTasks() {
-        return pickerTasks;
-    }
+  public List<PickerTask> getPickerTasks() {
+    return pickerTasks;
+  }
 }

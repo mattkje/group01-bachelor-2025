@@ -1,8 +1,8 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.controllers;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.*;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.*;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

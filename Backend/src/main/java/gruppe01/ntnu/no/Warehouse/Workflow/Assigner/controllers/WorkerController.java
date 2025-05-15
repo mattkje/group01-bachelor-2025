@@ -1,20 +1,18 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.controllers;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.LicenseService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.WorkerService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.LicenseService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

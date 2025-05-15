@@ -1,6 +1,6 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.repositories;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface ActiveTaskRepository extends JpaRepository<ActiveTask, Long> {
 
-    @EntityGraph(attributePaths = {"task", "workers", "workers.licenses", "task.requiredLicense"})
-    @Query("SELECT at FROM ActiveTask at")
-    List<ActiveTask> findAllWithTasksAndWorkersAndLicenses();
+  @EntityGraph(attributePaths = {"task", "workers", "workers.licenses", "task.requiredLicense"})
+  @Query("SELECT at FROM ActiveTask at")
+  List<ActiveTask> findAllWithTasksAndWorkersAndLicenses();
 }

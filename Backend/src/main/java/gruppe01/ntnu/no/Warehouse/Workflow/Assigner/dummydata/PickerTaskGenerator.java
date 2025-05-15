@@ -1,11 +1,11 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Worker;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Zone;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.PickerTaskService;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.ZoneService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.machinelearning.MachineLearningModelPicking;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.PickerTaskService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

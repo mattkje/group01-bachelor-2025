@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner;
+package gruppe01.ntnu.no.warehouse.workflow.assigner;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

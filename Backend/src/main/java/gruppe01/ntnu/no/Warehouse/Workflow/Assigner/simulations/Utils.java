@@ -1,12 +1,11 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.simulations;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Notification;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Notification;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.*;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.results.SimulationResult;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.results.ZoneSimResult;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

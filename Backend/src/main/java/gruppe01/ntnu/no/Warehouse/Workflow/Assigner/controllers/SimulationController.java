@@ -1,17 +1,17 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.controllers;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.ActiveTaskGenerator;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.PickerTaskGenerator;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.dummydata.TimeTableGenerator;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.machinelearning.MachineLearningModelPicking;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.SimulationService;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.ActiveTaskGenerator;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.PickerTaskGenerator;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.TimeTableGenerator;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.machinelearning.MachineLearningModelPicking;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.SimulationService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.ZoneSimResult;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.worldsimulation.WorldSimulation;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.results.ZoneSimResult;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.worldsimulation.WorldSimulation;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

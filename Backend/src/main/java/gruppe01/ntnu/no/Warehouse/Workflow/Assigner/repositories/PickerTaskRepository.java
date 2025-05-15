@@ -1,6 +1,6 @@
-package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.repositories;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.repositories;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
