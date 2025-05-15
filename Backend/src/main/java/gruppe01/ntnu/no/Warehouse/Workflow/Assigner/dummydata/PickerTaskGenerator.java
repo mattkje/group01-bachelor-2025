@@ -98,7 +98,7 @@ public class PickerTaskGenerator {
         pickerTask.setWeight((int) generateRandomValue(valueList.get(3), random));
         pickerTask.setVolume((int) generateRandomValue(valueList.get(4), random));
         pickerTask.setAvgHeight(generateRandomValue(valueList.get(5), random));
-        pickerTask.setDueDate(generateDueDate(dueHours, dueMinutes, random));
+        pickerTask.setDueDate(generateDueDate(date, dueHours, dueMinutes, random));
         if (testData) {
             Worker worker = new Worker();
             worker.setId(random.nextLong(1, 51));
@@ -119,9 +119,9 @@ public class PickerTaskGenerator {
         return Math.round(value * 100.0) / 100.0;
     }
 
-    private LocalDateTime generateDueDate(int[] dueHours, int[] dueMinutes, Random random) {
+    private LocalDateTime generateDueDate(LocalDate date, int[] dueHours, int[] dueMinutes, Random random) {
         int hour = dueHours[random.nextInt(dueHours.length)];
         int minute = dueMinutes[random.nextInt(dueMinutes.length)];
-        return LocalDateTime.now().withHour(hour).withMinute(minute).withSecond(0);
+        return date.atTime(hour, minute);
     }
 }
