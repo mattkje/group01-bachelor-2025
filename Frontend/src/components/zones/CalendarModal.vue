@@ -2,7 +2,7 @@
 import {onMounted, ref} from "vue";
 import {createWorkerSchedule, deleteWorkerSchedule, updateWorkerSchedule} from "@/composables/DataUpdater";
 
-const errorMessage = ref<string | null>(null);
+const notification = ref<string | null>(null);
 
 const props = defineProps({
   selectedSchedule: {
@@ -34,10 +34,10 @@ const endTime = ref(
 
 const updateSchedule = async () => {
   if (!startTime || !endTime) {
-    errorMessage.value = "Both start and end times are required.";
+    notification.value = "Both start and end times are required.";
     return;
   } else if (startTime.value >= endTime.value) {
-    errorMessage.value = "Start time must be earlier than end time.";
+    notification.value = "Start time must be earlier than end time.";
     return;
   }
 
@@ -49,20 +49,20 @@ const updateSchedule = async () => {
     try {
       await updateWorkerSchedule(props.selectedSchedule);
       console.log("Schedule updated successfully");
-      errorMessage.value = null;
+      notification.value = null;
       emit("schedule-updated");
     } catch (error) {
-      errorMessage.value = "Failed to update schedule. Please try again.";
+      notification.value = "Failed to update schedule. Please try again.";
     }
   }
 };
 
 const createSchedule = async () => {
   if (!startTime || !endTime) {
-    errorMessage.value = "Both start and end times are required.";
+    notification.value = "Both start and end times are required.";
     return;
   } else if (startTime.value >= endTime.value) {
-    errorMessage.value = "Start time must be earlier than end time.";
+    notification.value = "Start time must be earlier than end time.";
     return;
   }
 
@@ -73,10 +73,10 @@ const createSchedule = async () => {
 
   try {
     await createWorkerSchedule(props.worker.id, newSchedule);
-    errorMessage.value = null;
+    notification.value = null;
     emit("schedule-updated");
   } catch (error) {
-    errorMessage.value = "Failed to create schedule. Please try again.";
+    notification.value = "Failed to create schedule. Please try again.";
   }
 }
 
@@ -89,10 +89,10 @@ const deleteSchedule = async () => {
 
     try {
       await deleteWorkerSchedule(props.selectedSchedule.id);
-      errorMessage.value = null;
+      notification.value = null;
       emit("schedule-updated");
     } catch (error) {
-      errorMessage.value = "Failed to delete schedule. Please try again.";
+      notification.value = "Failed to delete schedule. Please try again.";
     }
   }
 }
@@ -117,7 +117,7 @@ onMounted(() => {
         <label for="end-time"><strong>End Time:</strong></label>
         <input id="end-time" type="time" v-model="endTime" />
       </div>
-      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <p v-if="notification" class="error-message">{{ notification }}</p>
       <button v-if="!props.selectedSchedule?.startTime && !props.selectedSchedule?.endTime" @click="createSchedule">
         Create Schedule
       </button>
