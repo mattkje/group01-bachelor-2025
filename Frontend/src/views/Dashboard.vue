@@ -3,9 +3,9 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import NotificationWidget from "@/components/widgets/NotificationWidget.vue";
 import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
-import {ref, onMounted, watch} from 'vue';
-import {Zone} from "@/assets/types";
-import {fetchAllZones, fetchDoneByForZone, fetchNotifications} from "@/composables/DataFetcher";
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { Zone } from "@/assets/types";
+import { fetchAllZones, fetchDoneByForZone } from "@/composables/DataFetcher";
 import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 
 let selectedZoneObject = ref<Zone | null>(null);
@@ -13,15 +13,22 @@ let zones = ref<Zone[]>([]);
 let doneBy = ref<string>("");
 let zoneId2 = ref<number>(0);
 
-const loadAllData = async (zoneId:string) => {
+const loadAllData = async (zoneId: string) => {
   zones.value = await fetchAllZones();
   if (zoneId) {
     doneBy.value = await fetchDoneByForZone(parseInt(zoneId));
   } else {
     doneBy.value = await fetchDoneByForZone(zones.value[0].id).then(response => response.time);
   }
-
 };
+
+const fetchDoneByInterval = async () => {
+  if (selectedZoneObject.value && selectedZoneObject.value.id !== 0) {
+    doneBy.value = await fetchDoneByForZone(selectedZoneObject.value.id).then(response => response.time);
+  }
+};
+
+let intervalId: ReturnType<typeof setInterval> | undefined;
 
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -38,6 +45,16 @@ onMounted(() => {
       }
     }
   });
+
+  // Start the interval for fetching doneBy
+  intervalId = setInterval(fetchDoneByInterval, 5000);
+});
+
+onUnmounted(() => {
+  // Clear the interval when the component is unmounted
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 });
 
 watch(selectedZoneObject, async (newZone) => {

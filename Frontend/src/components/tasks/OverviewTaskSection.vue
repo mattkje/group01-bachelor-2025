@@ -101,10 +101,20 @@ const tasksWithEndTime = computed(() => {
     });
 });
 const pickerTasksWithoutEndTime = computed(() => {
-  return pickerTasks.value.filter(task => !task.endTime);
+  return pickerTasks.value.filter(task => !task.endTime)
+      .sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });;
 });
 const pickerTasksWithEndTime = computed(() => {
-  return pickerTasks.value.filter(task => task.endTime);
+  return pickerTasks.value.filter(task => task.endTime)
+      .sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });;
 });
 
 // Watch for changes to the zone prop
@@ -127,12 +137,6 @@ watch(() => props.zoneId, async () => {
         </button>
       </div>
       <div class="controls" v-if="selectedTab==='Current'">
-        <select v-model="selectedOption">
-          <option v-for="option in dropdownOptions" :key="option" :value="option">
-            {{ option }}
-          </option>
-        </select>
-
         <div class="switch">
           <label>
             <input type="checkbox" v-model="showEstimations" />

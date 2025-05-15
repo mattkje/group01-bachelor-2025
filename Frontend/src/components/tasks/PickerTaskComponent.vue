@@ -17,20 +17,23 @@ const handleTaskUpdated = (updatedTask: PickerTask) => {
 
 // Computed property to determine the background color
 const taskBackgroundColor = computed(() => {
-  const {startTime, endTime, mcStartTime, mcEndTime} = props.pickerTask;
+  const {startTime, endTime, mcStartTime, mcEndTime, dueDate} = props.pickerTask;
 
   if (props.estimate) {
+    if (dueDate && mcEndTime && new Date(dueDate) < new Date(mcEndTime)) {
+      return "var(--main-color-3)"; // Orange for missed deadline
+    }
+
     if (mcStartTime && mcEndTime) {
-      return "#CCFFCC"; // Green
+      return "var(--background-2)";
     } else {
-      return "#FFCCCC"; // Red
+      return "var(--main-color-3)";
     }
   }
-
   if (startTime && !endTime) {
-    return "var(--main-color-3)"; // Yellow
+    return "var(--busy-color-2)";
   } else if (startTime && endTime) {
-    return "var(--busy-color-2)"; // Green
+    return "var(--main-color-3)";
   }
   return "var(--background-2)";
 });
@@ -62,7 +65,12 @@ const formattedTimes = computed(() => {
     </div>
     <div class="task-details">
       <div class="workers-info">
-        <div>{{ props.pickerTask.worker ? props.pickerTask.worker.name + ' picking...' : 'Waiting for worker' }}</div>
+        <div v-if="estimate &&props.pickerTask.dueDate && props.pickerTask.mcEndTime && new Date(props.pickerTask.dueDate) < new Date(props.pickerTask.mcEndTime)">
+          Deadline missed
+        </div>
+        <div v-else>
+          {{ props.pickerTask.worker ? props.pickerTask.worker.name + ' picking...' : 'Waiting for worker' }}
+        </div>
         <div v-if="props.estimate">
           <div v-if="props.pickerTask.mcStartTime && props.pickerTask.mcEndTime">
             Estimated: {{ formattedTimes.mcStartTime }} - {{ formattedTimes.mcEndTime }},
@@ -71,10 +79,14 @@ const formattedTimes = computed(() => {
             Task Estimated to not complete
           </div>
         </div>
-        <div v-else>Items to pick: {{ props.pickerTask.linesAmount }}</div>
-        <div>Due: {{props.pickerTask.dueDate}}</div>
+        <div v-else>
+          {{ props.pickerTask.dueDate
+              ? 'Due: ' + new Date(props.pickerTask.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'No deadline'
+          }}
+        </div>
       </div>
-      <div class="task-zone">Zone {{ props.pickerTask.zoneId }}</div>
+      <div class="task-zone">Zone {{ props.pickerTask.zoneId}}</div>
     </div>
   </div>
 </template>
@@ -89,60 +101,6 @@ const formattedTimes = computed(() => {
   width: 100%;
   color: var(--text-1);
   max-height: 75px;
-}
-
-.task-header {
-  display: flex;
-  justify-content: space-between;
-}
-
-.task-name {
-  font-size: 0.8rem;
-  margin-bottom: 0.2rem;
-  text-align: left;
-}
-
-.task-details {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.6rem;
-  text-align: left;
-}
-
-.workers-info {
-  display: flex;
-  flex-direction: column;
-  font-weight: bold;
-  text-align: left;
-}
-
-.task-zone {
-  align-self: flex-end;
-}
-
-@media (max-width: 1400px) {
-  .task-info-box {
-    max-height: 100px;
-  }
-
-  .task-name {
-    font-size: 0.7rem;
-  }
-
-  .task-details {
-    font-size: 0.6rem;
-  }
-}
-</style>
-<style scoped>
-.task-info-box {
-  border: 1px solid var(--border-1);
-  border-radius: 0.7rem;
-  padding: 0.3rem;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  color: var(--text-1);
 }
 
 .task-header {

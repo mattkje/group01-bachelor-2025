@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ErrorCodes, Notification, Zone} from "@/assets/types";
 import {fetchNotifications} from "@/composables/DataFetcher";
-import {onMounted, ref} from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 
 const props = defineProps<{
   zone: Zone;
@@ -10,11 +10,13 @@ const props = defineProps<{
 const notifications = ref<Notification[]>([]);
 const messages = ref<string[]>([]);
 const zoneId = ref<number>(0);
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
 const loadAndHandleNotifications = async () => {
+  messages.value = [];
   notifications.value = await fetchNotifications(props.zone.id);
 
-  //parse the notifications ","
+  // Parse the notifications ","
   notifications.value.forEach(notification => {
     const parsedMessage = notification.message.split(',').map((message: string) => message.trim().replace(/\[|\]/g, ''));
 
@@ -23,22 +25,36 @@ const loadAndHandleNotifications = async () => {
       const parts = message.split(':');
       zoneId.value = notification.zoneId;
       identifyNotificationType(parts, notification.zoneId);
-    })
-
+    });
   });
 };
 
 const identifyNotificationType = (parsedMessage: string[], zoneId: number) => {
   const zone = `Error Zone ${zoneId}`;
   const error = ErrorCodes.get(parseInt(parsedMessage[0])) || "Unknown Error";
- const details = parsedMessage.slice(1).filter(item => item !== "null").join(" | ");
+  const details = parsedMessage.slice(1).filter(item => item !== "null").join(" | ");
 
   messages.value.push([zone, error, "Task(s): " + details].filter(Boolean).join(" | "));
 };
 
-onMounted(async () => {
+// Watch for changes in the zone and reload notifications every 5 seconds
+watch(() => props.zone, async (newZone) => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
   await loadAndHandleNotifications();
-})
+  intervalId = setInterval(loadAndHandleNotifications, 5000);
+}, { immediate: true });
+
+onMounted(() => {
+  intervalId = setInterval(loadAndHandleNotifications, 5000);
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
 
 </script>
 
