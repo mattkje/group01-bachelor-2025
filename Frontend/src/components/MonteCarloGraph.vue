@@ -111,25 +111,25 @@ function generateChartData() {
 
   const baseColor = 'rgba(150, 150, 150, 0.2)';
 
-  const maxLength = 145;
+  const maxLength = 144;
 
-
-  ListOfListsOfValues.value.forEach((monecarloSimlist, index) => {
-    if (monecarloSimlist.length + dataValues.value.length > maxLength) {
-      removeFirstValues(monecarloSimlist, monecarloSimlist.length + dataValues.value.length - maxLength);
+  // Remove first values from dataValues if they are the same as the last value
+  ListOfListsOfValues.value.forEach((monteCarloSimulationList, index) => {
+    if (monteCarloSimulationList.length + dataValues.value.length > maxLength) {
+      removeFirstValues(monteCarloSimulationList, monteCarloSimulationList.length + dataValues.value.length - maxLength);
     }
 
-    // Remove last values from monecarloSimlist if they are the same as the last value
+    // Remove last values from the monteCarloSimulationList if they are the same as the last value
     while (
-        monecarloSimlist.length > 1 &&
-        monecarloSimlist[monecarloSimlist.length - 1] === monecarloSimlist[monecarloSimlist.length - 2]
+        monteCarloSimulationList.length > 1 &&
+        monteCarloSimulationList[monteCarloSimulationList.length - 1] === monteCarloSimulationList[monteCarloSimulationList.length - 2]
         ) {
-      monecarloSimlist.pop();
+      monteCarloSimulationList.pop();
     }
 
     simulatedDatasets.value.push({
       label: `Case ${index + 1}`,
-      data: [...Array(dataValues.value.length - 1).fill(null), ...monecarloSimlist],
+      data: [...Array(dataValues.value.length - 1).fill(null), ...monteCarloSimulationList],
       borderColor: baseColor,
       tension: 0.1,
       pointRadius: 0,
@@ -182,7 +182,7 @@ function generateChartData() {
   }
   if (bestCaseValueList.length > 0) {
     const maxIndex = bestCaseValueList.indexOf(Math.max(...bestCaseValueList));
-    topPointXValue = dataValues.value.length - 1 + maxIndex
+    topPointXValue = dataValues.value.length + maxIndex
   }
 
   let worstCaseValueList = [];
@@ -197,7 +197,7 @@ function generateChartData() {
 
   if (worstCaseValueList.length > 0) {
     const minIndex = worstCaseValueList.indexOf(Math.max(...worstCaseValueList));
-    worstPointXValue = dataValues.value.length - 1 + minIndex
+    worstPointXValue = dataValues.value.length + minIndex
   }
 
 

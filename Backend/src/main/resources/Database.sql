@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS active_task
     FOREIGN KEY (task_id) REFERENCES task (id)
 );
 
-CREATE TABLE IF NOT EXISTS error_message
+CREATE TABLE IF NOT EXISTS notifications
 (
     id      BIGINT AUTO_INCREMENT PRIMARY KEY,
     message LONGTEXT NOT NULL,

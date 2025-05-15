@@ -1,8 +1,7 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
-import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ErrorMessage;
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Notification;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.services.*;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations.results.SimulationResult;
@@ -24,7 +23,7 @@ public class Utils {
 
     private final MonteCarloService monteCarloService;
 
-    private final ErrorMessageService errorMessageService;
+    private final NotificationService notificationService;
 
     private final ActiveTaskService activeTaskService;
 
@@ -39,12 +38,12 @@ public class Utils {
      * @param monteCarloService the Monte Carlo simulation service
      */
     public Utils(@Autowired MonteCarloService monteCarloService,
-                 @Autowired ErrorMessageService errorMessageService,
+                 @Autowired NotificationService notificationService,
                  @Autowired ActiveTaskService activeTaskService,
                  @Autowired ZoneService zoneService,
                  @Autowired PickerTaskService pickerTaskService) {
         this.monteCarloService = monteCarloService;
-        this.errorMessageService = errorMessageService;
+        this.notificationService = notificationService;
         this.activeTaskService = activeTaskService;
         this.zoneService = zoneService;
         this.pickerTaskService = pickerTaskService;
@@ -161,8 +160,8 @@ public class Utils {
     }
 
     public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults, LocalDateTime now) {
-        Map<Long, ErrorMessage> errorMessages =
-            errorMessageService.generateErrorMessageMapFromZones();
+        Map<Long, Notification> errorMessages =
+            notificationService.generateNotificationMapFromZones();
         Map<Long, ZoneSimResult> bestCases = new HashMap<>();
 
         for (SimulationResult simulationResult : simulationResults) {
@@ -172,27 +171,27 @@ public class Utils {
         }
         System.out.println("SAVING ZONE SIM RESULTS");
         System.out.println("Best cases size: " + bestCases.size());
-        errorMessageService.deleteAll();
-        errorMessages.values().forEach(errorMessageService::saveErrorMessage);
+        notificationService.deleteAll();
+        errorMessages.values().forEach(notificationService::saveNotification);
         this.saveBestCases(bestCases, now);
         System.out.println("ALL ZONE SIM RESULTS SAVED");
     }
 
-    private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, ErrorMessage> errorMessages, Map<Long, ZoneSimResult> bestCases) {
+    private void processZoneSimResult(ZoneSimResult zoneSimResult, Map<Long, Notification> errorMessages, Map<Long, ZoneSimResult> bestCases) {
         LocalDateTime lastEndTime = zoneSimResult.getLastEndTime();
-        ErrorMessage errorMessage = errorMessages.get(zoneSimResult.getZone().getId());
+        Notification notification = errorMessages.get(zoneSimResult.getZone().getId());
 
-        if (errorMessage != null) {
-            updateErrorMessage(errorMessage, lastEndTime, zoneSimResult);
+        if (notification != null) {
+            updateErrorMessage(notification, lastEndTime, zoneSimResult);
             bestCases.put(zoneSimResult.getZone().getId(), zoneSimResult);
         }
     }
 
-    private void updateErrorMessage(ErrorMessage errorMessage, LocalDateTime lastEndTime, ZoneSimResult zoneSimResult) {
-        if (lastEndTime != null && (errorMessage.getTime() == null || lastEndTime.isBefore(errorMessage.getTime()))) {
-            errorMessage.setTime(lastEndTime);
+    private void updateErrorMessage(Notification notification, LocalDateTime lastEndTime, ZoneSimResult zoneSimResult) {
+        if (lastEndTime != null && (notification.getTime() == null || lastEndTime.isBefore(notification.getTime()))) {
+            notification.setTime(lastEndTime);
         }
-        errorMessage.setMessage(zoneSimResult.getErrorMessage().toString());
+        notification.setMessage(zoneSimResult.getErrorMessage().toString());
     }
 
     private void saveBestCases(Map<Long, ZoneSimResult> bestCases, LocalDateTime now) {

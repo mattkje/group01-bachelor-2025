@@ -35,7 +35,7 @@ public class WorldSimulation {
     private final AtomicInteger intervalId = new AtomicInteger(1);
 
     private final List<Integer> intervals = List.of(10, 30, 60);
-    private final ErrorMessageService errorMessageService;
+    private final NotificationService notificationService;
     private LocalTime currentSimulationTime;
 
     private LocalDate workday = LocalDate.now();
@@ -131,7 +131,7 @@ public class WorldSimulation {
         PickerTaskGenerator pickerTaskGenerator,
         PickerTaskService pickerTaskService,
         ZoneService zoneService,
-        WorldSimDataService worldSimDataService, ErrorMessageService errorMessageService) {
+        WorldSimDataService worldSimDataService, NotificationService notificationService) {
         this.timetableService = timetableService;
         this.activeTaskService = activeTaskService;
         this.activeTaskGenerator = activeTaskGenerator;
@@ -143,7 +143,7 @@ public class WorldSimulation {
         this.pickerTaskService = pickerTaskService;
         this.zoneService = zoneService;
         this.worldSimDataService = worldSimDataService;
-        this.errorMessageService = errorMessageService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -165,7 +165,7 @@ public class WorldSimulation {
 
         flushAllWorkerTasks();
         monteCarloDataService.flushMCData();
-        errorMessageService.deleteAll();
+        notificationService.deleteAll();
 
         //Initialize the random forests for each zone
         for (Zone zone : zoneService.getAllPickerZones()) {
