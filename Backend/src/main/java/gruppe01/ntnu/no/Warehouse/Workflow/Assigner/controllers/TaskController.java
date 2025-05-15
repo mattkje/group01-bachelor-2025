@@ -8,9 +8,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * TaskController handles HTTP requests related to tasks.
@@ -47,6 +54,12 @@ public class TaskController {
     return ResponseEntity.ok(taskService.getAllTasks());
   }
 
+  /**
+   * Retrieves a task by its ID.
+   *
+   * @param id the ID of the task
+   * @return the task with the specified ID, or null if not found
+   */
   @Operation(
       summary = "Get task by ID",
       description = "Retrieve a task by its ID."
@@ -67,10 +80,13 @@ public class TaskController {
     }
   }
 
-  @Operation(
-      summary = "Create a new task",
-      description = "Create a new task in the system."
-  )
+  /**
+   * Creates a new task.
+   *
+   * @param task   the task to create
+   * @param zoneId the ID of the zone to assign the task to
+   * @return the created task
+   */
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Successfully created task"),
       @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -82,15 +98,23 @@ public class TaskController {
       @RequestBody Task task,
       @Parameter(description = "ID of the zone to assign the task to")
       @PathVariable Long zoneId) {
-    if (task.getMinWorkers() > task.getMaxWorkers() || task.getMinWorkers() <= 0 ||
-        task.getName().isEmpty() ||
-        task.getZoneId() == null) {
+    if (task.getMinWorkers() > task.getMaxWorkers() || task.getMinWorkers() <= 0
+        || task.getName().isEmpty()
+        || task.getZoneId() == null) {
       return ResponseEntity.badRequest().build();
     } else {
       return ResponseEntity.ok(taskService.createTask(task, zoneId));
     }
   }
 
+  /**
+   * Updates an existing task.
+   *
+   * @param id     the ID of the task to update
+   * @param task   the updated task object
+   * @param zoneId the ID of the zone to assign the task to
+   * @return the updated task, or null if not found
+   */
   @Operation(
       summary = "Update an existing task",
       description = "Update an existing task in the system."
@@ -109,9 +133,9 @@ public class TaskController {
       @RequestBody Task task,
       @Parameter(description = "ID of the zone to assign the task to")
       @PathVariable Long zoneId) {
-    if (task.getMinWorkers() > task.getMaxWorkers() || task.getMinWorkers() <= 0 ||
-        task.getName().isEmpty() ||
-        task.getZoneId() == null) {
+    if (task.getMinWorkers() > task.getMaxWorkers() || task.getMinWorkers() <= 0
+        || task.getName().isEmpty()
+        || task.getZoneId() == null) {
       return ResponseEntity.badRequest().build();
     } else if (taskService.getTaskById(id) == null || zoneService.getZoneById(id) == null) {
       return ResponseEntity.notFound().build();
@@ -120,6 +144,12 @@ public class TaskController {
     }
   }
 
+  /**
+   * Deletes a task by its ID.
+   *
+   * @param id the ID of the task to delete
+   * @return the deleted task, or null if not found
+   */
   @Operation(
       summary = "Delete a task",
       description = "Delete a task by its ID."

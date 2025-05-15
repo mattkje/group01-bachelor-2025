@@ -9,11 +9,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * PickerTaskController handles HTTP requests related to picker tasks.
+ * It provides endpoints to create, read, update, and delete picker tasks.
+ */
 @RestController
 @RequestMapping("/api/picker-tasks")
 @Tag(name = "PickerTaskController", description = "Controller for managing picker tasks")
@@ -48,6 +58,12 @@ public class PickerTaskController {
     return ResponseEntity.ok(pickerTaskService.getAllPickerTasks());
   }
 
+  /**
+   * Retrieves a picker task by its ID.
+   *
+   * @param id the ID of the picker task
+   * @return the picker task with the specified ID, or null if not found
+   */
   @Operation(
       summary = "Get picker task by ID",
       description = "Retrieve a picker task by its ID."
@@ -68,6 +84,12 @@ public class PickerTaskController {
     }
   }
 
+  /**
+   * Retrieves a list of picker tasks by zone ID.
+   *
+   * @param zoneId the ID of the zone to retrieve picker tasks for
+   * @return a list of picker tasks associated with the specified zone ID
+   */
   @Operation(
       summary = "Get picker tasks by zone ID",
       description = "Retrieve a list of picker tasks by zone ID."
@@ -88,6 +110,14 @@ public class PickerTaskController {
     }
   }
 
+  /**
+   * Updates a picker task by its ID.
+   *
+   * @param pickerTaskId the ID of the picker task to update
+   * @param zoneId       the ID of the zone to assign the picker task to
+   * @param pickerTask   the updated picker task object
+   * @return the updated picker task, or null if not found
+   */
   @Operation(
       summary = "Create a new picker task",
       description = "Create a new picker task in the system."
@@ -108,8 +138,8 @@ public class PickerTaskController {
       @RequestBody PickerTask pickerTask) {
     if (pickerTask.getZone() == null || pickerTask.getDate() == null) {
       return ResponseEntity.badRequest().build();
-    } else if (zoneService.getZoneById(zoneId) == null ||
-        pickerTaskService.getPickerTaskById(pickerTaskId) == null) {
+    } else if (zoneService.getZoneById(zoneId) == null
+        || pickerTaskService.getPickerTaskById(pickerTaskId) == null) {
       return ResponseEntity.notFound().build();
     } else {
       return ResponseEntity.ok(
@@ -117,12 +147,20 @@ public class PickerTaskController {
     }
   }
 
+  /**
+   * Assigns a worker to a picker task.
+   *
+   * @param pickerTaskId the ID of the picker task to assign a worker to
+   * @param workerId     the ID of the worker to assign to the picker task
+   * @return the updated picker task with the assigned worker, or null if not found
+   */
   @Operation(
       summary = "Assign a worker to a picker task",
       description = "Assign a worker to a picker task."
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully assigned worker to picker task"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully assigned worker to picker task"),
       @ApiResponse(responseCode = "404", description = "Picker task or worker not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -132,20 +170,28 @@ public class PickerTaskController {
       @PathVariable Long pickerTaskId,
       @Parameter(description = "ID of the worker to assign to the picker task")
       @PathVariable Long workerId) {
-    if (pickerTaskService.getPickerTaskById(pickerTaskId) == null ||
-        workerService.getWorkerById(workerId).isEmpty()) {
+    if (pickerTaskService.getPickerTaskById(pickerTaskId) == null
+        || workerService.getWorkerById(workerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     } else {
       return ResponseEntity.ok(pickerTaskService.assignWorkerToPickerTask(pickerTaskId, workerId));
     }
   }
 
+  /**
+   * Removes a worker from a picker task.
+   *
+   * @param pickerTaskId the ID of the picker task to remove a worker from
+   * @param workerId     the ID of the worker to remove from the picker task
+   * @return the updated picker task with the removed worker, or null if not found
+   */
   @Operation(
       summary = "Remove a worker from a picker task",
       description = "Remove a worker from a picker task."
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully removed worker from picker task"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully removed worker from picker task"),
       @ApiResponse(responseCode = "404", description = "Picker task or worker not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -155,8 +201,8 @@ public class PickerTaskController {
       @PathVariable Long pickerTaskId,
       @Parameter(description = "ID of the worker to remove from the picker task")
       @PathVariable Long workerId) {
-    if (pickerTaskService.getPickerTaskById(pickerTaskId) == null ||
-        workerService.getWorkerById(workerId).isEmpty()) {
+    if (pickerTaskService.getPickerTaskById(pickerTaskId) == null
+        || workerService.getWorkerById(workerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     } else {
       return ResponseEntity.ok(
@@ -164,6 +210,13 @@ public class PickerTaskController {
     }
   }
 
+  /**
+   * Creates a new picker task.
+   *
+   * @param zoneId     the ID of the zone to assign the picker task to
+   * @param pickerTask the picker task object to create
+   * @return the created picker task, or null if not found
+   */
   @Operation(
       summary = "Create a new picker task",
       description = "Create a new picker task in the system."
@@ -189,6 +242,12 @@ public class PickerTaskController {
     }
   }
 
+  /**
+   * Deletes a picker task by its ID.
+   *
+   * @param id the ID of the picker task to delete
+   * @return the deleted picker task, or null if not found
+   */
   @Operation(
       summary = "Delete a picker task",
       description = "Delete a picker task by its ID."

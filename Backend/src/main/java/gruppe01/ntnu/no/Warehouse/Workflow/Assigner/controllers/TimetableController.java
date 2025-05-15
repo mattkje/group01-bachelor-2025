@@ -2,10 +2,6 @@ package gruppe01.ntnu.no.warehouse.workflow.assigner.controllers;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Timetable;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TimetableService;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,11 +9,19 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * TimetableController handles HTTP requests related to timetables.
@@ -57,6 +61,12 @@ public class TimetableController {
     return ResponseEntity.ok(timetableService.getAllTimetables());
   }
 
+  /**
+   * Retrieves a timetable by zoneId.
+   *
+   * @param zoneId the ID of the zone
+   * @return the timetable for the specified zoneId, or null if not found
+   */
   @Operation(
       summary = "Get timetable by zone ID",
       description = "Retrieve a timetable by zone ID"
@@ -67,7 +77,7 @@ public class TimetableController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/today/zone/{zoneId}")
-  public ResponseEntity<List<Timetable>> getTodaysTimetable(
+  public ResponseEntity<List<Timetable>> getTimetableForToday(
       @Parameter(description = "ID of the zone to retrieve timetables for")
       @PathVariable Long zoneId) {
     if (zoneService.getZoneById(zoneId) == null) {
@@ -77,12 +87,19 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Retrieves all timetables by zoneId.
+   *
+   * @param zoneId the ID of the zone
+   * @return a list of all timetables for the specified zoneId
+   */
   @Operation(
       summary = "Get all timetables by zone ID",
       description = "Retrieve all timetables by zone ID"
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully retrieved all timetables for the zone"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully retrieved all timetables for the zone"),
       @ApiResponse(responseCode = "404", description = "Zone not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -97,12 +114,20 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Retrieves all timetables by date and zoneId.
+   *
+   * @param day    the date to retrieve timetables for
+   * @param zoneId the ID of the zone
+   * @return a list of all timetables for the specified date and zoneId
+   */
   @Operation(
       summary = "Get timetables by date and zone ID",
       description = "Retrieve all timetables by date and zone ID"
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully retrieved all timetables for the zone on the specified day"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully retrieved all timetables for the zone on the specified day"),
       @ApiResponse(responseCode = "404", description = "Zone not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -119,12 +144,20 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Retrieves all timetables for one week by date and zoneId.
+   *
+   * @param date   the starting date to retrieve timetables for
+   * @param zoneId the ID of the zone
+   * @return a list of all timetables for the specified week and zoneId
+   */
   @Operation(
       summary = "Get timetables for one week",
       description = "Retrieve all timetables for one week by date and zone ID"
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully retrieved all timetables for the zone on the specified week"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully retrieved all timetables for the zone on the specified week"),
       @ApiResponse(responseCode = "404", description = "Zone not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -141,12 +174,19 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Sets the start time for a timetable to the current time.
+   *
+   * @param id the ID of the timetable to set the start time for
+   * @return the updated timetable
+   */
   @Operation(
       summary = "Set start time for a timetable to current time",
       description = "Set the start time for a timetable to current time"
   )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully set start time for the timetable"),
+      @ApiResponse(responseCode = "200", description
+          = "Successfully set start time for the timetable"),
       @ApiResponse(responseCode = "404", description = "Timetable not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -161,6 +201,13 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Updates a timetable by ID.
+   *
+   * @param id        the ID of the timetable to update
+   * @param timetable the updated timetable object
+   * @return the updated timetable
+   */
   @Operation(
       summary = "Update timetable by ID",
       description = "Update a timetable by ID"
@@ -186,6 +233,13 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Adds a new timetable for a worker.
+   *
+   * @param timetable the timetable to add
+   * @param workerId  the ID of the worker to add the timetable for
+   * @return the added timetable
+   */
   @Operation(
       summary = "Add a new timetable",
       description = "Add a new timetable for a worker"
@@ -212,6 +266,12 @@ public class TimetableController {
     }
   }
 
+  /**
+   * Deletes a timetable by ID.
+   *
+   * @param id the ID of the timetable to delete
+   * @return the deleted timetable
+   */
   @Operation(
       summary = "Delete a timetable by ID",
       description = "Delete a timetable by ID"
