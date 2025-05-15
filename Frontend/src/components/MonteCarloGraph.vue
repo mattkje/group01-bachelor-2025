@@ -229,12 +229,16 @@ function generateChartData() {
     });
   }
 
+  const cappedDataValues = dataValues.value.map(value =>
+      value > taskCount.value ? taskCount.value : value
+  );
+
   chartData.value = {
     labels: extendedLabels,
     datasets: [
       {
         label: 'Tasks Done Over Time',
-        data: [...dataValues.value, ...Array(144 - dataValues.value.length).fill(null)],
+        data: [...cappedDataValues, ...Array(144 - cappedDataValues.length).fill(null)],
         borderColor: 'rgb(131,131,131)',
         tension: 0.01,
         borderWidth: 2,
