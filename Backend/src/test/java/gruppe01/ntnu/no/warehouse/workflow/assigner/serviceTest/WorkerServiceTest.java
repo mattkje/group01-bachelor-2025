@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.WorkerTimeRange;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.LicenseRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.TimetableRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepository;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.LicenseService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class WorkerServiceTest {
 
   @InjectMocks
   private WorkerService workerService;
+
 
   @BeforeEach
   void setUp() {

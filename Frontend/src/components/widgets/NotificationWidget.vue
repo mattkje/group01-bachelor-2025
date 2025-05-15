@@ -33,8 +33,8 @@ const identifyNotificationType = (parsedMessage: string[], zoneId: number) => {
   if (parsedMessage.length < 2) {
     return;
   }
-  const zone = `Error Zone ${zoneId}`;
-  const error = ErrorCodes.get(parseInt(parsedMessage[0])) || "Unknown Error";
+  const zone = `Warning Zone ${zoneId}`;
+  const error = ErrorCodes.get(parseInt(parsedMessage[0])) || "Unknown Issue";
   const details = parsedMessage.slice(1).filter(item => item !== "null").join(" | ");
 
   messages.value.push([zone, error, "Task(s): " + details].filter(Boolean).join(" | "));

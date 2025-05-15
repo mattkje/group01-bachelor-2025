@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.WorkerController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.services.LicenseService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class WorkerControllerTest {
 
   @MockitoBean
   private WorkerService workerService;
+
+  @MockitoBean
+  private LicenseService licenseService;
 
   @Test
   void testGetAllWorkers() throws Exception {
