@@ -13,6 +13,16 @@ let zones = ref<Zone[]>([]);
 let doneBy = ref<string>("");
 let zoneId2 = ref<number>(0);
 
+const defaultZone: Zone = {
+  id: 0,
+  name: "All Zones",
+  capacity: 0,
+  isPickerZone: false,
+  pickerTasks: [],
+  tasks: [],
+  workers: []
+};
+
 const loadAllData = async (zoneId: string) => {
   zones.value = await fetchAllZones();
   if (zoneId) {
@@ -41,7 +51,7 @@ onMounted(() => {
           selectedZoneObject.value = zone;
         }
       } else {
-        selectedZoneObject.value = zones.value[0];
+        selectedZoneObject.value =  defaultZone;
       }
     }
   });
@@ -70,7 +80,7 @@ watch(selectedZoneObject, async (newZone) => {
     <div class="header">
       <div class="zone-selector">
         <select class="zone-selector-dropdown" id="zone-dropdown" v-model="selectedZoneObject">
-          <option :key="0" :value="{ id: 0 }">All Zones</option>
+          <option :key="0" :value="defaultZone">All Zones</option>
           <option v-for="zone in zones" :key="zone.id" :value="zone">
             {{ zone.name }}
           </option>

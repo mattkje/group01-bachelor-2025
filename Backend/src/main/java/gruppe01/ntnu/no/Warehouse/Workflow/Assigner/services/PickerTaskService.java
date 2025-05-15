@@ -151,15 +151,26 @@ public class PickerTaskService {
     return null;
   }
 
-  public List<PickerTask> getPickerTasksByDate(LocalDate date) {
-    List<PickerTask> pickerTasks = new ArrayList<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().isEqual(date)) {
-        pickerTasks.add(pickerTask);
-      }
+    public List<PickerTask> getAllStartedPickerTasks(LocalDate date) {
+        List<PickerTask> pickerTasks = new ArrayList<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(date) && pickerTask.getStartTime() != null &&
+                pickerTask.getEndTime() == null) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return pickerTasks;
     }
-    return pickerTasks;
-  }
+
+    public List<PickerTask> getPickerTasksByDate(LocalDate date) {
+        List<PickerTask> pickerTasks = new ArrayList<>();
+        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
+            if (pickerTask.getDate().isEqual(date)) {
+                pickerTasks.add(pickerTask);
+            }
+        }
+        return pickerTasks;
+    }
 
   /**
    * Assigns a worker to a PickerTask.
