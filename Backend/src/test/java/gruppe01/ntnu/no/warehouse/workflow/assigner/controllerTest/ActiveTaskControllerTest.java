@@ -6,7 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.ActiveTaskController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Task;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ActiveTaskService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TaskService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
@@ -52,13 +54,15 @@ class ActiveTaskControllerTest {
 
   @Test
   void testGetActiveTaskById() throws Exception {
-    long id = 1L;
+    long taskId = 1L;
     ActiveTask task = new ActiveTask();
-    when(activeTaskService.getActiveTaskById(id)).thenReturn(task);
 
-    mockMvc.perform(get("/api/active-tasks/{id}", id))
+    when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+
+    mockMvc.perform(get("/api/active-tasks/{id}", taskId))
+
         .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).getActiveTaskById(id);
+    verify(activeTaskService, times(2)).getActiveTaskById(taskId);
   }
 
   @Test
@@ -101,86 +105,109 @@ class ActiveTaskControllerTest {
     verify(activeTaskService, times(1)).getActiveTasksInProgress();
   }
 
-  @Test
-  void testGetWorkersAssignedToActiveTask() throws Exception {
-    long id = 1L;
-    List<Worker> workers = List.of(new Worker(), new Worker());
-    when(activeTaskService.getWorkersAssignedToActiveTask(id)).thenReturn(workers);
+ @Test
+ void testGetWorkersAssignedToActiveTask() throws Exception {
+   long taskId = 1L;
+   List<Worker> workers = List.of(new Worker(), new Worker());
+   ActiveTask activeTask = new ActiveTask(); // Mock the active task
 
-    mockMvc.perform(get("/api/active-tasks/{id}/workers", id))
-        .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).getWorkersAssignedToActiveTask(id);
-  }
+   when(activeTaskService.getActiveTaskById(taskId)).thenReturn(activeTask); // Mock this call
+   when(activeTaskService.getWorkersAssignedToActiveTask(taskId)).thenReturn(workers);
+
+   mockMvc.perform(get("/api/active-tasks/{id}/workers", taskId))
+       .andExpect(status().isOk());
+   verify(activeTaskService, times(1)).getWorkersAssignedToActiveTask(taskId);
+ }
 
   @Test
   void testCreateActiveTask() throws Exception {
     long taskId = 1L;
     ActiveTask task = new ActiveTask();
+    when(taskService.getTaskById(taskId)).thenReturn(new Task()); // Mock task retrieval
     when(activeTaskService.createActiveTask(eq(taskId), any())).thenReturn(task);
 
     mockMvc.perform(post("/api/active-tasks/{taskId}", taskId)
             .contentType("application/json")
-            .content("{}"))
-        .andExpect(status().isOk());
+            .content("{\"date\":\"2023-01-01\"}")) // Provide valid JSON content
+        .andExpect(status().isCreated()); // Expect 201 Created
     verify(activeTaskService, times(1)).createActiveTask(eq(taskId), any());
   }
 
   @Test
   void testUpdateActiveTask() throws Exception {
-    long id = 1L;
+    long taskId = 1L;
     ActiveTask task = new ActiveTask();
-    when(activeTaskService.updateActiveTask(eq(id), any())).thenReturn(task);
+    when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+    when(activeTaskService.updateActiveTask(eq(taskId), any())).thenReturn(task);
 
-    mockMvc.perform(put("/api/active-tasks/{id}", id)
+    mockMvc.perform(put("/api/active-tasks/{id}", taskId)
             .contentType("application/json")
-            .content("{}"))
+            .content("{\"date\":\"2023-01-01\"}"))
         .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).updateActiveTask(eq(id), any());
+    verify(activeTaskService, times(1)).updateActiveTask(eq(taskId), any());
+  }
+
+  @Test
+  void testGetActiveTasksForTodayByZone() throws Exception {
+      long zoneId = 1L;
+      List<ActiveTask> tasks = List.of(new ActiveTask(), new ActiveTask());
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone()); // Mock zone retrieval
+      when(activeTaskService.getActiveTasksForTodayByZone(eq(zoneId), any())).thenReturn(tasks);
+  
+      mockMvc.perform(get("/api/active-tasks/today/{zoneId}", zoneId))
+          .andExpect(status().isOk());
+      verify(activeTaskService, times(1)).getActiveTasksForTodayByZone(eq(zoneId), any());
   }
 
   @Test
   void testAssignWorkerToTask() throws Exception {
-    long id = 1L;
-    long workerId = 2L;
-    ActiveTask task = new ActiveTask();
-    when(activeTaskService.assignWorkerToTask(id, workerId)).thenReturn(task);
+      long taskId = 1L;
+      long workerId = 2L;
+      ActiveTask task = new ActiveTask();
+      when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+      when(workerService.getWorkerById(workerId)).thenReturn(java.util.Optional.of(new Worker()));
+      when(activeTaskService.assignWorkerToTask(taskId, workerId)).thenReturn(task);
 
-    mockMvc.perform(put("/api/active-tasks/{id}/worker/{workerId}", id, workerId))
-        .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).assignWorkerToTask(id, workerId);
+      mockMvc.perform(put("/api/active-tasks/{id}/worker/{workerId}", taskId, workerId))
+          .andExpect(status().isOk());
+      verify(activeTaskService, times(1)).assignWorkerToTask(taskId, workerId);
   }
 
   @Test
   void testRemoveWorkerFromTask() throws Exception {
-    long id = 1L;
-    long workerId = 2L;
-    ActiveTask task = new ActiveTask();
-    when(activeTaskService.removeWorkerFromTask(id, workerId)).thenReturn(task);
+      long taskId = 1L;
+      long workerId = 2L;
+      ActiveTask task = new ActiveTask();
+      when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+      when(workerService.getWorkerById(workerId)).thenReturn(java.util.Optional.of(new Worker()));
+      when(activeTaskService.removeWorkerFromTask(taskId, workerId)).thenReturn(task);
 
-    mockMvc.perform(put("/api/active-tasks/{id}/worker/{workerId}/remove", id, workerId))
-        .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).removeWorkerFromTask(id, workerId);
+      mockMvc.perform(put("/api/active-tasks/{id}/worker/{workerId}/remove", taskId, workerId))
+          .andExpect(status().isOk());
+      verify(activeTaskService, times(1)).removeWorkerFromTask(taskId, workerId);
   }
 
   @Test
   void testRemoveWorkersFromTask() throws Exception {
-    long id = 1L;
-    ActiveTask task = new ActiveTask();
-    when(activeTaskService.removeWorkersFromTask(id)).thenReturn(task);
+      long taskId = 1L;
+      ActiveTask task = new ActiveTask();
+      when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+      when(activeTaskService.removeWorkersFromTask(taskId)).thenReturn(task);
 
-    mockMvc.perform(put("/api/active-tasks/{id}/workers/remove", id))
-        .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).removeWorkersFromTask(id);
+      mockMvc.perform(put("/api/active-tasks/{id}/workers/remove", taskId))
+          .andExpect(status().isOk());
+      verify(activeTaskService, times(1)).removeWorkersFromTask(taskId);
   }
 
   @Test
   void testDeleteActiveTask() throws Exception {
-    long id = 1L;
-    ActiveTask task = new ActiveTask();
-    when(activeTaskService.deleteActiveTask(id)).thenReturn(task);
+      long taskId = 1L;
+      ActiveTask task = new ActiveTask();
+      when(activeTaskService.getActiveTaskById(taskId)).thenReturn(task);
+      when(activeTaskService.deleteActiveTask(taskId)).thenReturn(task);
 
-    mockMvc.perform(delete("/api/active-tasks/{id}", id))
-        .andExpect(status().isOk());
-    verify(activeTaskService, times(1)).deleteActiveTask(id);
+      mockMvc.perform(delete("/api/active-tasks/{id}", taskId))
+          .andExpect(status().isOk());
+      verify(activeTaskService, times(1)).deleteActiveTask(taskId);
   }
 }
