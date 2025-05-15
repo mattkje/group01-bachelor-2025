@@ -23,7 +23,6 @@ const props = defineProps<{
 
 const activeTask = ref<ActiveTask | null>(null);
 const pickerTask = ref<PickerTask | null>(null);
-const qualified = ref(false);
 const qualifiedForAnyTask = ref(true);
 const timeTables = ref<TimeTable[]>([]);
 const referenceTime = ref<Date | null>(null);
