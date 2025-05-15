@@ -54,7 +54,6 @@ public class MonteCarloDataService {
 
     // Fetch Monte Carlo data and process it
     List<MonteCarloData> monteCarloDataList = monteCarloDataRepository.findAllByZoneId(zoneId);
-    System.out.println("List zie: " + monteCarloDataList.size());
     for (MonteCarloData monteCarloData : monteCarloDataList) {
       int simCount = monteCarloData.getSimNo();
       groupedBySimCount.putIfAbsent(simCount, new ArrayList<>());
