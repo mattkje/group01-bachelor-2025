@@ -153,7 +153,7 @@ class ActiveTaskControllerTest {
       List<ActiveTask> tasks = List.of(new ActiveTask(), new ActiveTask());
       when(zoneService.getZoneById(zoneId)).thenReturn(new Zone()); // Mock zone retrieval
       when(activeTaskService.getActiveTasksForTodayByZone(eq(zoneId), any())).thenReturn(tasks);
-  
+
       mockMvc.perform(get("/api/active-tasks/today/{zoneId}", zoneId))
           .andExpect(status().isOk());
       verify(activeTaskService, times(1)).getActiveTasksForTodayByZone(eq(zoneId), any());

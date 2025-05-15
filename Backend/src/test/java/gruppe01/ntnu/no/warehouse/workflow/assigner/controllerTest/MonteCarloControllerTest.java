@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.MonteCarloController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.WorldSimData;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.*;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.simulations.worldsimulation.WorldSimulation;
 import org.junit.jupiter.api.Test;
@@ -42,32 +43,6 @@ public class MonteCarloControllerTest {
   private WorldSimulation worldSimulation;
 
   @Test
-  void testGetWorldSimData() throws Exception {
-    // Arrange
-    long zoneId = 1L;
-    List<WorldSimData> mockData = List.of(new WorldSimData());
-    when(worldSimDataService.getMostRecentWorldSimDataByZone(zoneId)).thenReturn(mockData);
-
-    // Act & Assert
-    mockMvc.perform(get("/api/data/{zoneId}", zoneId))
-        .andExpect(status().isOk());
-    verify(worldSimDataService, times(1)).getMostRecentWorldSimDataByZone(zoneId);
-  }
-
-  @Test
-  void testGetWorldSimValues() throws Exception {
-    // Arrange
-    long zoneId = 1L;
-    List<Integer> mockValues = List.of(1, 2, 3);
-    when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(mockValues);
-
-    // Act & Assert
-    mockMvc.perform(get("/api/data/{zoneId}/values", zoneId))
-        .andExpect(status().isOk());
-    verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
-  }
-
-  @Test
   void testGenerateWorldSimData() throws Exception {
     // Arrange
     LocalDateTime now = LocalDateTime.now();
@@ -80,41 +55,60 @@ public class MonteCarloControllerTest {
   }
 
   @Test
-  void testGetMonteCarloSimulationValues() throws Exception {
-    // Arrange
-    long zoneId = 1L;
-    List<List<Integer>> mockValues = List.of(List.of(1, 2), List.of(3, 4));
-    when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(mockValues);
+  void testGetWorldSimData() throws Exception {
+      long zoneId = 1L;
+      List<WorldSimData> worldSimData = List.of(new WorldSimData());
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(worldSimDataService.getMostRecentWorldSimDataByZone(zoneId)).thenReturn(worldSimData);
 
-    // Act & Assert
-    mockMvc.perform(get("/api/data/{zoneId}/mcvalues", zoneId))
-        .andExpect(status().isOk());
-    verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
+      mockMvc.perform(get("/api/data/{zoneId}", zoneId))
+          .andExpect(status().isOk());
+      verify(worldSimDataService, times(1)).getMostRecentWorldSimDataByZone(zoneId);
+  }
+
+  @Test
+  void testGetWorldSimValues() throws Exception {
+      long zoneId = 1L;
+      List<Integer> values = List.of(1, 2, 3);
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(values);
+
+      mockMvc.perform(get("/api/data/{zoneId}/values", zoneId))
+          .andExpect(status().isOk());
+      verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
+  }
+
+  @Test
+  void testGetMonteCarloSimulationValues() throws Exception {
+      long zoneId = 1L;
+      List<List<Integer>> mcValues = List.of(List.of(1, 2), List.of(3, 4));
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(mcValues);
+
+      mockMvc.perform(get("/api/data/{zoneId}/mcvalues", zoneId))
+          .andExpect(status().isOk());
+      verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
   }
 
   @Test
   void testGetAllData() throws Exception {
-    // Arrange
-    long zoneId = 1L;
-    List<Integer> realData = List.of(1, 2, 3);
-    List<List<Integer>> simulationData = List.of(List.of(4, 5), List.of(6, 7));
-    LocalDateTime currentDate = LocalDateTime.now();
-    int activeTasks = 5;
+      long zoneId = 1L;
+      List<Integer> realData = List.of(1, 2, 3);
+      List<List<Integer>> simulationData = List.of(List.of(4, 5), List.of(6, 7));
+      LocalDate currentDate = LocalDate.now();
+      int activeTasks = 5;
 
-    when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(realData);
-    when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(simulationData);
-    when(worldSimulation.getCurrentDate()).thenReturn(LocalDate.from(currentDate));
-    when(
-        zoneService.getNumberOfTasksForTodayByZone(zoneId, LocalDate.from(currentDate))).thenReturn(
-        activeTasks);
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(realData);
+      when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(simulationData);
+      when(worldSimulation.getCurrentDate()).thenReturn(currentDate);
+      when(zoneService.getNumberOfTasksForTodayByZone(zoneId, currentDate)).thenReturn(activeTasks);
 
-    // Act & Assert
-    mockMvc.perform(get("/api/data/{zoneId}/graph-data", zoneId))
-        .andExpect(status().isOk());
-    verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
-    verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
-    verify(worldSimulation, times(1)).getCurrentDate();
-    verify(zoneService, times(1)).getNumberOfTasksForTodayByZone(zoneId,
-        LocalDate.from(currentDate));
+      mockMvc.perform(get("/api/data/{zoneId}/graph-data", zoneId))
+          .andExpect(status().isOk());
+      verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
+      verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
+      verify(worldSimulation, times(1)).getCurrentDate();
+      verify(zoneService, times(1)).getNumberOfTasksForTodayByZone(zoneId, currentDate);
   }
 }

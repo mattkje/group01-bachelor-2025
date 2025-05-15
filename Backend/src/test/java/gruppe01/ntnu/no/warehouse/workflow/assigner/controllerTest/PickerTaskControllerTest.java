@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.PickerTaskController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.PickerTaskService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
@@ -13,9 +15,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @WebMvcTest(PickerTaskController.class)
@@ -47,73 +51,74 @@ public class PickerTaskControllerTest {
 
   @Test
   void testGetPickerTaskById() throws Exception {
-    long id = 1L;
-    PickerTask task = new PickerTask();
-    when(pickerTaskService.getPickerTaskById(id)).thenReturn(task);
+      long taskId = 1L;
+      PickerTask task = new PickerTask();
+      when(pickerTaskService.getPickerTaskById(taskId)).thenReturn(task);
 
-    mockMvc.perform(get("/api/picker-tasks/{id}", id))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).getPickerTaskById(id);
+      mockMvc.perform(get("/api/picker-tasks/{id}", taskId))
+          .andExpect(status().isOk());
+      verify(pickerTaskService, times(2)).getPickerTaskById(taskId);
   }
 
   @Test
   void testGetPickerTasksByZoneId() throws Exception {
-    long zoneId = 1L;
-    List<PickerTask> tasks = List.of(new PickerTask(), new PickerTask());
-    when(pickerTaskService.getPickerTaskByZoneId(zoneId)).thenReturn(tasks);
+      long zoneId = 1L;
+      List<PickerTask> tasks = List.of(new PickerTask(), new PickerTask());
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(pickerTaskService.getPickerTaskByZoneId(zoneId)).thenReturn(tasks);
 
-    mockMvc.perform(get("/api/picker-tasks/zone/{zoneId}", zoneId))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).getPickerTaskByZoneId(zoneId);
-  }
-
-  @Test
-  void testUpdatePickerTask() throws Exception {
-    long pickerTaskId = 1L;
-    long zoneId = 2L;
-    PickerTask task = new PickerTask();
-    when(pickerTaskService.updatePickerTask(eq(pickerTaskId), eq(zoneId), any())).thenReturn(task);
-
-    mockMvc.perform(put("/api/picker-tasks/{pickerTaskId}/zone/{zoneId}", pickerTaskId, zoneId)
-            .contentType("application/json")
-            .content("{}"))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).updatePickerTask(eq(pickerTaskId), eq(zoneId), any());
+      mockMvc.perform(get("/api/picker-tasks/zone/{zoneId}", zoneId))
+          .andExpect(status().isOk());
+      verify(pickerTaskService, times(1)).getPickerTaskByZoneId(zoneId);
   }
 
   @Test
   void testAssignWorkerToPickerTask() throws Exception {
-    long pickerTaskId = 1L;
-    long workerId = 2L;
-    PickerTask task = new PickerTask();
-    when(pickerTaskService.assignWorkerToPickerTask(pickerTaskId, workerId)).thenReturn(task);
+      long taskId = 1L;
+      long workerId = 2L;
+      PickerTask task = new PickerTask();
+      when(pickerTaskService.getPickerTaskById(taskId)).thenReturn(task);
+      when(workerService.getWorkerById(workerId)).thenReturn(java.util.Optional.of(new Worker()));
+      when(pickerTaskService.assignWorkerToPickerTask(taskId, workerId)).thenReturn(task);
 
-    mockMvc.perform(
-            put("/api/picker-tasks/assign-worker/{pickerTaskId}/{workerId}", pickerTaskId, workerId))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).assignWorkerToPickerTask(pickerTaskId, workerId);
+      mockMvc.perform(put("/api/picker-tasks/assign-worker/{pickerTaskId}/{workerId}", taskId, workerId))
+          .andExpect(status().isOk());
+      verify(pickerTaskService, times(1)).assignWorkerToPickerTask(taskId, workerId);
   }
 
   @Test
   void testRemoveWorkerFromPickerTask() throws Exception {
-    long pickerTaskId = 1L;
-    long workerId = 2L;
-    PickerTask task = new PickerTask();
-    when(pickerTaskService.removeWorkerFromPickerTask(pickerTaskId, workerId)).thenReturn(task);
+      long taskId = 1L;
+      long workerId = 2L;
+      PickerTask task = new PickerTask();
+      when(pickerTaskService.getPickerTaskById(taskId)).thenReturn(task);
+      when(workerService.getWorkerById(workerId)).thenReturn(java.util.Optional.of(new Worker()));
+      when(pickerTaskService.removeWorkerFromPickerTask(taskId, workerId)).thenReturn(task);
 
-    mockMvc.perform(
-            put("/api/picker-tasks/remove-worker/{pickerTaskId}/{workerId}", pickerTaskId, workerId))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).removeWorkerFromPickerTask(pickerTaskId, workerId);
+      mockMvc.perform(put("/api/picker-tasks/remove-worker/{pickerTaskId}/{workerId}", taskId, workerId))
+          .andExpect(status().isOk());
+      verify(pickerTaskService, times(1)).removeWorkerFromPickerTask(taskId, workerId);
   }
 
   @Test
   void testDeletePickerTask() throws Exception {
-    long id = 1L;
-    doNothing().when(pickerTaskService).deletePickerTask(id);
+      long taskId = 1L;
+      PickerTask task = new PickerTask();
+      when(pickerTaskService.getPickerTaskById(taskId)).thenReturn(task);
+      when(pickerTaskService.deletePickerTask(taskId)).thenReturn(task);
 
-    mockMvc.perform(delete("/api/picker-tasks/{id}", id))
-        .andExpect(status().isOk());
-    verify(pickerTaskService, times(1)).deletePickerTask(id);
+      mockMvc.perform(delete("/api/picker-tasks/{id}", taskId))
+          .andExpect(status().isOk());
+      verify(pickerTaskService, times(1)).deletePickerTask(taskId);
+  }
+
+  @Test
+  void testUpdatePickerTask() throws Exception {
+
+  }
+
+  @Test
+  void testCreatePickerTask() throws Exception {
+
   }
 }

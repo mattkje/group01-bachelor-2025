@@ -41,53 +41,52 @@ class LicenseControllerTest {
 
   @Test
   void testGetLicenseById() throws Exception {
-    // Arrange
-    License license = new License();
-    when(licenseService.getLicenseById(1L)).thenReturn(license);
+      long licenseId = 1L;
+      License license = new License();
+      when(licenseService.getLicenseById(licenseId)).thenReturn(license);
 
-    // Act & Assert
-    mockMvc.perform(get("/api/licenses/{id}", 1L))
-        .andExpect(status().isOk());
-    verify(licenseService, times(1)).getLicenseById(1L);
+      mockMvc.perform(get("/api/licenses/{id}", licenseId))
+          .andExpect(status().isOk());
+      verify(licenseService, times(2)).getLicenseById(licenseId);
   }
 
   @Test
   void testCreateLicense() throws Exception {
-    // Arrange
-    License license = new License();
-    when(licenseService.createLicense(any(License.class))).thenReturn(license);
+      License license = new License();
+      license.setName("Test License");
+      when(licenseService.createLicense(any(License.class))).thenReturn(license);
 
-    // Act & Assert
-    mockMvc.perform(post("/api/licenses")
-            .contentType("application/json")
-            .content("{}")) // To test, you have to replace it with JSON for License
-        .andExpect(status().isOk());
-    verify(licenseService, times(1)).createLicense(any(License.class));
+      mockMvc.perform(post("/api/licenses")
+              .contentType("application/json")
+              .content("{\"name\":\"Test License\"}"))
+          .andExpect(status().isOk());
+      verify(licenseService, times(1)).createLicense(any(License.class));
   }
 
   @Test
   void testUpdateLicense() throws Exception {
-    // Arrange
-    License license = new License();
-    when(licenseService.updateLicense(eq(1L), any(License.class))).thenReturn(license);
+      long licenseId = 1L;
+      License license = new License();
+      license.setName("Updated License");
+      when(licenseService.getLicenseById(licenseId)).thenReturn(license);
+      when(licenseService.updateLicense(eq(licenseId), any(License.class))).thenReturn(license);
 
-    // Act & Assert
-    mockMvc.perform(put("/api/licenses/{id}", 1L)
-            .contentType("application/json")
-            .content("{}")) // To test, you have to replace it with JSON for License
-        .andExpect(status().isOk());
-    verify(licenseService, times(1)).updateLicense(eq(1L), any(License.class));
+      mockMvc.perform(put("/api/licenses/{id}", licenseId)
+              .contentType("application/json")
+              .content("{\"name\":\"Updated License\"}"))
+          .andExpect(status().isOk());
+      verify(licenseService, times(1)).updateLicense(eq(licenseId), any(License.class));
   }
 
   @Test
   void testDeleteLicense() throws Exception {
-    // Arrange
-    License license = new License();
-    when(licenseService.deleteLicense(1L)).thenReturn(license);
+      long licenseId = 1L;
+      License license = new License();
+      when(licenseService.getLicenseById(licenseId)).thenReturn(license);
+      when(licenseService.deleteLicense(licenseId)).thenReturn(license);
 
-    // Act & Assert
-    mockMvc.perform(delete("/api/licenses/{id}", 1L))
-        .andExpect(status().isOk());
-    verify(licenseService, times(1)).deleteLicense(1L);
+      mockMvc.perform(delete("/api/licenses/{id}", licenseId))
+          .andExpect(status().isOk());
+      verify(licenseService, times(1)).deleteLicense(licenseId);
   }
 }
