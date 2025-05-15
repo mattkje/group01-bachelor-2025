@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.Warehouse.Workflow.Assigner.simulations;
 
+import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.controllers.WorldSimulationController;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.Notification;
 import gruppe01.ntnu.no.Warehouse.Workflow.Assigner.entities.PickerTask;
@@ -11,6 +12,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -115,13 +119,37 @@ public class Utils {
     public void saveSimulationResults(List<SimulationResult> simulationResults, LocalDateTime now) {
         System.out.println("Saving simulation results...");
         monteCarloService.dropAllData();
-        for (int i = 0; i < simulationResults.size(); i++) {
-            SimulationResult simulationResult = simulationResults.get(i);
-            saveGeneralSimulation(simulationResult, i, now);
-            saveZoneSimulation(simulationResult.getZoneSimResultList(), i, now);
+
+        // Create a thread pool
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        try {
+            // Submit tasks for each simulation result
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < simulationResults.size(); i++) {
+                SimulationResult simulationResult = simulationResults.get(i);
+                int index = i;
+
+                // Submit saveGeneralSimulation task
+                futures.add(executorService.submit(() -> saveGeneralSimulation(simulationResult, index, now)));
+
+                // Submit saveZoneSimulation task
+                futures.add(executorService.submit(() -> saveZoneSimulation(simulationResult.getZoneSimResultList(), index, now)));
+            }
+
+            // Wait for all tasks to complete
+            for (Future<?> future : futures) {
+                future.get(); // Ensures the task is complete
+            }
+
+            System.out.println("Simulation results saved.");
+            this.getBestCaseScenarioForEachZoneSim(simulationResults, now);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Shut down the executor service
+            executorService.shutdown();
         }
-        System.out.println("Simulation results saved.");
-        this.getBestCaseScenarioForEachZoneSim(simulationResults, now);
     }
 
 
@@ -150,29 +178,25 @@ public class Utils {
     }
 
     private void saveGeneralSimulation(SimulationResult simulationResult, int i, LocalDateTime now) {
-
-        Map<LocalDateTime, Integer> timestamps = getTotalTasksCompleted(simulationResult.getZoneSimResultList(), now);
-        for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .toList()) {
+        Map<LocalDateTime, Integer> timestamps = new TreeMap<>(getTotalTasksCompleted(simulationResult.getZoneSimResultList(), now));
+        for (Map.Entry<LocalDateTime, Integer> entry : timestamps.entrySet()) {
             monteCarloService.generateSimulationDataPoint(i, entry.getKey(), entry.getValue(), 0L);
         }
     }
 
     public void getBestCaseScenarioForEachZoneSim(List<SimulationResult> simulationResults, LocalDateTime now) {
-        Map<Long, Notification> errorMessages =
+        Map<Long, Notification> notifications =
             notificationService.generateNotificationMapFromZones();
         Map<Long, ZoneSimResult> bestCases = new HashMap<>();
 
         for (SimulationResult simulationResult : simulationResults) {
             simulationResult.getZoneSimResults().forEach((zoneId, zoneSimResult) -> {
-                processZoneSimResult(zoneSimResult, errorMessages, bestCases);
+                processZoneSimResult(zoneSimResult, notifications, bestCases);
             });
         }
         System.out.println("SAVING ZONE SIM RESULTS");
-        System.out.println("Best cases size: " + bestCases.size());
         notificationService.deleteAll();
-        errorMessages.values().forEach(notificationService::saveNotification);
+        notifications.values().forEach(notificationService::saveNotification);
         this.saveBestCases(bestCases, now);
         System.out.println("ALL ZONE SIM RESULTS SAVED");
     }
