@@ -1,4 +1,4 @@
-package gruppe01.ntnu.no.Warehouse.workflow.assigner.simulationsTest;
+package gruppe01.ntnu.no.warehouse.workflow.assigner.simulationsTest;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.ActiveTaskGenerator;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.dummydata.PickerTaskGenerator;
