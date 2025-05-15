@@ -66,7 +66,7 @@ public class ActiveTask {
   @Schema(description = "The task associated with this active task.")
   private Task task;
 
-  @OneToMany
+  @OneToMany(fetch = FetchType.EAGER)
   @JoinTable(
       name = "active_task_worker",
       joinColumns = @JoinColumn(name = "active_task_id"),

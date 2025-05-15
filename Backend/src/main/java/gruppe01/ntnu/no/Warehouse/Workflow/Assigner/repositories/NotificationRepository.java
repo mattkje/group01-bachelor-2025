@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.warehouse.workflow.assigner.repositories;
 
+import java.util.List;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
   @Query("SELECT e FROM Notification e WHERE e.zoneId = ?1 ORDER BY e.time DESC LIMIT 1")
   Notification findTopByZoneIdOrderByTimeDesc(long zoneId);
+
+  List<Notification> findByZoneId(long zoneId);
 }

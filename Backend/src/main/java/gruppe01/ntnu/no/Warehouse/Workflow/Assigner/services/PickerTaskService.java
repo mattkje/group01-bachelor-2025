@@ -13,7 +13,6 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepositor
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.ZoneRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -68,28 +67,7 @@ public class PickerTaskService {
    * @return a list of PickerTask entities for the specified zone
    */
   public List<PickerTask> getPickerTaskByZoneId(Long id) {
-    List<PickerTask> pickerTasks = new ArrayList<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getZone().getId().equals(id)) {
-        pickerTasks.add(pickerTask);
-      }
-    }
-    return pickerTasks;
-  }
-
-  /**
-   * Retrieves all PickerTask entities for today.
-   *
-   * @return a set of PickerTask entities for today
-   */
-  public Set<PickerTask> getPickerTasksForToday() {
-    List<PickerTask> pickerTasks = new ArrayList<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().isEqual(LocalDate.now())) {
-        pickerTasks.add(pickerTask);
-      }
-    }
-    return Set.copyOf(pickerTasks);
+    return pickerTaskRepository.findByZoneId(id);
   }
 
   /**
@@ -99,27 +77,18 @@ public class PickerTaskService {
    * @return an int of PickerTask entities for the specified date
    */
   public int getPickerTasksDoneForTodayInZone(LocalDate date, long zoneId) {
-    int count = 0;
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() != null &&
-          pickerTask.getZone().getId().equals(zoneId)) {
-        count++;
-      }
-    }
-    return count;
+    return pickerTaskRepository.countCompletedTasksByDateAndZone(date, zoneId);
   }
 
+  /**
+   * Get all picker tasks not done by date and zone
+   *
+   * @param date the date to filter the tasks by
+   * @param zoneId id of the zone to filter the tasks by
+   * @return a list of picker tasks that match the given date and zoneId field
+   */
   public List<PickerTask> getPickerTasksNotDoneForTodayInZone(LocalDate date, long zoneId) {
-    List<PickerTask> pickerTasks = new ArrayList<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (zoneId == 0 && pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() == null) {
-        pickerTasks.add(pickerTask);
-      } else if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() == null &&
-          pickerTask.getZone().getId().equals(zoneId)) {
-        pickerTasks.add(pickerTask);
-      }
-    }
-    return pickerTasks;
+    return pickerTaskRepository.findNotDoneTasksByDateAndZone(date, zoneId);
   }
 
   /**
@@ -129,14 +98,7 @@ public class PickerTaskService {
    * @return an int of PickerTask entities for the specified date
    */
   public int getItemsPickedByZone(LocalDate date, long zoneId) {
-    int count = 0;
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().isEqual(date) && pickerTask.getEndTime() != null &&
-          pickerTask.getZone().getId().equals(zoneId)) {
-        count += pickerTask.getPackAmount();
-      }
-    }
-    return count;
+    return pickerTaskRepository.sumPackAmountByDateAndZone(date, zoneId);
   }
 
   /**
@@ -151,26 +113,15 @@ public class PickerTaskService {
     return null;
   }
 
-    public List<PickerTask> getAllStartedPickerTasks(LocalDate date) {
-        List<PickerTask> pickerTasks = new ArrayList<>();
-        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-            if (pickerTask.getDate().isEqual(date) && pickerTask.getStartTime() != null &&
-                pickerTask.getEndTime() == null) {
-                pickerTasks.add(pickerTask);
-            }
-        }
-        return pickerTasks;
-    }
-
-    public List<PickerTask> getPickerTasksByDate(LocalDate date) {
-        List<PickerTask> pickerTasks = new ArrayList<>();
-        for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-            if (pickerTask.getDate().isEqual(date)) {
-                pickerTasks.add(pickerTask);
-            }
-        }
-        return pickerTasks;
-    }
+  /**
+   * Gets picker tasks filtered by the date parameter.
+   *
+   * @param date the date to fetch the picker tasks from
+   * @return a list of picker tasks filtered by date
+   */
+  public List<PickerTask> getPickerTasksByDate(LocalDate date) {
+    return pickerTaskRepository.findByDate(date);
+  }
 
   /**
    * Assigns a worker to a PickerTask.
@@ -279,6 +230,9 @@ public class PickerTaskService {
     return null;
   }
 
+  /**
+   * Delete all picker tasks inside the database.
+   */
   public void deleteAllPickerTasks() {
     for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
       pickerTask.setWorker(null);
@@ -287,14 +241,17 @@ public class PickerTaskService {
     pickerTaskRepository.deleteAll(pickerTaskRepository.findAll());
   }
 
+  /**
+   * Get all unfinished picker tasks for the given time.
+   *
+   * @param currentTime the date for the picker tasks to be filtered by
+   * @return a list of picker tasks that are unfinished for a day
+   */
   public Set<PickerTask> getUnfinishedPickerTasksForToday(LocalDateTime currentTime) {
-    List<PickerTask> pickerTasks = new ArrayList<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().isEqual(currentTime.toLocalDate()) &&
-          pickerTask.getEndTime() == null) {
-        pickerTasks.add(pickerTask);
-      }
+    if (currentTime == null) {
+      currentTime = LocalDateTime.now();
     }
+    List<PickerTask> pickerTasks = pickerTaskRepository.findByDateAndEndTimeIsNull(currentTime.toLocalDate());
     return Set.copyOf(pickerTasks);
   }
 }

@@ -6,7 +6,6 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.ActiveTaskRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.TaskRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepository;
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,57 +69,21 @@ public class ActiveTaskService {
     if (currentTime == null) {
       currentTime = LocalDateTime.now();
     }
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentTime.toLocalDate()) &&
-          activeTask.getEndTime() == null) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findByDateAndEndTimeIsNull(currentTime.toLocalDate());
   }
 
+  /**
+   * Gets all not completed tasks for a date by zone.
+   *
+   * @param zoneId id of the zone to fetch data from
+   * @param currentTime what the tasks are made
+   * @return a list of active tasks that have not been completed for a given date
+   */
   public List<ActiveTask> getActiveTasksForTodayByZone(Long zoneId, LocalDateTime currentTime) {
     if (currentTime == null) {
       currentTime = LocalDateTime.now();
     }
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentTime.toLocalDate()) &&
-          activeTask.getEndTime() == null && activeTask.getTask().getZoneId().equals(zoneId)) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
-  }
-
-  public List<ActiveTask> getRemainingTasksForToday() {
-    LocalDate currentDate = LocalDate.now();
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentDate) && activeTask.getEndTime() == null) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
-  }
-
-  /**
-   * Retrieves all active tasks for today by zone ID.
-   *
-   * @param zoneId The ID of the zone to filter tasks by.
-   * @return A list of active tasks for today in the specified zone.
-   */
-  public List<ActiveTask> getRemainingTasksForTodayByZone(Long zoneId) {
-    LocalDate currentDate = LocalDate.now();
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentDate) && activeTask.getEndTime() == null &&
-          activeTask.getTask().getZoneId().equals(zoneId)) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findByDateAndEndTimeIsNullAndTask_Zone_Id(currentTime.toLocalDate(), zoneId);
   }
 
   /**
@@ -130,13 +93,7 @@ public class ActiveTaskService {
    * @return A list of active tasks for the specified date.
    */
   public List<ActiveTask> getActiveTaskByDate(LocalDate date) {
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(date)) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findByDate(date);
   }
 
   /**
@@ -145,37 +102,11 @@ public class ActiveTaskService {
    * @return A list of completed active tasks.
    */
   public List<ActiveTask> getCompletedActiveTasks() {
-    List<ActiveTask> completedActiveTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getEndTime() != null) {
-        completedActiveTasks.add(activeTask);
-      }
-    }
-    return completedActiveTasks;
-  }
-
-  public List<ActiveTask> getCompletedActiveTasksByDateAndZone(LocalDate date, Long zoneId) {
-    List<ActiveTask> completedActiveTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getEndTime() != null && activeTask.getDate().equals(date) &&
-          activeTask.getTask().getZoneId().equals(zoneId)) {
-        completedActiveTasks.add(activeTask);
-      }
-    }
-    return completedActiveTasks;
+    return activeTaskRepository.findByEndTimeIsNotNull();
   }
 
   public List<ActiveTask> getNotCompletedActiveTasksByDateAndZone(LocalDate date, Long zoneId) {
-    List<ActiveTask> completedActiveTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (zoneId == 0 && activeTask.getEndTime() == null && activeTask.getDate().equals(date)) {
-        completedActiveTasks.add(activeTask);
-      } else if (activeTask.getEndTime() == null && activeTask.getDate().equals(date) &&
-          activeTask.getTask().getZoneId().equals(zoneId)) {
-        completedActiveTasks.add(activeTask);
-      }
-    }
-    return completedActiveTasks;
+    return activeTaskRepository.findNotCompletedTasksByDateAndZone(date, zoneId);
   }
 
   /**
@@ -184,13 +115,7 @@ public class ActiveTaskService {
    * @return A list of active tasks that have not been started.
    */
   public List<ActiveTask> getNotStartedActiveTasks() {
-    List<ActiveTask> incompleteActiveTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getEndTime() == null && activeTask.getStartTime() == null) {
-        incompleteActiveTasks.add(activeTask);
-      }
-    }
-    return incompleteActiveTasks;
+    return activeTaskRepository.findByStartTimeIsNullAndEndTimeIsNull();
   }
 
   /**
@@ -199,24 +124,7 @@ public class ActiveTaskService {
    * @return A list of active tasks that are currently in progress.
    */
   public List<ActiveTask> getActiveTasksInProgress() {
-    List<ActiveTask> activeTasksInProgress = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getStartTime() != null && activeTask.getEndTime() == null) {
-        activeTasksInProgress.add(activeTask);
-      }
-    }
-    return activeTasksInProgress;
-  }
-
-  public List<ActiveTask> getActiveTasksInProgressByZone(long zoneId) {
-    List<ActiveTask> activeTasksInProgress = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getStartTime() != null && activeTask.getEndTime() == null &&
-          activeTask.getTask().getZoneId().equals(zoneId)) {
-        activeTasksInProgress.add(activeTask);
-      }
-    }
-    return activeTasksInProgress;
+    return activeTaskRepository.findByStartTimeIsNotNullAndEndTimeIsNull();
   }
 
   /**
@@ -227,14 +135,7 @@ public class ActiveTaskService {
    * @return The number of active tasks completed for today in the specified zone.
    */
   public int getActiveTasksDoneForTodayInZone(LocalDate date, long zoneId) {
-    int count = 0;
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().isEqual(date) && activeTask.getEndTime() != null &&
-          activeTask.getTask().getZoneId().equals(zoneId)) {
-        count++;
-      }
-    }
-    return count;
+    return activeTaskRepository.countCompletedTasksByDateAndZone(date, zoneId);
   }
 
   /**
@@ -260,15 +161,27 @@ public class ActiveTaskService {
    * Updates an existing active task.
    *
    * @param id         The ID of the active task to update.
-   * @param activeTask The updated active task data.
+   * @param updatedData The updated active task data.
    * @return The updated active task.
    */
   @Transactional
-  public ActiveTask updateActiveTask(Long id, ActiveTask activeTask) {
-    if (activeTaskRepository.findById(id).isEmpty()) {
-      return null;
-    }
-    return activeTaskRepository.save(activeTask);
+  public ActiveTask updateActiveTask(Long id, ActiveTask updatedData) {
+    return activeTaskRepository.findById(id)
+        .map(existing -> {
+          // Manually update fields
+          existing.setDate(updatedData.getDate());
+          existing.setStartTime(updatedData.getStartTime());
+          existing.setEndTime(updatedData.getEndTime());
+          existing.setTask(updatedData.getTask());
+          existing.setRecurrenceType(updatedData.getRecurrenceType());
+          existing.setDueDate(updatedData.getDueDate());
+          existing.setWorkers(updatedData.getWorkers());
+          existing.setEta(updatedData.getEta());
+          existing.setMcEndTime(updatedData.getMcEndTime());
+          existing.setMcStartTime(updatedData.getMcStartTime());
+          return activeTaskRepository.save(existing);
+        })
+        .orElse(null);
   }
 
   /**
@@ -370,18 +283,6 @@ public class ActiveTaskService {
   }
 
   /**
-   * Deletes all active tasks for today.
-   */
-  public void deleteAllActiveTasksForToday() {
-    LocalDate currentDate = LocalDate.now();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentDate)) {
-        activeTaskRepository.delete(activeTask);
-      }
-    }
-  }
-
-  /**
    * Retrieves all workers assigned to a specific task.
    *
    * @param taskId The ID of the task to retrieve workers for.
@@ -399,7 +300,7 @@ public class ActiveTaskService {
    * Creates new active tasks for the next month based on the recurrence type of existing active tasks.
    * RecurrenceTyoe 1 = Monthly, 2 = Weekly, 3 = Every 2 days, 4 = Daily, 0 = No recurrence
    */
-  public void CreateRepeatingActiveTasks() {
+  public void createRepeatingActiveTasks() {
     List<ActiveTask> activeTasks = activeTaskRepository.findAll();
     for (ActiveTask activeTask : activeTasks) {
       if (activeTask.getRecurrenceType() == 1) {
@@ -518,21 +419,16 @@ public class ActiveTaskService {
     return new ArrayList<>();
   }
 
-  public void saveActiveTask(ActiveTask activeTask) {
-    activeTaskRepository.save(activeTask);
-  }
-
+  /**
+   * Get all active tasks by date that are not finished.
+   *
+   * @param currentTime the time to fetch the data from
+   * @return a list of active tasks by given date that are unfinished
+   */
   public List<ActiveTask> getUnfinishedActiveTasksForToday(LocalDateTime currentTime) {
     if (currentTime == null) {
       currentTime = LocalDateTime.now();
     }
-    List<ActiveTask> activeTasks = new ArrayList<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(currentTime.toLocalDate()) &&
-          activeTask.getEndTime() == null) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findByDateAndEndTimeIsNull(currentTime.toLocalDate());
   }
 }

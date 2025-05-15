@@ -7,6 +7,7 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.WorkerTimeRange;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.LicenseRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.TimetableRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -57,13 +59,7 @@ public class WorkerService {
    * @return a list of all available workers
    */
   public List<Worker> getAvailableWorkers() {
-    List<Worker> availableWorkers = new ArrayList<>();
-    for (Worker worker : workerRepository.findAll()) {
-      if (worker.isAvailability()) {
-        availableWorkers.add(worker);
-      }
-    }
-    return availableWorkers;
+    return workerRepository.findAvailableWorkers();
   }
 
   /**
@@ -72,13 +68,7 @@ public class WorkerService {
    * @return a list of all unavailable workers
    */
   public List<Worker> getUnavailableWorkers() {
-    List<Worker> unavailableWorkers = new ArrayList<>();
-    for (Worker worker : workerRepository.findAll()) {
-      if (!worker.isAvailability()) {
-        unavailableWorkers.add(worker);
-      }
-    }
-    return unavailableWorkers;
+    return workerRepository.findUnavailableWorkers();
   }
 
   /**
@@ -106,35 +96,44 @@ public class WorkerService {
    * Updates an existing worker.
    *
    * @param id     the ID of the worker to update
-   * @param worker the updated worker
+   * @param updatedData the updated worker
    * @return the updated worker
    */
-  public Worker updateWorker(Long id, Worker worker) {
-      if (workerRepository.findById(id).isEmpty()) {
-          return null;
-      }
-    Worker updatedWorker = workerRepository.findById(id).get();
-    updatedWorker.setAvailability(worker.isAvailability());
-    updatedWorker.setName(worker.getName());
-    updatedWorker.setEfficiency(worker.getEfficiency());
-    updatedWorker.setLicenses(worker.getLicenses());
-    updatedWorker.setZone(worker.getZone());
-    updatedWorker.setWorkerType(worker.getWorkerType());
-    updatedWorker.setCurrentPickerTask(worker.getCurrentPickerTask());
-    updatedWorker.setCurrentTask(worker.getCurrentActiveTask());
-
-    if (worker.getWorkSchedule() != updatedWorker.getWorkSchedule()) {
-      for (Timetable timetable : timetableRepository.findAll()) {
-        if (timetable.getWorker().getId().equals(updatedWorker.getId())) {
-          timetableRepository.delete(timetable);
-        }
-      }
-      createTimetablesTillNextMonth(LocalDate.now(), updatedWorker);
+  @Transactional
+  public Worker updateWorker(Long id, Worker updatedData) {
+    Optional<Worker> optionalWorker = workerRepository.findById(id);
+    if (optionalWorker.isEmpty()) {
+      return null;
     }
 
-    updatedWorker.setWorkSchedule(worker.getWorkSchedule());
-    return workerRepository.save(updatedWorker);
+    Worker existingWorker = optionalWorker.get();
+
+    // Check if workSchedule changed BEFORE updating it
+    boolean workScheduleChanged = !Objects.equals(
+        existingWorker.getWorkSchedule(),
+        updatedData.getWorkSchedule()
+    );
+
+    // Update fields
+    existingWorker.setAvailability(updatedData.isAvailability());
+    existingWorker.setName(updatedData.getName());
+    existingWorker.setEfficiency(updatedData.getEfficiency());
+    existingWorker.setLicenses(updatedData.getLicenses());
+    existingWorker.setZone(updatedData.getZone());
+    existingWorker.setWorkerType(updatedData.getWorkerType());
+    existingWorker.setCurrentPickerTask(updatedData.getCurrentPickerTask());
+    existingWorker.setCurrentTask(updatedData.getCurrentActiveTask());
+    existingWorker.setWorkSchedule(updatedData.getWorkSchedule());
+
+    // Only if schedule changed, update related timetables
+    if (workScheduleChanged) {
+      timetableRepository.deleteAllByWorkerId(existingWorker.getId());
+      createTimetablesTillNextMonth(LocalDate.now(), existingWorker);
+    }
+
+    return workerRepository.save(existingWorker);
   }
+
 
   /**
    * Updates the availability of a worker.

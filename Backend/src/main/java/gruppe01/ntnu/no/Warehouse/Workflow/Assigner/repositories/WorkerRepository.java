@@ -17,4 +17,11 @@ public interface WorkerRepository extends JpaRepository<Worker, Long> {
   @EntityGraph(attributePaths = "licenses")
   @Query("SELECT w FROM Worker w")
   List<Worker> findAllWithLicenses();
+
+  @Query("SELECT w FROM Worker w WHERE w.availability = true")
+  List<Worker> findAvailableWorkers();
+
+  @Query("SELECT w FROM Worker w WHERE w.availability = false")
+  List<Worker> findUnavailableWorkers();
+
 }
