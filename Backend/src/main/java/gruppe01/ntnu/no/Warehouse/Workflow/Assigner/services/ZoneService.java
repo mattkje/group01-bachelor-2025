@@ -7,14 +7,11 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDate;
-import java.util.stream.Collectors;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.machinelearning.MachineLearningModelPicking;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.*;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -69,9 +66,7 @@ public class ZoneService {
    * @return a list of all task zones
    */
   public List<Zone> getAllTaskZones() {
-    return zoneRepository.findAll().stream()
-        .filter(zone -> !zone.getIsPickerZone())
-        .collect(Collectors.toList());
+    return zoneRepository.findAllNonPickerZones();
   }
 
   /**
@@ -80,9 +75,7 @@ public class ZoneService {
    * @return a list of all picker zones
    */
   public List<Zone> getAllPickerZones() {
-    return zoneRepository.findAll().stream()
-        .filter(Zone::getIsPickerZone)
-        .collect(Collectors.toList());
+    return zoneRepository.findAllPickerZones();
   }
 
   /**
@@ -126,22 +119,11 @@ public class ZoneService {
   /**
    * Retrieves all active tasks associated with a specific zone ID.
    *
-   * @param id the ID of the zone
+   * @param zoneId the ID of the zone
    * @return a set of active tasks associated with the specified zone
    */
-  public Set<ActiveTask> getActiveTasksByZoneId(Long id) {
-    Zone zone = zoneRepository.findById(id).orElse(null);
-    Set<ActiveTask> activeTasks = new HashSet<>();
-    if (zone != null) {
-      for (Task task : zone.getTasks()) {
-        for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-          if (activeTask.getTask().equals(task)) {
-            activeTasks.add(activeTask);
-          }
-        }
-      }
-    }
-    return activeTasks;
+  public Set<ActiveTask> getActiveTasksByZoneId(Long zoneId) {
+    return activeTaskRepository.findActiveTasksByZoneId(zoneId);
   }
 
   /**
@@ -166,9 +148,7 @@ public class ZoneService {
    */
   public Set<ActiveTask> getTodayUnfinishedTasksByZoneId(Long id) {
     LocalDate today = LocalDate.now();
-    return getActiveTasksByZoneId(id).stream()
-        .filter(activeTask -> activeTask.getDate().equals(today) && activeTask.getEndTime() == null)
-        .collect(Collectors.toSet());
+    return activeTaskRepository.findTodayUnfinishedTasksByZoneId(id, today);
   }
 
   /**
@@ -179,9 +159,7 @@ public class ZoneService {
    */
   public Set<PickerTask> getTodayUnfinishedPickerTasksByZoneId(Long id) {
     LocalDate today = LocalDate.now();
-    return getPickerTasksByZoneId(id).stream()
-        .filter(pickerTask -> pickerTask.getDate().equals(today) && pickerTask.getEndTime() == null)
-        .collect(Collectors.toSet());
+    return pickerTaskRepository.findTodayUnfinishedPickerTasksByZoneId(id, today);
   }
 
   /**
@@ -301,29 +279,19 @@ public class ZoneService {
   public Integer getNumberOfTasksForTodayByZone(Long zoneId, LocalDate date) {
     int tasks = 0;
 
-    if (zoneId == 0 || !getZoneById(zoneId).getIsPickerZone()) {
-      for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-        if (activeTask.getDate().equals(date) && zoneId == 0) {
-          tasks++;
-        } else if (activeTask.getDate().equals(date) &&
-            activeTask.getTask().getZoneId().equals(zoneId)) {
-          tasks++;
-        }
-      }
+    Zone zone = getZoneById(zoneId);
+
+    if (zoneId == 0 || (zone != null && !zone.getIsPickerZone())) {
+      tasks += activeTaskRepository.countActiveTasksByDateAndZone(date, zoneId);
     }
 
-    if (zoneId == 0 || getZoneById(zoneId).getIsPickerZone()) {
-      for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-        if (pickerTask.getDate().equals(date) && zoneId == 0) {
-          tasks++;
-        } else if (pickerTask.getDate().equals(date) &&
-            pickerTask.getZone().getId().equals(zoneId)) {
-          tasks++;
-        }
-      }
+    if (zoneId == 0 || (zone != null && zone.getIsPickerZone())) {
+      tasks += pickerTaskRepository.countPickerTasksByDateAndZone(date, zoneId);
     }
+
     return tasks;
   }
+
 
   /**
    * Retrieves the minimum time for active tasks by zone ID for today.
@@ -332,10 +300,7 @@ public class ZoneService {
    * @return the minimum time for active tasks by zone ID for today
    */
   public Integer getMinTimeForActiveTasksByZoneIdNow(Long zoneId) {
-    return getActiveTasksByZoneId(zoneId).stream()
-        .filter(activeTask -> activeTask.getEndTime() == null) // Only unfinished tasks
-        .mapToInt(activeTask -> activeTask.getTask().getMinTime()) // Get the min time for each task
-        .sum(); // Sum up the min times
+    return activeTaskRepository.sumMinTimeOfUnfinishedActiveTasksByZone(zoneId);
   }
 
   /**
@@ -344,59 +309,57 @@ public class ZoneService {
    * @throws IOException if an I/O error occurs
    */
   public void updateMachineLearningModel(LocalDateTime time) throws IOException {
-    LocalDateTime oneWeekAgo = time.minusDays(7);
+    LocalDate oneWeekAgo = time.minusDays(7).toLocalDate();
+
     for (Zone zone : zoneRepository.findAll()) {
       if (zone.getIsPickerZone()) {
-        List<PickerTask> pickerTasks = zone.getPickerTask().stream()
-            .filter(pickerTask -> pickerTask.getTime() > 0 &&
-                pickerTask.getDate().isAfter(ChronoLocalDate.from(oneWeekAgo)))
-            .collect(Collectors.toList());
+        List<PickerTask> pickerTasks = pickerTaskRepository.findValidPickerTasksByZoneSince(zone.getId(), oneWeekAgo);
         machineLearningModelPicking.updateMachineLearningModel(pickerTasks, zone.getName());
       }
     }
   }
 
+  /**
+   * Retrieves the unfinished tasks by zone ID and date.
+   *
+   * @param id the ID of the zone
+   * @param date the date to check
+   * @return a set of unfinished tasks associated with the specified zone and date
+   */
   public Set<ActiveTask> getUnfinishedTasksByZoneIdAndDate(Long id, LocalDate date) {
-    Set<ActiveTask> activeTasks = new HashSet<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(date) && activeTask.getTask().getZoneId().equals(id) &&
-          activeTask.getEndTime() == null) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findUnfinishedTasksByZoneIdAndDate(id, date);
   }
 
-  public Set<PickerTask> getUnfinishedPickerTasksByZoneIdAndDate(Long id, LocalDate date) {
-    Set<PickerTask> pickerTasks = new HashSet<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().equals(date) && pickerTask.getZone().getId().equals(id) &&
-          pickerTask.getEndTime() == null) {
-        pickerTasks.add(pickerTask);
-      }
+    /**
+     * Retrieves the unfinished picker tasks by zone ID and date.
+     *
+     * @param id the ID of the zone
+     * @param date the date to check
+     * @return a set of unfinished picker tasks associated with the specified zone and date
+     */
+    public Set<PickerTask> getUnfinishedPickerTasksByZoneIdAndDate(Long id, LocalDate date) {
+      return pickerTaskRepository.findUnfinishedPickerTasksByZoneIdAndDate(id, date);
     }
-    return pickerTasks;
-  }
 
+    /**
+   * Retrieves all tasks by zone ID and date.
+   *
+   * @param id the ID of the zone
+   * @param parsedDate the date to check
+   * @return a set of tasks associated with the specified zone and date
+   */
   public Set<ActiveTask> getAllTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
-    Set<ActiveTask> activeTasks = new HashSet<>();
-    for (ActiveTask activeTask : activeTaskRepository.findAll()) {
-      if (activeTask.getDate().equals(parsedDate) &&
-          (id == 0 || activeTask.getTask().getZoneId().equals(id))) {
-        activeTasks.add(activeTask);
-      }
-    }
-    return activeTasks;
+    return activeTaskRepository.findAllByZoneIdAndDate(id, parsedDate);
   }
 
+  /**
+     * Retrieves all picker tasks by zone ID and date.
+     *
+     * @param id the ID of the zone
+     * @param parsedDate the date to check
+     * @return a set of picker tasks associated with the specified zone and date
+     */
   public Set<PickerTask> getAllPickerTasksByZoneIdAndDate(Long id, LocalDate parsedDate) {
-    Set<PickerTask> pickerTasks = new HashSet<>();
-    for (PickerTask pickerTask : pickerTaskRepository.findAll()) {
-      if (pickerTask.getDate().equals(parsedDate) &&
-          (id == 0 || pickerTask.getZone().getId().equals(id))) {
-        pickerTasks.add(pickerTask);
-      }
-    }
-    return pickerTasks;
+    return pickerTaskRepository.findAllByZoneIdAndDate(id, parsedDate);
   }
 }

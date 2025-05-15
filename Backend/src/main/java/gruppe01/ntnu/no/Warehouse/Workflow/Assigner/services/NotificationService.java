@@ -38,9 +38,7 @@ public class NotificationService {
   }
 
   public List<Notification> getNotificationsByZoneId(long zoneId) {
-    return notificationRepository.findAll().stream()
-        .filter(notification -> notification.getZoneId() == zoneId)
-        .toList();
+    return notificationRepository.findByZoneId(zoneId);
   }
 
   public void saveNotification(Notification notification) {
