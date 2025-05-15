@@ -21,7 +21,7 @@ const {currentTime, currentDate, completionTime} = useSimulationTime();
 const isSpinning = ref(false);
 let isPlaying = ref(false);
 const isPaused = ref(false);
-let simCount = ref(10);
+let simCount = ref(1);
 const isLoadingSimulation = ref(false);
 
 const fetchSimulationState = async () => {
@@ -179,6 +179,7 @@ watch(currentTime, (newValue, oldValue) => {
 
 onMounted(async () => {
   speedIndex = await fetchSpeed();
+  simCount.value = await fetchSimulationCount();
   await fetchSimulationState();
 });
 </script>

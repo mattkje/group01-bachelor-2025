@@ -54,19 +54,18 @@ public class WorkerSemaphore2 {
     List<Worker> workersToRemove = new ArrayList<>();
     // Iterate over the workers and check if they are busy
     for (Worker worker : workers) {
-      // Check if the worker is busy with an active task or picker task
       if (worker.getCurrentPickerTask() != null) {
-        // if the worker is busy with a picker task that has started that day and has no end time
-        if ((worker.getCurrentPickerTask().getStartTime().toLocalDate()
-            .equals(startTime.toLocalDate()) &&
-            worker.getCurrentPickerTask().getEndTime() == null) || !worker.isAvailability()) {
+        if ((worker.getCurrentPickerTask().getStartTime() != null
+            && worker.getCurrentPickerTask().getStartTime().toLocalDate()
+            .equals(startTime.toLocalDate())
+            && worker.getCurrentPickerTask().getEndTime() == null) || !worker.isAvailability()) {
           workersToRemove.add(worker);
         }
       } else if (worker.getCurrentActiveTask() != null) {
-        // if the worker is busy with an active task that has started that day and has no end time
-        if ((worker.getCurrentActiveTask().getStartTime().toLocalDate()
-            .equals(startTime.toLocalDate()) &&
-            worker.getCurrentActiveTask().getEndTime() == null) || !worker.isAvailability()) {
+        if ((worker.getCurrentActiveTask().getStartTime() != null
+            && worker.getCurrentActiveTask().getStartTime().toLocalDate()
+            .equals(startTime.toLocalDate())
+            && worker.getCurrentActiveTask().getEndTime() == null) || !worker.isAvailability()) {
           workersToRemove.add(worker);
         }
       }
