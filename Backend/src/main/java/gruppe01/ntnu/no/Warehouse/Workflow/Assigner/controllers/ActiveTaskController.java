@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -82,13 +83,14 @@ public class ActiveTaskController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<ActiveTask> getActiveTaskById(
+  public ResponseEntity<Optional<ActiveTask>> getActiveTaskById(
       @Parameter(description = "ID of the active task to retrieve")
       @PathVariable Long id) {
-    if (activeTaskService.getActiveTaskById(id) == null) {
-      return ResponseEntity.notFound().build();
+    Optional<ActiveTask> activeTask = Optional.ofNullable(activeTaskService.getActiveTaskById(id));
+    if (activeTask.isPresent()) {
+      return ResponseEntity.ok(activeTask);
     } else {
-      return ResponseEntity.ok(activeTaskService.getActiveTaskById(id));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
     }
   }
 

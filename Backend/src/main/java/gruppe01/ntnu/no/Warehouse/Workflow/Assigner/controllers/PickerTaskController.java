@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,13 +76,14 @@ public class PickerTaskController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<PickerTask> getPickerTaskById(
+  public ResponseEntity<Optional<PickerTask>> getPickerTaskById(
       @Parameter(description = "ID of the picker task to retrieve")
       @PathVariable Long id) {
-    if (pickerTaskService.getPickerTaskById(id) == null) {
-      return ResponseEntity.notFound().build();
+    Optional<PickerTask> pickerTask = Optional.ofNullable(pickerTaskService.getPickerTaskById(id));
+    if (pickerTask.isPresent()) {
+      return ResponseEntity.ok(pickerTask);
     } else {
-      return ResponseEntity.ok(pickerTaskService.getPickerTaskById(id));
+      return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
     }
   }
 

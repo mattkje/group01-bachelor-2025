@@ -101,11 +101,10 @@ public class WorkerController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<Optional<Worker>> getWorkerById(
-      @Parameter(description = "ID of the worker to retrieve")
-      @PathVariable Long id) {
-    if (workerService.getWorkerById(id).isPresent()) {
-      return ResponseEntity.ok(workerService.getWorkerById(id));
+  public ResponseEntity<Optional<Worker>> getWorkerById(@PathVariable Long id) {
+    Optional<Worker> worker = workerService.getWorkerById(id);
+    if (worker.isPresent()) {
+      return ResponseEntity.ok(worker);
     } else {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
     }

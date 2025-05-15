@@ -47,7 +47,7 @@ class LicenseControllerTest {
 
       mockMvc.perform(get("/api/licenses/{id}", licenseId))
           .andExpect(status().isOk());
-      verify(licenseService, times(2)).getLicenseById(licenseId);
+      verify(licenseService, times(1)).getLicenseById(licenseId);
   }
 
   @Test

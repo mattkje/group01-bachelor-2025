@@ -62,7 +62,7 @@ class ActiveTaskControllerTest {
     mockMvc.perform(get("/api/active-tasks/{id}", taskId))
 
         .andExpect(status().isOk());
-    verify(activeTaskService, times(2)).getActiveTaskById(taskId);
+    verify(activeTaskService, times(1)).getActiveTaskById(taskId);
   }
 
   @Test

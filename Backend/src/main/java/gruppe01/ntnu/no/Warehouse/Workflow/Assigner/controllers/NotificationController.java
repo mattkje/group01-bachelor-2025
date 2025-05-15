@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,13 +75,14 @@ public class NotificationController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<Notification> getNotificationById(
+  public ResponseEntity<Optional<Notification>> getNotificationById(
       @Parameter(description = "ID of the notification to retrieve")
       @PathVariable long id) {
-    if (notificationService.getNotificationById(id) == null) {
-      return ResponseEntity.notFound().build();
+    Optional<Notification> notification = Optional.ofNullable(notificationService.getNotificationById(id));
+    if (notification.isPresent()) {
+      return ResponseEntity.ok(notification);
     } else {
-      return ResponseEntity.ok(notificationService.getNotificationById(id));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
     }
   }
 

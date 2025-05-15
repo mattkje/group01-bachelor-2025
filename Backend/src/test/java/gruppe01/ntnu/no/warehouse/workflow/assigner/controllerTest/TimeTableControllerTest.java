@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.TimetableController;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Timetable;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Zone;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TimetableService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @WebMvcTest(TimetableController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -47,92 +50,106 @@ public class TimeTableControllerTest {
   }
 
   @Test
-  void testGetTodaysTimetable() throws Exception {
-    long zoneId = 1L;
-    when(timetableService.getTodayTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
+  void testGetTimetableForToday() throws Exception {
+      long zoneId = 1L;
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(timetableService.getTodayTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
 
-    mockMvc.perform(get("/api/timetables/today/zone/{zoneId}", zoneId))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).getTodayTimetablesByZone(zoneId);
+      mockMvc.perform(get("/api/timetables/today/zone/{zoneId}", zoneId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).getTodayTimetablesByZone(zoneId);
   }
 
   @Test
   void testGetAllTimetablesByZone() throws Exception {
-    long zoneId = 1L;
-    when(timetableService.getAllTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
+      long zoneId = 1L;
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(timetableService.getAllTimetablesByZone(zoneId)).thenReturn(List.of(new Timetable()));
 
-    mockMvc.perform(get("/api/timetables/zone/{zoneId}", zoneId))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).getAllTimetablesByZone(zoneId);
+      mockMvc.perform(get("/api/timetables/zone/{zoneId}", zoneId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).getAllTimetablesByZone(zoneId);
   }
 
   @Test
   void testGetTimetablesByDayAndZone() throws Exception {
-    long zoneId = 1L;
-    LocalDateTime day = LocalDateTime.now();
-    when(timetableService.getTimetablesByDayAndZone(day, zoneId)).thenReturn(
-        List.of(new Timetable()));
+      long zoneId = 1L;
+      LocalDateTime day = LocalDateTime.now();
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(timetableService.getTimetablesByDayAndZone(day, zoneId)).thenReturn(List.of(new Timetable()));
 
-    mockMvc.perform(get("/api/timetables/{day}/zone/{zoneId}", day, zoneId))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).getTimetablesByDayAndZone(day, zoneId);
+      mockMvc.perform(get("/api/timetables/{day}/zone/{zoneId}", day, zoneId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).getTimetablesByDayAndZone(day, zoneId);
   }
 
   @Test
   void testGetTimetablesForOneWeek() throws Exception {
-    long zoneId = 1L;
-    LocalDate date = LocalDate.now();
-    when(timetableService.getTimetablesForOneWeek(date, zoneId)).thenReturn(
-        List.of(new Timetable()));
+      long zoneId = 1L;
+      LocalDate date = LocalDate.now();
+      when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(timetableService.getTimetablesForOneWeek(date, zoneId)).thenReturn(List.of(new Timetable()));
 
-    mockMvc.perform(get("/api/timetables/one-week/{date}/{zoneId}", date, zoneId))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).getTimetablesForOneWeek(date, zoneId);
+      mockMvc.perform(get("/api/timetables/one-week/{date}/{zoneId}", date, zoneId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).getTimetablesForOneWeek(date, zoneId);
   }
 
   @Test
   void testSetStartTime() throws Exception {
-    long id = 1L;
-    Timetable timetable = new Timetable();
-    when(timetableService.setStartTime(id)).thenReturn(timetable);
+      long timetableId = 1L;
+      Timetable timetable = new Timetable();
+      when(timetableService.getTimetableById(timetableId)).thenReturn(timetable);
+      when(timetableService.setStartTime(timetableId)).thenReturn(timetable);
 
-    mockMvc.perform(put("/api/timetables/{id}/set-start-time", id))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).setStartTime(id);
+      mockMvc.perform(put("/api/timetables/{id}/set-start-time", timetableId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).setStartTime(timetableId);
   }
 
   @Test
   void testUpdateTimetable() throws Exception {
-    long id = 1L;
-    Timetable timetable = new Timetable();
-    when(timetableService.updateTimetable(eq(id), any())).thenReturn(timetable);
+      long timetableId = 1L;
+      Timetable timetable = new Timetable();
+      timetable.setStartTime(LocalDateTime.now());
+      timetable.setEndTime(LocalDateTime.now().plusHours(1));
+      when(timetableService.getTimetableById(timetableId)).thenReturn(new Timetable());
+      when(timetableService.updateTimetable(eq(timetableId), any(Timetable.class))).thenReturn(timetable);
 
-    mockMvc.perform(put("/api/timetables/{id}", id)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).updateTimetable(eq(id), any());
+      mockMvc.perform(put("/api/timetables/{id}", timetableId)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"startTime\":\"2025-05-15T10:00:00\",\"endTime\":\"2025-05-15T11:00:00\"}"))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).updateTimetable(eq(timetableId), any(Timetable.class));
   }
 
   @Test
   void testAddTimetable() throws Exception {
-    long workerId = 1L;
-    Timetable timetable = new Timetable();
-    when(timetableService.addTimetable(any(), eq(workerId))).thenReturn(timetable);
+      long workerId = 1L;
+      Timetable timetable = new Timetable();
+      timetable.setStartTime(LocalDateTime.now());
+      timetable.setEndTime(LocalDateTime.now().plusHours(1));
+      when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(new Worker()));
+      when(timetableService.addTimetable(any(Timetable.class), eq(workerId))).thenReturn(timetable);
 
-    mockMvc.perform(post("/api/timetables/{workerId}", workerId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).addTimetable(any(), eq(workerId));
+      mockMvc.perform(post("/api/timetables/{workerId}", workerId)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"startTime\":\"2025-05-15T10:00:00\",\"endTime\":\"2025-05-15T11:00:00\"}"))
+          .andExpect(status().isCreated());
+      verify(timetableService, times(1)).addTimetable(any(Timetable.class), eq(workerId));
   }
 
   @Test
   void testDeleteTimetable() throws Exception {
-    long id = 1L;
+      long timetableId = 1L;
+      Timetable timetable = new Timetable();
+      when(timetableService.getTimetableById(timetableId)).thenReturn(timetable);
+      when(timetableService.deleteTimetable(timetableId)).thenReturn(timetable);
 
-    mockMvc.perform(delete("/api/timetables/{id}", id))
-        .andExpect(status().isOk());
-    verify(timetableService, times(1)).deleteTimetable(id);
+      mockMvc.perform(delete("/api/timetables/{id}", timetableId))
+          .andExpect(status().isOk());
+      verify(timetableService, times(1)).deleteTimetable(timetableId);
   }
+
+
 }

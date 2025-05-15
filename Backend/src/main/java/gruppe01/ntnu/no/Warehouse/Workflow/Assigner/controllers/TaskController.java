@@ -1,6 +1,7 @@
 package gruppe01.ntnu.no.warehouse.workflow.assigner.controllers;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Task;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.TaskService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ZoneService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,13 +73,14 @@ public class TaskController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @GetMapping("/{id}")
-  public ResponseEntity<Task> getTaskById(
+  public ResponseEntity<Optional<Task>> getTaskById(
       @Parameter(description = "ID of the task to retrieve")
       @PathVariable Long id) {
-    if (taskService.getTaskById(id) == null) {
-      return ResponseEntity.notFound().build();
+    Optional<Task> task = Optional.ofNullable(taskService.getTaskById(id));
+    if (task.isPresent()) {
+      return ResponseEntity.ok(task);
     } else {
-      return ResponseEntity.ok(taskService.getTaskById(id));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
     }
   }
 

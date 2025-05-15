@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.controllers.WorkerController;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.License;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.LicenseService;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.WorkerService;
@@ -61,48 +62,55 @@ public class WorkerControllerTest {
 
   @Test
   void testGetWorkerById() throws Exception {
-    long id = 1L;
-    when(workerService.getWorkerById(id)).thenReturn(Optional.of(new Worker()));
+    long workerId = 1L;
+    Worker worker = new Worker();
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
 
-    mockMvc.perform(get("/api/workers/{id}", id))
+    mockMvc.perform(get("/api/workers/{id}", workerId))
         .andExpect(status().isOk());
-    verify(workerService, times(1)).getWorkerById(id);
+    verify(workerService, times(1)).getWorkerById(workerId);
   }
 
   @Test
   void testAddWorker() throws Exception {
     Worker worker = new Worker();
-    when(workerService.addWorker(any())).thenReturn(worker);
+    worker.setName("John Doe");
+    worker.setEfficiency(100);
+    when(workerService.addWorker(any(Worker.class))).thenReturn(worker);
 
     mockMvc.perform(post("/api/workers")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isOk());
-    verify(workerService, times(1)).addWorker(any());
+            .content("{\"name\":\"John Doe\",\"efficiency\":100}"))
+        .andExpect(status().isCreated());
+    verify(workerService, times(1)).addWorker(any(Worker.class));
   }
 
   @Test
   void testUpdateWorker() throws Exception {
-    long id = 1L;
+    long workerId = 1L;
     Worker worker = new Worker();
-    when(workerService.updateWorker(eq(id), any())).thenReturn(worker);
+    worker.setName("Updated Name");
+    worker.setEfficiency(90);
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
+    when(workerService.updateWorker(eq(workerId), any(Worker.class))).thenReturn(worker);
 
-    mockMvc.perform(put("/api/workers/{id}", id)
+    mockMvc.perform(put("/api/workers/{id}", workerId)
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
+            .content("{\"name\":\"Updated Name\",\"efficiency\":90}"))
         .andExpect(status().isOk());
-    verify(workerService, times(1)).updateWorker(eq(id), any());
+    verify(workerService, times(1)).updateWorker(eq(workerId), any(Worker.class));
   }
 
   @Test
   void testUpdateWorkerAvailability() throws Exception {
-    long id = 1L;
+    long workerId = 1L;
     Worker worker = new Worker();
-    when(workerService.updateWorkerAvailability(id)).thenReturn(worker);
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
+    when(workerService.updateWorkerAvailability(workerId)).thenReturn(worker);
 
-    mockMvc.perform(put("/api/workers/{id}/availability", id))
+    mockMvc.perform(put("/api/workers/{id}/availability", workerId))
         .andExpect(status().isOk());
-    verify(workerService, times(1)).updateWorkerAvailability(id);
+    verify(workerService, times(1)).updateWorkerAvailability(workerId);
   }
 
   @Test
@@ -110,6 +118,7 @@ public class WorkerControllerTest {
     long workerId = 1L;
     long zoneId = 2L;
     Worker worker = new Worker();
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
     when(workerService.addWorkerToZone(workerId, zoneId)).thenReturn(worker);
 
     mockMvc.perform(put("/api/workers/{workerId}/zone/{zoneId}", workerId, zoneId))
@@ -119,24 +128,36 @@ public class WorkerControllerTest {
 
   @Test
   void testAddLicenseToWorker() throws Exception {
-    long id = 1L;
+    long workerId = 1L;
     long licenseId = 2L;
     Worker worker = new Worker();
-    when(workerService.addLicenseToWorker(id, licenseId)).thenReturn(worker);
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
+    when(licenseService.getLicenseById(licenseId)).thenReturn(new License());
+    when(workerService.addLicenseToWorker(workerId, licenseId)).thenReturn(worker);
 
-    mockMvc.perform(put("/api/workers/{id}/license/{licenseId}", id, licenseId))
+    mockMvc.perform(put("/api/workers/{id}/license/{licenseId}", workerId, licenseId))
         .andExpect(status().isOk());
-    verify(workerService, times(1)).addLicenseToWorker(id, licenseId);
+    verify(workerService, times(1)).addLicenseToWorker(workerId, licenseId);
+  }
+
+  @Test
+  void testAddAllLicensesToWorkers() throws Exception {
+    when(workerService.addAllLicensesToWorkers()).thenReturn(List.of(new Worker(), new Worker()));
+
+    mockMvc.perform(get("/api/workers/all-licenses"))
+        .andExpect(status().isOk());
+    verify(workerService, times(1)).addAllLicensesToWorkers();
   }
 
   @Test
   void testDeleteWorker() throws Exception {
-    long id = 1L;
+    long workerId = 1L;
     Worker worker = new Worker();
-    when(workerService.deleteWorker(id)).thenReturn(worker);
+    when(workerService.getWorkerById(workerId)).thenReturn(Optional.of(worker));
+    when(workerService.deleteWorker(workerId)).thenReturn(worker);
 
-    mockMvc.perform(delete("/api/workers/{id}", id))
+    mockMvc.perform(delete("/api/workers/{id}", workerId))
         .andExpect(status().isOk());
-    verify(workerService, times(1)).deleteWorker(id);
+    verify(workerService, times(1)).deleteWorker(workerId);
   }
 }

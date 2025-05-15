@@ -15,11 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
 import java.util.List;
 
 @WebMvcTest(PickerTaskController.class)
@@ -57,7 +54,7 @@ public class PickerTaskControllerTest {
 
       mockMvc.perform(get("/api/picker-tasks/{id}", taskId))
           .andExpect(status().isOk());
-      verify(pickerTaskService, times(2)).getPickerTaskById(taskId);
+      verify(pickerTaskService, times(1)).getPickerTaskById(taskId);
   }
 
   @Test
