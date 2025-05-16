@@ -188,8 +188,9 @@ function generateChartData() {
   if (bestCaseValueList.length > 0) {
     const maxIndex = bestCaseValueList.indexOf(Math.max(...bestCaseValueList));
     topPointXValue = dataValues.value.length + maxIndex
-    emit("updateTopPoint", topPointXValue);
-
+    emit("updateTopPoint", bestCaseValueList[maxIndex]);
+  } else {
+    emit("updateTopPoint", 0);
   }
 
   let worstCaseValueList = [];
@@ -205,7 +206,9 @@ function generateChartData() {
   if (worstCaseValueList.length > 0) {
     const minIndex = worstCaseValueList.indexOf(Math.max(...worstCaseValueList));
     worstPointXValue = dataValues.value.length + minIndex
-    emit("updateWorstPoint", worstPointXValue);
+    emit("updateWorstPoint",  worstCaseValueList[minIndex]);
+  } else {
+    emit("updateWorstPoint", 0);
   }
 
 

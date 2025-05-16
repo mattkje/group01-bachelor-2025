@@ -105,14 +105,15 @@ function handleWorstPointUpdate(value: number) {
           <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
           <div class="day-status-container">
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
-            <div class="done-by" v-if="selectedZoneObject.id !== 0">
+            <div class="done-by">
               <div class="section2">
                 <h2>Best Case:</h2>
                 <p class="uppertext">{{ bestcase }}</p>
                 <p class="lowertext">Items Picked</p>
               </div>
               <div class="section2">
-                <h2>Zone Done:</h2>
+                <h2 v-if="selectedZoneObject.id !== 0">Zone Done:</h2>
+                <h2 v-else>All Zones Done:</h2>
                 <p class="uppertext">{{ doneBy }}</p>
               </div>
               <div class="section2">
