@@ -107,7 +107,7 @@ function handleWorstPointUpdate(value: number) {
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
             <div class="done-by">
               <div class="section1">
-                <h2>Tasks Done</h2>
+                <h2>EOD Prediction</h2>
                 <div class="section3">
                   <div class="section2">
                     <p class="uppertext">{{ worstcase }}</p>
