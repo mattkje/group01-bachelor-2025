@@ -164,7 +164,7 @@ public class WorldSimulation {
     this.speedFactory = 0;
 
     flushAllWorkerTasks();
-    monteCarloDataService.flushMCData();
+    monteCarloDataService.flushMonteCarloData();
     notificationService.deleteAll();
 
     //Initialize the random forests for each zone

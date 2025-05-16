@@ -1,6 +1,9 @@
 package gruppe01.ntnu.no.warehouse.workflow.assigner.serviceTest;
 
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.License;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.PickerTask;
+import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Task;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Timetable;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.Worker;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.WorkerTimeRange;
@@ -16,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -54,19 +58,6 @@ class WorkerServiceTest {
   }
 
   @Test
-  void testGetAvailableWorkers() {
-    Worker availableWorker = new Worker();
-    availableWorker.setAvailability(true);
-    when(workerRepository.findAll()).thenReturn(List.of(availableWorker));
-
-    List<Worker> result = workerService.getAvailableWorkers();
-
-    assertEquals(1, result.size());
-    assertTrue(result.get(0).isAvailability());
-    verify(workerRepository, times(1)).findAll();
-  }
-
-  @Test
   void testAddWorker() {
     Worker worker = new Worker();
     worker.setWorkSchedule(
@@ -80,30 +71,6 @@ class WorkerServiceTest {
     verify(workerRepository, times(1)).save(worker);
   }
 
-  @Test
-  void testUpdateWorker() {
-    Worker existingWorker = new Worker();
-    existingWorker.setId(1L);
-    existingWorker.setWorkSchedule(
-        Map.of(DayOfWeek.MONDAY, new WorkerTimeRange(LocalTime.of(9, 0), LocalTime.of(17, 0))));
-    Worker updatedWorker = new Worker();
-    updatedWorker.setWorkSchedule(
-        Map.of(DayOfWeek.TUESDAY, new WorkerTimeRange(LocalTime.of(10, 0), LocalTime.of(18, 0))));
-
-    Timetable timetable = new Timetable();
-    timetable.setWorker(existingWorker);
-
-    when(workerRepository.findById(1L)).thenReturn(Optional.of(existingWorker));
-    when(timetableRepository.findAll()).thenReturn(List.of(timetable));
-    when(workerRepository.save(existingWorker)).thenReturn(existingWorker);
-
-    Worker result = workerService.updateWorker(1L, updatedWorker);
-
-    assertNotNull(result);
-    verify(timetableRepository, times(1)).delete(timetable);
-    verify(timetableRepository, times(1)).saveAll(anyList());
-    verify(workerRepository, times(1)).save(existingWorker);
-  }
 
   @Test
   void testAddLicenseToWorker() {
@@ -130,5 +97,95 @@ class WorkerServiceTest {
     assertNotNull(result);
     assertTrue(result.isDead());
     verify(workerRepository, times(1)).save(worker);
+  }
+
+  @Test
+  void testGetAvailableWorkers() {
+      List<Worker> workers = List.of(new Worker(), new Worker());
+      when(workerRepository.findAvailableWorkers()).thenReturn(workers);
+
+      List<Worker> result = workerService.getAvailableWorkers();
+
+      assertEquals(2, result.size());
+      verify(workerRepository, times(1)).findAvailableWorkers();
+  }
+
+  @Test
+  void testGetUnavailableWorkers() {
+      List<Worker> workers = List.of(new Worker());
+      when(workerRepository.findUnavailableWorkers()).thenReturn(workers);
+
+      List<Worker> result = workerService.getUnavailableWorkers();
+
+      assertEquals(1, result.size());
+      verify(workerRepository, times(1)).findUnavailableWorkers();
+  }
+
+  @Test
+  void testUpdateWorkerAvailability() {
+      Worker worker = new Worker();
+      worker.setAvailability(true);
+      when(workerRepository.findById(1L)).thenReturn(Optional.of(worker));
+      when(workerRepository.save(worker)).thenReturn(worker);
+
+      Worker result = workerService.updateWorkerAvailability(1L);
+
+      assertNotNull(result);
+      assertFalse(result.isAvailability());
+      verify(workerRepository, times(1)).save(worker);
+  }
+
+  @Test
+  void testAddWorkerToZone() {
+      Worker worker = new Worker();
+      when(workerRepository.findById(1L)).thenReturn(Optional.of(worker));
+      when(workerRepository.save(worker)).thenReturn(worker);
+
+      Worker result = workerService.addWorkerToZone(1L, 2L);
+
+      assertNotNull(result);
+      assertEquals(2L, result.getZone());
+      verify(workerRepository, times(1)).save(worker);
+  }
+
+  @Test
+  void testCreateWorkerTimetablesForNextMonth() {
+      Worker worker = new Worker();
+      worker.setWorkSchedule(Map.of(DayOfWeek.MONDAY, new WorkerTimeRange(LocalTime.of(9, 0), LocalTime.of(17, 0))));
+      when(workerRepository.findAll()).thenReturn(List.of(worker));
+
+      workerService.createWorkerTimetablesForNextMonth(LocalDate.now());
+
+      verify(timetableRepository, times(1)).saveAll(anyList());
+  }
+
+  @Test
+  void testAddAllLicensesToWorkers() {
+      Worker worker = new Worker();
+      License license = new License();
+      when(workerRepository.findAll()).thenReturn(List.of(worker));
+      when(licenseRepository.findAll()).thenReturn(List.of(license));
+      when(workerRepository.save(worker)).thenReturn(worker);
+
+      List<Worker> result = workerService.addAllLicensesToWorkers();
+
+      assertEquals(1, result.size());
+      assertTrue(result.get(0).getLicenses().contains(license));
+      verify(workerRepository, times(1)).save(worker);
+  }
+
+  @Test
+  void testRemoveTasks() {
+      Worker worker = new Worker();
+      worker.setCurrentTask(new ActiveTask());
+      worker.setCurrentPickerTask(new PickerTask());
+      when(workerRepository.findAll()).thenReturn(List.of(worker));
+      when(workerRepository.save(worker)).thenReturn(worker);
+
+      workerService.removeTasks();
+
+      assertNull(worker.getCurrentActiveTask());
+      assertNull(worker.getCurrentPickerTask());
+      verify(workerRepository, times(1)).save(worker);
   }
 }

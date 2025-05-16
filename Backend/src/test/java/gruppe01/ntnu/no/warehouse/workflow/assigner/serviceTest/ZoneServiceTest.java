@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,6 +58,9 @@ class ZoneServiceTest {
   @Test
   void testAddZone() {
     Zone zone = new Zone();
+    zone.setPickerTask(null);
+    zone.setTasks(null);
+
     when(zoneRepository.save(zone)).thenReturn(zone);
 
     Zone result = zoneService.addZone(zone);
@@ -117,29 +121,26 @@ class ZoneServiceTest {
 
   @Test
   void testGetTodaysUnfinishedTasksByZoneId() {
-    // Mock Zone
-    Zone zone = new Zone();
-    zone.setId(1L);
-    Task task = new Task();
-    zone.setTasks(Set.of(task));
+    // Arrange
+    ActiveTask task1 = new ActiveTask();
+    ActiveTask task2 = new ActiveTask();
+    task1.setId(1L); // Ensure unique IDs
+    task2.setId(2L);
+    task1.setStartTime(LocalDateTime.now());
+    task2.setStartTime(LocalDateTime.now());
 
-    // Mock ActiveTask
-    ActiveTask activeTask = new ActiveTask();
-    activeTask.setTask(task);
-    activeTask.setDate(LocalDate.now());
-    activeTask.setEndTime(null);
+    Set<ActiveTask> tasks = new HashSet<>();
+    tasks.add(task1);
+    tasks.add(task2);
 
-    // Mock repository behavior
-    when(zoneRepository.findById(1L)).thenReturn(Optional.of(zone));
-    when(activeTaskRepository.findAll()).thenReturn(List.of(activeTask));
+    when(activeTaskRepository.findTodayUnfinishedTasksByZoneId(1L, LocalDate.now())).thenReturn(tasks);
 
-    // Call the method
+    // Act
     Set<ActiveTask> result = zoneService.getTodayUnfinishedTasksByZoneId(1L);
 
-    // Assert the result
-    assertEquals(1, result.size());
-    verify(zoneRepository, times(1)).findById(1L);
-    verify(activeTaskRepository, times(1)).findAll();
+    // Assert
+    assertEquals(2, result.size()); // Ensure the size matches the expected value
+    verify(activeTaskRepository, times(1)).findTodayUnfinishedTasksByZoneId(1L, LocalDate.now());
   }
 
 

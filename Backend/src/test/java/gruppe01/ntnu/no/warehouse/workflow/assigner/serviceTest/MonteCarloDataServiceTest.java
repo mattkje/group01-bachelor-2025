@@ -24,9 +24,6 @@ class MonteCarloDataServiceTest {
   private MonteCarloDataRepository monteCarloDataRepository;
 
   @Mock
-  private ZoneService zoneService;
-
-  @Mock
   private WorldSimDataService worldSimDataService;
 
   @InjectMocks
@@ -38,32 +35,33 @@ class MonteCarloDataServiceTest {
   }
 
   @Test
-  void testGetMCDataValues() {
-    long zoneId = 1L;
-    List<Integer> worldSimValues = List.of(10, 20, 30);
-    List<MonteCarloData> monteCarloDataList = List.of(
-        new MonteCarloData(1, LocalDateTime.now(), 5, 0, zoneId),
-        new MonteCarloData(2, LocalDateTime.now(), 10, 0, zoneId)
-    );
+  void testGetMonteCarloDataValues() {
+      // Arrange
+      long zoneId = 1L;
+      List<Integer> worldSimValues = List.of(10, 20, 30); // Last value is 30
+      List<MonteCarloData> monteCarloDataList = List.of(
+          new MonteCarloData(1, LocalDateTime.now(), 5, 0, zoneId),
+          new MonteCarloData(2, LocalDateTime.now(), 10, 0, zoneId)
+      );
 
-    when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(worldSimValues);
-    when(monteCarloDataRepository.findAll()).thenReturn(monteCarloDataList);
-    when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
+      when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(worldSimValues);
+      when(monteCarloDataRepository.findAllByZoneId(zoneId)).thenReturn(monteCarloDataList);
 
-    List<List<Integer>> result = monteCarloDataService.getMCDataValues(zoneId);
+      // Act
+      List<List<Integer>> result = monteCarloDataService.getMonteCarloDataValues(zoneId);
 
-    assertEquals(2, result.size());
-    assertEquals(List.of(35), result.get(0));
-    assertEquals(List.of(40), result.get(1));
+      // Assert
+      assertEquals(2, result.size());
+      assertEquals(List.of(35), result.get(0)); // 5 + 30
+      assertEquals(List.of(40), result.get(1)); // 10 + 30
 
-    verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
-    verify(monteCarloDataRepository, times(1)).findAll();
-    verify(zoneService, times(2)).getZoneById(zoneId);
+      verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
+      verify(monteCarloDataRepository, times(1)).findAllByZoneId(zoneId);
   }
 
   @Test
-  void testFlushMCData() {
-    monteCarloDataService.flushMCData();
+  void testFlushMonteCarloData() {
+    monteCarloDataService.flushMonteCarloData();
 
     verify(monteCarloDataRepository, times(1)).deleteAll();
   }

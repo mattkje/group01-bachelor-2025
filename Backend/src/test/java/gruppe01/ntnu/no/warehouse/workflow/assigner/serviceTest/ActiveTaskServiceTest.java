@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import gruppe01.ntnu.no.warehouse.workflow.assigner.entities.ActiveTask;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.ActiveTaskRepository;
-import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.TaskRepository;
-import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.WorkerRepository;
 import gruppe01.ntnu.no.warehouse.workflow.assigner.services.ActiveTaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +27,25 @@ class ActiveTaskServiceTest {
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  void testActiveTaskConstructor() {
+    // Arrange
+    ActiveTask activeTask = new ActiveTask();
+    activeTask.setId(1L);
+    activeTask.setStartTime(LocalDateTime.now());
+    activeTask.setEndTime(null);
+    activeTask.setWorkers(new ArrayList<>());
+
+    // Act
+    ActiveTask result = new ActiveTask(activeTask);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(activeTask.getId(), result.getId());
+    assertEquals(activeTask.getStartTime(), result.getStartTime());
+    assertNull(result.getEndTime());
   }
 
   @Test
@@ -142,5 +159,25 @@ class ActiveTaskServiceTest {
 
       // Assert
       verify(activeTaskRepository, times(1)).deleteAll();
+  }
+
+  @Test
+  void testGetActiveTasksForTodayByZone() {
+      // Arrange
+      Long zoneId = 1L;
+      LocalDateTime currentTime = LocalDateTime.now();
+      ActiveTask task1 = new ActiveTask();
+      ActiveTask task2 = new ActiveTask();
+      when(activeTaskRepository.findByDateAndEndTimeIsNullAndTask_Zone_Id(currentTime.toLocalDate(), zoneId))
+          .thenReturn(List.of(task1, task2));
+
+      // Act
+      List<ActiveTask> result = activeTaskService.getActiveTasksForTodayByZone(zoneId, currentTime);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(2, result.size());
+      verify(activeTaskRepository, times(1))
+          .findByDateAndEndTimeIsNullAndTask_Zone_Id(currentTime.toLocalDate(), zoneId);
   }
 }

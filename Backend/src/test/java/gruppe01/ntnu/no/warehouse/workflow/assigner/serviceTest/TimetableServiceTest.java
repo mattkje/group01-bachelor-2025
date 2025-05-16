@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -60,18 +61,6 @@ class TimetableServiceTest {
   }
 
   @Test
-  void testGetTodaysTimetables() {
-    Timetable timetable = new Timetable();
-    timetable.setStartTime(LocalDateTime.now());
-    when(timetableRepository.findAll()).thenReturn(List.of(timetable));
-
-    List<Timetable> result = timetableService.getTodaysTimetables();
-
-    assertEquals(1, result.size());
-    verify(timetableRepository, times(1)).findAll();
-  }
-
-  @Test
   void testSetStartTime() {
     Timetable timetable = new Timetable();
     when(timetableRepository.findById(1L)).thenReturn(Optional.of(timetable));
@@ -96,5 +85,160 @@ class TimetableServiceTest {
     timetableService.deleteTimetable(1L);
 
     verify(timetableRepository, times(1)).deleteById(1L);
+  }
+
+  @Test
+  void testGetTimetableById() {
+      // Arrange
+      Timetable timetable = new Timetable();
+      when(timetableRepository.findById(1L)).thenReturn(Optional.of(timetable));
+
+      // Act
+      Timetable result = timetableService.getTimetableById(1L);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(timetable, result);
+      verify(timetableRepository, times(1)).findById(1L);
+  }
+
+  @Test
+  void testGetTodaysTimetables() {
+      // Arrange
+      List<Timetable> timetables = List.of(new Timetable());
+      when(timetableRepository.findByRealStartDate(LocalDate.now())).thenReturn(timetables);
+
+      // Act
+      List<Timetable> result = timetableService.getTodaysTimetables();
+
+      // Assert
+      assertEquals(1, result.size());
+      verify(timetableRepository, times(1)).findByRealStartDate(LocalDate.now());
+  }
+
+  @Test
+  void testGetTodayTimetablesByZone() {
+      // Arrange
+      List<Timetable> timetables = List.of(new Timetable());
+      when(timetableRepository.findTodayTimetablesByZone(1L, LocalDate.now())).thenReturn(timetables);
+
+      // Act
+      List<Timetable> result = timetableService.getTodayTimetablesByZone(1L);
+
+      // Assert
+      assertEquals(1, result.size());
+      verify(timetableRepository, times(1)).findTodayTimetablesByZone(1L, LocalDate.now());
+  }
+
+  @Test
+  void testGetAllTimetablesByZone() {
+      // Arrange
+      List<Timetable> timetables = List.of(new Timetable());
+      when(timetableRepository.findAllByZoneId(1L)).thenReturn(timetables);
+
+      // Act
+      List<Timetable> result = timetableService.getAllTimetablesByZone(1L);
+
+      // Assert
+      assertEquals(1, result.size());
+      verify(timetableRepository, times(1)).findAllByZoneId(1L);
+  }
+
+  @Test
+  void testGetTimetablesByDate() {
+      // Arrange
+      List<Timetable> timetables = List.of(new Timetable());
+      when(timetableRepository.findByStartDate(LocalDate.now())).thenReturn(timetables);
+
+      // Act
+      List<Timetable> result = timetableService.getTimetablesByDate(LocalDate.now());
+
+      // Assert
+      assertEquals(1, result.size());
+      verify(timetableRepository, times(1)).findByStartDate(LocalDate.now());
+  }
+
+  @Test
+  void testUpdateTimetable() {
+      // Arrange
+      Timetable existingTimetable = new Timetable();
+      Timetable updatedTimetable = new Timetable();
+      updatedTimetable.setStartTime(LocalDateTime.now());
+      updatedTimetable.setEndTime(LocalDateTime.now().plusHours(1));
+      when(timetableRepository.findById(1L)).thenReturn(Optional.of(existingTimetable));
+      when(timetableRepository.save(existingTimetable)).thenReturn(existingTimetable);
+
+      // Act
+      Timetable result = timetableService.updateTimetable(1L, updatedTimetable);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(updatedTimetable.getStartTime(), existingTimetable.getStartTime());
+      assertEquals(updatedTimetable.getEndTime(), existingTimetable.getEndTime());
+      verify(timetableRepository, times(1)).findById(1L);
+      verify(timetableRepository, times(1)).save(existingTimetable);
+  }
+
+  @Test
+  void testGetTimetablesByDayAndZone() {
+      // Arrange
+      List<Timetable> timetables = List.of(new Timetable());
+      when(timetableRepository.findByDayAndZone(LocalDate.now(), 1L)).thenReturn(timetables);
+
+      // Act
+      List<Timetable> result = timetableService.getTimetablesByDayAndZone(LocalDateTime.now(), 1L);
+
+      // Assert
+      assertEquals(1, result.size());
+      verify(timetableRepository, times(1)).findByDayAndZone(LocalDate.now(), 1L);
+  }
+@Test
+void testWorkerIsWorking() {
+    Timetable timetable = new Timetable();
+    LocalDateTime now = LocalDateTime.now();
+    timetable.setRealStartTime(now.minusHours(1));
+    timetable.setRealEndTime(now.plusHours(1));
+    when(timetableRepository.findWorkerTimetableForDay(1L, now))
+        .thenReturn(List.of(timetable));
+
+    boolean result = timetableService.workerIsWorking(now, 1L);
+
+    assertTrue(result);
+    verify(timetableRepository, times(1)).findWorkerTimetableForDay(1L, now);
+}
+
+  @Test
+  void testWorkerHasFinishedShift() {
+    Timetable timetable = new Timetable();
+    LocalDateTime now = LocalDateTime.now();
+    timetable.setRealEndTime(now.minusHours(1));
+    when(timetableRepository.findWorkerTimetableForDay(1L, now))
+          .thenReturn(List.of(timetable));
+
+      // Act
+      boolean result = timetableService.workerHasFinishedShift(1L, now);
+
+      // Assert
+      assertTrue(result);
+      verify(timetableRepository, times(1)).findWorkerTimetableForDay(1L, now);
+  }
+
+  @Test
+  void testCountWorkersNotFinished() {
+      // Arrange
+      Timetable timetable = new Timetable();
+      Worker worker = new Worker();
+      worker.setAvailability(true);
+      worker.setZone(1L);
+      timetable.setWorker(worker);
+      timetable.setRealEndTime(LocalDateTime.now().plusHours(1));
+      when(timetableRepository.findByStartDate(LocalDate.now())).thenReturn(List.of(timetable));
+
+      // Act
+      int result = timetableService.countWorkersNotFinished(1L, LocalDateTime.now());
+
+      // Assert
+      assertEquals(1, result);
+      verify(timetableRepository, times(1)).findByStartDate(LocalDate.now());
   }
 }

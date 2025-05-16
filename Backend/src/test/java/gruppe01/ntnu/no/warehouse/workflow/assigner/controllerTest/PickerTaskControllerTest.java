@@ -1,5 +1,6 @@
 package gruppe01.ntnu.no.warehouse.workflow.assigner.controllerTest;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,6 +35,12 @@ public class PickerTaskControllerTest {
 
   @MockitoBean
   private WorkerService workerService;
+
+  @Test
+  void testPickerTaskControllerConstructor() {
+    PickerTaskController controller = new PickerTaskController(pickerTaskService, zoneService, workerService);
+    assertNotNull(controller);
+  }
 
   @Test
   void testGetAllPickerTasks() throws Exception {
