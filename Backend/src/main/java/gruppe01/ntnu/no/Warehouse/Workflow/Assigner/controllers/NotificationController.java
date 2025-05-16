@@ -237,7 +237,13 @@ public class NotificationController {
   @GetMapping("/done-by/{zoneId}")
   public ResponseEntity<Map<String, String>> getLastNotificationTimeByZone(
       @PathVariable long zoneId) {
-    String lastNotificationTime = notificationService.getNotificationTimeByZone(zoneId);
+    String lastNotificationTime;
+    if (zoneId == 0) {
+      lastNotificationTime = notificationService.getLastNotificationTime();
+    } else {
+      lastNotificationTime = notificationService.getNotificationTimeByZone(zoneId);
+    }
+
     if (lastNotificationTime == null) {
       return ResponseEntity.notFound().build();
     } else {

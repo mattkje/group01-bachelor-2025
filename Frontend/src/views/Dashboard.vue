@@ -78,11 +78,11 @@ watch(selectedZoneObject, async (newZone) => {
 });
 
 function handleTopPointUpdate(value: number) {
-  bestcase.value = value;
+  bestcase.value = Math.round(value);
 }
 
 function handleWorstPointUpdate(value: number) {
-  worstcase.value = value;
+  worstcase.value = Math.round(value);
 }
 </script>
 
@@ -279,13 +279,13 @@ function handleWorstPointUpdate(value: number) {
 }
 
 .done-by h2 {
-  color: var(--main-color);
+  color: var(--text-2);
   font-size: 0.8rem;
   font-weight: bolder;
 }
 
 .uppertext{
-  color: var(--main-color);
+  color: var(--text-2);
   font-size: 1.8rem;
   font-weight: bolder;
   position: relative;
@@ -300,7 +300,7 @@ function handleWorstPointUpdate(value: number) {
 }
 
 .lowertext {
-  color: var(--text-1);
+  color: var(--text-2);
   font-size: 0.5rem;
   font-weight: bolder;
   position: relative;
@@ -335,11 +335,21 @@ function handleWorstPointUpdate(value: number) {
     max-height: 100%;
     padding: 0 1rem;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     line-height: 2rem;
   }
 
   .done-by h2 {
     font-size: 0.75rem;
+    text-wrap: nowrap;
+  }
+
+  .section2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
   .overview {
     flex-direction: column;
@@ -349,6 +359,10 @@ function handleWorstPointUpdate(value: number) {
 
   .monte-carlo-graph-container {
     height: 65%;
+  }
+
+  .lowertext {
+    display: none;
   }
 
 
