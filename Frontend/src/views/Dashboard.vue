@@ -108,15 +108,17 @@ function handleWorstPointUpdate(value: number) {
             <div class="done-by" v-if="selectedZoneObject.id !== 0">
               <div class="section2">
                 <h2>Best Case:</h2>
-                <p>{{ bestcase }}</p>
+                <p class="uppertext">{{ bestcase }}</p>
+                <p class="lowertext">Items Picked</p>
               </div>
               <div class="section2">
                 <h2>Zone Done:</h2>
-                <p>{{ doneBy }}</p>
+                <p class="uppertext">{{ doneBy }}</p>
               </div>
               <div class="section2">
                 <h2>Worst Case:</h2>
-                <p>{{ worstcase }}</p>
+                <p class="uppertext">{{ worstcase }}</p>
+                <p class="lowertext">Items Picked</p>
               </div>
             </div>
           </div>
@@ -265,14 +267,14 @@ function handleWorstPointUpdate(value: number) {
 .done-by {
   width: 100%;
   height: 100%;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-evenly;
+  align-items: flex-start;
   font-size: 1.2rem;
   border: 1px solid var(--border-1);
   border-radius: 1rem;
   display: flex;
   flex-direction: row;
-  padding: 0.8rem 1.5rem 0.2rem 1.5rem;
+  padding: 0.8rem 1rem 0.2rem 1rem;
 }
 
 .done-by h2 {
@@ -281,7 +283,7 @@ function handleWorstPointUpdate(value: number) {
   font-weight: bolder;
 }
 
-.done-by p {
+.uppertext{
   color: var(--main-color);
   font-size: 1.8rem;
   font-weight: bolder;
@@ -294,6 +296,15 @@ function handleWorstPointUpdate(value: number) {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.lowertext {
+  color: var(--text-1);
+  font-size: 0.5rem;
+  font-weight: bolder;
+  position: relative;
+  top: -1rem;
+  text-wrap: nowrap;
 }
 
 @media (max-width: 1400px) {
