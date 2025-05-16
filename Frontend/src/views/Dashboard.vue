@@ -12,6 +12,8 @@ let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
 let doneBy = ref<string>("");
 let zoneId2 = ref<number>(0);
+let bestcase = ref<number>(0);
+let worstcase = ref<number>(0);
 
 const defaultZone: Zone = {
   id: 0,
@@ -72,7 +74,16 @@ watch(selectedZoneObject, async (newZone) => {
     zoneId2.value = newZone.id;
     doneBy.value = await fetchDoneByForZone(newZone.id).then(response => response.time);
   }
+
 });
+
+function handleTopPointUpdate(value: number) {
+  bestcase.value = value;
+}
+
+function handleWorstPointUpdate(value: number) {
+  worstcase.value = value;
+}
 </script>
 
 <template>
@@ -95,8 +106,18 @@ watch(selectedZoneObject, async (newZone) => {
           <div class="day-status-container">
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
             <div class="done-by" v-if="selectedZoneObject.id !== 0">
-              <h2>Zone Done:</h2>
-              <p>{{ doneBy }}</p>
+              <div class="section2">
+                <h2>Best Case:</h2>
+                <p>{{ bestcase }}</p>
+              </div>
+              <div class="section2">
+                <h2>Zone Done:</h2>
+                <p>{{ doneBy }}</p>
+              </div>
+              <div class="section2">
+                <h2>Worst Case:</h2>
+                <p>{{ worstcase }}</p>
+              </div>
             </div>
           </div>
 
@@ -106,6 +127,8 @@ watch(selectedZoneObject, async (newZone) => {
               class="monte-carlo-graph"
               :zone-id="selectedZoneObject.id"
               :key="selectedZoneObject.id"
+              @updateTopPoint="handleTopPointUpdate"
+              @updateWorstPoint="handleWorstPointUpdate"
           />
         </div>
       </div>
@@ -181,7 +204,7 @@ watch(selectedZoneObject, async (newZone) => {
 }
 
 .day-status {
-  max-height: 30%;
+  max-height: 40%;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -242,13 +265,14 @@ watch(selectedZoneObject, async (newZone) => {
 .done-by {
   width: 100%;
   height: 100%;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   font-size: 1.2rem;
   border: 1px solid var(--border-1);
   border-radius: 1rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  padding: 0.8rem 1.5rem 0.2rem 1.5rem;
 }
 
 .done-by h2 {
@@ -265,6 +289,13 @@ watch(selectedZoneObject, async (newZone) => {
   top: -0.5rem;
 }
 
+.section2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 @media (max-width: 1400px) {
 
   .tasks-container {
@@ -278,7 +309,7 @@ watch(selectedZoneObject, async (newZone) => {
 
 }
 
-@media (max-height: 1000px) {
+@media (max-height: 900px) {
   .day-status {
     height: 30%;
 
@@ -291,6 +322,8 @@ watch(selectedZoneObject, async (newZone) => {
   .done-by {
     max-height: 100%;
     padding: 0 1rem;
+    flex-direction: column;
+    line-height: 2rem;
   }
 
   .done-by h2 {

@@ -19,6 +19,11 @@ const props = defineProps<{
   zoneId: number;
 }>();
 
+const emit = defineEmits<{
+  (event: "updateTopPoint", value: number): void;
+  (event: "updateWorstPoint", value: number): void;
+}>();
+
 let currentTimeIndex = ref<number>(0);
 const numPoints = 10000;
 const insideCircle = ref(0);
@@ -183,6 +188,8 @@ function generateChartData() {
   if (bestCaseValueList.length > 0) {
     const maxIndex = bestCaseValueList.indexOf(Math.max(...bestCaseValueList));
     topPointXValue = dataValues.value.length + maxIndex
+    emit("updateTopPoint", topPointXValue);
+
   }
 
   let worstCaseValueList = [];
@@ -198,6 +205,7 @@ function generateChartData() {
   if (worstCaseValueList.length > 0) {
     const minIndex = worstCaseValueList.indexOf(Math.max(...worstCaseValueList));
     worstPointXValue = dataValues.value.length + minIndex
+    emit("updateWorstPoint", worstPointXValue);
   }
 
 
