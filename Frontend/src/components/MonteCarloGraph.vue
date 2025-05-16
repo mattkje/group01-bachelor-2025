@@ -433,16 +433,16 @@ onUnmounted(() => {
     </div>
     <div class="color-indicator-container">
       <p>
-        <span class="color-indicator best-case"></span> Best Case
-      </p>
-      <p>
-        <span class="color-indicator worst-case"></span> Worst Case
+        <span class="color-indicator-line now-line"></span> Now
       </p>
       <p>
         <span class="color-indicator-dotted-line best-finish"></span> Optimistic Finish
       </p>
       <p>
         <span class="color-indicator-dotted-line worst-finish"></span> Pessimistic Finish
+      </p>
+      <p>
+        <span class="color-indicator-dotted-line simulation-line"></span> Simulation
       </p>
     </div>
   </div>
@@ -486,6 +486,21 @@ onUnmounted(() => {
   display: inline-block;
   width: 20px;
   margin-right: 5px;
+}
+
+.color-indicator-line {
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  margin-right: 5px;
+}
+
+.now-line {
+  background-color: #8e8e8e;
+}
+
+.simulation-line {
+  border-bottom: 2px dashed rgb(181, 181, 181); /* Red */
 }
 
 .monte-carlo-graph {
