@@ -39,8 +39,8 @@ onUnmounted(() => {
     <div class="status-grid">
       <div class="status-group">
         <div class="status-header">
-          <img src="@/assets/icons/staff.svg">
           <span class="status-title">Workers</span>
+          <img src="@/assets/icons/staff.svg">
         </div>
         <div class="status-item">
           <span class="status-label">Present:</span>
@@ -53,8 +53,8 @@ onUnmounted(() => {
       </div>
       <div class="status-group">
         <div class="status-header">
-          <img src="@/assets/icons/tasks.svg">
           <span class="status-title">Tasks</span>
+          <img src="@/assets/icons/tasks.svg">
         </div>
         <div class="status-item">
           <span class="status-label">Pending:</span>
@@ -112,8 +112,9 @@ onUnmounted(() => {
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-1);
 }
 
@@ -121,14 +122,13 @@ onUnmounted(() => {
   width: 20px;
   height: 20px;
   font-size: 1.5rem;
-  margin-right: 0.5rem;
 }
 
 
 .status-title {
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: var(--text-1);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-2);
 }
 
 .status-item {
@@ -146,8 +146,9 @@ onUnmounted(() => {
 }
 
 .status-value {
-  color: var(--main-color);
+  color: var(--text-2);
   font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .status-group hr {

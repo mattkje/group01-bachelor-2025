@@ -106,20 +106,23 @@ function handleWorstPointUpdate(value: number) {
           <div class="day-status-container">
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
             <div class="done-by">
-              <div class="section2">
-                <h2>Best Case:</h2>
-                <p class="uppertext">{{ bestcase }}</p>
-                <p class="lowertext">Items Picked</p>
+              <div class="section1">
+                <h2>Tasks Done</h2>
+                <div class="section3">
+                  <div class="section2">
+                    <p class="uppertext">{{ worstcase }}</p>
+                    <p class="lowertext">Pessimistic</p>
+                  </div>
+                  <div class="section2">
+                    <p class="uppertext">{{ bestcase }}</p>
+                    <p class="lowertext">Optimistic</p>
+                  </div>
+                </div>
               </div>
               <div class="section2">
                 <h2 v-if="selectedZoneObject.id !== 0">Zone Done:</h2>
                 <h2 v-else>All Zones Done:</h2>
                 <p class="uppertext">{{ doneBy }}</p>
-              </div>
-              <div class="section2">
-                <h2>Worst Case:</h2>
-                <p class="uppertext">{{ worstcase }}</p>
-                <p class="lowertext">Items Picked</p>
               </div>
             </div>
           </div>
@@ -135,9 +138,7 @@ function handleWorstPointUpdate(value: number) {
           />
         </div>
       </div>
-      <div class="tasks-container">
-        <OverviewTaskSection :zone="selectedZoneObject" :zone-id="selectedZoneObject.id"></OverviewTaskSection>
-      </div>
+      <OverviewTaskSection class="tasks-container" :zone="selectedZoneObject" :zone-id="selectedZoneObject.id"></OverviewTaskSection>
     </div>
   </div>
   <div v-else>
@@ -147,13 +148,14 @@ function handleWorstPointUpdate(value: number) {
 
 <style scoped>
 .container-container {
-  height: calc(90vh - 4rem);
+  height: 100%;
+  max-height: 90%;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .vertical-separator {
@@ -207,7 +209,7 @@ function handleWorstPointUpdate(value: number) {
 }
 
 .day-status {
-  max-height: 40%;
+  max-height: 300px;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -253,17 +255,17 @@ function handleWorstPointUpdate(value: number) {
 }
 
 .tasks-container {
+  height: 100%;
   width: 100%;
-  height: 97%;
   border: 1px solid var(--border-1);
-  flex-direction: row;
   border-radius: 1rem;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
   font-size: 1.2rem;
   color: var(--text-1);
+  overflow: auto;
+  max-height: 100%;
 }
+
 
 .done-by {
   width: 100%;
@@ -281,7 +283,7 @@ function handleWorstPointUpdate(value: number) {
 .done-by h2 {
   color: var(--text-2);
   font-size: 0.8rem;
-  font-weight: bolder;
+  font-weight: 500;
 }
 
 .uppertext{
@@ -292,11 +294,22 @@ function handleWorstPointUpdate(value: number) {
   top: -0.5rem;
 }
 
-.section2 {
+.section1, .section2 {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  text-align: center;
+}
+
+.section3 {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+  gap: 1rem;
 }
 
 .lowertext {
