@@ -79,7 +79,7 @@ public class MachineLearningModelPicking {
               department.toUpperCase() + "_time.csv";
 
       // Parse CSV and create DataFrame
-      DataFrame data = parseCsvToDataFrame(department, csvFilePath);
+      DataFrame data = parseCsvToDataFrame(department, csvFilePath, 9900);
       if (data != null) {
         // Train the model
         if (isWorkerEfficiency) {
@@ -100,7 +100,7 @@ public class MachineLearningModelPicking {
   public void createSynetheticData(String department) throws IOException, URISyntaxException {
     DataFrame data = parseCsvToDataFrame(department,
         "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
-            department.toUpperCase() + "_time.csv");
+            department.toUpperCase() + "_time.csv", 10);
 
     // Columns used for regression
     String[] featureCols = new String[] {
@@ -166,22 +166,22 @@ public class MachineLearningModelPicking {
         "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
             department.toUpperCase() + "_time.csv"));
     System.out.println("Synthetic data saved to synthetic_output.csv");
-    System.out.println(createDBModel(department));
+    //System.out.println(createDBModel(department));
   }
 
-  public String createDBModel(String department) throws IOException {
+  public String createDBModel(String department, int rows) throws IOException {
     // Define the file path for the model
     String filePath = "pickroute_database_" + department.toUpperCase() + ".ser";
-
-    DataFrame dataFrame = parseCsvToDataFrame(department,
-        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/testData/synthetic_pickroutes_" +
-            department.toUpperCase() + "_time.csv");
 
     // Check if the model file exists
     File modelFile = new File(filePath);
 
     List<PickerTask> pickerTasks =
         pickerTaskGenerator.generatePickerTasks(LocalDate.now(), 1, 20, this, true);
+
+    DataFrame dataFrame = parseCsvToDataFrame(department,
+        "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
+            department.toUpperCase() + "_time.csv", rows);
 
     // If the model file doesn't exist, train a new model
     if (!modelFile.exists()) {
@@ -287,11 +287,7 @@ public class MachineLearningModelPicking {
    * @return A DataFrame containing the parsed data.
    * @throws IOException If there is an error reading the CSV file.
    */
-  private DataFrame parseCsvToDataFrame(String department, String csvFilePath) {
-    if (dataFrames.containsKey(department)) {
-      return dataFrames.get(department);
-    }
-
+  private DataFrame parseCsvToDataFrame(String department, String csvFilePath, int maxRows) {
     FileReader reader = null;
     CSVParser parser = null;
 
@@ -309,11 +305,14 @@ public class MachineLearningModelPicking {
       }
 
       // Parse each record and populate the columns
+      int rowCount = 0;
       for (CSVRecord record : parser) {
+        if (maxRows > 0 && rowCount >= maxRows) break;
         for (int i = 0; i < record.size(); i++) {
           String value = record.get(i);
           columnData.get(i).add(Double.parseDouble(value));
         }
+        rowCount++;
       }
 
       // Convert lists to arrays and build the DataFrame
@@ -414,10 +413,6 @@ public class MachineLearningModelPicking {
    * @return The loaded RandomForest model, or null if no model was found.
    */
   public RandomForest loadModel(String department, String filePath) {
-    if (randomForests.containsKey(department.toUpperCase())) {
-      return randomForests.get(department.toUpperCase());
-    }
-
     try {
       RandomForest model = ModelLoader.loadModel(filePath);
       if (model != null) {
@@ -507,7 +502,7 @@ public class MachineLearningModelPicking {
       String csvFilePath =
           "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_" +
               department.toUpperCase() + "_time.csv";
-      DataFrame data = parseCsvToDataFrame(department, csvFilePath);
+      DataFrame data = parseCsvToDataFrame(department, csvFilePath, 9900);
       List<List<Double>> minMaxValues = getMinMaxValues(data);
 
       mcValues.put(weights, minMaxValues);
@@ -560,7 +555,7 @@ public class MachineLearningModelPicking {
     String csvFilePath =
         "Backend/src/main/java/gruppe01/ntnu/no/Warehouse/Workflow/Assigner/machinelearning/datasets/synthetic_pickroutes_"
             + department.toUpperCase() + "_time.csv";
-    DataFrame data = parseCsvToDataFrame(department, csvFilePath);
+    DataFrame data = parseCsvToDataFrame(department, csvFilePath, 9900);
 
     if (data == null) {
       throw new IllegalStateException("Failed to parse the dataset for predictions.");

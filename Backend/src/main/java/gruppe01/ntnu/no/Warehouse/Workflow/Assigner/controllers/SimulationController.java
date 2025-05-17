@@ -364,4 +364,11 @@ public class SimulationController {
     machineLearningModelPicking.createSynetheticData(department);
     return ResponseEntity.ok("Data created");
   }
+
+  @GetMapping("/create-data/{department}/{rows}")
+  public ResponseEntity<String> createDataDep(@PathVariable String department, @PathVariable int rows)
+      throws IOException {
+    machineLearningModelPicking.createDBModel(department, rows);
+    return ResponseEntity.ok("Data created");
+  }
 }
