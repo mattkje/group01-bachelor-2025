@@ -235,11 +235,22 @@ public class MachineLearningModelPicking {
 
     double totalErrorModel2 = 0.0;
 
+    long totalInferenceTimeModel1 = 0;
+    int count = 0;
+
+    testData = testData.stream().filter(pickerTask -> pickerTask.getZone().getName().equals(department)).toList();
+
     for (PickerTask pickerTask : testData) {
+      long startTime = System.nanoTime();
       double predictedByModel1 =
           estimateTimeUsingModel(model1, pickerTask, pickerTask.getWorker().getId());
+      long endTime = System.nanoTime();
       double predictedByModel2 =
           estimateTimeUsingModel(model2, pickerTask, pickerTask.getWorker().getId());
+
+      long inferenceTime = endTime - startTime;
+      totalInferenceTimeModel1 += inferenceTime;
+      count++;
 
       System.out.println("Model 1 Prediction: " + predictedByModel1);
       System.out.println("Model 2 Prediction: " + predictedByModel2);
@@ -252,6 +263,9 @@ public class MachineLearningModelPicking {
     double maeModel2 = totalErrorModel2 / testData.size();
 
     System.out.println("Model 2 of " + department + " MAE compared to Model 1: " + maeModel2);
+
+    double avgInferenceTimeMs = (totalInferenceTimeModel1 / (double) count / 1_000_000);
+    System.out.println("Average inference time per prediction: " + avgInferenceTimeMs);
 
     saveMetrics(department, maeModel2);
   }
@@ -605,7 +619,6 @@ public class MachineLearningModelPicking {
     );
     // Predict the time using the model
     double[] predictions = model.predict(featureDataFrame);
-
     // Convert to long and return the predicted time
     return (long) predictions[0];
   }
