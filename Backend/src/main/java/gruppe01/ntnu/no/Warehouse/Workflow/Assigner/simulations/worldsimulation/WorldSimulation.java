@@ -261,8 +261,7 @@ public class WorldSimulation {
       Iterator<ActiveTask> activeTaskWithDueDatesIterator = activeTasksWithDueDates.iterator();
       while (activeTaskWithDueDatesIterator.hasNext()) {
         ActiveTask task = activeTaskWithDueDatesIterator.next();
-        if (!task.getDueDate().minusMinutes(task.getTask().getMaxTime()).toLocalTime()
-            .isAfter(currentTime)) {
+        if (!task.getDueDate().minusMinutes(task.getTask().getMaxTime()).toLocalTime().isAfter(currentTime)) {
           List<Worker> workers = Stream.concat(
                   availableWorkers.stream(),
                   workersWaitingForTask.stream())
@@ -324,8 +323,7 @@ public class WorldSimulation {
         int workersSlots = 0;
         if (workers.size() >= task.getTask().getMinWorkers()) {
           workersSlots = task.getTask().getMinWorkers();
-          if (workers.size() < task.getTask().getMaxWorkers() &&
-              workers.size() > task.getTask().getMinWorkers()) {
+          if (workers.size() < task.getTask().getMaxWorkers() && workers.size() > task.getTask().getMinWorkers()) {
             workersSlots = workers.size();
             if (workers.size() > task.getTask().getMaxWorkers()) {
               workersSlots = task.getTask().getMaxWorkers();
@@ -428,14 +426,11 @@ public class WorldSimulation {
               completedTaskMap.getOrDefault(task.getTask().getZoneId(), 0) + 1);
 
           for (Worker worker : activeTaskService.getWorkersAssignedToTask(task.getId())) {
-            if (!availableWorkers.contains(worker)) {
-              availableWorkers.add(worker);
-            }
+            if (!availableWorkers.contains(worker)) availableWorkers.add(worker);
             workersWaitingForTask.remove(worker);
             worker.setCurrentTask(null);
             workerService.updateWorker(worker.getId(), worker);
-            System.out.println(
-                worker.getName() + " has completed task: " + task.getTask().getName());
+            System.out.println(worker.getName() + " has completed task: " + task.getTask().getName());
             busyWorkers.remove(worker);
           }
 
@@ -539,7 +534,18 @@ public class WorldSimulation {
   public LocalDateTime getEndTime(ActiveTask task) {
     Task task1 = task.getTask();
     int assignedWorkersSize = activeTaskService.getWorkersAssignedToTask(task.getId()).size();
-    double taskDuration = getTaskDuration(task1, assignedWorkersSize);
+    int minWorkers = task1.getMinWorkers();
+    int maxWorkers = task1.getMaxWorkers();
+
+    double interpolationFactor = 0.0;
+    if (maxWorkers > minWorkers) {
+      // Calculate the interpolation factor based on the number of assigned workers
+      interpolationFactor = Math.min(1.0,
+          Math.max(0.0, (double) (assignedWorkersSize - minWorkers) / (maxWorkers - minWorkers)));
+    }
+
+    double taskDuration =
+        task1.getMaxTime() - interpolationFactor * (task1.getMaxTime() - task1.getMinTime());
 
     // Calculate the average efficiency of the workers assigned to the task
     double averageEfficiency = activeTaskService.getWorkersAssignedToTask(task.getId()).stream()
@@ -554,22 +560,6 @@ public class WorldSimulation {
     return task.getStartTime().plusMinutes((int) actualDuration + randomOffset);
   }
 
-  private static double getTaskDuration(Task task1, int assignedWorkersSize) {
-    int minWorkers = task1.getMinWorkers();
-    int maxWorkers = task1.getMaxWorkers();
-
-    double interpolationFactor = 0.0;
-    if (maxWorkers > minWorkers) {
-      // Calculate the interpolation factor based on the number of assigned workers
-      interpolationFactor = Math.min(1.0,
-          Math.max(0.0, (double) (assignedWorkersSize - minWorkers) / (maxWorkers - minWorkers)));
-    }
-
-    double taskDuration =
-        task1.getMaxTime() - interpolationFactor * (task1.getMaxTime() - task1.getMinTime());
-    return taskDuration;
-  }
-
   public LocalDateTime getPickerEndTime(PickerTask task, long workerId) throws IOException {
     long estimatedTime = machineLearningModelPicking.estimateTimeUsingModel(
         randomForests.get(task.getZone().getName().toUpperCase()), task, workerId);
@@ -579,16 +569,16 @@ public class WorldSimulation {
     return task.getStartTime().plusSeconds((int) estimatedTime + randomOffset);
   }
 
-  public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
-    isPaused = !isPaused;
-    if (!isPaused) {
-      System.out.println("Simulation resumed");
-      filterData();
-      startSimulating();
+    public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
+        isPaused = !isPaused;
+        if (!isPaused) {
+            System.out.println("Simulation resumed");
+            filterData();
+            startSimulating();
+        }
     }
-  }
 
-  public void stopSimulation() {
+  public void stopSimulation() throws InterruptedException, IOException, ExecutionException {
     isPlaying = false;
     isPaused = false;
     currentTime = LocalTime.MIDNIGHT;

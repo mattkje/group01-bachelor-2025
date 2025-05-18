@@ -19,6 +19,11 @@ const props = defineProps<{
   zoneId: number;
 }>();
 
+const emit = defineEmits<{
+  (event: "updateTopPoint", value: number): void;
+  (event: "updateWorstPoint", value: number): void;
+}>();
+
 let currentTimeIndex = ref<number>(0);
 const numPoints = 10000;
 const insideCircle = ref(0);
@@ -183,6 +188,9 @@ function generateChartData() {
   if (bestCaseValueList.length > 0) {
     const maxIndex = bestCaseValueList.indexOf(Math.max(...bestCaseValueList));
     topPointXValue = dataValues.value.length + maxIndex
+    emit("updateTopPoint", bestCaseValueList[maxIndex]);
+  } else {
+    emit("updateTopPoint", 0);
   }
 
   let worstCaseValueList = [];
@@ -198,6 +206,9 @@ function generateChartData() {
   if (worstCaseValueList.length > 0) {
     const minIndex = worstCaseValueList.indexOf(Math.max(...worstCaseValueList));
     worstPointXValue = dataValues.value.length + minIndex
+    emit("updateWorstPoint",  worstCaseValueList[minIndex]);
+  } else {
+    emit("updateWorstPoint", 0);
   }
 
 
@@ -422,16 +433,16 @@ onUnmounted(() => {
     </div>
     <div class="color-indicator-container">
       <p>
-        <span class="color-indicator best-case"></span> Best Case
-      </p>
-      <p>
-        <span class="color-indicator worst-case"></span> Worst Case
+        <span class="color-indicator-line now-line"></span> Now
       </p>
       <p>
         <span class="color-indicator-dotted-line best-finish"></span> Optimistic Finish
       </p>
       <p>
         <span class="color-indicator-dotted-line worst-finish"></span> Pessimistic Finish
+      </p>
+      <p>
+        <span class="color-indicator-dotted-line simulation-line"></span> Simulation
       </p>
     </div>
   </div>
@@ -475,6 +486,21 @@ onUnmounted(() => {
   display: inline-block;
   width: 20px;
   margin-right: 5px;
+}
+
+.color-indicator-line {
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  margin-right: 5px;
+}
+
+.now-line {
+  background-color: #8e8e8e;
+}
+
+.simulation-line {
+  border-bottom: 2px dashed rgb(181, 181, 181); /* Red */
 }
 
 .monte-carlo-graph {

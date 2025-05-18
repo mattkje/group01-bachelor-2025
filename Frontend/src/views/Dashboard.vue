@@ -12,6 +12,8 @@ let selectedZoneObject = ref<Zone | null>(null);
 let zones = ref<Zone[]>([]);
 let doneBy = ref<string>("");
 let zoneId2 = ref<number>(0);
+let bestcase = ref<number>(0);
+let worstcase = ref<number>(0);
 
 const defaultZone: Zone = {
   id: 0,
@@ -72,7 +74,16 @@ watch(selectedZoneObject, async (newZone) => {
     zoneId2.value = newZone.id;
     doneBy.value = await fetchDoneByForZone(newZone.id).then(response => response.time);
   }
+
 });
+
+function handleTopPointUpdate(value: number) {
+  bestcase.value = Math.round(value);
+}
+
+function handleWorstPointUpdate(value: number) {
+  worstcase.value = Math.round(value);
+}
 </script>
 
 <template>
@@ -94,9 +105,25 @@ watch(selectedZoneObject, async (newZone) => {
           <NotificationWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
           <div class="day-status-container">
             <WorkerStatusWidget :zone="selectedZoneObject" :key="selectedZoneObject.id" class="status-text-box"/>
-            <div class="done-by" v-if="selectedZoneObject.id !== 0">
-              <h2>Zone Done:</h2>
-              <p>{{ doneBy }}</p>
+            <div class="done-by">
+              <div class="section1">
+                <h2>EOD Prediction</h2>
+                <div class="section3">
+                  <div class="section2">
+                    <p class="uppertext">{{ worstcase }}</p>
+                    <p class="lowertext">Pessimistic</p>
+                  </div>
+                  <div class="section2">
+                    <p class="uppertext">{{ bestcase }}</p>
+                    <p class="lowertext">Optimistic</p>
+                  </div>
+                </div>
+              </div>
+              <div class="section2">
+                <h2 v-if="selectedZoneObject.id !== 0">Zone Done:</h2>
+                <h2 v-else>All Zones Done:</h2>
+                <p class="uppertext">{{ doneBy }}</p>
+              </div>
             </div>
           </div>
 
@@ -106,12 +133,12 @@ watch(selectedZoneObject, async (newZone) => {
               class="monte-carlo-graph"
               :zone-id="selectedZoneObject.id"
               :key="selectedZoneObject.id"
+              @updateTopPoint="handleTopPointUpdate"
+              @updateWorstPoint="handleWorstPointUpdate"
           />
         </div>
       </div>
-      <div class="tasks-container">
-        <OverviewTaskSection :zone="selectedZoneObject" :zone-id="selectedZoneObject.id"></OverviewTaskSection>
-      </div>
+      <OverviewTaskSection class="tasks-container" :zone="selectedZoneObject" :zone-id="selectedZoneObject.id"></OverviewTaskSection>
     </div>
   </div>
   <div v-else>
@@ -121,13 +148,14 @@ watch(selectedZoneObject, async (newZone) => {
 
 <style scoped>
 .container-container {
-  height: calc(90vh - 4rem);
+  height: 100%;
+  max-height: 90%;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .vertical-separator {
@@ -181,7 +209,7 @@ watch(selectedZoneObject, async (newZone) => {
 }
 
 .day-status {
-  max-height: 30%;
+  max-height: 300px;
   width: 100%;
   gap: 1rem;
   display: flex;
@@ -227,42 +255,70 @@ watch(selectedZoneObject, async (newZone) => {
 }
 
 .tasks-container {
+  height: 100%;
   width: 100%;
-  height: 97%;
   border: 1px solid var(--border-1);
-  flex-direction: row;
   border-radius: 1rem;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
   font-size: 1.2rem;
   color: var(--text-1);
+  overflow: auto;
+  max-height: 100%;
 }
+
 
 .done-by {
   width: 100%;
   height: 100%;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-evenly;
+  align-items: flex-start;
   font-size: 1.2rem;
   border: 1px solid var(--border-1);
   border-radius: 1rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  padding: 0.8rem 1rem 0.2rem 1rem;
 }
 
 .done-by h2 {
-  color: var(--main-color);
+  color: var(--text-2);
   font-size: 0.8rem;
-  font-weight: bolder;
+  font-weight: 500;
 }
 
-.done-by p {
-  color: var(--main-color);
+.uppertext{
+  color: var(--text-2);
   font-size: 1.8rem;
   font-weight: bolder;
   position: relative;
   top: -0.5rem;
+}
+
+.section1, .section2 {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.section3 {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+  gap: 1rem;
+}
+
+.lowertext {
+  color: var(--text-2);
+  font-size: 0.5rem;
+  font-weight: bolder;
+  position: relative;
+  top: -1rem;
+  text-wrap: nowrap;
 }
 
 @media (max-width: 1400px) {
@@ -278,7 +334,7 @@ watch(selectedZoneObject, async (newZone) => {
 
 }
 
-@media (max-height: 1000px) {
+@media (max-height: 900px) {
   .day-status {
     height: 30%;
 
@@ -291,10 +347,22 @@ watch(selectedZoneObject, async (newZone) => {
   .done-by {
     max-height: 100%;
     padding: 0 1rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    line-height: 2rem;
   }
 
   .done-by h2 {
     font-size: 0.75rem;
+    text-wrap: nowrap;
+  }
+
+  .section2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   .overview {
@@ -305,6 +373,10 @@ watch(selectedZoneObject, async (newZone) => {
 
   .monte-carlo-graph-container {
     height: 65%;
+  }
+
+  .lowertext {
+    display: none;
   }
 
 
