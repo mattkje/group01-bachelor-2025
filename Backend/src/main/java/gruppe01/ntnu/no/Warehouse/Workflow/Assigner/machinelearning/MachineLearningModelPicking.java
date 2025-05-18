@@ -238,9 +238,14 @@ public class MachineLearningModelPicking {
     long totalInferenceTimeModel1 = 0;
     int count = 0;
 
-    testData = testData.stream().filter(pickerTask -> pickerTask.getZone().getName().equals(department)).toList();
-
-    for (PickerTask pickerTask : testData) {
+    List<PickerTask> filteredData = testData.stream()
+        .filter(pickerTask ->
+            pickerTask.getZone().getName().equalsIgnoreCase(
+                department.substring(0, 1).toUpperCase() + department.substring(1).toLowerCase()
+            )
+        )
+        .toList();
+    for (PickerTask pickerTask : filteredData) {
       long startTime = System.nanoTime();
       double predictedByModel1 =
           estimateTimeUsingModel(model1, pickerTask, pickerTask.getWorker().getId());
@@ -260,7 +265,7 @@ public class MachineLearningModelPicking {
 
     System.out.println("Total error model2: " + totalErrorModel2);
 
-    double maeModel2 = totalErrorModel2 / testData.size();
+    double maeModel2 = totalErrorModel2 / filteredData.size();
 
     System.out.println("Model 2 of " + department + " MAE compared to Model 1: " + maeModel2);
 
