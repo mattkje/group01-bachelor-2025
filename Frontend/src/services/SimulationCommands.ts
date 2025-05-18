@@ -1,4 +1,4 @@
-import {fetchData, postData, runCommand} from "@/composables/HttpMethods";
+import {fetchData, postData, runCommand} from "@/services/HttpMethods";
 
 /**
  * Starts the simulation clock.

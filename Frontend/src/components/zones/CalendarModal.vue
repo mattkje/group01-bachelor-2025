@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import {createWorkerSchedule, deleteWorkerSchedule, updateWorkerSchedule} from "@/composables/DataUpdater";
+import {createWorkerSchedule, deleteWorkerSchedule, updateWorkerSchedule} from "@/services/DataUpdater";
 
 const notification = ref<string | null>(null);
 

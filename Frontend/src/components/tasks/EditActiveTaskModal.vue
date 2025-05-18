@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ActiveTask, PickerTask } from "@/assets/types";
-import { computed, reactive } from "vue";
+import {ActiveTask, PickerTask} from "@/assets/types";
+import {computed, reactive} from "vue";
 
 const props = defineProps<{ task: PickerTask | ActiveTask }>();
 const emit = defineEmits(["taskUpdated"]);
@@ -13,9 +13,9 @@ const updatedTask = reactive({
 
 const saveChanges = () => {
   if (isPickerTask.value) {
-    emit("taskUpdated", { ...updatedTask } as PickerTask);
+    emit("taskUpdated", {...updatedTask} as PickerTask);
   } else {
-    emit("taskUpdated", { ...updatedTask } as ActiveTask);
+    emit("taskUpdated", {...updatedTask} as ActiveTask);
   }
 };
 </script>
@@ -26,43 +26,43 @@ const saveChanges = () => {
       <h2>Edit Task</h2>
       <label v-if="!isPickerTask">
         Due Date:
-        <input v-model="updatedTask.dueDate" type="date" />
+        <input v-model="updatedTask.dueDate" type="date"/>
       </label>
       <label v-if="!isPickerTask">
         Strict Start:
-        <input v-model="updatedTask.strictStart" type="checkbox" />
+        <input v-model="updatedTask.strictStart" type="checkbox"/>
       </label>
       <label v-if="isPickerTask">
         Zone ID:
-        <input v-model="updatedTask.zoneId" type="number" />
+        <input v-model="updatedTask.zoneId" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Date:
-        <input v-model="updatedTask.date" type="date" />
+        <input v-model="updatedTask.date" type="date"/>
       </label>
       <label v-if="isPickerTask">
         Distance (m):
-        <input v-model="updatedTask.distance" type="number" />
+        <input v-model="updatedTask.distance" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Pack Amount:
-        <input v-model="updatedTask.packAmount" type="number" />
+        <input v-model="updatedTask.packAmount" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Lines Amount:
-        <input v-model="updatedTask.linesAmount" type="number" />
+        <input v-model="updatedTask.linesAmount" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Weight (g):
-        <input v-model="updatedTask.weight" type="number" />
+        <input v-model="updatedTask.weight" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Volume (mL):
-        <input v-model="updatedTask.volume" type="number" />
+        <input v-model="updatedTask.volume" type="number"/>
       </label>
       <label v-if="isPickerTask">
         Average Height (m):
-        <input v-model="updatedTask.avgHeight" type="number" />
+        <input v-model="updatedTask.avgHeight" type="number"/>
       </label>
       <div class="modal-actions">
         <button @click="$emit('close')">Cancel</button>

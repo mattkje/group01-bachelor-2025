@@ -3,9 +3,9 @@ import MonteCarloGraph from "@/components/MonteCarloGraph.vue";
 import NotificationWidget from "@/components/widgets/NotificationWidget.vue";
 import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { Zone } from "@/assets/types";
-import { fetchAllZones, fetchDoneByForZone } from "@/composables/DataFetcher";
+import {ref, onMounted, onUnmounted, watch} from 'vue';
+import {Zone} from "@/assets/types";
+import {fetchAllZones, fetchDoneByForZone} from "@/services/DataFetcher";
 import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 
 let selectedZoneObject = ref<Zone | null>(null);
@@ -51,7 +51,7 @@ onMounted(() => {
           selectedZoneObject.value = zone;
         }
       } else {
-        selectedZoneObject.value =  defaultZone;
+        selectedZoneObject.value = defaultZone;
       }
     }
   });
@@ -296,6 +296,7 @@ watch(selectedZoneObject, async (newZone) => {
   .done-by h2 {
     font-size: 0.75rem;
   }
+
   .overview {
     flex-direction: column;
     overflow-y: auto;

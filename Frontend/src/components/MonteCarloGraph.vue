@@ -11,7 +11,7 @@ import {
   LinearScale,
 } from "chart.js";
 import {onMounted, onUnmounted, ref, watch} from "vue";
-import {fetchAllMonteCarloGraphData} from "@/composables/DataFetcher";
+import {fetchAllMonteCarloGraphData} from "@/services/DataFetcher";
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue';
 import {Zone, Worker} from "@/assets/types";
-import {fetchAllWorkers, fetchAllZones} from "@/composables/DataFetcher";
-import {createWorker} from "@/composables/DataUpdater";
+import {fetchAllWorkers, fetchAllZones} from "@/services/DataFetcher";
+import {createWorker} from "@/services/DataUpdater";
 
 const workers = ref<Worker[]>([]);
 const zones = ref<Zone[]>([]);

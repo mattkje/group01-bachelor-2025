@@ -1,5 +1,5 @@
 import {ref, onMounted, onUnmounted} from "vue";
-import {fetchSimulationTime, fetchSimulationDate, fetchDoneBy} from "@/composables/DataFetcher";
+import {fetchSimulationTime, fetchSimulationDate, fetchDoneBy} from "@/services/DataFetcher";
 
 interface NotificationDoneObject {
     time: string;

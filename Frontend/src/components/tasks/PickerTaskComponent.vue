@@ -42,7 +42,7 @@ const formattedTimes = computed(() => {
   const formatTime = (time: string | null) => {
     if (!time) return "N/A";
     const date = new Date(time);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
   };
 
   return {
@@ -65,7 +65,8 @@ const formattedTimes = computed(() => {
     </div>
     <div class="task-details">
       <div class="workers-info">
-        <div v-if="estimate &&props.pickerTask.dueDate && props.pickerTask.mcEndTime && new Date(props.pickerTask.dueDate) < new Date(props.pickerTask.mcEndTime)">
+        <div
+            v-if="estimate &&props.pickerTask.dueDate && props.pickerTask.mcEndTime && new Date(props.pickerTask.dueDate) < new Date(props.pickerTask.mcEndTime)">
           Deadline missed
         </div>
         <div v-else>
@@ -80,13 +81,17 @@ const formattedTimes = computed(() => {
           </div>
         </div>
         <div v-else>
-          {{ props.pickerTask.dueDate
-              ? 'Due: ' + new Date(props.pickerTask.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              : 'No deadline'
+          {{
+            props.pickerTask.dueDate
+                ? 'Due: ' + new Date(props.pickerTask.dueDate).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+                : 'No deadline'
           }}
         </div>
       </div>
-      <div class="task-zone">Zone {{ props.pickerTask.zoneId}}</div>
+      <div class="task-zone">Zone {{ props.pickerTask.zoneId }}</div>
     </div>
   </div>
 </template>

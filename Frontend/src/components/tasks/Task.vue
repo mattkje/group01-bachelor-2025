@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
-import {ActiveTask, License, PickerTask, Task, Worker} from '@/assets/types';
-import {fetchActiveTask, fetchSimulationDate, fetchTask, fetchWorkersFromActiveTask} from "@/composables/DataFetcher";
+import {ActiveTask, License, PickerTask} from '@/assets/types';
 
 const props = defineProps<{
   activeTask: ActiveTask | null;

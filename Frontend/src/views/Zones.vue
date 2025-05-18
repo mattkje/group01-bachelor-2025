@@ -3,7 +3,7 @@ import {ref, onMounted} from 'vue';
 import ZoneClass from "../components/zones/Zone.vue";
 import WorkerRegistry from "../components/zones/WorkerRegistry.vue";
 import {Zone, Worker, ActiveTask} from "@/assets/types";
-import {fetchAllWorkers, fetchAllZones, fetchAllActiveTasks} from "@/composables/DataFetcher";
+import {fetchAllWorkers, fetchAllZones, fetchAllActiveTasks} from "@/services/DataFetcher";
 
 const zones = ref<Zone[]>([]);
 const workers = ref<Worker[]>([]);

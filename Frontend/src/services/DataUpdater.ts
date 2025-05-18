@@ -1,5 +1,5 @@
 import {License, Task, Worker} from "@/assets/types";
-import {deleteData, putData, postData, postWithParams} from "@/composables/HttpMethods";
+import {deleteData, putData, postData, postWithParams} from "@/services/HttpMethods";
 
 /**
  * Adds licenses to a worker.

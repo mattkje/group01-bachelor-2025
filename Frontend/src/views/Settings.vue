@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue';
-import {resetToInitialState} from "@/composables/SimulationCommands";
+import {resetToInitialState} from "@/services/SimulationCommands";
 import axios from "axios";
-import {setIntervalId, setPredictionStatus} from "@/composables/DataUpdater";
-import {fetchIntervalId, fetchPredictionStatus, fetchSimulationCount} from "@/composables/DataFetcher";
+import {setIntervalId, setPredictionStatus} from "@/services/DataUpdater";
+import {fetchIntervalId, fetchPredictionStatus, fetchSimulationCount} from "@/services/DataFetcher";
 
 const settings = ref({
   notification: true,
@@ -14,9 +14,9 @@ const settings = ref({
 
 const simCount = ref(10);
 const intervals = [
-  { id: 0, label: "10 min" },
-  { id: 1, label: "30 min" },
-  { id: 2, label: "60 min" },
+  {id: 0, label: "10 min"},
+  {id: 1, label: "30 min"},
+  {id: 2, label: "60 min"},
 ];
 const selectedIntervalId = ref(0);
 const predictions = ref(true);
@@ -24,7 +24,7 @@ const predictions = ref(true);
 async function updateSimCount() {
   try {
     await axios.post('http://localhost:8080/api/setSimCount', null, {
-      params: { simCount: simCount.value },
+      params: {simCount: simCount.value},
     });
     console.log('SIM_COUNT updated successfully');
   } catch (error) {
@@ -206,7 +206,6 @@ label {
 }
 
 
-
 button {
   display: inline-block;
   padding: 0.7rem 1.5rem;
@@ -216,11 +215,12 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 button:hover {
   background-color: var(--main-color-2);
+  transform: scale(1.05);
 }
 
 .reset-simulations {

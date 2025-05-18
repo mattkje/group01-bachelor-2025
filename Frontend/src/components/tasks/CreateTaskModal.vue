@@ -2,8 +2,8 @@
 import {onMounted, reactive, ref} from "vue";
 import Multiselect from "vue-multiselect";
 import "vue-multiselect/dist/vue-multiselect.min.css";
-import {fetchLicenses} from "@/composables/DataFetcher";
-import {createTask} from "@/composables/DataUpdater";
+import {fetchLicenses} from "@/services/DataFetcher";
+import {createTask} from "@/services/DataUpdater";
 import {License, Task} from "@/assets/types";
 
 
@@ -47,27 +47,27 @@ onMounted(async () => {
       <h2>Create Task</h2>
       <label>
         Task Name:
-        <input v-model="newTask.name" type="text" />
+        <input v-model="newTask.name" type="text"/>
       </label>
       <label>
         Description:
-        <input v-model="newTask.description" type="text" />
+        <input v-model="newTask.description" type="text"/>
       </label>
       <label>
         Max Time:
-        <input v-model="newTask.maxTime" type="number" />
+        <input v-model="newTask.maxTime" type="number"/>
       </label>
       <label>
         Min Time:
-        <input v-model="newTask.minTime" type="number" />
+        <input v-model="newTask.minTime" type="number"/>
       </label>
       <label>
         Max Workers:
-        <input v-model="newTask.maxWorkers" type="number" />
+        <input v-model="newTask.maxWorkers" type="number"/>
       </label>
       <label>
         Min Workers:
-        <input v-model="newTask.minWorkers" type="number" />
+        <input v-model="newTask.minWorkers" type="number"/>
       </label>
       <label>
         Required Licenses:

@@ -2,14 +2,14 @@
 import {computed, onMounted, ref, watch} from "vue";
 import {Zone} from "@/assets/types";
 import CalendarModal from "@/components/zones/CalendarModal.vue";
-import {fetchTimetable, fetchSimulationDate} from "@/composables/DataFetcher";
+import {fetchTimetable, fetchSimulationDate} from "@/services/DataFetcher";
 
 const props = defineProps<{
   zone: Zone;
 }>();
 
 const date = ref<Date | null>(null);
-const dates = ref<{formattedDate: string, isoDate: string }[]>([]);
+const dates = ref<{ formattedDate: string, isoDate: string }[]>([]);
 const dateTitle = ref<string | null>(null);
 const schedules = ref<any[]>([]);
 const groupedSchedules = ref<Record<number, any[]>>({});
@@ -62,11 +62,11 @@ const generateDates = () => {
       const newDate = new Date(date.value);
       newDate.setDate(newDate.getDate() + i);
 
-      const dayName = newDate.toLocaleDateString("en-US", { weekday: "short" });
+      const dayName = newDate.toLocaleDateString("en-US", {weekday: "short"});
       const formattedDate = `${dayName} ${newDate.getDate()}`;
       const isoDate = newDate.toISOString().split("T")[0];
 
-      dates.value.push({ formattedDate, isoDate });
+      dates.value.push({formattedDate, isoDate});
     }
   }
 };
@@ -153,57 +153,59 @@ onMounted(() => {
 </script>
 
 <template>
-<div class="calendar-container">
-  <div class="top-calendar-navbar">
-    <h2>{{ dateTitle }}</h2>
-    <div class="top-calendar-navbar-buttons">
-      <button @click="navigateWeek(-1)" class="nav-button">←</button>
-      <button @click="navigateWeek(1)" class="nav-button">→</button>
+  <div class="calendar-container">
+    <div class="top-calendar-navbar">
+      <h2>{{ dateTitle }}</h2>
+      <div class="top-calendar-navbar-buttons">
+        <button @click="navigateWeek(-1)" class="nav-button">←</button>
+        <button @click="navigateWeek(1)" class="nav-button">→</button>
+      </div>
     </div>
-  </div>
-  <table>
-    <thead>
-    <tr>
-      <th></th>
-      <th v-for="(dateObj, index) in dates" :key="index" :class="{ 'today-column': isTodayColumn(dateObj.isoDate) }">{{ dateObj.formattedDate }}</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr v-for="worker in sortedWorkers" :key="worker.id">
-      <td>{{ worker.name }}</td>
-      <td v-for="(dateObj, index) in dates" :key="index">
-        <div
-            @click="openModal(
+    <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th v-for="(dateObj, index) in dates" :key="index" :class="{ 'today-column': isTodayColumn(dateObj.isoDate) }">
+          {{ dateObj.formattedDate }}
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="worker in sortedWorkers" :key="worker.id">
+        <td>{{ worker.name }}</td>
+        <td v-for="(dateObj, index) in dates" :key="index">
+          <div
+              @click="openModal(
             (groupedSchedules[worker.id] || []).find(s => s.startTime.split('T')[0] === dateObj.isoDate) || null,
             worker, dateObj
             )"
-            :class="['schedule-box', getCellClass(groupedSchedules[worker.id] || [], dateObj.isoDate)]">
-          <div
-              v-for="schedule in (groupedSchedules[worker.id] || [])"
-              :key="schedule.id"
-              class="schedule-text-box"
-          >
+              :class="['schedule-box', getCellClass(groupedSchedules[worker.id] || [], dateObj.isoDate)]">
+            <div
+                v-for="schedule in (groupedSchedules[worker.id] || [])"
+                :key="schedule.id"
+                class="schedule-text-box"
+            >
     <span
         v-if="schedule.startTime.split('T')[0] === dateObj.isoDate"
     >
-      {{ new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' , hourCycle: 'h23'}) }} -
-      {{ new Date(schedule.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' , hourCycle: 'h23'}) }}
+      {{ new Date(schedule.startTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}) }} -
+      {{ new Date(schedule.endTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}) }}
     </span>
+            </div>
           </div>
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  <CalendarModal
-      v-if="isModalVisible"
-      @click="closeModal"
-      :date="selectedDate"
-      :selected-schedule="selectedSchedule"
-      :worker="selectedWorker"
-      @schedule-updated="loadSchedulesFromBackend">
-  </CalendarModal>
-</div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <CalendarModal
+        v-if="isModalVisible"
+        @click="closeModal"
+        :date="selectedDate"
+        :selected-schedule="selectedSchedule"
+        :worker="selectedWorker"
+        @schedule-updated="loadSchedulesFromBackend">
+    </CalendarModal>
+  </div>
 </template>
 
 <style scoped>

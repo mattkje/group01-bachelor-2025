@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
 import {ActiveTask, PickerTask} from '@/assets/types';
-import {fetchSimulationDate} from "@/composables/DataFetcher";
+import {fetchSimulationDate} from "@/services/DataFetcher";
 
 const props = defineProps<{
   zoneId: number;
@@ -64,14 +64,14 @@ const sortedPickerTasks = computed(() => {
   });
 });
 
-onMounted( () => {
+onMounted(() => {
   fetchCurrentDateFromBackend()
-    .then(date => {
-      currentDate.value = date;
-    })
-    .catch(error => {
-      console.error('Error fetching current date:', error);
-    });
+      .then(date => {
+        currentDate.value = date;
+      })
+      .catch(error => {
+        console.error('Error fetching current date:', error);
+      });
 });
 </script>
 
@@ -106,7 +106,13 @@ onMounted( () => {
             </p>
           </div>
           <div class="task-footer">
-            <p class="task-due">Due: {{ new Date(task.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+            <p class="task-due">Due: {{
+                new Date(task.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              }}</p>
           </div>
         </div>
       </div>
@@ -124,7 +130,13 @@ onMounted( () => {
             </p>
           </div>
           <div class="task-footer">
-            <p class="task-due">Due: {{ new Date(task.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+            <p class="task-due">Due: {{
+                new Date(task.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              }}</p>
           </div>
         </div>
       </div>
@@ -141,127 +153,127 @@ onMounted( () => {
 </template>
 
 <style scoped>
-    .rounded-square {
-      width: 250px;
-      height: min-content;
-      border: 1px solid var(--border-1);
-      border-radius: 15px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+.rounded-square {
+  width: 250px;
+  height: min-content;
+  border: 1px solid var(--border-1);
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-    .title-bar {
-      display: flex;
-      flex-direction: column;
-      background-color: var(--background-backdrop);
-      padding: 1rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: var(--text-1);
-      margin-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border-1);
-    }
+.title-bar {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-backdrop);
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-1);
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-1);
+}
 
-    .task-summary {
-      color: var(--text-1);
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-start;
-      font-size: 0.8rem;
+.task-summary {
+  color: var(--text-1);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.8rem;
 
-    }
+}
 
-    .vertical-task-box {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      transition: max-height 0.3s ease, opacity 0.3s ease;
-      max-height: 500px;
-      overflow: auto;
-    }
+.vertical-task-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  max-height: 500px;
+  overflow: auto;
+}
 
-    .vertical-task-box[style*="display: none"] {
-      max-height: 0;
-      opacity: 0;
-    }
+.vertical-task-box[style*="display: none"] {
+  max-height: 0;
+  opacity: 0;
+}
 
-    .task-item {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 0.5rem;
-      border: 1px solid var(--border-1);
-      border-radius: 9px;
-      margin: 0 0.4rem 0.4rem 0.4rem;
-      font-size: 0.8rem;
-    }
+.task-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border: 1px solid var(--border-1);
+  border-radius: 9px;
+  margin: 0 0.4rem 0.4rem 0.4rem;
+  font-size: 0.8rem;
+}
 
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .task-name {
-      font-weight: bold;
-      font-size: 0.8rem;
-    }
+.task-name {
+  font-weight: bold;
+  font-size: 0.8rem;
+}
 
-    .task-status {
-      font-size: 0.6rem;
-      color: var(--text-2);
-    }
+.task-status {
+  font-size: 0.6rem;
+  color: var(--text-2);
+}
 
-    .task-footer {
-      margin-top: 0.5rem;
-      text-align: right;
-      font-size: 0.6rem;
-      color: var(--text-2);
-    }
+.task-footer {
+  margin-top: 0.5rem;
+  text-align: right;
+  font-size: 0.6rem;
+  color: var(--text-2);
+}
 
-    .task-item.doing {
-      background-color: var(--main-color-3);
-      color: #181818;
-    }
+.task-item.doing {
+  background-color: var(--main-color-3);
+  color: #181818;
+}
 
-    .task-item.completed {
-      background-color: var(--busy-color-2);
-      color: #181818;
-    }
+.task-item.completed {
+  background-color: var(--busy-color-2);
+  color: #181818;
+}
 
-    .add-task-button {
-      margin: 1rem 0;
-      background: none;
-      color: var(--text-1);
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+.add-task-button {
+  margin: 1rem 0;
+  background: none;
+  color: var(--text-1);
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
-    .add-task-button:hover {
-      color: var(--text-2);
-    }
+.add-task-button:hover {
+  color: var(--text-2);
+}
 
-    .collapsable-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.2rem;
-      color: var(--text-1);
-    }
+.collapsable-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--text-1);
+}
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .top-bar p {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-    </style>
+.top-bar p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+</style>

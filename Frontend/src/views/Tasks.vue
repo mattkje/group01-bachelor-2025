@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {ref, onMounted} from 'vue';
 import TaskZone from '@/components/tasks/TaskZone.vue';
 import {Task, ActiveTask, Zone, PickerTask} from '@/assets/types';
-import {fetchAllActiveTasks, fetchAllPickerTasks, fetchAllTasks, fetchAllZones} from "@/composables/DataFetcher";
+import {fetchAllActiveTasks, fetchAllPickerTasks, fetchAllTasks, fetchAllZones} from "@/services/DataFetcher";
 
 const tasks = ref<Task[]>([]);
 const activeTasks = ref<ActiveTask[]>([]);
@@ -60,13 +60,13 @@ const handleAddTask = (zoneId: number) => {
       <h2>Non-Picker Tasks</h2>
       <div class="grid">
         <TaskZone
-          v-for="zone in zonesWithoutPickerTasks"
-          :key="zone.id"
-          :zoneId="zone.id"
-          :title="zone.name"
-          :tasks="getTasksForZone(zone.id)"
-          :picker-tasks=null
-          @add-task="handleAddTask"
+            v-for="zone in zonesWithoutPickerTasks"
+            :key="zone.id"
+            :zoneId="zone.id"
+            :title="zone.name"
+            :tasks="getTasksForZone(zone.id)"
+            :picker-tasks=null
+            @add-task="handleAddTask"
         />
       </div>
     </div>

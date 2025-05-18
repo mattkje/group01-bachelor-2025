@@ -6,18 +6,15 @@ import {
   fetchAllActiveTasksByZoneForDate,
   fetchAllPickerTasksByZoneForDate,
   fetchSimulationDate
-} from "@/composables/DataFetcher";
+} from "@/services/DataFetcher";
 import PickerTaskComponent from "@/components/tasks/PickerTaskComponent.vue";
 import ZoneCalendar from "@/components/zones/ZoneCalendar.vue";
 
 const selectedTab = ref('Current');
-const selectedOption = ref('best case');
-const displayEstimations = ref(false);
 
 const tabs = computed(() => {
   return isZoneNull.value ? ['Current', 'Completed'] : ['Current', 'Completed', 'Schedule'];
 });
-const dropdownOptions = ['best case', 'average case', 'worst case'];
 
 const props = defineProps<{
   zone: Zone;

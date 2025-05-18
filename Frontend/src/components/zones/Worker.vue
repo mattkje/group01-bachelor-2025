@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, watch, watchEffect} from 'vue';
+import {onMounted, onUnmounted, ref} from 'vue';
 import {License, ActiveTask, TimeTable, Task, PickerTask} from '@/assets/types';
 import TaskClass from '@/components/tasks/Task.vue';
 import {
@@ -9,7 +9,7 @@ import {
   fetchSimulationDate,
   fetchSimulationTime,
   fetchAllTimeTables, fetchWorker,
-} from '@/composables/DataFetcher';
+} from '@/services/DataFetcher';
 
 const POLLING_INTERVAL = 5000;
 
@@ -178,7 +178,7 @@ onUnmounted(() => {
              v-if="!doesWorkerHaveUnfinishedActiveTask(workerId) && !qualifiedForAnyTask && isWorkerPresent(workerId)"
              src="/src/assets/icons/warning-severe.svg" class="status-icon" alt="Unqualified Severe"/>
         <TaskClass
-            v-if="activeTask"
+            v-if="activeTask && doesWorkerHaveUnfinishedActiveTask(workerId) && qualifiedForAnyTask && isWorkerPresent(workerId)"
             :active-task="activeTask"
             :requiredLicenses="activeTask.task.requiredLicense"
             :qualified="qualifiedForAnyTask"
@@ -186,7 +186,7 @@ onUnmounted(() => {
             :picker-task="null"/>
 
         <TaskClass
-            v-if="pickerTask"
+            v-if="pickerTask && doesWorkerHaveUnfinishedActiveTask(workerId) && isWorkerPresent(workerId)"
             :active-task="null"
             :requiredLicenses="[]"
             :qualified="true"
@@ -226,12 +226,19 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   background-color: var(--background-backdrop);
+  border: 2px solid var(--background-backdrop);
   border-radius: 10px;
   max-height: 30px;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none !important;
   -webkit-user-select: none !important;
+  transition: transform 0.2s, border 0.2s;
+}
+
+.worker-compact:active {
+  cursor: grabbing;
+  transform: scale(1.05);
 }
 
 
@@ -278,6 +285,7 @@ onUnmounted(() => {
 
 .not-present-worker-box {
   background: var(--background-2);
+  border: 2px solid var(--background-2);
   border-radius: 10px;
   opacity: 0.7;
 }
@@ -323,7 +331,6 @@ onUnmounted(() => {
 }
 
 .status-icon {
-  margin-top: 7px;
   width: 20px;
   height: 20px;
 }
@@ -345,10 +352,12 @@ onUnmounted(() => {
   display: block;
 }
 
-.worker-status-container {
+.status-container {
   display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .worker-status {

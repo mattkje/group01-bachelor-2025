@@ -1,5 +1,5 @@
 import {ActiveTask, License, Notification, NotificationDone, PickerTask, Task, Worker, Zone} from "@/assets/types";
-import {fetchData} from "@/composables/HttpMethods";
+import {fetchData} from "@/services/HttpMethods";
 
 /**
  * Fetches all Monte Carlo graph data for a given zone ID.

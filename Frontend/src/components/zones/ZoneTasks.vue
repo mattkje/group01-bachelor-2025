@@ -8,7 +8,7 @@ import {
   fetchAllPickerTasksForZoneNow,
   fetchAllTasks,
   fetchAllZones
-} from "@/composables/DataFetcher";
+} from "@/services/DataFetcher";
 
 
 const props = defineProps<{

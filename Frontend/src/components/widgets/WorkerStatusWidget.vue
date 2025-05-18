@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { fetchOverviewData } from "@/composables/DataFetcher";
-import { Zone } from "@/assets/types";
+import {ref, onMounted, onUnmounted} from 'vue';
+import {fetchOverviewData} from "@/services/DataFetcher";
+import {Zone} from "@/assets/types";
 
 const props = defineProps<{
   zone: Zone;
