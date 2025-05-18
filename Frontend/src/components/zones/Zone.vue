@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import {computed, ref, onMounted, onUnmounted} from 'vue';
+import {ref, onMounted} from 'vue';
 import WorkerClass from '@/components/zones/Worker.vue';
 import NotificationBubble from "@/components/notifications/NotificationBubble.vue";
-import {ActiveTask, License, PickerTask, Worker, Zone} from '@/assets/types';
-import axios from "axios";
+import {ActiveTask, PickerTask, Worker, Zone} from '@/assets/types';
 import {
-  fetchPickerTasksForZone,
-  fetchAllTasksForZone,
   fetchZone,
-  fetchSimulationDate,
-  fetchAllActiveTasksForZone, fetchSimulationTime, fetchAllActiveTasksByZoneForDate, fetchAllPickerTasksByZoneForDate
-} from "@/composables/DataFetcher";
-import {runMonteCarloSimulationForZone, updateWorkerZone} from "@/composables/SimulationCommands";
+  fetchSimulationDate, fetchAllActiveTasksByZoneForDate, fetchAllPickerTasksByZoneForDate
+} from "@/services/DataFetcher";
+import {runMonteCarloSimulationForZone, updateWorkerZone} from "@/services/SimulationCommands";
 
 const props = defineProps<{
   title: string;
@@ -139,53 +135,53 @@ const toggleNotificationBubble = () => {
     <p>Loading...</p>
   </div>
   <div v-else>
-  <div class="rounded-square">
-    <div class="title-bar">
-      <div class="title-bar-status">
-        {{ title }}
-        <div v-if="completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
-          Done by: {{ completionTime }}
-          <br/>
-          <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
-          <p v-if="remainingPickerTasks"> Picker Tasks: {{ remainingPickerTasks }}</p>
+    <div class="rounded-square">
+      <div class="title-bar">
+        <div class="title-bar-status">
+          {{ title }}
+          <div v-if="completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
+            Done by: {{ completionTime }}
+            <br/>
+            <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
+            <p v-if="remainingPickerTasks"> Picker Tasks: {{ remainingPickerTasks }}</p>
+          </div>
+          <div v-else-if="!completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
+            <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
+            <p v-if="remainingPickerTasks">Picker Tasks: {{ remainingPickerTasks }}</p>
+          </div>
+          <div v-else class="task-summary">
+            <p>Done</p>
+          </div>
         </div>
-        <div v-else-if="!completionTime && (hasActiveTasks || hasPickerTasks)" class="task-summary">
-          <p v-if="remainingActiveTasks"> Tasks: {{ remainingActiveTasks }}</p>
-          <p v-if="remainingPickerTasks">Picker Tasks: {{ remainingPickerTasks }}</p>
-        </div>
-        <div v-else class="task-summary">
-          <p>Done</p>
-        </div>
-      </div>
-      <hr>
-      <div class="zone-options">
-        <div class="zone-option">
-          <router-link :to="`/?id=${props.zoneId}`" class="icon-button">
+        <hr>
+        <div class="zone-options">
+          <div class="zone-option">
+            <router-link :to="`/?id=${props.zoneId}`" class="icon-button">
               <img src="/src/assets/icons/zones.svg" alt="Assign"/>
-          </router-link>
-          <div class="status-popup">Tasks</div>
-        </div>
-        <div class="zone-option">
-          <button class="icon-button" @click="runMonteCarloSimulation">
-            <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
-          </button>
-          <div class="status-popup">Simulate zone</div>
-        </div>
-        <div v-if="notification" class="zone-option">
-          <button class="icon-button bell-icon" @mouseenter="toggleNotificationBubble"
-                  @mouseleave="toggleNotificationBubble">
-            <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
-          </button>
-          <div class="status-popup">Notifications</div>
-        </div>
-        <div v-else class="zone-option">
-          <button class="icon-button bell-icon">
-            <img src="/src/assets/icons/bell.svg" alt="Assign"/>
-          </button>
-          <div class="status-popup">Notifications</div>
+            </router-link>
+            <div class="status-popup">Tasks</div>
+          </div>
+          <div class="zone-option">
+            <button class="icon-button" @click="runMonteCarloSimulation">
+              <img :class="{ 'spin-animation': isSpinning }" src="/src/assets/icons/simulation.svg" alt="Assign"/>
+            </button>
+            <div class="status-popup">Simulate zone</div>
+          </div>
+          <div v-if="notification" class="zone-option">
+            <button class="icon-button bell-icon" @mouseenter="toggleNotificationBubble"
+                    @mouseleave="toggleNotificationBubble">
+              <img src="/src/assets/icons/bellUpdate.svg" alt="Assign"/>
+            </button>
+            <div class="status-popup">Notifications</div>
+          </div>
+          <div v-else class="zone-option">
+            <button class="icon-button bell-icon">
+              <img src="/src/assets/icons/bell.svg" alt="Assign"/>
+            </button>
+            <div class="status-popup">Notifications</div>
+          </div>
         </div>
       </div>
-    </div>
       <div class="vertical-worker-box" @drop="onDrop" @dragover="onDragOver" @dragleave="onDragLeave">
         <WorkerClass
             v-for="(worker, index) in workers"
@@ -199,7 +195,9 @@ const toggleNotificationBubble = () => {
             @dragstart="(event) => onDragStart(event, worker)"
         />
 
-        <div v-if="isDraggingOver" class="on-drop-worker-box"/>
+        <div
+            :class="['on-drop-worker-box', { 'is-dragging-over': isDraggingOver }]"
+        />
         <div v-if="workers.length === 0" class="vertical-box" style="text-align: center; margin-top: 1rem;">
           <img
               src="/src/assets/icons/warning.svg"
@@ -212,8 +210,8 @@ const toggleNotificationBubble = () => {
         </div>
       </div>
 
-    <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
-  </div>
+      <NotificationBubble v-if="showNotificationBubble" :messages="notificationMessage"/>
+    </div>
   </div>
 </template>
 
@@ -229,11 +227,17 @@ const toggleNotificationBubble = () => {
 }
 
 .on-drop-worker-box {
-  height: 30px;
+  height: 0;
   width: 100%;
-  background-color: var(--main-color-3);
   border-radius: 7px;
   pointer-events: none;
+  overflow: hidden;
+  transition: height 0.3s ease, opacity 0.3s ease;
+}
+
+.is-dragging-over {
+  border: 2px dashed var(--border-1);
+  height: 30px;
 }
 
 .title-bar {

@@ -1,29 +1,20 @@
-import { fileURLToPath, URL } from 'node:url'
+import {fileURLToPath, URL} from 'node:url'
 
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
-import { viteStaticCopy } from 'vite-plugin-static-copy';
+import {viteStaticCopy} from 'vite-plugin-static-copy';
 import raw from 'vite-plugin-raw';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-    // viteStaticCopy({
-    //   targets: [
-    //     {
-    //       src: 'src/assets/temp-data.csv',
-    //       dest: 'assets',
-    //     },
-    //   ],
-    // }),
-    // raw(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+    plugins: [
+        vue(),
+        vueDevTools(),
+    ],
+    resolve: {
+        alias: {
+            '@': fileURLToPath(new URL('./src', import.meta.url))
+        },
     },
-  },
 })

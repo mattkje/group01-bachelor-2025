@@ -164,7 +164,7 @@ public class WorldSimulation {
     this.speedFactory = 0;
 
     flushAllWorkerTasks();
-    monteCarloDataService.flushMCData();
+    monteCarloDataService.flushMonteCarloData();
     notificationService.deleteAll();
 
     //Initialize the random forests for each zone
@@ -569,14 +569,14 @@ public class WorldSimulation {
     return task.getStartTime().plusSeconds((int) estimatedTime + randomOffset);
   }
 
-  public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
-    isPaused = !isPaused;
-    if (!isPaused) {
-      System.out.println("Simulation resumed");
-      filterData();
-      startSimulating();
+    public void pauseSimulation() throws InterruptedException, IOException, ExecutionException {
+        isPaused = !isPaused;
+        if (!isPaused) {
+            System.out.println("Simulation resumed");
+            filterData();
+            startSimulating();
+        }
     }
-  }
 
   public void stopSimulation() throws InterruptedException, IOException, ExecutionException {
     isPlaying = false;

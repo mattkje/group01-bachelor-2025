@@ -150,7 +150,7 @@ public class MonteCarloController {
     if (zoneService.getZoneById(zoneId) == null) {
       return ResponseEntity.notFound().build();
     } else {
-      return ResponseEntity.ok(monteCarloDataService.getMCDataValues(zoneId));
+      return ResponseEntity.ok(monteCarloDataService.getMonteCarloDataValues(zoneId));
     }
   }
 
@@ -182,7 +182,7 @@ public class MonteCarloController {
       Map<String, Object> response = new HashMap<>();
       LocalDate currentDate = worldSimulation.getCurrentDate(); // Store the result in a variable
       response.put("realData", worldSimDataService.getWorldSimValues(zoneId));
-      response.put("simulationData", monteCarloDataService.getMCDataValues(zoneId));
+      response.put("simulationData", monteCarloDataService.getMonteCarloDataValues(zoneId));
       response.put("currentDate", currentDate);
       response.put("activeTasks", zoneService.getNumberOfTasksForTodayByZone(zoneId, currentDate));
       return ResponseEntity.ok(response);

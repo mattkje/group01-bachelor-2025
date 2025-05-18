@@ -5,6 +5,8 @@ import gruppe01.ntnu.no.warehouse.workflow.assigner.repositories.LicenseReposito
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Service class for managing licenses.
@@ -74,8 +76,9 @@ public class LicenseService {
    * @return the updated license
    */
   public License updateLicense(Long id, License license) {
-    if (licenseRepository.findById(id).isPresent()) {
-      License updatedLicense = licenseRepository.findById(id).get();
+    Optional<License> optionalLicense = licenseRepository.findById(id);
+    if (optionalLicense.isPresent()) {
+      License updatedLicense = optionalLicense.get();
       updatedLicense.setName(license.getName());
       updatedLicense.setWorkers(license.getWorkers());
       return licenseRepository.save(updatedLicense);

@@ -2,17 +2,15 @@
 import {onMounted, ref, computed, watch} from "vue";
 import {
   fetchSimulationCount,
-  fetchSimulationDate,
-  fetchSimulationStatus,
-  fetchSimulationTime, fetchSpeed
-} from "@/composables/DataFetcher";
+  fetchSimulationStatus, fetchSpeed
+} from "@/services/DataFetcher";
 import {
   fastForwardSimulationClock,
   runAllMonteCarloSimulations,
   startSimulationClock,
   pauseSimulationClock,
   stopSimulationClock
-} from "@/composables/SimulationCommands";
+} from "@/services/SimulationCommands";
 import axios from "axios";
 import {useSimulationTime} from "@/composables/useSimulationTime";
 

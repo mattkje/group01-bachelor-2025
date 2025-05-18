@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ErrorCodes, Notification, Zone} from "@/assets/types";
-import {fetchNotifications} from "@/composables/DataFetcher";
+import {fetchNotifications} from "@/services/DataFetcher";
 import {onMounted, onUnmounted, ref, watch} from "vue";
 
 const props = defineProps<{
@@ -47,7 +47,7 @@ watch(() => props.zone, async (newZone) => {
   }
   await loadAndHandleNotifications();
   intervalId = setInterval(loadAndHandleNotifications, 5000);
-}, { immediate: true });
+}, {immediate: true});
 
 onMounted(() => {
   intervalId = setInterval(loadAndHandleNotifications, 5000);
@@ -65,12 +65,12 @@ onUnmounted(() => {
   <div class="overview-widget">
     <router-link class="notification" :to="`/zones/${zoneId}/tasks`" v-if="messages.length > 0">
       <div
-        v-for="message in messages"
-        :key="message"
-        class="notification-item"
+          v-for="message in messages"
+          :key="message"
+          class="notification-item"
       >
-        <img  src="@/assets/icons/info.svg" alt="Notification Icon" />
-      <p>{{ message }}</p>
+        <img src="@/assets/icons/info.svg" alt="Notification Icon"/>
+        <p>{{ message }}</p>
       </div>
     </router-link>
     <div class="no-notifications" v-else>

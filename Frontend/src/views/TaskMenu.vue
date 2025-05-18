@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { Zone, Task, ActiveTask } from '@/assets/types';
-import axios from 'axios';
+import {ref, onMounted} from 'vue';
+import {useRoute} from 'vue-router';
+import {Zone, Task, ActiveTask} from '@/assets/types';
 import CreateActiveTask from "@/components/tasks/CreateActiveTask.vue";
 import {
   fetchAllActiveTasksForZone,
   fetchAllTasksForZone,
   fetchSimulationDate, fetchZone
-} from "@/composables/DataFetcher";
-import { deleteActiveTask } from "@/composables/DataUpdater";
+} from "@/services/DataFetcher";
+import {deleteActiveTask} from "@/services/DataUpdater";
 
 const showCreateActiveTask = ref(false);
 
@@ -65,10 +64,10 @@ onMounted(() => {
         </div>
         <div class="vertical-task-box">
           <div
-            v-if="activeTasks"
-            v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) >= new Date(currentDate))"
-            :key="activeTask.id"
-            class="task-item"
+              v-if="activeTasks"
+              v-for="activeTask in activeTasks.filter(task => !task.endTime && new Date(task.date) >= new Date(currentDate))"
+              :key="activeTask.id"
+              class="task-item"
           >
             <div class="task-header">
               <div>
@@ -83,18 +82,18 @@ onMounted(() => {
           </div>
           <div class="task-item">
             <div
-              class="add-task-button"
-              :class="{ rotated: showCreateActiveTask }"
-              @click="showCreateActiveTask = !showCreateActiveTask"
+                class="add-task-button"
+                :class="{ rotated: showCreateActiveTask }"
+                @click="showCreateActiveTask = !showCreateActiveTask"
             >
               <img src="@/assets/icons/plus.svg" class="plus-icon" alt="Add Task">
             </div>
             <transition name="expand">
               <div v-if="showCreateActiveTask" class="expanded-task-form">
                 <CreateActiveTask
-                  :zoneId="zone?.id"
-                  @close="showCreateActiveTask = false"
-                  @activeTaskAdded="handleActiveTaskAdded"
+                    :zoneId="zone?.id"
+                    @close="showCreateActiveTask = false"
+                    @activeTaskAdded="handleActiveTaskAdded"
                 />
               </div>
             </transition>

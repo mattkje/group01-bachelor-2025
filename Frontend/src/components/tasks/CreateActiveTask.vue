@@ -2,8 +2,8 @@
 import {ref, computed, onMounted} from "vue";
 import CreateTaskModal from "./CreateTaskModal.vue";
 import {Task, Worker} from "@/assets/types";
-import {fetchAllTasksForZone, fetchWorkersForZone} from "@/composables/DataFetcher";
-import {createActiveTask} from "@/composables/DataUpdater";
+import {fetchAllTasksForZone, fetchWorkersForZone} from "@/services/DataFetcher";
+import {createActiveTask} from "@/services/DataUpdater";
 
 const props = defineProps<{
   zoneId: number | null;

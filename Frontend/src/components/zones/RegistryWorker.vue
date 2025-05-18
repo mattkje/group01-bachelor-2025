@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {License, Worker} from "@/assets/types";
+import {Worker} from "@/assets/types";
 
 const props = defineProps<{
   worker: Worker;

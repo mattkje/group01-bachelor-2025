@@ -27,7 +27,7 @@
     <ul class="contributors-list">
       <li>
         <img src="@/assets/images/ntnu.png" alt="NTNU" class="contributor-image"/>
-       <span>NTNU - Academic Partner</span>
+        <span>NTNU - Academic Partner</span>
       </li>
       <li>
         <img src="@/assets/images/solwr.png" alt="Solwr" class="contributor-image"/>

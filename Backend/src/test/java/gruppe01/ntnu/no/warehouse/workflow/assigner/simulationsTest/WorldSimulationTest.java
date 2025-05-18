@@ -74,7 +74,7 @@ class WorldSimulationTest {
     when(timetableService.getTimetablesByDate(any())).thenReturn(Collections.emptyList());
     worldSimulation.runWorldSimulation(0, LocalDate.of(2025, 1, 1), true);
     verify(notificationService).deleteAll();
-    verify(monteCarloDataService).flushMCData();
+    verify(monteCarloDataService).flushMonteCarloData();
   }
 
   @Test

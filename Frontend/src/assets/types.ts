@@ -1,8 +1,18 @@
+/**
+ * This file contains functions to handle HTTP requests using the Fetch API.
+ */
+
+/**
+ * Represents a license that a worker can have.
+ */
 export interface License {
     id: number;
     name: string;
 }
 
+/**
+ * Represents a zone.
+ */
 export interface Zone {
     id: number;
     name: string;
@@ -13,6 +23,9 @@ export interface Zone {
     workers: Worker[];
 }
 
+/**
+ * Represents a task an active task can be.
+ */
 export interface Task {
     id: number;
     name: string;
@@ -25,6 +38,9 @@ export interface Task {
     minTime: number;
 }
 
+/**
+ * Represents a task that is currently active.
+ */
 export interface ActiveTask {
     id: number;
     dueDate: string;
@@ -39,6 +55,9 @@ export interface ActiveTask {
     strictStart: boolean;
 }
 
+/**
+ * Represents a worker.
+ */
 export interface Worker {
     id: number;
     name: string;
@@ -50,6 +69,9 @@ export interface Worker {
     currentTaskId: number;
 }
 
+/**
+ * Represents a time table entry.
+ */
 export interface TimeTable {
     id: number;
     startTime: string;
@@ -59,6 +81,9 @@ export interface TimeTable {
     workerId: number;
 }
 
+/**
+ * Represents a picker task.
+ */
 export interface PickerTask {
     id: number;
     distance: number;
@@ -78,6 +103,9 @@ export interface PickerTask {
     worker: Worker;
 }
 
+/**
+ * Represents a world simulation object.
+ */
 export interface WorldSimObject {
     id: number;
     time: string;
@@ -87,6 +115,9 @@ export interface WorldSimObject {
     zoneId: number;
 }
 
+/**
+ * Represents a notification.
+ */
 export interface Notification {
     id: number;
     message: string;
@@ -94,10 +125,17 @@ export interface Notification {
     timestamp: string | null;
 }
 
+/**
+ * Represents a notification done object.
+ * This is used to notify the user when a task is done.
+ */
 export interface NotificationDone {
     time: string;
 }
 
+/**
+ * This const contains error codes and their corresponding messages.
+ */
 export const ErrorCodes = new Map<number, string>([
     [101, "No Tasks"],
     [102, "No Workers in Zone"],

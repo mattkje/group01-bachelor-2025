@@ -95,7 +95,7 @@ public class WorkerService {
   /**
    * Updates an existing worker.
    *
-   * @param id     the ID of the worker to update
+   * @param id          the ID of the worker to update
    * @param updatedData the updated worker
    * @return the updated worker
    */
@@ -142,9 +142,9 @@ public class WorkerService {
    * @return the updated worker
    */
   public Worker updateWorkerAvailability(Long id) {
-      if (workerRepository.findById(id).isEmpty()) {
-          return null;
-      }
+    if (workerRepository.findById(id).isEmpty()) {
+      return null;
+    }
     Worker updatedWorker = workerRepository.findById(id).get();
     updatedWorker.setAvailability(!updatedWorker.isAvailability());
     return workerRepository.save(updatedWorker);
@@ -158,10 +158,10 @@ public class WorkerService {
    * @return the updated worker
    */
   public Worker addLicenseToWorker(Long id, Long licenseId) {
-      if (workerRepository.findById(id).isEmpty() ||
-          licenseRepository.findById(licenseId).isEmpty()) {
-          return null;
-      }
+    if (workerRepository.findById(id).isEmpty() ||
+        licenseRepository.findById(licenseId).isEmpty()) {
+      return null;
+    }
     Worker updatedWorker = workerRepository.findById(id).get();
     License license = licenseRepository.findById(licenseId).get();
     if (updatedWorker.getLicenses().contains(license)) {
@@ -179,9 +179,9 @@ public class WorkerService {
    * @return the deleted worker
    */
   public Worker deleteWorker(Long id) {
-      if (workerRepository.findById(id).isEmpty()) {
-          return null;
-      }
+    if (workerRepository.findById(id).isEmpty()) {
+      return null;
+    }
     Worker worker = workerRepository.findById(id).get();
     worker.setDead(true);
     return workerRepository.save(worker);
@@ -195,9 +195,9 @@ public class WorkerService {
    * @return the updated worker
    */
   public Worker addWorkerToZone(Long workerId, Long zoneId) {
-      if (workerRepository.findById(workerId).isEmpty()) {
-          return null;
-      }
+    if (workerRepository.findById(workerId).isEmpty()) {
+      return null;
+    }
     Worker updatedWorker = workerRepository.findById(workerId).get();
     updatedWorker.setZone(zoneId);
     return workerRepository.save(updatedWorker);

@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class MonteCarloServiceTest {
@@ -19,15 +20,18 @@ class MonteCarloServiceTest {
   @Mock
   private MonteCarloDataRepository monteCarloDataRepository;
 
-  @Mock
-  private ZoneRepository zoneRepository;
-
   @InjectMocks
   private MonteCarloService monteCarloService;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  void testMonteCarloServiceConstructor() {
+    MonteCarloService service = new MonteCarloService(monteCarloDataRepository);
+    assertNotNull(service);
   }
 
   @Test

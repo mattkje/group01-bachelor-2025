@@ -2,7 +2,7 @@
 import {computed, ref, watch} from 'vue';
 import WorkerClass from '@/components/zones/RegistryWorker.vue';
 import {Worker} from '@/assets/types';
-import {updateWorkerZone} from "@/composables/SimulationCommands";
+import {updateWorkerZone} from "@/services/SimulationCommands";
 
 
 const props = defineProps<{

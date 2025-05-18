@@ -83,11 +83,11 @@ public class MonteCarloControllerTest {
       long zoneId = 1L;
       List<List<Integer>> mcValues = List.of(List.of(1, 2), List.of(3, 4));
       when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
-      when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(mcValues);
+      when(monteCarloDataService.getMonteCarloDataValues(zoneId)).thenReturn(mcValues);
 
       mockMvc.perform(get("/api/data/{zoneId}/mcvalues", zoneId))
           .andExpect(status().isOk());
-      verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
+      verify(monteCarloDataService, times(1)).getMonteCarloDataValues(zoneId);
   }
 
   @Test
@@ -100,14 +100,14 @@ public class MonteCarloControllerTest {
 
       when(zoneService.getZoneById(zoneId)).thenReturn(new Zone());
       when(worldSimDataService.getWorldSimValues(zoneId)).thenReturn(realData);
-      when(monteCarloDataService.getMCDataValues(zoneId)).thenReturn(simulationData);
+      when(monteCarloDataService.getMonteCarloDataValues(zoneId)).thenReturn(simulationData);
       when(worldSimulation.getCurrentDate()).thenReturn(currentDate);
       when(zoneService.getNumberOfTasksForTodayByZone(zoneId, currentDate)).thenReturn(activeTasks);
 
       mockMvc.perform(get("/api/data/{zoneId}/graph-data", zoneId))
           .andExpect(status().isOk());
       verify(worldSimDataService, times(1)).getWorldSimValues(zoneId);
-      verify(monteCarloDataService, times(1)).getMCDataValues(zoneId);
+      verify(monteCarloDataService, times(1)).getMonteCarloDataValues(zoneId);
       verify(worldSimulation, times(1)).getCurrentDate();
       verify(zoneService, times(1)).getNumberOfTasksForTodayByZone(zoneId, currentDate);
   }

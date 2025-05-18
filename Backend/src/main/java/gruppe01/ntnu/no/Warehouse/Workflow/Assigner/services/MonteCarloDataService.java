@@ -17,22 +17,17 @@ public class MonteCarloDataService {
 
   private final MonteCarloDataRepository monteCarloDataRepository;
 
-  private final ZoneService zoneService;
-
   private final WorldSimDataService worldSimDataService;
 
   /**
    * Constructor for MonteCarloDataService.
    *
    * @param monteCarloDataRepository the repository for MonteCarloData entity
-   * @param zoneService              the service for Zone entity
    * @param worldSimDataService      the service for WorldSimData entity
    */
   public MonteCarloDataService(MonteCarloDataRepository monteCarloDataRepository,
-                               ZoneService zoneService,
                                WorldSimDataService worldSimDataService) {
     this.monteCarloDataRepository = monteCarloDataRepository;
-    this.zoneService = zoneService;
     this.worldSimDataService = worldSimDataService;
   }
 
@@ -42,7 +37,7 @@ public class MonteCarloDataService {
    * @param zoneId the ID of the zone
    * @return a list of lists containing Monte Carlo data values
    */
-  public List<List<Integer>> getMCDataValues(long zoneId) {
+  public List<List<Integer>> getMonteCarloDataValues(long zoneId) {
 
     Map<Integer, List<Integer>> groupedBySimCount = new HashMap<>();
     // Retrieve world simulation values
@@ -50,7 +45,7 @@ public class MonteCarloDataService {
     if (worldSimValues == null || worldSimValues.isEmpty()) {
       return new ArrayList<>();
     }
-    int lastValue = worldSimValues.get(worldSimValues.size() - 1);
+    int lastValue = worldSimValues.getLast();
 
     // Fetch Monte Carlo data and process it
     List<MonteCarloData> monteCarloDataList = monteCarloDataRepository.findAllByZoneId(zoneId);
@@ -63,9 +58,8 @@ public class MonteCarloDataService {
     return new ArrayList<>(groupedBySimCount.values());
   }
 
-  public void flushMCData() {
+  public void flushMonteCarloData() {
     monteCarloDataRepository.deleteAll();
   }
-
 
 }

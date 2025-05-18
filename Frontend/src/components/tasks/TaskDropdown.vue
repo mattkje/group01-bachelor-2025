@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from "vue";
-import { PickerTask, ActiveTask } from "@/assets/types";
+import {PickerTask, ActiveTask} from "@/assets/types";
 import EditActiveTaskModal from "@/components/tasks/EditActiveTaskModal.vue";
-import {deleteActiveTask, deletePickerTask, updateActiveTask, updatePickerTask} from "@/composables/DataUpdater";
+import {deleteActiveTask, deletePickerTask, updateActiveTask, updatePickerTask} from "@/services/DataUpdater";
 
 const props = defineProps<{
   pickerTask?: PickerTask;
@@ -84,22 +84,22 @@ onBeforeUnmount(() => {
 
 <template>
   <div>
-  <div class="dropdown-container">
-    <button class="dropdown-button" @click="toggleDropdown">⋮</button>
-    <div
-        v-if="isDropdownOpen"
-        class="dropdown-menu"
-        :class="{ 'dropdown-menu-visible': isDropdownOpen }"
-    >
-      <div class="dropdown-item" @click="openEditModal($event)">Edit</div>
-      <div class="dropdown-item" @click="promptDeleteConfirmation">Delete</div>
+    <div class="dropdown-container">
+      <button class="dropdown-button" @click="toggleDropdown">⋮</button>
+      <div
+          v-if="isDropdownOpen"
+          class="dropdown-menu"
+          :class="{ 'dropdown-menu-visible': isDropdownOpen }"
+      >
+        <div class="dropdown-item" @click="openEditModal($event)">Edit</div>
+        <div class="dropdown-item" @click="promptDeleteConfirmation">Delete</div>
+      </div>
     </div>
-  </div>
-  <EditActiveTaskModal
-    v-if="isEditModalOpen"
-    :task="props.pickerTask || props.activeTask"
-    @close="closeEditModal"
-    @task-updated="handleTaskUpdated"
+    <EditActiveTaskModal
+        v-if="isEditModalOpen"
+        :task="props.pickerTask || props.activeTask"
+        @close="closeEditModal"
+        @task-updated="handleTaskUpdated"
     />
   </div>
 </template>

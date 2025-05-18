@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {ref, onMounted, Ref} from "vue";
+import {ref, onMounted} from "vue";
 import {useRoute} from "vue-router";
 import {computed} from "vue";
 import Multiselect from "vue-multiselect";
 import {License, Worker, Zone} from "@/assets/types";
-import {fetchWorker, fetchAllZones, fetchLicenses} from "@/composables/DataFetcher";
-import {deleteWorker, updateWorkerAvailability} from "@/composables/DataUpdater";
+import {fetchWorker, fetchAllZones, fetchLicenses} from "@/services/DataFetcher";
+import {deleteWorker, updateWorkerAvailability} from "@/services/DataUpdater";
 
 const route = useRoute();
 const worker = ref<Worker | null>(null);
@@ -90,25 +90,24 @@ onMounted(() => {
            </span>
               {{ worker.availability ? 'Available' : 'Unavailable' }} - Working from 9:00 AM to 5:00 PM
             </p>
-            <div class="option-bar">
-              <button @click="changeWorkerAvailability(worker, !worker.availability)">
-                <img src="@/assets/icons/edit.svg" alt="Change Availability"/>
-                <span>{{ worker.availability ? 'Set Unavailable' : 'Set Available' }}</span>
-              </button>
-              <button @click="showDeleteConfirmation = true">
-                <img src="@/assets/icons/trash.svg" alt="Delete Worker"/>
-                <span>Delete Worker</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
-      <div class="calendar-container">
-        Calendar goes here
+      <div class="option-bar">
+        <button @click="changeWorkerAvailability(worker, !worker.availability)">
+          <img src="@/assets/icons/edit.svg" alt="Change Availability"/>
+          <span>{{ worker.availability ? 'Set Unavailable' : 'Set Available' }}</span>
+        </button>
+        <button @click="showDeleteConfirmation = true">
+          <img src="@/assets/icons/trash.svg" alt="Delete Worker"/>
+          <span>Delete Worker</span>
+        </button>
       </div>
     </div>
     <div class="graph-container">
-      Graph goes here
+      <div class="calendar-placeholder">
+        <p>Room for a calendar or graph here</p>
+      </div>
     </div>
   </div>
   <div v-else>
@@ -155,6 +154,21 @@ onMounted(() => {
   margin-right: 2rem;
 }
 
+.calendar-placeholder {
+  min-height: 60%;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  border: var(--border-1) 1px dashed;
+  margin-right: 2rem;
+  color: var(--text-2);
+  font-style: italic;
+  background-color: var(--background-2);
+}
+
 .staff-page {
   display: flex;
   flex-direction: row;
@@ -173,36 +187,47 @@ onMounted(() => {
   align-items: center;
 }
 
-.option-bar {
-  background-color: var(--background-1);
-  padding: 0.5rem 1rem;
-  width: 100%;
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
+
+ .option-bar {
+   background-color: var(--background-1);
+   padding: 1rem;
+   width: 100%;
+   display: flex;
+   gap: 1.5rem;
+   margin-top: 1rem;
+   justify-content: center;
+   border-radius: 0.5rem;
+ }
 
 .option-bar button {
   display: flex;
-  border: var(--border-1) 1px solid;
+  align-items: center;
+  justify-content: center;
+  border: none;
   border-radius: 0.5rem;
   background-color: var(--main-color);
-  align-items: center;
-  padding: 0.5rem 1rem;
-  width: 12rem;
-  align-content: center;
-  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.option-bar button:hover {
+  background-color: var(--main-color-2);
+  transform: scale(1.05);
 }
 
 .option-bar button img {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   margin-right: 0.5rem;
+  filter: brightness(0) invert(1);
 }
 
 .option-bar button span {
-  font-size: 1rem;
+  display: inline-block;
 }
 
 
@@ -291,5 +316,55 @@ onMounted(() => {
 
 .worker-image {
   width: 80px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content button {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+
+
+.modal-content button:first-of-type {
+  background-color: var(--main-color);
+  color: white;
+}
+
+.modal-content button:first-of-type:hover {
+  background-color: var(--main-color-2);
+}
+
+.modal-content button:last-of-type {
+  background-color: gray;
+  color: white;
+}
+
+.modal-content button:last-of-type:hover {
+  background-color: darkgray;
 }
 </style>
