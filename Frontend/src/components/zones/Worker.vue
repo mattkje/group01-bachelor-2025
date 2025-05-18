@@ -8,7 +8,7 @@ import {
   fetchAllTasksForZone,
   fetchSimulationDate,
   fetchSimulationTime,
-  fetchTimeTables, fetchWorker,
+  fetchAllTimeTables, fetchWorker,
 } from '@/composables/DataFetcher';
 
 const POLLING_INTERVAL = 5000;
@@ -136,7 +136,7 @@ const startPolling = () => {
   pollingIntervalId = setInterval(async () => {
     try {
       await fetchCurrentTimeFromBackend();
-      timeTables.value = await fetchTimeTables();
+      timeTables.value = await fetchAllTimeTables();
       await setTaskBasedOnZoneType(props.workerId);
       qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
     } catch (error) {
@@ -148,7 +148,7 @@ const startPolling = () => {
 
 onMounted(async () => {
   await fetchCurrentTimeFromBackend();
-  timeTables.value = await fetchTimeTables();
+  timeTables.value = await fetchAllTimeTables();
   await setTaskBasedOnZoneType(props.workerId);
   qualifiedForAnyTask.value = await doesWorkerFulfillAnyTaskLicense(props.zoneId);
   startPolling();

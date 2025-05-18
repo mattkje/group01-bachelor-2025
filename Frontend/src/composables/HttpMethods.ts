@@ -1,3 +1,13 @@
+/**
+ * This file contains functions to handle HTTP requests using the Fetch API.
+ */
+
+/**
+ * PUT-request to update data on the server.
+ *
+ * @param url the URL to send the request to
+ * @param body the data to be sent in the request body
+ */
 export const putData = async (url: string, body?: any): Promise<void> => {
     try {
         const response = await fetch(url, {
@@ -16,6 +26,11 @@ export const putData = async (url: string, body?: any): Promise<void> => {
     }
 };
 
+/**
+ * GET-request to fetch data from the server.
+ *
+ * @param url the URL to send the request to
+ */
 export const fetchData = async <T>(url: string): Promise<T> => {
     try {
         const response = await fetch(url);
@@ -29,6 +44,12 @@ export const fetchData = async <T>(url: string): Promise<T> => {
     }
 };
 
+/**
+ * POST-request to send data to the server.
+ *
+ * @param url the URL to send the request to
+ * @param body the data to be sent in the request body
+ */
 export const postData = async (url: string, body?: any): Promise<void> => {
     try {
         const response = await fetch(url, {
@@ -47,6 +68,12 @@ export const postData = async (url: string, body?: any): Promise<void> => {
     }
 };
 
+/**
+ * POST-request to send data to the server with URL parameters.
+ *
+ * @param url the URL to send the request to
+ * @param params the parameters to be sent in the URL
+ */
 export const postWithParams = async (url: string, params: Record<string, any>): Promise<void> => {
     try {
         const queryString = new URLSearchParams(params).toString();
@@ -66,6 +93,11 @@ export const postWithParams = async (url: string, params: Record<string, any>): 
     }
 }
 
+/**
+ * DELETE-request to remove data from the server.
+ *
+ * @param url the URL to send the request to
+ */
 export const deleteData = async (url: string): Promise<void> => {
     try {
         const response = await fetch(url, {
@@ -80,6 +112,11 @@ export const deleteData = async (url: string): Promise<void> => {
     }
 };
 
+/**
+ * Function to run a command on the server.
+ *
+ * @param url the URL to send the request to
+ */
 export const runCommand = async (url: string) => {
     try {
         await fetch(url);

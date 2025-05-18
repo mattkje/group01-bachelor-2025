@@ -2,7 +2,7 @@
 import {computed, onMounted, ref, watch} from "vue";
 import {Zone} from "@/assets/types";
 import CalendarModal from "@/components/zones/CalendarModal.vue";
-import {fetchSchedulesFromBackend, fetchSimulationDate} from "@/composables/DataFetcher";
+import {fetchTimetable, fetchSimulationDate} from "@/composables/DataFetcher";
 
 const props = defineProps<{
   zone: Zone;
@@ -36,7 +36,7 @@ const fetchDateFromBackend = async () => {
 const loadSchedulesFromBackend = async () => {
 
   try {
-    schedules.value = await fetchSchedulesFromBackend(date.value?.toISOString().split("T")[0], props.zone.id);
+    schedules.value = await fetchTimetable(date.value?.toISOString().split("T")[0], props.zone.id);
     groupSchedulesByWorker();
     isModalVisible.value = false;
   } catch (error) {
