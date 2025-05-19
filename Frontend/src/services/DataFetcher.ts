@@ -313,7 +313,7 @@ export const fetchDoneBy = async () => {
  * @param zoneId - The ID of the zone for which to fetch the done-by time.
  */
 export const fetchDoneByForZone = async (zoneId: number) => {
-    return fetchData<string>(`http://localhost:8080/api/error-messages/done-by/${zoneId}`);
+    return fetchData<NotificationDone>(`http://localhost:8080/api/error-messages/done-by/${zoneId}`);
 }
 
 /**

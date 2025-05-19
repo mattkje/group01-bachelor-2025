@@ -116,12 +116,14 @@ function generateChartData() {
 
   const baseColor = 'rgba(150, 150, 150, 0.2)';
 
-  const maxLength = 144;
+  const maxLength = 143;
 
   // Remove first values from dataValues if they are the same as the last value
   ListOfListsOfValues.value.forEach((monteCarloSimulationList, index) => {
     if (monteCarloSimulationList.length + dataValues.value.length > maxLength) {
       removeFirstValues(monteCarloSimulationList, monteCarloSimulationList.length + dataValues.value.length - maxLength);
+      // Add last value of dataValues to be the first value of the simulation list
+      monteCarloSimulationList.unshift(dataValues.value[dataValues.value.length - 1]);
     }
 
     // Remove last values from the monteCarloSimulationList if they are the same as the last value

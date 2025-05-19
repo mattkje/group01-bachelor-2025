@@ -4,7 +4,7 @@ import NotificationWidget from "@/components/widgets/NotificationWidget.vue";
 import WorkerStatusWidget from "@/components/widgets/WorkerStatusWidget.vue";
 
 import {ref, onMounted, onUnmounted, watch} from 'vue';
-import {Zone} from "@/assets/types";
+import {NotificationDone, Zone} from "@/assets/types";
 import {fetchAllZones, fetchDoneByForZone} from "@/services/DataFetcher";
 import OverviewTaskSection from "@/components/tasks/OverviewTaskSection.vue";
 
@@ -28,7 +28,7 @@ const defaultZone: Zone = {
 const loadAllData = async (zoneId: string) => {
   zones.value = await fetchAllZones();
   if (zoneId) {
-    doneBy.value = await fetchDoneByForZone(parseInt(zoneId));
+    doneBy.value = await fetchDoneByForZone(parseInt(zoneId)).then(response => response.time);
   } else {
     doneBy.value = await fetchDoneByForZone(zones.value[0].id).then(response => response.time);
   }

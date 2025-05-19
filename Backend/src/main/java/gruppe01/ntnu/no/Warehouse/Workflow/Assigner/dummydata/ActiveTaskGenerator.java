@@ -50,8 +50,8 @@ public class ActiveTaskGenerator {
     LocalDate endDate = startDate.plusDays(numDays - 1);
 
     Random random = new Random();
-    int minNumTasks = 120;
-    int maxNumTasks = 180;
+    int minNumTasks = 50;
+    int maxNumTasks = 90;
     int[] dueHours = {7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
     int[] dueMinutes = {0, 15, 30, 45};
 

@@ -182,7 +182,7 @@ public class WorldSimulation {
         if (timetableService.getTimetablesByDate(workday).isEmpty()) {
           timeTableGenerator.generateTimeTable(workday);
         }
-        pickerTaskGenerator.generatePickerTasks(workday, 1, 50, machineLearningModelPicking, false);
+        pickerTaskGenerator.generatePickerTasks(workday, 1, 30, machineLearningModelPicking, false);
         activeTasksExistForWorkday = true;
       } else {
         workday = workday.plusDays(1);
