@@ -1,7 +1,3 @@
-Here’s a polished `README.md`-style **Overview** and **Background** section based on your provided introduction:
-
----
-
 # Warehouse Management Simulator – Bachelor Thesis Project
 
 ## Overview
