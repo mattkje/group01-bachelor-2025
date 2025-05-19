@@ -89,7 +89,7 @@ public class MonteCarlo {
       throws InterruptedException, ExecutionException, IOException {
     // Zone simulator object to run the simulation
     ExecutorService simulationExecutor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
     // List of futures to hold the results of the simulation
     List<Future<SimulationResult>> futures = new ArrayList<>();
     // Get all zones and active tasks for today
@@ -118,7 +118,8 @@ public class MonteCarlo {
       LocalDateTime finalCurrentTime = currentTime;
       // Submit the simulation to the executor service
       futures.add(simulationExecutor.submit(() -> {
-        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(zones.size());
+        ExecutorService warehouseExecutor = Executors.newFixedThreadPool(
+            Math.max(1, zones.size()));
         // Create a deep copy of the zones and active tasks
         List<Zone> zonesCopy = zones.stream().map(Zone::new).toList();
         List<ActiveTask> activeTasksCopy = activeTasks.stream()
